@@ -1,33 +1,42 @@
-import Header from "@/components/Header";
-import HeroSection from "@/components/HeroSection";
-import TestimonyVideo from "@/components/TestimonyVideo";
-import AboutNick from "@/components/AboutNick";
-import Doctrine from "@/components/Doctrine";
-import FeaturedExercises from "@/components/FeaturedExercises";
-import RecoveryBooks from "@/components/RecoveryBooks";
-import ProgressTimeline from "@/components/ProgressTimeline";
-import CommunityStories from "@/components/CommunityStories";
-import CTASection from "@/components/CTASection";
-import FAQ from "@/components/FAQ";
-import Footer from "@/components/Footer";
+import { useEffect, useRef } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import Landing from "@/pages/Landing";
+import Dashboard from "@/pages/Dashboard";
 
 export default function Home() {
-  return (
-    <div className="min-h-screen">
-      <Header />
-      <main>
-        <HeroSection />
-        <TestimonyVideo />
-        <AboutNick />
-        <Doctrine />
-        <FeaturedExercises />
-        <RecoveryBooks />
-        <ProgressTimeline />
-        <CommunityStories />
-        <CTASection />
-        <FAQ />
-      </main>
-      <Footer />
-    </div>
-  );
+  const { isAuthenticated, isLoading } = useAuth();
+  const { toast } = useToast();
+  const wasAuthenticated = useRef(false);
+
+  // Track if user was ever authenticated during this session
+  useEffect(() => {
+    if (isAuthenticated) {
+      wasAuthenticated.current = true;
+    }
+  }, [isAuthenticated]);
+
+  // Page-level protection: redirect to login ONLY if session expires (user was authenticated but now isn't)
+  // This handles session expiry while the component is mounted
+  // First-time unauthenticated users should see the landing page, not be redirected
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated && wasAuthenticated.current) {
+      toast({
+        title: "Unauthorized",
+        description: "You are logged out. Logging in again...",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+    }
+  }, [isAuthenticated, isLoading, toast]);
+
+  // Show landing page while loading or not authenticated
+  if (isLoading || !isAuthenticated) {
+    return <Landing />;
+  }
+
+  // Show dashboard when authenticated
+  return <Dashboard />;
 }
