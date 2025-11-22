@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Play, ArrowRight } from "lucide-react";
-import heroImage from "@assets/generated_images/nick_kremers_hero_portrait.png";
+
+const heroImage = "/attached_assets/Nick king_1763787525256.png";
 
 export default function HeroSection() {
   return (

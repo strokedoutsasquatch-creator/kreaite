@@ -35,10 +35,14 @@ export default function Footer() {
         <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
           <div className="lg:col-span-2">
             <div className="flex items-center gap-3 mb-4">
-              <div className="text-3xl">🦍</div>
+              <img 
+                src="/attached_assets/ss logo 2_1763787525258.png"
+                alt="Stroked Out Sasquatch"
+                className="h-12 w-12 object-contain"
+              />
               <div>
-                <div className="text-xl font-black">STROKE RECOVERY OS</div>
-                <div className="text-sm text-muted-foreground">The Sasquatch Method</div>
+                <div className="text-xl font-black">STROKE RECOVERY ACADEMY</div>
+                <div className="text-sm text-muted-foreground">The Stroked Out Sasquatch</div>
               </div>
             </div>
             <p className="text-muted-foreground mb-6 leading-relaxed">

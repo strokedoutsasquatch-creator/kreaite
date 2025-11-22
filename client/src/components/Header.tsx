@@ -21,11 +21,15 @@ export default function Header() {
         <div className="flex items-center justify-between h-16">
           <Link href="/" data-testid="link-home">
             <div className="flex items-center gap-3 hover-elevate active-elevate-2 px-3 py-2 rounded-md cursor-pointer">
-              <div className="text-2xl font-black text-primary">🦍</div>
+              <img 
+                src="/attached_assets/ss logo 2_1763787525258.png"
+                alt="Stroked Out Sasquatch"
+                className="h-10 w-10 object-contain"
+              />
               <div className="hidden sm:block">
-                <div className="text-lg font-black tracking-tight">STROKE RECOVERY OS</div>
+                <div className="text-lg font-black tracking-tight">STROKE RECOVERY ACADEMY</div>
                 <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  The Sasquatch Method
+                  The Stroked Out Sasquatch
                 </div>
               </div>
             </div>

@@ -2,6 +2,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2 } from "lucide-react";
 
+const nickPhoto = "/attached_assets/Nick crooked smile_1763787525254.jpg";
+
 export default function AboutNick() {
   const achievements = [
     "Massive hemorrhagic stroke with 50 staples in skull",
@@ -15,6 +17,15 @@ export default function AboutNick() {
     <section className="py-20 bg-card" id="about">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="relative">
+            <div className="aspect-square rounded-lg overflow-hidden">
+              <img 
+                src={nickPhoto}
+                alt="Nick Kremers - The Stroked Out Sasquatch"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
           <div>
             <Badge variant="outline" className="mb-4" data-testid="badge-about-category">
               FROM WHEELCHAIR TO WARRIOR
@@ -41,25 +52,25 @@ export default function AboutNick() {
               </p>
             </div>
           </div>
-
-          <Card className="p-8">
-            <h3 className="text-2xl font-bold mb-6" data-testid="text-achievements-title">
-              The Journey
-            </h3>
-            <div className="space-y-4">
-              {achievements.map((achievement, index) => (
-                <div
-                  key={index}
-                  className="flex gap-3"
-                  data-testid={`achievement-${index}`}
-                >
-                  <CheckCircle2 className="h-6 w-6 text-accent flex-shrink-0 mt-0.5" />
-                  <p className="text-base font-medium">{achievement}</p>
-                </div>
-              ))}
-            </div>
-          </Card>
         </div>
+
+        <Card className="p-8 mt-12">
+          <h3 className="text-2xl font-bold mb-6" data-testid="text-achievements-title">
+            The Journey
+          </h3>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {achievements.map((achievement, index) => (
+              <div
+                key={index}
+                className="flex gap-3"
+                data-testid={`achievement-${index}`}
+              >
+                <CheckCircle2 className="h-6 w-6 text-accent flex-shrink-0 mt-0.5" />
+                <p className="text-base font-medium">{achievement}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
       </div>
     </section>
   );

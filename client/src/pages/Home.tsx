@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import AboutNick from "@/components/AboutNick";
+import Doctrine from "@/components/Doctrine";
 import FeaturedExercises from "@/components/FeaturedExercises";
 import RecoveryBooks from "@/components/RecoveryBooks";
 import ProgressTimeline from "@/components/ProgressTimeline";
@@ -16,6 +17,7 @@ export default function Home() {
       <main>
         <HeroSection />
         <AboutNick />
+        <Doctrine />
         <FeaturedExercises />
         <RecoveryBooks />
         <ProgressTimeline />

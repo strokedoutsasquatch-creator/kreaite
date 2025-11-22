@@ -1,6 +1,7 @@
 import BookCard from "./BookCard";
 import { Badge } from "@/components/ui/badge";
-import bookCoverImage from "@assets/generated_images/sasquatch_recovery_book_cover.png";
+
+const bookCoverImage = "/attached_assets/Nick Kremers stroke book_1763787525256.jpeg";
 
 export default function RecoveryBooks() {
   const books = [
