@@ -11,7 +11,7 @@ import CTASection from "@/components/CTASection";
 import FAQ from "@/components/FAQ";
 import Footer from "@/components/Footer";
 
-export default function Home() {
+export default function Landing() {
   return (
     <div className="min-h-screen">
       <Header />

@@ -55,14 +55,14 @@ export default function Header() {
               variant="outline"
               size="sm"
               data-testid="button-login"
-              onClick={() => console.log("Login clicked")}
+              onClick={() => window.location.href = '/api/login'}
             >
               Login
             </Button>
             <Button
               size="sm"
               data-testid="button-start-recovery"
-              onClick={() => console.log("Start Recovery clicked")}
+              onClick={() => window.location.href = '/api/login'}
             >
               Start Your Recovery
             </Button>
@@ -98,14 +98,14 @@ export default function Header() {
                 variant="outline"
                 className="w-full"
                 data-testid="mobile-button-login"
-                onClick={() => console.log("Login clicked")}
+                onClick={() => window.location.href = '/api/login'}
               >
                 Login
               </Button>
               <Button
                 className="w-full"
                 data-testid="mobile-button-start-recovery"
-                onClick={() => console.log("Start Recovery clicked")}
+                onClick={() => window.location.href = '/api/login'}
               >
                 Start Your Recovery
               </Button>
