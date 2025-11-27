@@ -350,8 +350,150 @@ export const marketplaceProducts = pgTable("marketplace_products", {
 });
 
 // ============================================================================
+// STROKE LYFE PUBLISHING - Book Writing Studio
+// ============================================================================
+
+export const publishingProjects = pgTable("publishing_projects", {
+  id: serial("id").primaryKey(),
+  authorId: varchar("author_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  subtitle: text("subtitle"),
+  description: text("description"),
+  genre: text("genre"),
+  targetAudience: text("target_audience"),
+  coverImageUrl: text("cover_image_url"),
+  status: text("status").notNull().default("draft"), // draft, writing, editing, review, published
+  wordCount: integer("word_count").notNull().default(0),
+  chapterCount: integer("chapter_count").notNull().default(0),
+  isPublished: boolean("is_published").notNull().default(false),
+  publishedAt: timestamp("published_at"),
+  price: integer("price"), // in cents
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const manuscriptChapters = pgTable("manuscript_chapters", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => publishingProjects.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  order: integer("order").notNull().default(0),
+  content: text("content"), // Rich text content
+  aiDraft: text("ai_draft"), // AI-generated draft
+  notes: text("notes"), // Author notes
+  wordCount: integer("word_count").notNull().default(0),
+  status: text("status").notNull().default("outline"), // outline, drafting, ai_review, editing, complete
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const manuscriptAssets = pgTable("manuscript_assets", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => publishingProjects.id, { onDelete: "cascade" }),
+  chapterId: integer("chapter_id").references(() => manuscriptChapters.id, { onDelete: "set null" }),
+  assetType: text("asset_type").notNull(), // image, document, audio
+  fileName: text("file_name").notNull(),
+  fileUrl: text("file_url").notNull(),
+  mimeType: text("mime_type"),
+  fileSize: integer("file_size"),
+  isAiGenerated: boolean("is_ai_generated").notNull().default(false),
+  aiPrompt: text("ai_prompt"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const aiWritingJobs = pgTable("ai_writing_jobs", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => publishingProjects.id, { onDelete: "cascade" }),
+  chapterId: integer("chapter_id").references(() => manuscriptChapters.id, { onDelete: "cascade" }),
+  jobType: text("job_type").notNull(), // outline, draft, rewrite, edit, expand, summarize
+  prompt: text("prompt").notNull(),
+  result: text("result"),
+  status: text("status").notNull().default("pending"), // pending, processing, completed, failed
+  tokensUsed: integer("tokens_used"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  completedAt: timestamp("completed_at"),
+});
+
+// ============================================================================
+// STROKE LYFE PUBLISHING - Course Builder
+// ============================================================================
+
+export const creatorCourses = pgTable("creator_courses", {
+  id: serial("id").primaryKey(),
+  creatorId: varchar("creator_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  sourceProjectId: integer("source_project_id").references(() => publishingProjects.id, { onDelete: "set null" }),
+  title: text("title").notNull(),
+  slug: text("slug").notNull(),
+  description: text("description"),
+  thumbnailUrl: text("thumbnail_url"),
+  difficulty: text("difficulty").notNull().default("beginner"),
+  estimatedHours: integer("estimated_hours"),
+  price: integer("price"), // in cents
+  status: text("status").notNull().default("draft"), // draft, review, published
+  isPublished: boolean("is_published").notNull().default(false),
+  publishedAt: timestamp("published_at"),
+  enrollmentCount: integer("enrollment_count").notNull().default(0),
+  revenue: integer("revenue").notNull().default(0), // in cents
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const creatorCourseModules = pgTable("creator_course_modules", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id").notNull().references(() => creatorCourses.id, { onDelete: "cascade" }),
+  sourceChapterId: integer("source_chapter_id").references(() => manuscriptChapters.id, { onDelete: "set null" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  order: integer("order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const creatorCourseLessons = pgTable("creator_course_lessons", {
+  id: serial("id").primaryKey(),
+  moduleId: integer("module_id").notNull().references(() => creatorCourseModules.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  content: text("content"),
+  videoUrl: text("video_url"),
+  duration: integer("duration"), // in minutes
+  order: integer("order").notNull().default(0),
+  isFree: boolean("is_free").notNull().default(false), // Preview lesson
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const coursePurchases = pgTable("course_purchases", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  courseId: integer("course_id").notNull().references(() => creatorCourses.id, { onDelete: "cascade" }),
+  stripePaymentId: text("stripe_payment_id"),
+  amount: integer("amount").notNull(), // in cents
+  status: text("status").notNull().default("pending"), // pending, completed, refunded
+  purchasedAt: timestamp("purchased_at").notNull().defaultNow(),
+});
+
+export const creatorPayouts = pgTable("creator_payouts", {
+  id: serial("id").primaryKey(),
+  creatorId: varchar("creator_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  amount: integer("amount").notNull(), // in cents
+  status: text("status").notNull().default("pending"), // pending, processing, completed
+  stripePayoutId: text("stripe_payout_id"),
+  periodStart: timestamp("period_start").notNull(),
+  periodEnd: timestamp("period_end").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  paidAt: timestamp("paid_at"),
+});
+
+// ============================================================================
 // INSERT SCHEMAS & TYPES
 // ============================================================================
+
+export const insertPublishingProjectSchema = createInsertSchema(publishingProjects).omit({ id: true, createdAt: true, updatedAt: true, wordCount: true, chapterCount: true });
+export const insertManuscriptChapterSchema = createInsertSchema(manuscriptChapters).omit({ id: true, createdAt: true, updatedAt: true, wordCount: true });
+export const insertManuscriptAssetSchema = createInsertSchema(manuscriptAssets).omit({ id: true, createdAt: true });
+export const insertAiWritingJobSchema = createInsertSchema(aiWritingJobs).omit({ id: true, createdAt: true, completedAt: true });
+export const insertCreatorCourseSchema = createInsertSchema(creatorCourses).omit({ id: true, createdAt: true, updatedAt: true, enrollmentCount: true, revenue: true });
+export const insertCreatorCourseModuleSchema = createInsertSchema(creatorCourseModules).omit({ id: true, createdAt: true });
+export const insertCreatorCourseLessonSchema = createInsertSchema(creatorCourseLessons).omit({ id: true, createdAt: true });
+export const insertCoursePurchaseSchema = createInsertSchema(coursePurchases).omit({ id: true, purchasedAt: true });
+export const insertCreatorPayoutSchema = createInsertSchema(creatorPayouts).omit({ id: true, createdAt: true, paidAt: true });
 
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, updatedAt: true, role: true });
 export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({ id: true, updatedAt: true });
@@ -415,3 +557,23 @@ export type MarketplaceCategory = typeof marketplaceCategories.$inferSelect;
 export type InsertMarketplaceCategory = z.infer<typeof insertMarketplaceCategorySchema>;
 export type MarketplaceProduct = typeof marketplaceProducts.$inferSelect;
 export type InsertMarketplaceProduct = z.infer<typeof insertMarketplaceProductSchema>;
+
+// Stroke Lyfe Publishing Types
+export type PublishingProject = typeof publishingProjects.$inferSelect;
+export type InsertPublishingProject = z.infer<typeof insertPublishingProjectSchema>;
+export type ManuscriptChapter = typeof manuscriptChapters.$inferSelect;
+export type InsertManuscriptChapter = z.infer<typeof insertManuscriptChapterSchema>;
+export type ManuscriptAsset = typeof manuscriptAssets.$inferSelect;
+export type InsertManuscriptAsset = z.infer<typeof insertManuscriptAssetSchema>;
+export type AiWritingJob = typeof aiWritingJobs.$inferSelect;
+export type InsertAiWritingJob = z.infer<typeof insertAiWritingJobSchema>;
+export type CreatorCourse = typeof creatorCourses.$inferSelect;
+export type InsertCreatorCourse = z.infer<typeof insertCreatorCourseSchema>;
+export type CreatorCourseModule = typeof creatorCourseModules.$inferSelect;
+export type InsertCreatorCourseModule = z.infer<typeof insertCreatorCourseModuleSchema>;
+export type CreatorCourseLesson = typeof creatorCourseLessons.$inferSelect;
+export type InsertCreatorCourseLesson = z.infer<typeof insertCreatorCourseLessonSchema>;
+export type CoursePurchase = typeof coursePurchases.$inferSelect;
+export type InsertCoursePurchase = z.infer<typeof insertCoursePurchaseSchema>;
+export type CreatorPayout = typeof creatorPayouts.$inferSelect;
+export type InsertCreatorPayout = z.infer<typeof insertCreatorPayoutSchema>;
