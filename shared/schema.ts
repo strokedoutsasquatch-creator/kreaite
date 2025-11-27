@@ -314,6 +314,42 @@ export const dailyLogs = pgTable("daily_logs", {
 });
 
 // ============================================================================
+// MARKETPLACE (Amazon Affiliate Products)
+// ============================================================================
+
+export const marketplaceCategories = pgTable("marketplace_categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  description: text("description"),
+  icon: text("icon"),
+  order: integer("order").notNull().default(0),
+  isFeatured: boolean("is_featured").notNull().default(false),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const marketplaceProducts = pgTable("marketplace_products", {
+  id: serial("id").primaryKey(),
+  categoryId: integer("category_id").notNull().references(() => marketplaceCategories.id, { onDelete: "cascade" }),
+  asin: text("asin"),
+  title: text("title").notNull(),
+  brand: text("brand"),
+  description: text("description"),
+  features: text("features").array(),
+  imageUrl: text("image_url"),
+  amazonUrl: text("amazon_url").notNull(),
+  priceDisplay: text("price_display"),
+  rating: text("rating"),
+  reviewCount: integer("review_count"),
+  isFeatured: boolean("is_featured").notNull().default(false),
+  isActive: boolean("is_active").notNull().default(true),
+  tags: text("tags").array(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// ============================================================================
 // INSERT SCHEMAS & TYPES
 // ============================================================================
 
@@ -331,6 +367,8 @@ export const insertBookPageSchema = createInsertSchema(bookPages).omit({ id: tru
 export const insertAiChatSessionSchema = createInsertSchema(aiChatSessions).omit({ id: true, createdAt: true, messageCount: true, lastMessageAt: true });
 export const insertAiChatMessageSchema = createInsertSchema(aiChatMessages).omit({ id: true, createdAt: true });
 export const insertDailyLogSchema = createInsertSchema(dailyLogs).omit({ id: true, createdAt: true });
+export const insertMarketplaceCategorySchema = createInsertSchema(marketplaceCategories).omit({ id: true, createdAt: true });
+export const insertMarketplaceProductSchema = createInsertSchema(marketplaceProducts).omit({ id: true, createdAt: true, updatedAt: true });
 
 // ============================================================================
 // EXPORT TYPES
@@ -373,3 +411,7 @@ export type Achievement = typeof achievements.$inferSelect;
 export type UserAchievement = typeof userAchievements.$inferSelect;
 export type CoachingInsight = typeof coachingInsights.$inferSelect;
 export type LearningPackage = typeof learningPackages.$inferSelect;
+export type MarketplaceCategory = typeof marketplaceCategories.$inferSelect;
+export type InsertMarketplaceCategory = z.infer<typeof insertMarketplaceCategorySchema>;
+export type MarketplaceProduct = typeof marketplaceProducts.$inferSelect;
+export type InsertMarketplaceProduct = z.infer<typeof insertMarketplaceProductSchema>;

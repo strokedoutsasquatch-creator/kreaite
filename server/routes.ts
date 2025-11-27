@@ -542,6 +542,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Marketplace routes
+  app.get('/api/marketplace/categories', async (req, res) => {
+    try {
+      const categories = await storage.getMarketplaceCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching marketplace categories:", error);
+      res.status(500).json({ message: "Failed to fetch marketplace categories" });
+    }
+  });
+
+  app.get('/api/marketplace/categories/:id', async (req, res) => {
+    try {
+      const category = await storage.getMarketplaceCategory(parseInt(req.params.id));
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      res.json(category);
+    } catch (error) {
+      console.error("Error fetching marketplace category:", error);
+      res.status(500).json({ message: "Failed to fetch marketplace category" });
+    }
+  });
+
+  app.get('/api/marketplace/products', async (req, res) => {
+    try {
+      const { categoryId, search, featured } = req.query;
+      const filters: { categoryId?: number; search?: string; featured?: boolean } = {};
+      
+      if (categoryId) {
+        filters.categoryId = parseInt(categoryId as string);
+      }
+      if (search) {
+        filters.search = search as string;
+      }
+      if (featured !== undefined) {
+        filters.featured = featured === 'true';
+      }
+      
+      const products = await storage.getMarketplaceProducts(filters);
+      res.json(products);
+    } catch (error) {
+      console.error("Error fetching marketplace products:", error);
+      res.status(500).json({ message: "Failed to fetch marketplace products" });
+    }
+  });
+
+  app.get('/api/marketplace/products/:id', async (req, res) => {
+    try {
+      const product = await storage.getMarketplaceProduct(parseInt(req.params.id));
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      res.json(product);
+    } catch (error) {
+      console.error("Error fetching marketplace product:", error);
+      res.status(500).json({ message: "Failed to fetch marketplace product" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

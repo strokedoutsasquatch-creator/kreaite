@@ -6,13 +6,16 @@ import {
   type Book, type InsertBook,
   type AiChatSession, type InsertAiChatSession,
   type AiChatMessage, type InsertAiChatMessage,
+  type MarketplaceCategory, type InsertMarketplaceCategory,
+  type MarketplaceProduct, type InsertMarketplaceProduct,
 } from "@shared/schema";
 import { 
   users, forumCategories, forumThreads, forumPosts, forumReactions,
-  books, aiChatSessions, aiChatMessages 
+  books, aiChatSessions, aiChatMessages,
+  marketplaceCategories, marketplaceProducts,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, sql, count } from "drizzle-orm";
+import { eq, desc, and, sql, count, ilike, or } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -42,6 +45,12 @@ export interface IStorage {
   getChatMessages(sessionId: number): Promise<AiChatMessage[]>;
   createChatMessage(message: InsertAiChatMessage): Promise<AiChatMessage>;
   getCategoryStats(): Promise<{ categoryId: number; threadCount: number; postCount: number }[]>;
+  getMarketplaceCategories(): Promise<MarketplaceCategory[]>;
+  getMarketplaceCategory(id: number): Promise<MarketplaceCategory | undefined>;
+  getMarketplaceProducts(filters?: { categoryId?: number; search?: string; featured?: boolean }): Promise<MarketplaceProduct[]>;
+  getMarketplaceProduct(id: number): Promise<MarketplaceProduct | undefined>;
+  createMarketplaceCategory(data: InsertMarketplaceCategory): Promise<MarketplaceCategory>;
+  createMarketplaceProduct(data: InsertMarketplaceProduct): Promise<MarketplaceProduct>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -282,6 +291,61 @@ export class DatabaseStorage implements IStorage {
       threadCount: Number(s.threadCount),
       postCount: Number(s.postCount)
     }));
+  }
+
+  async getMarketplaceCategories(): Promise<MarketplaceCategory[]> {
+    return db.select().from(marketplaceCategories)
+      .where(eq(marketplaceCategories.isActive, true))
+      .orderBy(marketplaceCategories.order);
+  }
+
+  async getMarketplaceCategory(id: number): Promise<MarketplaceCategory | undefined> {
+    const [category] = await db.select().from(marketplaceCategories)
+      .where(eq(marketplaceCategories.id, id));
+    return category;
+  }
+
+  async getMarketplaceProducts(filters?: { categoryId?: number; search?: string; featured?: boolean }): Promise<MarketplaceProduct[]> {
+    const conditions = [eq(marketplaceProducts.isActive, true)];
+
+    if (filters?.categoryId) {
+      conditions.push(eq(marketplaceProducts.categoryId, filters.categoryId));
+    }
+
+    if (filters?.featured !== undefined) {
+      conditions.push(eq(marketplaceProducts.isFeatured, filters.featured));
+    }
+
+    if (filters?.search) {
+      const searchTerm = `%${filters.search}%`;
+      conditions.push(
+        or(
+          ilike(marketplaceProducts.title, searchTerm),
+          ilike(marketplaceProducts.description, searchTerm),
+          ilike(marketplaceProducts.brand, searchTerm)
+        )!
+      );
+    }
+
+    return db.select().from(marketplaceProducts)
+      .where(and(...conditions))
+      .orderBy(desc(marketplaceProducts.isFeatured), marketplaceProducts.title);
+  }
+
+  async getMarketplaceProduct(id: number): Promise<MarketplaceProduct | undefined> {
+    const [product] = await db.select().from(marketplaceProducts)
+      .where(eq(marketplaceProducts.id, id));
+    return product;
+  }
+
+  async createMarketplaceCategory(data: InsertMarketplaceCategory): Promise<MarketplaceCategory> {
+    const [category] = await db.insert(marketplaceCategories).values(data).returning();
+    return category;
+  }
+
+  async createMarketplaceProduct(data: InsertMarketplaceProduct): Promise<MarketplaceProduct> {
+    const [product] = await db.insert(marketplaceProducts).values(data).returning();
+    return product;
   }
 }
 
