@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2 } from "lucide-react";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
+import RecoveryByDesign from "@/components/RecoveryByDesign";
 import TestimonyVideo from "@/components/TestimonyVideo";
 import AboutNick from "@/components/AboutNick";
 import Doctrine from "@/components/Doctrine";
@@ -53,6 +54,7 @@ export default function Landing() {
       <Header />
       <main>
         <HeroSection />
+        <RecoveryByDesign />
         <TestimonyVideo />
         <AboutNick />
         <Doctrine />

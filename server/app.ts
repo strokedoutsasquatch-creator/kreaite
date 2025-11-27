@@ -8,6 +8,7 @@ import express, {
 } from "express";
 
 import { registerRoutes } from "./routes";
+import { WebhookHandlers } from "./webhookHandlers";
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -21,6 +22,35 @@ export function log(message: string, source = "express") {
 }
 
 export const app = express();
+
+// CRITICAL: Stripe webhook routes MUST be registered BEFORE express.json()
+// This ensures we receive the raw Buffer payload for signature verification
+// Handle both /api/stripe/webhook and /api/stripe/webhook/:uuid for managed webhook
+app.post(
+  '/api/stripe/webhook/:uuid?',
+  express.raw({ type: 'application/json' }),
+  async (req, res) => {
+    const signature = req.headers['stripe-signature'];
+    if (!signature) {
+      return res.status(400).json({ error: 'Missing stripe-signature' });
+    }
+
+    try {
+      const sig = Array.isArray(signature) ? signature[0] : signature;
+      if (!Buffer.isBuffer(req.body)) {
+        console.error('STRIPE WEBHOOK ERROR: req.body is not a Buffer');
+        return res.status(500).json({ error: 'Webhook processing error' });
+      }
+
+      const uuid = req.params.uuid || 'default';
+      await WebhookHandlers.processWebhook(req.body as Buffer, sig, uuid);
+      res.status(200).json({ received: true });
+    } catch (error: any) {
+      console.error('Webhook error:', error.message);
+      res.status(400).json({ error: 'Webhook processing error' });
+    }
+  }
+);
 
 declare module 'http' {
   interface IncomingMessage {

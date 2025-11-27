@@ -7,6 +7,7 @@ import Landing from "@/pages/Landing";
 import Dashboard from "@/pages/Dashboard";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
+import SasquatchChatWidget from "@/components/SasquatchChatWidget";
 
 function Router() {
   return (
@@ -28,6 +29,7 @@ function App() {
       <TooltipProvider>
         <Toaster />
         <Router />
+        <SasquatchChatWidget />
       </TooltipProvider>
     </QueryClientProvider>
   );

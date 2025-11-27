@@ -28,6 +28,9 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   role: text("role").notNull().default("member"),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  subscriptionStatus: text("subscription_status"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -138,13 +141,32 @@ export const courseLessons = pgTable("course_lessons", {
 });
 
 // ============================================================================
-// LEARNING PLATFORM - INTERACTIVE BOOK
+// LEARNING PLATFORM - BOOKS
 // ============================================================================
 
-export const bookChapters = pgTable("book_chapters", {
+export const books = pgTable("books", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   slug: text("slug").notNull().unique(),
+  subtitle: text("subtitle"),
+  description: text("description").notNull(),
+  author: text("author").notNull().default("Nick Kremers"),
+  coverImageUrl: text("cover_image_url"),
+  stripePriceId: text("stripe_price_id"),
+  stripeProductId: text("stripe_product_id"),
+  category: text("category").notNull(),
+  isPublished: boolean("is_published").notNull().default(false),
+  isFree: boolean("is_free").notNull().default(false),
+  order: integer("order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const bookChapters = pgTable("book_chapters", {
+  id: serial("id").primaryKey(),
+  bookId: integer("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  slug: text("slug").notNull(),
   chapterNumber: integer("chapter_number").notNull(),
   description: text("description"),
   coverImageUrl: text("cover_image_url"),
@@ -303,6 +325,7 @@ export const insertForumPostSchema = createInsertSchema(forumPosts).omit({ id: t
 export const insertCourseSchema = createInsertSchema(courses).omit({ id: true, createdAt: true, updatedAt: true, enrollmentCount: true });
 export const insertCourseModuleSchema = createInsertSchema(courseModules).omit({ id: true, createdAt: true });
 export const insertCourseLessonSchema = createInsertSchema(courseLessons).omit({ id: true, createdAt: true });
+export const insertBookSchema = createInsertSchema(books).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertBookChapterSchema = createInsertSchema(bookChapters).omit({ id: true, createdAt: true });
 export const insertBookPageSchema = createInsertSchema(bookPages).omit({ id: true, createdAt: true });
 export const insertAiChatSessionSchema = createInsertSchema(aiChatSessions).omit({ id: true, createdAt: true, messageCount: true, lastMessageAt: true });
@@ -330,6 +353,8 @@ export type CourseModule = typeof courseModules.$inferSelect;
 export type InsertCourseModule = z.infer<typeof insertCourseModuleSchema>;
 export type CourseLesson = typeof courseLessons.$inferSelect;
 export type InsertCourseLesson = z.infer<typeof insertCourseLessonSchema>;
+export type Book = typeof books.$inferSelect;
+export type InsertBook = z.infer<typeof insertBookSchema>;
 export type BookChapter = typeof bookChapters.$inferSelect;
 export type InsertBookChapter = z.infer<typeof insertBookChapterSchema>;
 export type BookPage = typeof bookPages.$inferSelect;
