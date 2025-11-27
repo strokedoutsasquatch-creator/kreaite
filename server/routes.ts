@@ -567,6 +567,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  const appendAffiliateTag = (url: string): string => {
+    const affiliateTag = process.env.AMAZON_AFFILIATE_TAG;
+    if (!affiliateTag || !url) return url;
+    
+    try {
+      const urlObj = new URL(url);
+      urlObj.searchParams.set('tag', affiliateTag);
+      return urlObj.toString();
+    } catch {
+      if (url.includes('?')) {
+        return `${url}&tag=${affiliateTag}`;
+      }
+      return `${url}?tag=${affiliateTag}`;
+    }
+  };
+
   app.get('/api/marketplace/products', async (req, res) => {
     try {
       const { categoryId, search, featured } = req.query;
@@ -583,7 +599,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const products = await storage.getMarketplaceProducts(filters);
-      res.json(products);
+      const productsWithAffiliateLinks = products.map(product => ({
+        ...product,
+        amazonUrl: appendAffiliateTag(product.amazonUrl)
+      }));
+      res.json(productsWithAffiliateLinks);
     } catch (error) {
       console.error("Error fetching marketplace products:", error);
       res.status(500).json({ message: "Failed to fetch marketplace products" });
@@ -596,7 +616,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!product) {
         return res.status(404).json({ message: "Product not found" });
       }
-      res.json(product);
+      res.json({
+        ...product,
+        amazonUrl: appendAffiliateTag(product.amazonUrl)
+      });
     } catch (error) {
       console.error("Error fetching marketplace product:", error);
       res.status(500).json({ message: "Failed to fetch marketplace product" });
