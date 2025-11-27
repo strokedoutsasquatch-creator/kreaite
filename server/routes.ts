@@ -273,6 +273,223 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get posts for a thread
+  app.get('/api/forum/threads/:id/posts', async (req, res) => {
+    try {
+      const { limit = '50', offset = '0' } = req.query;
+      const posts = await storage.getForumPosts(
+        parseInt(req.params.id),
+        parseInt(limit as string),
+        parseInt(offset as string)
+      );
+      res.json(posts);
+    } catch (error) {
+      console.error("Error fetching forum posts:", error);
+      res.status(500).json({ message: "Failed to fetch forum posts" });
+    }
+  });
+
+  // Update a post (author or moderator)
+  app.patch('/api/forum/posts/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const postId = parseInt(req.params.id);
+      const { content } = req.body;
+      
+      const post = await storage.getForumPost(postId);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (post.authorId !== userId && !['moderator', 'admin'].includes(user?.role || '')) {
+        return res.status(403).json({ message: "Not authorized to edit this post" });
+      }
+      
+      const updatedPost = await storage.updateForumPost(postId, content);
+      res.json(updatedPost);
+    } catch (error) {
+      console.error("Error updating forum post:", error);
+      res.status(500).json({ message: "Failed to update forum post" });
+    }
+  });
+
+  // Delete a post (author or moderator)
+  app.delete('/api/forum/posts/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const postId = parseInt(req.params.id);
+      
+      const post = await storage.getForumPost(postId);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (post.authorId !== userId && !['moderator', 'admin'].includes(user?.role || '')) {
+        return res.status(403).json({ message: "Not authorized to delete this post" });
+      }
+      
+      await storage.deleteForumPost(postId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting forum post:", error);
+      res.status(500).json({ message: "Failed to delete forum post" });
+    }
+  });
+
+  // React to a post
+  app.post('/api/forum/posts/:id/react', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const postId = parseInt(req.params.id);
+      const { reactionType = 'like' } = req.body;
+      
+      const result = await storage.togglePostReaction(postId, userId, reactionType);
+      res.json(result);
+    } catch (error) {
+      console.error("Error reacting to post:", error);
+      res.status(500).json({ message: "Failed to react to post" });
+    }
+  });
+
+  // Get reactions for a post
+  app.get('/api/forum/posts/:id/reactions', async (req, res) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const reactions = await storage.getPostReactions(postId);
+      res.json(reactions);
+    } catch (error) {
+      console.error("Error fetching reactions:", error);
+      res.status(500).json({ message: "Failed to fetch reactions" });
+    }
+  });
+
+  // Moderation: Lock/unlock thread
+  app.patch('/api/forum/threads/:id/moderate', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!['moderator', 'admin'].includes(user?.role || '')) {
+        return res.status(403).json({ message: "Moderator access required" });
+      }
+      
+      const { isPinned, isLocked } = req.body;
+      const thread = await storage.updateForumThread(parseInt(req.params.id), { isPinned, isLocked });
+      res.json(thread);
+    } catch (error) {
+      console.error("Error moderating thread:", error);
+      res.status(500).json({ message: "Failed to moderate thread" });
+    }
+  });
+
+  // Delete thread (moderator only)
+  app.delete('/api/forum/threads/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!['moderator', 'admin'].includes(user?.role || '')) {
+        return res.status(403).json({ message: "Moderator access required" });
+      }
+      
+      await storage.deleteForumThread(parseInt(req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting thread:", error);
+      res.status(500).json({ message: "Failed to delete thread" });
+    }
+  });
+
+  // Admin: Create category
+  app.post('/api/forum/categories', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const category = await storage.createForumCategory(req.body);
+      res.json(category);
+    } catch (error) {
+      console.error("Error creating category:", error);
+      res.status(500).json({ message: "Failed to create category" });
+    }
+  });
+
+  // Admin: Update category
+  app.patch('/api/forum/categories/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const category = await storage.updateForumCategory(parseInt(req.params.id), req.body);
+      res.json(category);
+    } catch (error) {
+      console.error("Error updating category:", error);
+      res.status(500).json({ message: "Failed to update category" });
+    }
+  });
+
+  // Admin: Delete category
+  app.delete('/api/forum/categories/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      await storage.deleteForumCategory(parseInt(req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      res.status(500).json({ message: "Failed to delete category" });
+    }
+  });
+
+  // Get category stats
+  app.get('/api/forum/stats', async (req, res) => {
+    try {
+      const stats = await storage.getCategoryStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // Admin: Update user role
+  app.patch('/api/users/:id/role', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const { role } = req.body;
+      if (!['member', 'subscriber', 'moderator', 'admin'].includes(role)) {
+        return res.status(400).json({ message: "Invalid role" });
+      }
+      
+      const updatedUser = await storage.updateUserRole(req.params.id, role);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user role:", error);
+      res.status(500).json({ message: "Failed to update user role" });
+    }
+  });
+
   // Books routes
   app.get('/api/books', async (req, res) => {
     try {
