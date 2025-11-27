@@ -8,6 +8,7 @@ import Dashboard from "@/pages/Dashboard";
 import Community from "@/pages/Community";
 import Thread from "@/pages/Thread";
 import About from "@/pages/About";
+import Marketplace from "@/pages/Marketplace";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 import SasquatchChatWidget from "@/components/SasquatchChatWidget";
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/community" component={Community} />
       <Route path="/community/thread/:id" component={Thread} />
       <Route path="/about" component={About} />
+      <Route path="/marketplace" component={Marketplace} />
       <Route component={NotFound} />
     </Switch>
   );
