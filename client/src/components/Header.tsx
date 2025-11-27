@@ -8,41 +8,48 @@ export default function Header() {
   const [location] = useLocation();
 
   const navLinks = [
-    { href: "/", label: "Home" },
-    { href: "/exercises", label: "Exercise Arsenal" },
-    { href: "/books", label: "Recovery Guides" },
-    { href: "/equipment", label: "Equipment" },
-    { href: "/community", label: "Community" },
+    { href: "/", label: "HOME" },
+    { href: "/academy", label: "ACADEMY" },
+    { href: "/builder", label: "BUILDER" },
+    { href: "/community", label: "COMMUNITY" },
+    { href: "/marketplace", label: "MARKETPLACE" },
+    { href: "/survival-grid", label: "SURVIVAL GRID" },
+    { href: "/about", label: "ABOUT" },
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+    <header className="sticky top-0 z-50 bg-black border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href="/" data-testid="link-home">
-            <div className="flex items-center gap-3 hover-elevate active-elevate-2 px-3 py-2 rounded-md cursor-pointer">
-              <img 
-                src="/attached_assets/ss logo 2_1763787525258.png"
-                alt="Stroked Out Sasquatch"
-                className="h-10 w-10 object-contain"
-              />
+            <div className="flex items-center gap-2 hover-elevate active-elevate-2 px-2 py-2 rounded-md cursor-pointer">
+              <div className="flex items-center gap-1">
+                <span className="text-primary text-2xl font-black">0</span>
+                <span className="text-primary text-2xl font-black">9</span>
+              </div>
               <div className="hidden sm:block">
-                <div className="text-lg font-black tracking-tight">STROKE RECOVERY ACADEMY</div>
-                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  The Stroked Out Sasquatch
+                <div className="text-lg font-bold tracking-tight text-white">
+                  STROKE RECOVERY OS
+                </div>
+                <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                  Sasquatch Survival System
                 </div>
               </div>
             </div>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link key={link.href} href={link.href}>
                 <Button
-                  variant={location === link.href ? "secondary" : "ghost"}
+                  variant="ghost"
                   size="sm"
                   data-testid={`link-${link.label.toLowerCase().replace(" ", "-")}`}
-                  className="font-medium"
+                  className={`font-medium text-xs tracking-wide ${
+                    location === link.href 
+                      ? "text-white" 
+                      : "text-muted-foreground hover:text-white"
+                  }`}
                 >
                   {link.label}
                 </Button>
@@ -50,28 +57,21 @@ export default function Header() {
             ))}
           </nav>
 
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden lg:flex items-center">
             <Button
-              variant="outline"
               size="sm"
               data-testid="button-login"
               onClick={() => window.location.href = '/api/login'}
+              className="font-semibold text-xs tracking-wide"
             >
-              Login
-            </Button>
-            <Button
-              size="sm"
-              data-testid="button-start-recovery"
-              onClick={() => window.location.href = '/api/login'}
-            >
-              Start Your Recovery
+              LOGIN / JOIN
             </Button>
           </div>
 
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className="lg:hidden text-white"
             data-testid="button-menu"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
@@ -80,12 +80,12 @@ export default function Header() {
         </div>
 
         {mobileMenuOpen && (
-          <div className="md:hidden py-4 space-y-2 border-t">
+          <div className="lg:hidden py-4 space-y-2 border-t border-border">
             {navLinks.map((link) => (
               <Link key={link.href} href={link.href}>
                 <Button
                   variant={location === link.href ? "secondary" : "ghost"}
-                  className="w-full justify-start"
+                  className="w-full justify-start text-white"
                   onClick={() => setMobileMenuOpen(false)}
                   data-testid={`mobile-link-${link.label.toLowerCase().replace(" ", "-")}`}
                 >
@@ -93,21 +93,13 @@ export default function Header() {
                 </Button>
               </Link>
             ))}
-            <div className="pt-2 space-y-2">
+            <div className="pt-2">
               <Button
-                variant="outline"
                 className="w-full"
                 data-testid="mobile-button-login"
                 onClick={() => window.location.href = '/api/login'}
               >
-                Login
-              </Button>
-              <Button
-                className="w-full"
-                data-testid="mobile-button-start-recovery"
-                onClick={() => window.location.href = '/api/login'}
-              >
-                Start Your Recovery
+                LOGIN / JOIN
               </Button>
             </div>
           </div>

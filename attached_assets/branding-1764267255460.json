@@ -1,0 +1,116 @@
+{
+  "colorScheme": "light",
+  "fonts": [
+    {
+      "family": "Inter",
+      "role": "body"
+    },
+    {
+      "family": "Roboto",
+      "role": "body"
+    },
+    {
+      "family": "Helvetica Neue",
+      "role": "body"
+    },
+    {
+      "family": "Segoe UI",
+      "role": "body"
+    },
+    {
+      "family": "Arial",
+      "role": "body"
+    }
+  ],
+  "colors": {
+    "primary": "#0C8CE9",
+    "accent": "#7CC4F8",
+    "background": "#000000",
+    "textPrimary": "#000000",
+    "link": "#7CC4F8"
+  },
+  "typography": {
+    "fontFamilies": {
+      "primary": "Inter",
+      "heading": "Inter"
+    },
+    "fontStacks": {
+      "heading": [
+        "Inter",
+        "sans-serif"
+      ],
+      "body": [
+        "Times New Roman"
+      ],
+      "paragraph": [
+        "Inter",
+        "sans-serif"
+      ]
+    },
+    "fontSizes": {
+      "h1": "14px",
+      "h2": "14px",
+      "body": "11px"
+    }
+  },
+  "spacing": {
+    "baseUnit": 4,
+    "borderRadius": "5px"
+  },
+  "components": {
+    "input": {
+      "borderColor": "#CCCCCC",
+      "borderRadius": "5px"
+    },
+    "buttonPrimary": {
+      "background": "#FFFFFF",
+      "textColor": "#000000",
+      "borderRadius": "5px",
+      "shadow": "none"
+    },
+    "buttonSecondary": {
+      "background": "#2C2C2C",
+      "textColor": "#FFFFFF",
+      "borderRadius": "5px",
+      "shadow": "none"
+    }
+  },
+  "images": {
+    "logo": "File saved at: attached_assets/logo.svg",
+    "favicon": "File saved at: attached_assets/favicon.png",
+    "ogImage": "https://www.figma.com/file/KAXuTEVSbraoiLirY4OvSY/thumbnail?ver=thumbnails%2Fe3e95f3d-c3bc-4265-8005-d55fb8aa9800&t=qpLcbVeX9MXMM9wg-0"
+  },
+  "__framework_hints": [],
+  "__llm_logo_reasoning": {
+    "selectedIndex": 0,
+    "reasoning": "Logo #0 matches the brand name 'Figma' and is located in the header, linking to the homepage. It is visible and represents the brand effectively, making it the best choice for the brand logo.",
+    "confidence": 0.95
+  },
+  "__llm_button_reasoning": {
+    "primary": {
+      "index": 3,
+      "text": "Continue with Google",
+      "reasoning": "Button #3 has a vibrant white background with black text, which stands out as a clear call-to-action. It also uses the text 'Continue with Google', which is action-oriented and indicates a primary action for users. The other buttons have a dark background, making them less prominent as a primary CTA."
+    },
+    "secondary": {
+      "index": 0,
+      "text": "Log in or create account",
+      "reasoning": "Button #0 has a dark background and is less visually prominent compared to Button #3. It also has the same text as Button #1 and Button #2, making it a less distinct choice for a primary action. It serves as a secondary option for users who may want to log in or create an account instead of continuing with Google."
+    },
+    "confidence": 0.95
+  },
+  "personality": {
+    "tone": "modern",
+    "energy": "medium",
+    "targetAudience": "designers and developers looking for collaborative design tools."
+  },
+  "designSystem": {
+    "framework": "custom",
+    "componentLibrary": null
+  },
+  "confidence": {
+    "buttons": 0.95,
+    "colors": 0.9,
+    "overall": 0.925
+  }
+}
