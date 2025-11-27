@@ -1,16 +1,24 @@
-# Stroke Recovery OS
+# Stroke Recovery Academy
+
+**"REBUILD. REWIRE. RISE."**
 
 ## Overview
 
-Stroke Recovery OS is a comprehensive web application designed to support stroke survivors, caregivers, and professionals in their recovery journey. Built by Nick "The Stroked Out Sasquatch" Kremers, a stroke survivor who achieved 90% recovery, the platform combines personal recovery expertise with modern neuroscience to provide:
+Stroke Recovery Academy (strokerecoveryacademy.com) is a comprehensive web platform designed to support stroke survivors, caregivers, and professionals in their recovery journey. Built by Nick "The Stroked Out Sasquatch" Kremers, a stroke survivor who achieved 90% recovery, the platform combines personal recovery expertise with modern neuroscience.
 
-- **Recovery resources and guides** - Digital library of comprehensive stroke recovery books and methods
-- **AI-powered coaching** - Interactive chat with the "Sasquatch Coach" for motivation and guidance
-- **Community forum** - Support network for survivors to share stories and connect
-- **Exercise protocols** - Battle-tested recovery techniques including Baseball Bat Therapy, Mirror Therapy, and Drop Foot protocols
-- **Progress tracking** - Dashboard for monitoring recovery milestones
+### Key Features:
+- **Academy** - Digital courses from 3 recovery books (The Stroked Out Sasquatch, Ultimate Stroke Recovery Bible, Wheeled Out)
+- **Stroke Lyfe Publishing** - AI-powered book writing studio with Gemini ghostwriting and course builder
+- **AI Sasquatch Coach** - Interactive chat for motivation and guidance
+- **Community Forum** - Support network for survivors to share stories
+- **Survival Grid** - 16 battle-tested exercise protocols (Upper Body, Lower Body, Cognitive, Daily Living)
+- **Recovery Builder** - 4-step assessment wizard for personalized recovery plans
+- **Marketplace** - Premium books, coaching, and courses with Amazon affiliate integration
 
-The application serves as a "Recovery Operating System" - a complete platform for rebuilding body, brain, and belief system through evidence-based techniques combined with patient-driven innovation.
+### Platform Model:
+- **Centralized at StrokeRecoveryAcademy.com** - Single community with curated creator program
+- **Curated Creators** - Vetted experts can publish through Stroke Lyfe Publishing
+- **Quality Control** - All content reviewed before publishing to ensure safety
 
 ## User Preferences
 

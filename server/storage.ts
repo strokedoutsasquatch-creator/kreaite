@@ -8,11 +8,13 @@ import {
   type AiChatMessage, type InsertAiChatMessage,
   type MarketplaceCategory, type InsertMarketplaceCategory,
   type MarketplaceProduct, type InsertMarketplaceProduct,
+  type PublishingProject, type InsertPublishingProject,
 } from "@shared/schema";
 import { 
   users, forumCategories, forumThreads, forumPosts, forumReactions,
   books, aiChatSessions, aiChatMessages,
   marketplaceCategories, marketplaceProducts,
+  publishingProjects,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, count, ilike, or } from "drizzle-orm";
@@ -51,6 +53,11 @@ export interface IStorage {
   getMarketplaceProduct(id: number): Promise<MarketplaceProduct | undefined>;
   createMarketplaceCategory(data: InsertMarketplaceCategory): Promise<MarketplaceCategory>;
   createMarketplaceProduct(data: InsertMarketplaceProduct): Promise<MarketplaceProduct>;
+  getPublishingProjects(userId: string): Promise<PublishingProject[]>;
+  createPublishingProject(project: InsertPublishingProject): Promise<PublishingProject>;
+  getPublishingProject(id: number): Promise<PublishingProject | undefined>;
+  updatePublishingProject(id: number, updates: Partial<PublishingProject>): Promise<PublishingProject | undefined>;
+  deletePublishingProject(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -346,6 +353,36 @@ export class DatabaseStorage implements IStorage {
   async createMarketplaceProduct(data: InsertMarketplaceProduct): Promise<MarketplaceProduct> {
     const [product] = await db.insert(marketplaceProducts).values(data).returning();
     return product;
+  }
+
+  async getPublishingProjects(userId: string): Promise<PublishingProject[]> {
+    return db.select().from(publishingProjects)
+      .where(eq(publishingProjects.authorId, userId))
+      .orderBy(desc(publishingProjects.updatedAt));
+  }
+
+  async createPublishingProject(project: InsertPublishingProject): Promise<PublishingProject> {
+    const [newProject] = await db.insert(publishingProjects).values(project).returning();
+    return newProject;
+  }
+
+  async getPublishingProject(id: number): Promise<PublishingProject | undefined> {
+    const [project] = await db.select().from(publishingProjects)
+      .where(eq(publishingProjects.id, id));
+    return project;
+  }
+
+  async updatePublishingProject(id: number, updates: Partial<PublishingProject>): Promise<PublishingProject | undefined> {
+    const [project] = await db.update(publishingProjects)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(publishingProjects.id, id))
+      .returning();
+    return project;
+  }
+
+  async deletePublishingProject(id: number): Promise<boolean> {
+    await db.delete(publishingProjects).where(eq(publishingProjects.id, id));
+    return true;
   }
 }
 

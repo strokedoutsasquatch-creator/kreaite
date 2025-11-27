@@ -12,6 +12,7 @@ import Marketplace from "@/pages/Marketplace";
 import Academy from "@/pages/Academy";
 import Builder from "@/pages/Builder";
 import SurvivalGrid from "@/pages/SurvivalGrid";
+import Publishing from "@/pages/Publishing";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 import SasquatchChatWidget from "@/components/SasquatchChatWidget";
@@ -32,6 +33,7 @@ function Router() {
       <Route path="/academy" component={Academy} />
       <Route path="/builder" component={Builder} />
       <Route path="/survival-grid" component={SurvivalGrid} />
+      <Route path="/publishing" component={Publishing} />
       <Route component={NotFound} />
     </Switch>
   );

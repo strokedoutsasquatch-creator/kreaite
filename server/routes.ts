@@ -710,6 +710,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================================================
+  // STROKE LYFE PUBLISHING ROUTES
+  // ============================================================================
+
+  // Get user's publishing projects
+  app.get('/api/publishing/projects', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const projects = await storage.getPublishingProjects(userId);
+      res.json(projects);
+    } catch (error) {
+      console.error("Error fetching publishing projects:", error);
+      res.status(500).json({ message: "Failed to fetch publishing projects" });
+    }
+  });
+
+  // Create new publishing project
+  app.post('/api/publishing/projects', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { title, subtitle, description, genre, targetAudience } = req.body;
+      
+      if (!title) {
+        return res.status(400).json({ message: "Title is required" });
+      }
+
+      const project = await storage.createPublishingProject({
+        authorId: userId,
+        title,
+        subtitle: subtitle || null,
+        description: description || null,
+        genre: genre || null,
+        targetAudience: targetAudience || null,
+        status: 'draft',
+        isPublished: false,
+      });
+      
+      res.json(project);
+    } catch (error) {
+      console.error("Error creating publishing project:", error);
+      res.status(500).json({ message: "Failed to create publishing project" });
+    }
+  });
+
+  // Get single publishing project
+  app.get('/api/publishing/projects/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const projectId = parseInt(req.params.id);
+      
+      const project = await storage.getPublishingProject(projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+      
+      // Verify ownership
+      if (project.authorId !== userId) {
+        return res.status(403).json({ message: "Not authorized to view this project" });
+      }
+      
+      res.json(project);
+    } catch (error) {
+      console.error("Error fetching publishing project:", error);
+      res.status(500).json({ message: "Failed to fetch publishing project" });
+    }
+  });
+
+  // Update publishing project
+  app.patch('/api/publishing/projects/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const projectId = parseInt(req.params.id);
+      
+      const project = await storage.getPublishingProject(projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+      
+      // Verify ownership
+      if (project.authorId !== userId) {
+        return res.status(403).json({ message: "Not authorized to update this project" });
+      }
+      
+      const { title, subtitle, description, genre, targetAudience, status, coverImageUrl, wordCount, chapterCount } = req.body;
+      
+      const updatedProject = await storage.updatePublishingProject(projectId, {
+        ...(title !== undefined && { title }),
+        ...(subtitle !== undefined && { subtitle }),
+        ...(description !== undefined && { description }),
+        ...(genre !== undefined && { genre }),
+        ...(targetAudience !== undefined && { targetAudience }),
+        ...(status !== undefined && { status }),
+        ...(coverImageUrl !== undefined && { coverImageUrl }),
+        ...(wordCount !== undefined && { wordCount }),
+        ...(chapterCount !== undefined && { chapterCount }),
+      });
+      
+      res.json(updatedProject);
+    } catch (error) {
+      console.error("Error updating publishing project:", error);
+      res.status(500).json({ message: "Failed to update publishing project" });
+    }
+  });
+
+  // Delete publishing project
+  app.delete('/api/publishing/projects/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const projectId = parseInt(req.params.id);
+      
+      const project = await storage.getPublishingProject(projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+      
+      // Verify ownership
+      if (project.authorId !== userId) {
+        return res.status(403).json({ message: "Not authorized to delete this project" });
+      }
+      
+      await storage.deletePublishingProject(projectId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting publishing project:", error);
+      res.status(500).json({ message: "Failed to delete publishing project" });
+    }
+  });
+
   // Image proxy for external product images
   app.get('/api/image-proxy', async (req, res) => {
     try {

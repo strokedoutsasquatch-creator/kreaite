@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
+import academyLogo from "@assets/Untitled design (25)_1764274560110.png";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -10,10 +11,9 @@ export default function Header() {
   const navLinks = [
     { href: "/", label: "HOME" },
     { href: "/academy", label: "ACADEMY" },
-    { href: "/builder", label: "BUILDER" },
+    { href: "/publishing", label: "PUBLISHING" },
     { href: "/community", label: "COMMUNITY" },
     { href: "/marketplace", label: "MARKETPLACE" },
-    { href: "/survival-grid", label: "SURVIVAL GRID" },
     { href: "/about", label: "ABOUT" },
   ];
 
@@ -22,17 +22,19 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href="/" data-testid="link-home">
-            <div className="flex items-center gap-2 hover-elevate active-elevate-2 px-2 py-2 rounded-md cursor-pointer">
-              <div className="flex items-center gap-1">
-                <span className="text-primary text-2xl font-black">0</span>
-                <span className="text-primary text-2xl font-black">9</span>
-              </div>
-              <div className="hidden sm:block">
-                <div className="text-lg font-bold tracking-tight text-white">
-                  STROKE RECOVERY OS
+            <div className="flex items-center gap-3 hover-elevate active-elevate-2 px-2 py-1 rounded-md cursor-pointer">
+              <img 
+                src={academyLogo} 
+                alt="Stroke Recovery Academy" 
+                className="h-12 w-auto"
+                data-testid="img-logo"
+              />
+              <div className="hidden md:block">
+                <div className="text-sm font-bold tracking-tight text-primary">
+                  STROKE RECOVERY ACADEMY
                 </div>
                 <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                  Sasquatch Survival System
+                  Rebuild. Rewire. Rise.
                 </div>
               </div>
             </div>
