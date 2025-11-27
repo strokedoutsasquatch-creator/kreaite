@@ -9,6 +9,9 @@ import Community from "@/pages/Community";
 import Thread from "@/pages/Thread";
 import About from "@/pages/About";
 import Marketplace from "@/pages/Marketplace";
+import Academy from "@/pages/Academy";
+import Builder from "@/pages/Builder";
+import SurvivalGrid from "@/pages/SurvivalGrid";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 import SasquatchChatWidget from "@/components/SasquatchChatWidget";
@@ -26,6 +29,9 @@ function Router() {
       <Route path="/community/thread/:id" component={Thread} />
       <Route path="/about" component={About} />
       <Route path="/marketplace" component={Marketplace} />
+      <Route path="/academy" component={Academy} />
+      <Route path="/builder" component={Builder} />
+      <Route path="/survival-grid" component={SurvivalGrid} />
       <Route component={NotFound} />
     </Switch>
   );

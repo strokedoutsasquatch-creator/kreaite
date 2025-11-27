@@ -1,5 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import express from "express";
+import path from "path";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { stripeService } from "./stripeService";
@@ -45,6 +47,9 @@ async function initStripe() {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Serve stock images from attached_assets
+  app.use('/stock_images', express.static(path.join(process.cwd(), 'attached_assets', 'stock_images')));
+  
   // Setup authentication
   await setupAuth(app);
   

@@ -48,6 +48,10 @@ function ProductCard({ product }: { product: MarketplaceProduct }) {
   };
 
   const getProxiedImageUrl = (url: string) => {
+    // Local stock images don't need proxying
+    if (url.startsWith('/stock_images/')) {
+      return url;
+    }
     return `/api/image-proxy?url=${encodeURIComponent(url)}`;
   };
 
