@@ -6,6 +6,7 @@ import { stripeService } from "./stripeService";
 import { getStripeSync, getStripePublishableKey } from "./stripeClient";
 import { runMigrations } from "stripe-replit-sync";
 import { generateCoachResponse, getRandomQuote } from "./geminiService";
+import { searchAmazonProducts, getAmazonProduct, isConfigured as isAmazonConfigured } from "./amazonService";
 
 async function initStripe() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -599,6 +600,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching marketplace product:", error);
       res.status(500).json({ message: "Failed to fetch marketplace product" });
+    }
+  });
+
+  // Amazon Product API routes (admin only)
+  app.get('/api/amazon/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      res.json({ configured: isAmazonConfigured() });
+    } catch (error) {
+      console.error("Error checking Amazon status:", error);
+      res.status(500).json({ message: "Failed to check Amazon status" });
+    }
+  });
+
+  app.get('/api/amazon/search', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { keywords, category, limit } = req.query;
+      if (!keywords) {
+        return res.status(400).json({ message: "Keywords are required" });
+      }
+
+      const results = await searchAmazonProducts(
+        keywords as string,
+        category as string | undefined,
+        limit ? parseInt(limit as string) : 10
+      );
+      res.json(results);
+    } catch (error) {
+      console.error("Error searching Amazon:", error);
+      res.status(500).json({ message: "Failed to search Amazon products" });
+    }
+  });
+
+  app.post('/api/amazon/import', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { asin, categoryId, isFeatured, tags } = req.body;
+      if (!asin || !categoryId) {
+        return res.status(400).json({ message: "ASIN and categoryId are required" });
+      }
+
+      const amazonProduct = await getAmazonProduct(asin);
+      if (!amazonProduct) {
+        return res.status(404).json({ message: "Product not found on Amazon" });
+      }
+
+      const product = await storage.createMarketplaceProduct({
+        categoryId,
+        asin: amazonProduct.asin,
+        title: amazonProduct.title,
+        brand: amazonProduct.brand,
+        description: amazonProduct.description,
+        features: amazonProduct.features,
+        imageUrl: amazonProduct.imageUrl,
+        amazonUrl: amazonProduct.amazonUrl,
+        priceDisplay: amazonProduct.priceDisplay,
+        rating: amazonProduct.rating,
+        reviewCount: amazonProduct.reviewCount,
+        isFeatured: isFeatured || false,
+        isActive: true,
+        tags: tags || [],
+      });
+
+      res.json(product);
+    } catch (error) {
+      console.error("Error importing Amazon product:", error);
+      res.status(500).json({ message: "Failed to import product" });
     }
   });
 
