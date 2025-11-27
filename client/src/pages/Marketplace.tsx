@@ -172,8 +172,21 @@ export default function Marketplace() {
     queryKey: ["/api/marketplace/categories"],
   });
 
+  const buildProductsUrl = () => {
+    const params = new URLSearchParams();
+    if (selectedCategory) params.set('categoryId', selectedCategory.toString());
+    if (debouncedSearch) params.set('search', debouncedSearch);
+    const queryString = params.toString();
+    return queryString ? `/api/marketplace/products?${queryString}` : '/api/marketplace/products';
+  };
+
   const { data: products, isLoading: productsLoading } = useQuery<MarketplaceProduct[]>({
-    queryKey: ["/api/marketplace/products", { categoryId: selectedCategory, search: debouncedSearch }],
+    queryKey: ["/api/marketplace/products", selectedCategory, debouncedSearch],
+    queryFn: async () => {
+      const res = await fetch(buildProductsUrl(), { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch products');
+      return res.json();
+    },
   });
 
   const filteredProducts = products?.filter(product => {
