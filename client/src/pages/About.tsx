@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import Header from "@/components/Header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,21 @@ import nickBeforeImage from "@assets/Nick crooked smile_1764268708613.jpg";
 import nickTodayImage from "@assets/Nick_1764268830601.jpg";
 
 export default function About() {
+  useEffect(() => {
+    document.title = "About Nick Kremers - From 0% to 90% Recovery | Stroke Recovery OS";
+    
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute("content", "Nick Kremers' inspiring stroke recovery journey from 0% function to 90% recovery. Learn how the Stroke Recovery OS was born from his personal experience beating the odds.");
+    }
+    
+    const ogTitle = document.querySelector('meta[property="og:title"]');
+    if (ogTitle) ogTitle.setAttribute("content", "Nick Kremers - 0% to 90% Stroke Recovery Story");
+    
+    const ogDescription = document.querySelector('meta[property="og:description"]');
+    if (ogDescription) ogDescription.setAttribute("content", "When doctors said 'never,' Nick said 'watch me.' Discover the incredible journey from wheelchair to walking that inspired the Stroke Recovery OS.");
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
