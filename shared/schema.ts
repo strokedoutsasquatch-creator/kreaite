@@ -755,6 +755,416 @@ export const exerciseLogs = pgTable("exercise_logs", {
 });
 
 // ============================================================================
+// ENHANCED USER MANAGEMENT
+// ============================================================================
+
+export const userSettings = pgTable("user_settings", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
+  // Profile Settings
+  username: text("username").unique(),
+  displayName: text("display_name"),
+  avatarUrl: text("avatar_url"),
+  bannerUrl: text("banner_url"),
+  // Privacy Settings
+  profileVisibility: text("profile_visibility").notNull().default("public"), // public, members, private
+  showRecoveryProgress: boolean("show_recovery_progress").notNull().default(true),
+  showActivityFeed: boolean("show_activity_feed").notNull().default(true),
+  allowDirectMessages: boolean("allow_direct_messages").notNull().default(true),
+  // Notification Settings
+  emailNotifications: boolean("email_notifications").notNull().default(true),
+  pushNotifications: boolean("push_notifications").notNull().default(true),
+  reminderNotifications: boolean("reminder_notifications").notNull().default(true),
+  communityNotifications: boolean("community_notifications").notNull().default(true),
+  achievementNotifications: boolean("achievement_notifications").notNull().default(true),
+  // Accessibility Settings
+  fontSize: text("font_size").notNull().default("medium"), // small, medium, large, xlarge
+  highContrast: boolean("high_contrast").notNull().default(false),
+  reducedMotion: boolean("reduced_motion").notNull().default(false),
+  screenReader: boolean("screen_reader").notNull().default(false),
+  // Theme Settings
+  theme: text("theme").notNull().default("dark"), // dark, light, system
+  accentColor: text("accent_color").notNull().default("#FF6B35"),
+  // Recovery Preferences
+  preferredExerciseTime: text("preferred_exercise_time"), // morning, afternoon, evening
+  recoveryFocus: text("recovery_focus").array(), // upper_extremity, speech, cognitive, etc.
+  difficultyLevel: text("difficulty_level").notNull().default("adaptive"), // easy, moderate, challenging, adaptive
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// ============================================================================
+// THERAPIST SYSTEM
+// ============================================================================
+
+export const therapistProfiles = pgTable("therapist_profiles", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
+  licenseNumber: text("license_number"),
+  licenseState: text("license_state"),
+  licenseType: text("license_type"), // PT, OT, SLP, etc.
+  specializations: text("specializations").array(),
+  yearsExperience: integer("years_experience"),
+  bio: text("bio"),
+  education: text("education"),
+  certifications: text("certifications").array(),
+  acceptingPatients: boolean("accepting_patients").notNull().default(true),
+  hourlyRate: integer("hourly_rate"), // in cents
+  availableHours: jsonb("available_hours"), // { monday: ["9:00-12:00", "14:00-17:00"], ... }
+  isVerified: boolean("is_verified").notNull().default(false),
+  verifiedAt: timestamp("verified_at"),
+  rating: integer("rating"), // 1-5 scale, stored as 10-50 for precision
+  reviewCount: integer("review_count").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const patientAssignments = pgTable("patient_assignments", {
+  id: serial("id").primaryKey(),
+  therapistId: varchar("therapist_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  patientId: varchar("patient_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  status: text("status").notNull().default("active"), // pending, active, paused, completed, terminated
+  startDate: timestamp("start_date").notNull().defaultNow(),
+  endDate: timestamp("end_date"),
+  goals: text("goals").array(),
+  notes: text("notes"),
+  sessionFrequency: text("session_frequency"), // weekly, biweekly, monthly
+  nextSessionDate: timestamp("next_session_date"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const therapySessions = pgTable("therapy_sessions", {
+  id: serial("id").primaryKey(),
+  assignmentId: integer("assignment_id").notNull().references(() => patientAssignments.id, { onDelete: "cascade" }),
+  therapistId: varchar("therapist_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  patientId: varchar("patient_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  sessionType: text("session_type").notNull(), // video, in_person, phone, async_review
+  scheduledAt: timestamp("scheduled_at").notNull(),
+  startedAt: timestamp("started_at"),
+  endedAt: timestamp("ended_at"),
+  duration: integer("duration"), // minutes
+  status: text("status").notNull().default("scheduled"), // scheduled, in_progress, completed, cancelled, no_show
+  meetingUrl: text("meeting_url"),
+  recordingUrl: text("recording_url"),
+  notes: text("notes"),
+  patientNotes: text("patient_notes"),
+  exercisesPrescribed: jsonb("exercises_prescribed"),
+  progressAssessment: jsonb("progress_assessment"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const exercisePrescriptions = pgTable("exercise_prescriptions", {
+  id: serial("id").primaryKey(),
+  assignmentId: integer("assignment_id").notNull().references(() => patientAssignments.id, { onDelete: "cascade" }),
+  therapistId: varchar("therapist_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  patientId: varchar("patient_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  exerciseId: integer("exercise_id"), // links to therapeutic exercises
+  title: text("title").notNull(),
+  description: text("description"),
+  instructions: text("instructions"),
+  videoUrl: text("video_url"),
+  sets: integer("sets"),
+  reps: integer("reps"),
+  duration: integer("duration"), // seconds
+  frequency: text("frequency").notNull(), // daily, twice_daily, weekly, etc.
+  daysPerWeek: integer("days_per_week"),
+  startDate: timestamp("start_date").notNull().defaultNow(),
+  endDate: timestamp("end_date"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ============================================================================
+// ACTIVITY WALL (Social Feed)
+// ============================================================================
+
+export const activityPosts = pgTable("activity_posts", {
+  id: serial("id").primaryKey(),
+  authorId: varchar("author_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  postType: text("post_type").notNull().default("update"), // update, milestone, question, tip, celebration, pod_activity
+  visibility: text("visibility").notNull().default("public"), // public, members, pod, private
+  podId: integer("pod_id").references(() => accountabilityPods.id, { onDelete: "set null" }),
+  isPinned: boolean("is_pinned").notNull().default(false),
+  likeCount: integer("like_count").notNull().default(0),
+  commentCount: integer("comment_count").notNull().default(0),
+  shareCount: integer("share_count").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const activityMedia = pgTable("activity_media", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").notNull().references(() => activityPosts.id, { onDelete: "cascade" }),
+  mediaType: text("media_type").notNull(), // image, video, gif, sticker
+  mediaUrl: text("media_url").notNull(),
+  thumbnailUrl: text("thumbnail_url"),
+  tenorId: text("tenor_id"), // for GIFs from Tenor API
+  altText: text("alt_text"),
+  width: integer("width"),
+  height: integer("height"),
+  duration: integer("duration"), // for videos, in seconds
+  order: integer("order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const activityReactions = pgTable("activity_reactions", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").notNull().references(() => activityPosts.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  reactionType: text("reaction_type").notNull(), // like, love, celebrate, support, insightful
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const activityComments = pgTable("activity_comments", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").notNull().references(() => activityPosts.id, { onDelete: "cascade" }),
+  authorId: varchar("author_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  parentId: integer("parent_id"), // for nested replies
+  content: text("content").notNull(),
+  likeCount: integer("like_count").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// ============================================================================
+// THERAPEUTIC EXERCISE GAMES
+// ============================================================================
+
+export const therapeuticExercises = pgTable("therapeutic_exercises", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  description: text("description"),
+  category: text("category").notNull(), // upper_extremity, lower_extremity, cognitive, speech, balance, daily_living
+  subcategory: text("subcategory"), // grip_strength, shoulder_rom, finger_dexterity, memory, attention, etc.
+  difficulty: text("difficulty").notNull(), // beginner, intermediate, advanced
+  targetArea: text("target_area").array(), // shoulder, elbow, wrist, fingers, etc.
+  instructions: text("instructions"),
+  videoUrl: text("video_url"),
+  thumbnailUrl: text("thumbnail_url"),
+  gameType: text("game_type"), // tap_sequence, target_hit, word_match, memory_cards, reaction_time, etc.
+  gameConfig: jsonb("game_config"), // { duration: 60, targets: 10, speed: "medium", etc. }
+  benefits: text("benefits").array(),
+  contraindications: text("contraindications").array(),
+  estimatedMinutes: integer("estimated_minutes"),
+  caloriesBurned: integer("calories_burned"),
+  equipmentNeeded: text("equipment_needed").array(),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const exerciseSessions = pgTable("exercise_sessions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  exerciseId: integer("exercise_id").notNull().references(() => therapeuticExercises.id, { onDelete: "cascade" }),
+  prescriptionId: integer("prescription_id").references(() => exercisePrescriptions.id, { onDelete: "set null" }),
+  startedAt: timestamp("started_at").notNull().defaultNow(),
+  completedAt: timestamp("completed_at"),
+  duration: integer("duration"), // seconds
+  score: integer("score"),
+  maxScore: integer("max_score"),
+  accuracy: integer("accuracy"), // percentage 0-100
+  speed: integer("speed"), // average response time in ms
+  reps: integer("reps"),
+  sets: integer("sets"),
+  difficulty: text("difficulty"),
+  gameData: jsonb("game_data"), // detailed performance metrics
+  notes: text("notes"),
+  painLevel: integer("pain_level"), // 0-10 scale
+  effortLevel: integer("effort_level"), // 0-10 scale
+});
+
+export const exerciseScores = pgTable("exercise_scores", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  exerciseId: integer("exercise_id").notNull().references(() => therapeuticExercises.id, { onDelete: "cascade" }),
+  highScore: integer("high_score").notNull().default(0),
+  totalSessions: integer("total_sessions").notNull().default(0),
+  totalTime: integer("total_time").notNull().default(0), // seconds
+  averageScore: integer("average_score").notNull().default(0),
+  averageAccuracy: integer("average_accuracy").notNull().default(0),
+  lastPlayedAt: timestamp("last_played_at"),
+  streak: integer("streak").notNull().default(0),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// ============================================================================
+// SPEECH & COGNITIVE THERAPY
+// ============================================================================
+
+export const speechExercises = pgTable("speech_exercises", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  category: text("category").notNull(), // apraxia, aphasia, articulation, fluency, voice
+  difficulty: text("difficulty").notNull(),
+  promptType: text("prompt_type").notNull(), // word, phrase, sentence, reading, naming, repetition
+  promptContent: text("prompt_content").notNull(),
+  audioUrl: text("audio_url"), // model pronunciation
+  imageUrl: text("image_url"), // visual prompt
+  expectedResponse: text("expected_response"),
+  phonemes: text("phonemes").array(), // target sounds
+  hints: text("hints").array(),
+  order: integer("order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const cognitiveExercises = pgTable("cognitive_exercises", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  category: text("category").notNull(), // memory, attention, problem_solving, processing_speed, language
+  subcategory: text("subcategory"), // working_memory, visual_memory, sustained_attention, etc.
+  difficulty: text("difficulty").notNull(),
+  gameType: text("game_type").notNull(), // matching, sequence, sorting, word_finding, math, etc.
+  instructions: text("instructions"),
+  gameConfig: jsonb("game_config"), // { grid_size: 4, time_limit: 60, categories: ["animals"], etc. }
+  estimatedMinutes: integer("estimated_minutes"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ============================================================================
+// WEARABLE INTEGRATION
+// ============================================================================
+
+export const wearableConnections = pgTable("wearable_connections", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  provider: text("provider").notNull(), // fitbit, apple_health, google_fit, garmin, oura
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  tokenExpiresAt: timestamp("token_expires_at"),
+  deviceId: text("device_id"),
+  deviceName: text("device_name"),
+  lastSyncAt: timestamp("last_sync_at"),
+  syncEnabled: boolean("sync_enabled").notNull().default(true),
+  metricsEnabled: jsonb("metrics_enabled"), // { steps: true, heart_rate: true, sleep: true, etc. }
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const wearableMetrics = pgTable("wearable_metrics", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  connectionId: integer("connection_id").notNull().references(() => wearableConnections.id, { onDelete: "cascade" }),
+  metricType: text("metric_type").notNull(), // steps, heart_rate, sleep, calories, active_minutes, etc.
+  value: integer("value").notNull(),
+  unit: text("unit").notNull(), // count, bpm, hours, kcal, etc.
+  recordedAt: timestamp("recorded_at").notNull(),
+  metadata: jsonb("metadata"), // additional data like heart_rate_zones, sleep_stages, etc.
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ============================================================================
+// DIRECT MESSAGING
+// ============================================================================
+
+export const conversations = pgTable("conversations", {
+  id: serial("id").primaryKey(),
+  type: text("type").notNull().default("direct"), // direct, group
+  name: text("name"), // for group chats
+  createdById: varchar("created_by_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  lastMessageAt: timestamp("last_message_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const conversationParticipants = pgTable("conversation_participants", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").notNull().references(() => conversations.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  lastReadAt: timestamp("last_read_at"),
+  isMuted: boolean("is_muted").notNull().default(false),
+  joinedAt: timestamp("joined_at").notNull().defaultNow(),
+});
+
+export const directMessages = pgTable("direct_messages", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").notNull().references(() => conversations.id, { onDelete: "cascade" }),
+  senderId: varchar("sender_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  content: text("content"),
+  mediaUrl: text("media_url"),
+  mediaType: text("media_type"), // image, video, gif, file
+  tenorId: text("tenor_id"),
+  isRead: boolean("is_read").notNull().default(false),
+  isEdited: boolean("is_edited").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// ============================================================================
+// ENHANCED FORUM (Media Support)
+// ============================================================================
+
+export const forumPostMedia = pgTable("forum_post_media", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").notNull().references(() => forumPosts.id, { onDelete: "cascade" }),
+  mediaType: text("media_type").notNull(), // image, video, gif, file
+  mediaUrl: text("media_url").notNull(),
+  thumbnailUrl: text("thumbnail_url"),
+  fileName: text("file_name"),
+  fileSize: integer("file_size"),
+  tenorId: text("tenor_id"),
+  altText: text("alt_text"),
+  order: integer("order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ============================================================================
+// VIDEO SESSIONS (Telemedicine)
+// ============================================================================
+
+export const videoSessions = pgTable("video_sessions", {
+  id: serial("id").primaryKey(),
+  hostId: varchar("host_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  sessionType: text("session_type").notNull(), // therapy, pod_meeting, coaching, group_class
+  title: text("title"),
+  description: text("description"),
+  scheduledAt: timestamp("scheduled_at"),
+  startedAt: timestamp("started_at"),
+  endedAt: timestamp("ended_at"),
+  duration: integer("duration"), // minutes
+  maxParticipants: integer("max_participants").notNull().default(2),
+  meetingUrl: text("meeting_url"),
+  roomId: text("room_id"),
+  recordingUrl: text("recording_url"),
+  status: text("status").notNull().default("scheduled"), // scheduled, live, ended, cancelled
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const videoSessionParticipants = pgTable("video_session_participants", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").notNull().references(() => videoSessions.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  role: text("role").notNull().default("participant"), // host, co_host, participant
+  joinedAt: timestamp("joined_at"),
+  leftAt: timestamp("left_at"),
+  status: text("status").notNull().default("invited"), // invited, joined, left
+});
+
+// ============================================================================
+// SEO & CONTENT PAGES
+// ============================================================================
+
+export const seoPages = pgTable("seo_pages", {
+  id: serial("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  metaDescription: text("meta_description"),
+  metaKeywords: text("meta_keywords").array(),
+  ogTitle: text("og_title"),
+  ogDescription: text("og_description"),
+  ogImage: text("og_image"),
+  canonicalUrl: text("canonical_url"),
+  structuredData: jsonb("structured_data"), // JSON-LD schema.org data
+  robots: text("robots").notNull().default("index, follow"),
+  priority: integer("priority").notNull().default(5), // 1-10 for sitemap
+  changeFrequency: text("change_frequency").notNull().default("weekly"),
+  lastModified: timestamp("last_modified").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ============================================================================
 // INSERT SCHEMAS & TYPES
 // ============================================================================
 
@@ -804,6 +1214,47 @@ export const insertAiChatMessageSchema = createInsertSchema(aiChatMessages).omit
 export const insertDailyLogSchema = createInsertSchema(dailyLogs).omit({ id: true, createdAt: true });
 export const insertMarketplaceCategorySchema = createInsertSchema(marketplaceCategories).omit({ id: true, createdAt: true });
 export const insertMarketplaceProductSchema = createInsertSchema(marketplaceProducts).omit({ id: true, createdAt: true, updatedAt: true });
+
+// Enhanced User Management Insert Schemas
+export const insertUserSettingsSchema = createInsertSchema(userSettings).omit({ id: true, updatedAt: true });
+
+// Therapist System Insert Schemas
+export const insertTherapistProfileSchema = createInsertSchema(therapistProfiles).omit({ id: true, createdAt: true, updatedAt: true, isVerified: true, verifiedAt: true, rating: true, reviewCount: true });
+export const insertPatientAssignmentSchema = createInsertSchema(patientAssignments).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertTherapySessionSchema = createInsertSchema(therapySessions).omit({ id: true, createdAt: true });
+export const insertExercisePrescriptionSchema = createInsertSchema(exercisePrescriptions).omit({ id: true, createdAt: true });
+
+// Activity Wall Insert Schemas
+export const insertActivityPostSchema = createInsertSchema(activityPosts).omit({ id: true, createdAt: true, updatedAt: true, likeCount: true, commentCount: true, shareCount: true });
+export const insertActivityMediaSchema = createInsertSchema(activityMedia).omit({ id: true, createdAt: true });
+export const insertActivityReactionSchema = createInsertSchema(activityReactions).omit({ id: true, createdAt: true });
+export const insertActivityCommentSchema = createInsertSchema(activityComments).omit({ id: true, createdAt: true, updatedAt: true, likeCount: true });
+
+// Therapeutic Exercises Insert Schemas
+export const insertTherapeuticExerciseSchema = createInsertSchema(therapeuticExercises).omit({ id: true, createdAt: true });
+export const insertExerciseSessionSchema = createInsertSchema(exerciseSessions).omit({ id: true, startedAt: true });
+export const insertExerciseScoreSchema = createInsertSchema(exerciseScores).omit({ id: true, updatedAt: true });
+export const insertSpeechExerciseSchema = createInsertSchema(speechExercises).omit({ id: true, createdAt: true });
+export const insertCognitiveExerciseSchema = createInsertSchema(cognitiveExercises).omit({ id: true, createdAt: true });
+
+// Wearable Integration Insert Schemas
+export const insertWearableConnectionSchema = createInsertSchema(wearableConnections).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertWearableMetricSchema = createInsertSchema(wearableMetrics).omit({ id: true, createdAt: true });
+
+// Direct Messaging Insert Schemas
+export const insertConversationSchema = createInsertSchema(conversations).omit({ id: true, createdAt: true });
+export const insertConversationParticipantSchema = createInsertSchema(conversationParticipants).omit({ id: true, joinedAt: true });
+export const insertDirectMessageSchema = createInsertSchema(directMessages).omit({ id: true, createdAt: true, updatedAt: true, isRead: true, isEdited: true });
+
+// Enhanced Forum Insert Schemas
+export const insertForumPostMediaSchema = createInsertSchema(forumPostMedia).omit({ id: true, createdAt: true });
+
+// Video Sessions Insert Schemas
+export const insertVideoSessionSchema = createInsertSchema(videoSessions).omit({ id: true, createdAt: true });
+export const insertVideoSessionParticipantSchema = createInsertSchema(videoSessionParticipants).omit({ id: true });
+
+// SEO Insert Schemas
+export const insertSeoPageSchema = createInsertSchema(seoPages).omit({ id: true, createdAt: true, lastModified: true });
 
 // ============================================================================
 // EXPORT TYPES
@@ -886,3 +1337,67 @@ export type PodMember = typeof podMembers.$inferSelect;
 export type InsertPodMember = z.infer<typeof insertPodMemberSchema>;
 export type RecoveryMilestone = typeof recoveryMilestones.$inferSelect;
 export type UserStreak = typeof userStreaks.$inferSelect;
+
+// Enhanced User Management Types
+export type UserSettings = typeof userSettings.$inferSelect;
+export type InsertUserSettings = z.infer<typeof insertUserSettingsSchema>;
+
+// Therapist System Types
+export type TherapistProfile = typeof therapistProfiles.$inferSelect;
+export type InsertTherapistProfile = z.infer<typeof insertTherapistProfileSchema>;
+export type PatientAssignment = typeof patientAssignments.$inferSelect;
+export type InsertPatientAssignment = z.infer<typeof insertPatientAssignmentSchema>;
+export type TherapySession = typeof therapySessions.$inferSelect;
+export type InsertTherapySession = z.infer<typeof insertTherapySessionSchema>;
+export type ExercisePrescription = typeof exercisePrescriptions.$inferSelect;
+export type InsertExercisePrescription = z.infer<typeof insertExercisePrescriptionSchema>;
+
+// Activity Wall Types
+export type ActivityPost = typeof activityPosts.$inferSelect;
+export type InsertActivityPost = z.infer<typeof insertActivityPostSchema>;
+export type ActivityMedia = typeof activityMedia.$inferSelect;
+export type InsertActivityMedia = z.infer<typeof insertActivityMediaSchema>;
+export type ActivityReaction = typeof activityReactions.$inferSelect;
+export type InsertActivityReaction = z.infer<typeof insertActivityReactionSchema>;
+export type ActivityComment = typeof activityComments.$inferSelect;
+export type InsertActivityComment = z.infer<typeof insertActivityCommentSchema>;
+
+// Therapeutic Exercises Types
+export type TherapeuticExercise = typeof therapeuticExercises.$inferSelect;
+export type InsertTherapeuticExercise = z.infer<typeof insertTherapeuticExerciseSchema>;
+export type ExerciseSession = typeof exerciseSessions.$inferSelect;
+export type InsertExerciseSession = z.infer<typeof insertExerciseSessionSchema>;
+export type ExerciseScore = typeof exerciseScores.$inferSelect;
+export type InsertExerciseScore = z.infer<typeof insertExerciseScoreSchema>;
+export type SpeechExercise = typeof speechExercises.$inferSelect;
+export type InsertSpeechExercise = z.infer<typeof insertSpeechExerciseSchema>;
+export type CognitiveExercise = typeof cognitiveExercises.$inferSelect;
+export type InsertCognitiveExercise = z.infer<typeof insertCognitiveExerciseSchema>;
+
+// Wearable Integration Types
+export type WearableConnection = typeof wearableConnections.$inferSelect;
+export type InsertWearableConnection = z.infer<typeof insertWearableConnectionSchema>;
+export type WearableMetric = typeof wearableMetrics.$inferSelect;
+export type InsertWearableMetric = z.infer<typeof insertWearableMetricSchema>;
+
+// Direct Messaging Types
+export type Conversation = typeof conversations.$inferSelect;
+export type InsertConversation = z.infer<typeof insertConversationSchema>;
+export type ConversationParticipant = typeof conversationParticipants.$inferSelect;
+export type InsertConversationParticipant = z.infer<typeof insertConversationParticipantSchema>;
+export type DirectMessage = typeof directMessages.$inferSelect;
+export type InsertDirectMessage = z.infer<typeof insertDirectMessageSchema>;
+
+// Enhanced Forum Types
+export type ForumPostMedia = typeof forumPostMedia.$inferSelect;
+export type InsertForumPostMedia = z.infer<typeof insertForumPostMediaSchema>;
+
+// Video Sessions Types
+export type VideoSession = typeof videoSessions.$inferSelect;
+export type InsertVideoSession = z.infer<typeof insertVideoSessionSchema>;
+export type VideoSessionParticipant = typeof videoSessionParticipants.$inferSelect;
+export type InsertVideoSessionParticipant = z.infer<typeof insertVideoSessionParticipantSchema>;
+
+// SEO Types
+export type SeoPage = typeof seoPages.$inferSelect;
+export type InsertSeoPage = z.infer<typeof insertSeoPageSchema>;
