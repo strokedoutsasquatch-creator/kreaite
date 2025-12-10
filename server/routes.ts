@@ -1139,6 +1139,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Recovery enrollment endpoint
+  app.post('/api/recovery/enrollment', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { strokeDate, strokeType, affectedSide, mobilityLevel, handFunction, speechAbility, goals, dailyTime } = req.body;
+      
+      // 1. Update or create user profile
+      const existingProfile = await storage.getUserProfile(userId);
+      if (existingProfile) {
+        await storage.updateUserProfile(userId, {
+          strokeDate: strokeDate ? new Date(strokeDate) : null,
+          strokeType,
+          affectedSide,
+          recoveryGoals: goals,
+        });
+      } else {
+        await storage.createUserProfile({
+          userId,
+          strokeDate: strokeDate ? new Date(strokeDate) : null,
+          strokeType,
+          affectedSide,
+          recoveryGoals: goals,
+        });
+      }
+      
+      // 2. Determine program tier based on assessment
+      let tier = 'explorer';
+      if (mobilityLevel === 'independent' && (dailyTime === '60-90' || dailyTime === '90+')) {
+        tier = 'champion';
+      } else if ((mobilityLevel === 'cane' || mobilityLevel === 'independent-limited') && (dailyTime === '30-60' || dailyTime === '60-90')) {
+        tier = 'warrior';
+      }
+      
+      // 3. Find or create program for tier
+      const program = await storage.getRecoveryProgramBySlug(`recovery-university-${tier}`);
+      
+      // 4. Check for existing enrollment
+      const existingEnrollment = await storage.getUserEnrollment(userId);
+      let enrollment;
+      if (existingEnrollment) {
+        enrollment = await storage.updateUserEnrollment(existingEnrollment.id, {
+          programId: program?.id || 1,
+          status: 'active',
+        });
+      } else {
+        enrollment = await storage.createUserEnrollment({
+          userId,
+          programId: program?.id || 1,
+          status: 'active',
+          recoveryScore: 0,
+          progressPercentage: 0,
+        });
+      }
+      
+      // 5. Create initial user streak
+      await storage.createOrUpdateUserStreak(userId, {
+        currentStreak: 0,
+        longestStreak: 0,
+        totalActiveDays: 0,
+      });
+      
+      // 6. Create initial habits based on goals
+      const defaultHabits = await storage.getDefaultHabits();
+      const existingHabits = await storage.getUserHabits(userId);
+      if (existingHabits.length === 0) {
+        for (const habit of defaultHabits.slice(0, 3)) {
+          await storage.createUserHabit({
+            userId,
+            habitId: habit.id,
+            targetDays: 66,
+            status: 'active',
+          });
+        }
+      }
+      
+      res.json({ enrollment, tier, programName: program?.name || `Recovery University ${tier.charAt(0).toUpperCase() + tier.slice(1)}` });
+    } catch (error) {
+      console.error("Error creating enrollment:", error);
+      res.status(500).json({ message: "Failed to create enrollment" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

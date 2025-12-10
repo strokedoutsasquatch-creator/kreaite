@@ -32,9 +32,15 @@ import {
   ShoppingBag,
   Timer,
   Trophy,
-  Activity
+  Activity,
+  LogIn,
+  GraduationCap,
+  Loader2
 } from "lucide-react";
 import { Link } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 interface FormData {
   strokeDate: string;
@@ -415,7 +421,13 @@ function Step4Time({ formData, setFormData }: { formData: FormData; setFormData:
   );
 }
 
-function ResultsSection({ formData }: { formData: FormData }) {
+interface EnrollmentData {
+  enrollment: any;
+  tier: string;
+  programName: string;
+}
+
+function ResultsSection({ formData, enrollmentData }: { formData: FormData; enrollmentData?: EnrollmentData }) {
   const getExerciseRecommendations = () => {
     const exercises = [];
     
@@ -561,8 +573,53 @@ function ResultsSection({ formData }: { formData: FormData }) {
   const equipment = getEquipmentRecommendations();
   const timelineWeeks = getTimelineEstimate();
 
+  const getTierBadgeVariant = (tier: string) => {
+    switch (tier) {
+      case 'champion': return 'default';
+      case 'warrior': return 'secondary';
+      default: return 'outline';
+    }
+  };
+
+  const getTierDescription = (tier: string) => {
+    switch (tier) {
+      case 'champion': return "You're ready for intensive recovery with 60+ minutes daily. Maximum results incoming!";
+      case 'warrior': return "With moderate commitment and mobility, you'll make steady, strong progress.";
+      default: return "Start where you are. Every step forward builds momentum for your recovery.";
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
+      {enrollmentData && (
+        <Card className="border-primary bg-primary/10">
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
+                <GraduationCap className="h-8 w-8 text-primary" aria-hidden="true" />
+              </div>
+              <div>
+                <Badge variant={getTierBadgeVariant(enrollmentData.tier)} className="mb-2 text-sm">
+                  {enrollmentData.tier.charAt(0).toUpperCase() + enrollmentData.tier.slice(1)} Tier
+                </Badge>
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2" data-testid="text-enrollment-success">
+                  You're Enrolled in Recovery University!
+                </h2>
+                <p className="text-muted-foreground max-w-xl">
+                  {getTierDescription(enrollmentData.tier)}
+                </p>
+              </div>
+              <Link href="/recovery">
+                <Button size="lg" className="gap-2 mt-2" data-testid="button-go-to-dashboard">
+                  Go to Recovery Dashboard
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="text-center mb-12">
         <Badge className="mb-4">Protocol Generated</Badge>
         <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4" data-testid="text-results-title">
@@ -709,7 +766,31 @@ export default function Builder() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [showResults, setShowResults] = useState(false);
+  const [enrollmentData, setEnrollmentData] = useState<EnrollmentData | undefined>(undefined);
   const totalSteps = 4;
+  
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+
+  const enrollmentMutation = useMutation({
+    mutationFn: async (data: FormData) => {
+      const response = await apiRequest('/api/recovery/enrollment', {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' },
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setEnrollmentData(data);
+      setShowResults(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    onError: (error) => {
+      console.error("Enrollment error:", error);
+      setShowResults(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  });
 
   useEffect(() => {
     document.title = "Build Your Recovery Plan - Personalized Stroke Recovery | StrokeRecoveryAcademy.com";
@@ -783,8 +864,12 @@ export default function Builder() {
       setCurrentStep(currentStep + 1);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
-      setShowResults(true);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      if (isAuthenticated) {
+        enrollmentMutation.mutate(formData);
+      } else {
+        setShowResults(true);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
     }
   };
 
@@ -801,6 +886,7 @@ export default function Builder() {
     setFormData(initialFormData);
     setCurrentStep(1);
     setShowResults(false);
+    setEnrollmentData(undefined);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -830,6 +916,30 @@ export default function Builder() {
                 We'll create a personalized protocol based on Nick Kremers' proven recovery methods.
               </p>
             </div>
+
+            {!isAuthenticated && !authLoading && (
+              <Card className="max-w-2xl mx-auto mb-8 border-amber-500/50 bg-amber-500/10">
+                <CardContent className="pt-6">
+                  <div className="flex flex-col sm:flex-row items-center gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
+                      <LogIn className="h-6 w-6 text-amber-500" aria-hidden="true" />
+                    </div>
+                    <div className="flex-1 text-center sm:text-left">
+                      <h3 className="font-semibold text-foreground mb-1">Sign in to save your progress</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Log in to enroll in Recovery University and save your assessment data. You can still complete the assessment without logging in.
+                      </p>
+                    </div>
+                    <Button asChild className="gap-2" data-testid="button-login-prompt">
+                      <a href="/api/login">
+                        <LogIn className="h-4 w-4" aria-hidden="true" />
+                        Sign In
+                      </a>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {!showResults ? (
               <>
@@ -864,18 +974,27 @@ export default function Builder() {
                   )}
                   <Button
                     onClick={handleNext}
-                    disabled={!canProceed()}
+                    disabled={!canProceed() || enrollmentMutation.isPending}
                     className="gap-2 min-w-[140px]"
                     data-testid="button-next"
                   >
-                    {currentStep === totalSteps ? "Generate Protocol" : "Continue"}
-                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    {enrollmentMutation.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                        Enrolling...
+                      </>
+                    ) : (
+                      <>
+                        {currentStep === totalSteps ? "Generate Protocol" : "Continue"}
+                        <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                      </>
+                    )}
                   </Button>
                 </div>
               </>
             ) : (
               <>
-                <ResultsSection formData={formData} />
+                <ResultsSection formData={formData} enrollmentData={enrollmentData} />
                 
                 <div className="flex justify-center gap-4 mt-8">
                   <Button

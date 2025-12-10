@@ -19,6 +19,7 @@ import {
   userEnrollments, dailyCheckins, userStreaks,
   userHabits, habitLogs, recoveryHabits,
   recoveryMilestones, userMilestoneLogs,
+  userProfiles,
 } from "@shared/schema";
 import { gte } from "drizzle-orm";
 import { db } from "./db";
@@ -82,6 +83,11 @@ export interface IStorage {
   getUserMilestones(userId: string): Promise<any[]>;
   awardMilestone(userId: string, milestoneId: number, notes?: string): Promise<any>;
   getDefaultHabits(): Promise<any[]>;
+  
+  // User Profile
+  getUserProfile(userId: string): Promise<any | undefined>;
+  createUserProfile(profile: any): Promise<any>;
+  updateUserProfile(userId: string, updates: any): Promise<any | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -633,6 +639,27 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(recoveryHabits)
       .where(eq(recoveryHabits.isDefault, true))
       .orderBy(recoveryHabits.id);
+  }
+
+  async getUserProfile(userId: string): Promise<any | undefined> {
+    const [profile] = await db.select().from(userProfiles)
+      .where(eq(userProfiles.userId, userId));
+    return profile;
+  }
+
+  async createUserProfile(profile: any): Promise<any> {
+    const [newProfile] = await db.insert(userProfiles)
+      .values(profile)
+      .returning();
+    return newProfile;
+  }
+
+  async updateUserProfile(userId: string, updates: any): Promise<any | undefined> {
+    const [profile] = await db.update(userProfiles)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(userProfiles.userId, userId))
+      .returning();
+    return profile;
   }
 }
 
