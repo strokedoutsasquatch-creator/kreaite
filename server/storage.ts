@@ -20,6 +20,9 @@ import {
   userHabits, habitLogs, recoveryHabits,
   recoveryMilestones, userMilestoneLogs,
   userProfiles,
+  accountabilityPods, podMembers,
+  type AccountabilityPod, type InsertAccountabilityPod,
+  type PodMember, type InsertPodMember,
 } from "@shared/schema";
 import { gte } from "drizzle-orm";
 import { db } from "./db";
@@ -88,6 +91,16 @@ export interface IStorage {
   getUserProfile(userId: string): Promise<any | undefined>;
   createUserProfile(profile: any): Promise<any>;
   updateUserProfile(userId: string, updates: any): Promise<any | undefined>;
+  
+  // Accountability Pods
+  getAccountabilityPod(podId: number): Promise<AccountabilityPod | null>;
+  getUserPod(userId: string): Promise<AccountabilityPod | null>;
+  getPodMembers(podId: number): Promise<any[]>;
+  createPod(pod: InsertAccountabilityPod): Promise<AccountabilityPod>;
+  joinPod(userId: string, podId: number): Promise<PodMember>;
+  leavePod(userId: string, podId: number): Promise<void>;
+  getOpenPods(): Promise<AccountabilityPod[]>;
+  getRecentPodActivity(podId: number, limit?: number): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -660,6 +673,130 @@ export class DatabaseStorage implements IStorage {
       .where(eq(userProfiles.userId, userId))
       .returning();
     return profile;
+  }
+
+  // Accountability Pod Methods
+  async getAccountabilityPod(podId: number): Promise<AccountabilityPod | null> {
+    const [pod] = await db.select().from(accountabilityPods)
+      .where(eq(accountabilityPods.id, podId));
+    return pod || null;
+  }
+
+  async getUserPod(userId: string): Promise<AccountabilityPod | null> {
+    const [membership] = await db.select({
+      pod: accountabilityPods
+    })
+      .from(podMembers)
+      .innerJoin(accountabilityPods, eq(podMembers.podId, accountabilityPods.id))
+      .where(eq(podMembers.userId, userId));
+    return membership?.pod || null;
+  }
+
+  async getPodMembers(podId: number): Promise<any[]> {
+    const members = await db.select({
+      member: podMembers,
+      user: users
+    })
+      .from(podMembers)
+      .innerJoin(users, eq(podMembers.userId, users.id))
+      .where(eq(podMembers.podId, podId))
+      .orderBy(podMembers.joinedAt);
+    
+    return members.map(m => ({
+      ...m.member,
+      firstName: m.user.firstName,
+      lastName: m.user.lastName,
+      profileImageUrl: m.user.profileImageUrl,
+    }));
+  }
+
+  async createPod(pod: InsertAccountabilityPod): Promise<AccountabilityPod> {
+    const [newPod] = await db.insert(accountabilityPods)
+      .values({ ...pod, memberCount: 0 })
+      .returning();
+    return newPod;
+  }
+
+  async joinPod(userId: string, podId: number): Promise<PodMember> {
+    const existing = await db.select().from(podMembers)
+      .where(and(
+        eq(podMembers.userId, userId),
+        eq(podMembers.podId, podId)
+      ));
+    
+    if (existing.length > 0) {
+      return existing[0];
+    }
+    
+    const [member] = await db.insert(podMembers)
+      .values({ userId, podId, role: 'member' })
+      .returning();
+    
+    await db.update(accountabilityPods)
+      .set({ memberCount: sql`${accountabilityPods.memberCount} + 1` })
+      .where(eq(accountabilityPods.id, podId));
+    
+    return member;
+  }
+
+  async leavePod(userId: string, podId: number): Promise<void> {
+    const result = await db.delete(podMembers)
+      .where(and(
+        eq(podMembers.userId, userId),
+        eq(podMembers.podId, podId)
+      ));
+    
+    await db.update(accountabilityPods)
+      .set({ memberCount: sql`GREATEST(${accountabilityPods.memberCount} - 1, 0)` })
+      .where(eq(accountabilityPods.id, podId));
+  }
+
+  async getOpenPods(): Promise<AccountabilityPod[]> {
+    return db.select().from(accountabilityPods)
+      .where(and(
+        eq(accountabilityPods.isActive, true),
+        eq(accountabilityPods.isPrivate, false),
+        sql`${accountabilityPods.memberCount} < ${accountabilityPods.maxMembers}`
+      ))
+      .orderBy(desc(accountabilityPods.createdAt));
+  }
+
+  async getRecentPodActivity(podId: number, limit: number = 20): Promise<any[]> {
+    const members = await db.select().from(podMembers)
+      .where(eq(podMembers.podId, podId));
+    
+    if (members.length === 0) return [];
+    
+    const memberIds = members.map(m => m.userId);
+    
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const checkins = await db.select({
+      checkin: dailyCheckins,
+      user: users
+    })
+      .from(dailyCheckins)
+      .innerJoin(users, eq(dailyCheckins.userId, users.id))
+      .where(and(
+        sql`${dailyCheckins.userId} IN ${memberIds}`,
+        gte(dailyCheckins.checkinDate, sevenDaysAgo)
+      ))
+      .orderBy(desc(dailyCheckins.checkinDate))
+      .limit(limit);
+    
+    return checkins.map(c => ({
+      id: c.checkin.id,
+      type: 'checkin',
+      userId: c.checkin.userId,
+      firstName: c.user.firstName,
+      lastName: c.user.lastName,
+      profileImageUrl: c.user.profileImageUrl,
+      moodScore: c.checkin.moodScore,
+      energyScore: c.checkin.energyScore,
+      winsToday: c.checkin.winsToday,
+      createdAt: c.checkin.checkinDate,
+    }));
   }
 }
 

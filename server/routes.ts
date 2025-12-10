@@ -1222,6 +1222,152 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================================================
+  // ACCOUNTABILITY PODS API
+  // ============================================================================
+
+  // Get open pods for joining
+  app.get('/api/pods', isAuthenticated, async (req: any, res) => {
+    try {
+      const pods = await storage.getOpenPods();
+      res.json(pods);
+    } catch (error) {
+      console.error("Error fetching pods:", error);
+      res.status(500).json({ message: "Failed to fetch pods" });
+    }
+  });
+
+  // Get user's current pod
+  app.get('/api/user/pod', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const pod = await storage.getUserPod(userId);
+      if (!pod) {
+        return res.json(null);
+      }
+      const members = await storage.getPodMembers(pod.id);
+      res.json({ ...pod, members });
+    } catch (error) {
+      console.error("Error fetching user pod:", error);
+      res.status(500).json({ message: "Failed to fetch user pod" });
+    }
+  });
+
+  // Get pod details
+  app.get('/api/pods/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const podId = parseInt(req.params.id);
+      const pod = await storage.getAccountabilityPod(podId);
+      if (!pod) {
+        return res.status(404).json({ message: "Pod not found" });
+      }
+      res.json(pod);
+    } catch (error) {
+      console.error("Error fetching pod:", error);
+      res.status(500).json({ message: "Failed to fetch pod" });
+    }
+  });
+
+  // Get pod members
+  app.get('/api/pods/:id/members', isAuthenticated, async (req: any, res) => {
+    try {
+      const podId = parseInt(req.params.id);
+      const members = await storage.getPodMembers(podId);
+      res.json(members);
+    } catch (error) {
+      console.error("Error fetching pod members:", error);
+      res.status(500).json({ message: "Failed to fetch pod members" });
+    }
+  });
+
+  // Get pod activity feed
+  app.get('/api/pods/:id/activity', isAuthenticated, async (req: any, res) => {
+    try {
+      const podId = parseInt(req.params.id);
+      const limit = parseInt(req.query.limit as string) || 20;
+      const activity = await storage.getRecentPodActivity(podId, limit);
+      res.json(activity);
+    } catch (error) {
+      console.error("Error fetching pod activity:", error);
+      res.status(500).json({ message: "Failed to fetch pod activity" });
+    }
+  });
+
+  // Create a new pod
+  app.post('/api/pods', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { name, description, focusArea, meetingSchedule, isPrivate, maxMembers } = req.body;
+      
+      if (!name) {
+        return res.status(400).json({ message: "Pod name is required" });
+      }
+      
+      const pod = await storage.createPod({
+        name,
+        description: description || null,
+        leaderId: userId,
+        focusArea: focusArea || null,
+        meetingSchedule: meetingSchedule || null,
+        isPrivate: isPrivate || false,
+        maxMembers: maxMembers || 6,
+        isActive: true,
+      });
+      
+      // Automatically join the pod as creator
+      await storage.joinPod(userId, pod.id);
+      
+      res.json(pod);
+    } catch (error) {
+      console.error("Error creating pod:", error);
+      res.status(500).json({ message: "Failed to create pod" });
+    }
+  });
+
+  // Join a pod
+  app.post('/api/pods/:id/join', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const podId = parseInt(req.params.id);
+      
+      // Check if pod exists and has space
+      const pod = await storage.getAccountabilityPod(podId);
+      if (!pod) {
+        return res.status(404).json({ message: "Pod not found" });
+      }
+      
+      if (pod.memberCount >= pod.maxMembers) {
+        return res.status(400).json({ message: "Pod is full" });
+      }
+      
+      // Check if user is already in a pod
+      const existingPod = await storage.getUserPod(userId);
+      if (existingPod) {
+        return res.status(400).json({ message: "You are already in a pod. Leave your current pod first." });
+      }
+      
+      const member = await storage.joinPod(userId, podId);
+      res.json(member);
+    } catch (error) {
+      console.error("Error joining pod:", error);
+      res.status(500).json({ message: "Failed to join pod" });
+    }
+  });
+
+  // Leave a pod
+  app.post('/api/pods/:id/leave', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const podId = parseInt(req.params.id);
+      
+      await storage.leavePod(userId, podId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error leaving pod:", error);
+      res.status(500).json({ message: "Failed to leave pod" });
+    }
+  });
+
   app.post('/api/admin/seed-recovery-data', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);

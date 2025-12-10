@@ -678,6 +678,8 @@ export const insertDailyCheckinSchema = createInsertSchema(dailyCheckins).omit({
 export const insertUserHabitSchema = createInsertSchema(userHabits).omit({ id: true, currentStreak: true, longestStreak: true, totalCompletions: true });
 export const insertHabitLogSchema = createInsertSchema(habitLogs).omit({ id: true, createdAt: true });
 export const insertRecoveryExperimentSchema = createInsertSchema(recoveryExperiments).omit({ id: true, createdAt: true });
+export const insertAccountabilityPodSchema = createInsertSchema(accountabilityPods).omit({ id: true, createdAt: true, memberCount: true });
+export const insertPodMemberSchema = createInsertSchema(podMembers).omit({ id: true, joinedAt: true });
 
 export const insertPublishingProjectSchema = createInsertSchema(publishingProjects).omit({ id: true, createdAt: true, updatedAt: true, wordCount: true, chapterCount: true });
 export const insertManuscriptChapterSchema = createInsertSchema(manuscriptChapters).omit({ id: true, createdAt: true, updatedAt: true, wordCount: true });
@@ -782,5 +784,8 @@ export type UserHabit = typeof userHabits.$inferSelect;
 export type HabitLog = typeof habitLogs.$inferSelect;
 export type RecoveryExperiment = typeof recoveryExperiments.$inferSelect;
 export type AccountabilityPod = typeof accountabilityPods.$inferSelect;
+export type InsertAccountabilityPod = z.infer<typeof insertAccountabilityPodSchema>;
+export type PodMember = typeof podMembers.$inferSelect;
+export type InsertPodMember = z.infer<typeof insertPodMemberSchema>;
 export type RecoveryMilestone = typeof recoveryMilestones.$inferSelect;
 export type UserStreak = typeof userStreaks.$inferSelect;

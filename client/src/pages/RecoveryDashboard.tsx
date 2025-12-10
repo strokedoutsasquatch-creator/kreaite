@@ -10,10 +10,21 @@ import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Link } from "wouter";
 import { 
   Flame, Trophy, BookOpen, MessageCircle, Grid3X3, ShoppingBag, Users,
-  CheckCircle2, Target, Star, TrendingUp, Calendar, Heart, Zap, LogOut
+  CheckCircle2, Target, Star, TrendingUp, Calendar, Heart, Zap, LogOut,
+  Plus, UserPlus, DoorOpen, Smile, Activity
 } from "lucide-react";
 
 const motivationalQuotes = [
@@ -35,9 +46,27 @@ export default function RecoveryDashboard() {
     challengesToday: "",
     gratitude: "",
   });
+  const [createPodOpen, setCreatePodOpen] = useState(false);
+  const [newPodName, setNewPodName] = useState("");
+  const [newPodDescription, setNewPodDescription] = useState("");
+  const [newPodFocus, setNewPodFocus] = useState("");
 
   const { data: dashboard, isLoading } = useQuery<any>({
     queryKey: ["/api/recovery/dashboard"],
+  });
+
+  const { data: userPod } = useQuery<any>({
+    queryKey: ["/api/user/pod"],
+  });
+
+  const { data: openPods } = useQuery<any[]>({
+    queryKey: ["/api/pods"],
+    enabled: !userPod,
+  });
+
+  const { data: podActivity } = useQuery<any[]>({
+    queryKey: ["/api/pods", userPod?.id, "activity"],
+    enabled: !!userPod?.id,
   });
 
   const checkinMutation = useMutation({
@@ -61,6 +90,61 @@ export default function RecoveryDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/recovery/dashboard"] });
     },
   });
+
+  const createPodMutation = useMutation({
+    mutationFn: async (data: { name: string; description: string; focusArea: string }) => {
+      return apiRequest("/api/pods", { method: "POST", body: JSON.stringify(data) });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user/pod"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/pods"] });
+      setCreatePodOpen(false);
+      setNewPodName("");
+      setNewPodDescription("");
+      setNewPodFocus("");
+      toast({ title: "Pod created!", description: "You are now the leader of your pod." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Could not create pod", variant: "destructive" });
+    },
+  });
+
+  const joinPodMutation = useMutation({
+    mutationFn: async (podId: number) => {
+      return apiRequest(`/api/pods/${podId}/join`, { method: "POST" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user/pod"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/pods"] });
+      toast({ title: "Joined pod!", description: "You're now part of an accountability pod." });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error?.message || "Could not join pod", variant: "destructive" });
+    },
+  });
+
+  const leavePodMutation = useMutation({
+    mutationFn: async (podId: number) => {
+      return apiRequest(`/api/pods/${podId}/leave`, { method: "POST" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user/pod"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/pods"] });
+      toast({ title: "Left pod", description: "You've left the accountability pod." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Could not leave pod", variant: "destructive" });
+    },
+  });
+
+  const handleCreatePod = () => {
+    if (!newPodName.trim()) return;
+    createPodMutation.mutate({
+      name: newPodName,
+      description: newPodDescription,
+      focusArea: newPodFocus,
+    });
+  };
 
   const handleCheckinSubmit = () => {
     checkinMutation.mutate(checkinForm);
@@ -430,6 +514,226 @@ export default function RecoveryDashboard() {
             )}
           </Card>
         </div>
+
+        {/* Accountability Pod Section */}
+        <Card className="bg-gray-900 border-gray-800 p-6 mb-8" data-testid="card-accountability-pod">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <Users className="h-5 w-5 text-orange-500" />
+              My Accountability Pod
+            </h2>
+            {userPod && (
+              <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">
+                {userPod.memberCount}/{userPod.maxMembers} members
+              </Badge>
+            )}
+          </div>
+
+          {userPod ? (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-1" data-testid="text-pod-name">{userPod.name}</h3>
+                {userPod.description && (
+                  <p className="text-sm text-gray-400 mb-3">{userPod.description}</p>
+                )}
+                {userPod.focusArea && (
+                  <Badge className="bg-gray-800 text-gray-300 mb-4">{userPod.focusArea}</Badge>
+                )}
+              </div>
+
+              {/* Pod Members */}
+              <div>
+                <div className="text-sm text-gray-400 mb-3">Pod Members</div>
+                <div className="flex flex-wrap gap-3" data-testid="pod-members-list">
+                  {userPod.members?.map((member: any) => (
+                    <div 
+                      key={member.id} 
+                      className="flex items-center gap-2 bg-gray-800/50 rounded-full pr-3"
+                      data-testid={`pod-member-${member.id}`}
+                    >
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={member.profileImageUrl} />
+                        <AvatarFallback className="bg-orange-500/20 text-orange-400 text-xs">
+                          {member.firstName?.[0] || "?"}{member.lastName?.[0] || ""}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm text-white">
+                        {member.firstName || "Member"}
+                        {member.role === "leader" && (
+                          <Star className="h-3 w-3 inline ml-1 text-orange-500" />
+                        )}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Pod Activity Feed */}
+              {podActivity && podActivity.length > 0 && (
+                <div>
+                  <div className="text-sm text-gray-400 mb-3 flex items-center gap-2">
+                    <Activity className="h-4 w-4" />
+                    Recent Activity
+                  </div>
+                  <div className="space-y-2" data-testid="pod-activity-feed">
+                    {podActivity.slice(0, 5).map((activity: any) => (
+                      <div 
+                        key={activity.id} 
+                        className="flex items-center gap-3 p-3 bg-gray-800/30 rounded-lg"
+                        data-testid={`activity-${activity.id}`}
+                      >
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={activity.profileImageUrl} />
+                          <AvatarFallback className="bg-orange-500/20 text-orange-400 text-xs">
+                            {activity.firstName?.[0] || "?"}{activity.lastName?.[0] || ""}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-white">{activity.firstName || "Member"}</span>
+                            {activity.type === "checkin" && (
+                              <Badge className="bg-green-500/20 text-green-400 text-xs">
+                                <CheckCircle2 className="h-3 w-3 mr-1" />
+                                Checked in
+                              </Badge>
+                            )}
+                          </div>
+                          {activity.winsToday && (
+                            <p className="text-xs text-gray-400 truncate">{activity.winsToday}</p>
+                          )}
+                          {activity.moodScore && (
+                            <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                              <Smile className="h-3 w-3" />
+                              Mood: {activity.moodScore}/10
+                              <Zap className="h-3 w-3 ml-2" />
+                              Energy: {activity.energyScore}/10
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <Button 
+                variant="outline" 
+                onClick={() => leavePodMutation.mutate(userPod.id)}
+                disabled={leavePodMutation.isPending}
+                className="border-gray-700 text-gray-400 hover:text-white hover:border-gray-500"
+                data-testid="button-leave-pod"
+              >
+                <DoorOpen className="h-4 w-4 mr-2" />
+                {leavePodMutation.isPending ? "Leaving..." : "Leave Pod"}
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="text-center py-4">
+                <Users className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-400 mb-2">Join an accountability pod for peer support</p>
+                <p className="text-xs text-gray-500">Stay motivated with fellow recovery warriors</p>
+              </div>
+
+              {/* Open Pods to Join */}
+              {openPods && openPods.length > 0 && (
+                <div>
+                  <div className="text-sm text-gray-400 mb-3">Available Pods</div>
+                  <div className="space-y-2" data-testid="open-pods-list">
+                    {openPods.slice(0, 3).map((pod: any) => (
+                      <div 
+                        key={pod.id}
+                        className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg"
+                        data-testid={`open-pod-${pod.id}`}
+                      >
+                        <div>
+                          <div className="font-medium text-white">{pod.name}</div>
+                          <div className="text-xs text-gray-500">
+                            {pod.memberCount}/{pod.maxMembers} members
+                            {pod.focusArea && ` • ${pod.focusArea}`}
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => joinPodMutation.mutate(pod.id)}
+                          disabled={joinPodMutation.isPending}
+                          className="bg-orange-500 hover:bg-orange-600 text-white"
+                          data-testid={`button-join-pod-${pod.id}`}
+                        >
+                          <UserPlus className="h-4 w-4 mr-1" />
+                          Join
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Create Pod */}
+              <div className="flex justify-center gap-3">
+                <Dialog open={createPodOpen} onOpenChange={setCreatePodOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      className="bg-orange-500 hover:bg-orange-600 text-white"
+                      data-testid="button-create-pod"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create a Pod
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-gray-900 border-gray-800 text-white">
+                    <DialogHeader>
+                      <DialogTitle className="text-white">Create Accountability Pod</DialogTitle>
+                      <DialogDescription className="text-gray-400">
+                        Start a pod and invite other warriors to join your recovery journey.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 mt-4">
+                      <div>
+                        <label className="text-sm text-gray-400 mb-2 block">Pod Name *</label>
+                        <Input
+                          placeholder="e.g., Morning Warriors"
+                          value={newPodName}
+                          onChange={(e) => setNewPodName(e.target.value)}
+                          className="bg-gray-800 border-gray-700 text-white"
+                          data-testid="input-pod-name"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm text-gray-400 mb-2 block">Description</label>
+                        <Textarea
+                          placeholder="What's your pod about?"
+                          value={newPodDescription}
+                          onChange={(e) => setNewPodDescription(e.target.value)}
+                          className="bg-gray-800 border-gray-700 text-white"
+                          data-testid="input-pod-description"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm text-gray-400 mb-2 block">Focus Area</label>
+                        <Input
+                          placeholder="e.g., Physical Therapy, Mindfulness"
+                          value={newPodFocus}
+                          onChange={(e) => setNewPodFocus(e.target.value)}
+                          className="bg-gray-800 border-gray-700 text-white"
+                          data-testid="input-pod-focus"
+                        />
+                      </div>
+                      <Button
+                        onClick={handleCreatePod}
+                        disabled={createPodMutation.isPending || !newPodName.trim()}
+                        className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+                        data-testid="button-confirm-create-pod"
+                      >
+                        {createPodMutation.isPending ? "Creating..." : "Create Pod"}
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+          )}
+        </Card>
 
         <Card className="bg-gray-900 border-gray-800 p-6 mb-8" data-testid="card-ai-coach">
           <div className="flex items-center justify-between mb-4">
