@@ -482,8 +482,202 @@ export const creatorPayouts = pgTable("creator_payouts", {
 });
 
 // ============================================================================
+// RECOVERY UNIVERSITY - Learning Programs
+// ============================================================================
+
+export const recoveryPrograms = pgTable("recovery_programs", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  description: text("description"),
+  tier: text("tier").notNull(),
+  difficulty: text("difficulty").notNull(),
+  estimatedWeeks: integer("estimated_weeks"),
+  moduleCount: integer("module_count").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const programModules = pgTable("program_modules", {
+  id: serial("id").primaryKey(),
+  programId: integer("program_id").notNull().references(() => recoveryPrograms.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  order: integer("order").notNull(),
+  lessonCount: integer("lesson_count").notNull().default(0),
+  estimatedMinutes: integer("estimated_minutes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const programLessons = pgTable("program_lessons", {
+  id: serial("id").primaryKey(),
+  moduleId: integer("module_id").notNull().references(() => programModules.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  content: text("content"),
+  videoUrl: text("video_url"),
+  order: integer("order").notNull(),
+  lessonType: text("lesson_type").notNull(),
+  estimatedMinutes: integer("estimated_minutes"),
+  resources: jsonb("resources"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const userEnrollments = pgTable("user_enrollments", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  programId: integer("program_id").notNull().references(() => recoveryPrograms.id),
+  currentModuleId: integer("current_module_id").references(() => programModules.id),
+  currentLessonId: integer("current_lesson_id").references(() => programLessons.id),
+  completedModuleIds: integer("completed_module_ids").array(),
+  completedLessonIds: integer("completed_lesson_ids").array(),
+  progressPercentage: integer("progress_percentage").notNull().default(0),
+  recoveryScore: integer("recovery_score").notNull().default(0),
+  status: text("status").notNull().default("active"),
+  enrolledAt: timestamp("enrolled_at").notNull().defaultNow(),
+  lastActivityAt: timestamp("last_activity_at").notNull().defaultNow(),
+  graduatedAt: timestamp("graduated_at"),
+});
+
+// ============================================================================
+// RECOVERY UNIVERSITY - Milestones & Achievements
+// ============================================================================
+
+export const recoveryMilestones = pgTable("recovery_milestones", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  category: text("category").notNull(),
+  iconUrl: text("icon_url"),
+  badgeUrl: text("badge_url"),
+  pointsAwarded: integer("points_awarded").notNull().default(0),
+  order: integer("order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const userMilestoneLogs = pgTable("user_milestone_logs", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  milestoneId: integer("milestone_id").notNull().references(() => recoveryMilestones.id),
+  celebrationNotes: text("celebration_notes"),
+  achievedAt: timestamp("achieved_at").notNull().defaultNow(),
+});
+
+// ============================================================================
+// RECOVERY UNIVERSITY - Habits & Streaks
+// ============================================================================
+
+export const recoveryHabits = pgTable("recovery_habits", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  category: text("category").notNull(),
+  frequency: text("frequency").notNull().default("daily"),
+  targetDays: integer("target_days").notNull().default(66),
+  isDefault: boolean("is_default").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const userHabits = pgTable("user_habits", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  habitId: integer("habit_id").notNull().references(() => recoveryHabits.id),
+  customName: text("custom_name"),
+  startDate: timestamp("start_date").notNull().defaultNow(),
+  targetDays: integer("target_days").notNull().default(66),
+  currentStreak: integer("current_streak").notNull().default(0),
+  longestStreak: integer("longest_streak").notNull().default(0),
+  totalCompletions: integer("total_completions").notNull().default(0),
+  status: text("status").notNull().default("active"),
+  completedAt: timestamp("completed_at"),
+});
+
+export const habitLogs = pgTable("habit_logs", {
+  id: serial("id").primaryKey(),
+  userHabitId: integer("user_habit_id").notNull().references(() => userHabits.id, { onDelete: "cascade" }),
+  logDate: timestamp("log_date").notNull(),
+  isCompleted: boolean("is_completed").notNull().default(false),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const dailyCheckins = pgTable("daily_checkins", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  checkinDate: timestamp("checkin_date").notNull(),
+  moodScore: integer("mood_score"),
+  energyScore: integer("energy_score"),
+  painScore: integer("pain_score"),
+  effortScore: integer("effort_score"),
+  sleepHours: integer("sleep_hours"),
+  exerciseMinutes: integer("exercise_minutes"),
+  winsToday: text("wins_today"),
+  challengesToday: text("challenges_today"),
+  gratitude: text("gratitude"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const userStreaks = pgTable("user_streaks", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
+  currentStreak: integer("current_streak").notNull().default(0),
+  longestStreak: integer("longest_streak").notNull().default(0),
+  lastActivityDate: timestamp("last_activity_date"),
+  totalActiveDays: integer("total_active_days").notNull().default(0),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// ============================================================================
+// RECOVERY UNIVERSITY - Accountability & Community
+// ============================================================================
+
+export const accountabilityPods = pgTable("accountability_pods", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  leaderId: varchar("leader_id").references(() => users.id),
+  maxMembers: integer("max_members").notNull().default(6),
+  memberCount: integer("member_count").notNull().default(0),
+  focusArea: text("focus_area"),
+  meetingSchedule: text("meeting_schedule"),
+  isPrivate: boolean("is_private").notNull().default(false),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const podMembers = pgTable("pod_members", {
+  id: serial("id").primaryKey(),
+  podId: integer("pod_id").notNull().references(() => accountabilityPods.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  role: text("role").notNull().default("member"),
+  joinedAt: timestamp("joined_at").notNull().defaultNow(),
+});
+
+export const recoveryExperiments = pgTable("recovery_experiments", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  category: text("category").notNull(),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date"),
+  outcome: text("outcome"),
+  notes: text("notes"),
+  rating: integer("rating"),
+  wouldRecommend: boolean("would_recommend"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ============================================================================
 // INSERT SCHEMAS & TYPES
 // ============================================================================
+
+// Recovery University Insert Schemas
+export const insertRecoveryProgramSchema = createInsertSchema(recoveryPrograms).omit({ id: true, createdAt: true });
+export const insertUserEnrollmentSchema = createInsertSchema(userEnrollments).omit({ id: true, enrolledAt: true, lastActivityAt: true });
+export const insertDailyCheckinSchema = createInsertSchema(dailyCheckins).omit({ id: true, createdAt: true });
+export const insertUserHabitSchema = createInsertSchema(userHabits).omit({ id: true, currentStreak: true, longestStreak: true, totalCompletions: true });
+export const insertHabitLogSchema = createInsertSchema(habitLogs).omit({ id: true, createdAt: true });
+export const insertRecoveryExperimentSchema = createInsertSchema(recoveryExperiments).omit({ id: true, createdAt: true });
 
 export const insertPublishingProjectSchema = createInsertSchema(publishingProjects).omit({ id: true, createdAt: true, updatedAt: true, wordCount: true, chapterCount: true });
 export const insertManuscriptChapterSchema = createInsertSchema(manuscriptChapters).omit({ id: true, createdAt: true, updatedAt: true, wordCount: true });
@@ -577,3 +771,16 @@ export type CoursePurchase = typeof coursePurchases.$inferSelect;
 export type InsertCoursePurchase = z.infer<typeof insertCoursePurchaseSchema>;
 export type CreatorPayout = typeof creatorPayouts.$inferSelect;
 export type InsertCreatorPayout = z.infer<typeof insertCreatorPayoutSchema>;
+
+// Recovery University Types
+export type RecoveryProgram = typeof recoveryPrograms.$inferSelect;
+export type InsertRecoveryProgram = z.infer<typeof insertRecoveryProgramSchema>;
+export type UserEnrollment = typeof userEnrollments.$inferSelect;
+export type DailyCheckin = typeof dailyCheckins.$inferSelect;
+export type InsertDailyCheckin = z.infer<typeof insertDailyCheckinSchema>;
+export type UserHabit = typeof userHabits.$inferSelect;
+export type HabitLog = typeof habitLogs.$inferSelect;
+export type RecoveryExperiment = typeof recoveryExperiments.$inferSelect;
+export type AccountabilityPod = typeof accountabilityPods.$inferSelect;
+export type RecoveryMilestone = typeof recoveryMilestones.$inferSelect;
+export type UserStreak = typeof userStreaks.$inferSelect;
