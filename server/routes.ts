@@ -1473,6 +1473,141 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reminders
+  app.get('/api/reminders', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const reminders = await storage.getUserReminders(userId);
+      res.json(reminders);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch reminders" });
+    }
+  });
+
+  app.post('/api/reminders', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const reminder = await storage.createReminder({ ...req.body, userId });
+      res.json(reminder);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create reminder" });
+    }
+  });
+
+  app.patch('/api/reminders/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const reminder = await storage.updateReminder(parseInt(req.params.id), req.body);
+      res.json(reminder);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update reminder" });
+    }
+  });
+
+  app.delete('/api/reminders/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      await storage.deleteReminder(parseInt(req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete reminder" });
+    }
+  });
+
+  // Stand Goals
+  app.get('/api/wellness/stand-goal', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const goal = await storage.getUserStandGoal(userId);
+      const count = await storage.getTodayStandCount(userId);
+      res.json({ goal, todayCount: count });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch stand goal" });
+    }
+  });
+
+  app.post('/api/wellness/stand-goal', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const goal = await storage.createOrUpdateStandGoal(userId, req.body);
+      res.json(goal);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to save stand goal" });
+    }
+  });
+
+  app.post('/api/wellness/stand-log', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const log = await storage.logStand(userId, req.body.duration);
+      res.json(log);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to log stand" });
+    }
+  });
+
+  // Hydration Goals
+  app.get('/api/wellness/hydration-goal', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const goal = await storage.getUserHydrationGoal(userId);
+      const amount = await storage.getTodayHydration(userId);
+      res.json({ goal, todayAmount: amount });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch hydration goal" });
+    }
+  });
+
+  app.post('/api/wellness/hydration-goal', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const goal = await storage.createOrUpdateHydrationGoal(userId, req.body);
+      res.json(goal);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to save hydration goal" });
+    }
+  });
+
+  app.post('/api/wellness/hydration-log', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const log = await storage.logHydration(userId, req.body.amount);
+      res.json(log);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to log hydration" });
+    }
+  });
+
+  // Exercise Goals
+  app.get('/api/wellness/exercise-goal', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const goal = await storage.getUserExerciseGoal(userId);
+      const duration = await storage.getTodayExercise(userId);
+      res.json({ goal, todayDuration: duration });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch exercise goal" });
+    }
+  });
+
+  app.post('/api/wellness/exercise-goal', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const goal = await storage.createOrUpdateExerciseGoal(userId, req.body);
+      res.json(goal);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to save exercise goal" });
+    }
+  });
+
+  app.post('/api/wellness/exercise-log', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const log = await storage.logExercise(userId, req.body.type, req.body.duration, req.body.intensity);
+      res.json(log);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to log exercise" });
+    }
+  });
+
   app.post('/api/admin/seed-recovery-data', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);

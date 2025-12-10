@@ -21,12 +21,15 @@ import {
   recoveryMilestones, userMilestoneLogs,
   userProfiles,
   accountabilityPods, podMembers,
+  recoveryReminders, reminderLogs,
+  standGoals, standLogs,
+  hydrationGoals, hydrationLogs,
+  exerciseGoals, exerciseLogs,
   type AccountabilityPod, type InsertAccountabilityPod,
   type PodMember, type InsertPodMember,
 } from "@shared/schema";
-import { gte } from "drizzle-orm";
 import { db } from "./db";
-import { eq, desc, and, sql, count, ilike, or } from "drizzle-orm";
+import { eq, desc, and, sql, count, ilike, or, gte, lt } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -106,6 +109,31 @@ export interface IStorage {
   leavePod(userId: string, podId: number): Promise<void>;
   getOpenPods(): Promise<AccountabilityPod[]>;
   getRecentPodActivity(podId: number, limit?: number): Promise<any[]>;
+  
+  // Reminders & Wellness
+  getUserReminders(userId: string): Promise<any[]>;
+  createReminder(reminder: any): Promise<any>;
+  updateReminder(id: number, updates: any): Promise<any>;
+  deleteReminder(id: number): Promise<boolean>;
+  logReminderAction(log: any): Promise<any>;
+  
+  // Stand Goals
+  getUserStandGoal(userId: string): Promise<any | undefined>;
+  createOrUpdateStandGoal(userId: string, goal: any): Promise<any>;
+  logStand(userId: string, duration?: number): Promise<any>;
+  getTodayStandCount(userId: string): Promise<number>;
+  
+  // Hydration Goals
+  getUserHydrationGoal(userId: string): Promise<any | undefined>;
+  createOrUpdateHydrationGoal(userId: string, goal: any): Promise<any>;
+  logHydration(userId: string, amount: number): Promise<any>;
+  getTodayHydration(userId: string): Promise<number>;
+  
+  // Exercise Goals
+  getUserExerciseGoal(userId: string): Promise<any | undefined>;
+  createOrUpdateExerciseGoal(userId: string, goal: any): Promise<any>;
+  logExercise(userId: string, type: string, duration: number, intensity?: string): Promise<any>;
+  getTodayExercise(userId: string): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -872,6 +900,121 @@ export class DatabaseStorage implements IStorage {
     }
     
     return awardedMilestones;
+  }
+
+  // Reminders
+  async getUserReminders(userId: string): Promise<any[]> {
+    return db.select().from(recoveryReminders).where(eq(recoveryReminders.userId, userId)).orderBy(recoveryReminders.time);
+  }
+
+  async createReminder(reminder: any): Promise<any> {
+    const [result] = await db.insert(recoveryReminders).values(reminder).returning();
+    return result;
+  }
+
+  async updateReminder(id: number, updates: any): Promise<any> {
+    const [result] = await db.update(recoveryReminders).set(updates).where(eq(recoveryReminders.id, id)).returning();
+    return result;
+  }
+
+  async deleteReminder(id: number): Promise<boolean> {
+    const result = await db.delete(recoveryReminders).where(eq(recoveryReminders.id, id));
+    return !!result;
+  }
+
+  async logReminderAction(log: any): Promise<any> {
+    const [result] = await db.insert(reminderLogs).values(log).returning();
+    return result;
+  }
+
+  // Stand Goals
+  async getUserStandGoal(userId: string): Promise<any | undefined> {
+    const [goal] = await db.select().from(standGoals).where(eq(standGoals.userId, userId));
+    return goal;
+  }
+
+  async createOrUpdateStandGoal(userId: string, goal: any): Promise<any> {
+    const existing = await this.getUserStandGoal(userId);
+    if (existing) {
+      const [result] = await db.update(standGoals).set(goal).where(eq(standGoals.userId, userId)).returning();
+      return result;
+    }
+    const [result] = await db.insert(standGoals).values({ ...goal, userId }).returning();
+    return result;
+  }
+
+  async logStand(userId: string, duration?: number): Promise<any> {
+    const [result] = await db.insert(standLogs).values({ userId, duration }).returning();
+    return result;
+  }
+
+  async getTodayStandCount(userId: string): Promise<number> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const result = await db.select({ count: sql<number>`count(*)` }).from(standLogs).where(and(eq(standLogs.userId, userId), gte(standLogs.standAt, today), lt(standLogs.standAt, tomorrow)));
+    return result[0]?.count || 0;
+  }
+
+  // Hydration Goals
+  async getUserHydrationGoal(userId: string): Promise<any | undefined> {
+    const [goal] = await db.select().from(hydrationGoals).where(eq(hydrationGoals.userId, userId));
+    return goal;
+  }
+
+  async createOrUpdateHydrationGoal(userId: string, goal: any): Promise<any> {
+    const existing = await this.getUserHydrationGoal(userId);
+    if (existing) {
+      const [result] = await db.update(hydrationGoals).set(goal).where(eq(hydrationGoals.userId, userId)).returning();
+      return result;
+    }
+    const [result] = await db.insert(hydrationGoals).values({ ...goal, userId }).returning();
+    return result;
+  }
+
+  async logHydration(userId: string, amount: number): Promise<any> {
+    const [result] = await db.insert(hydrationLogs).values({ userId, amount }).returning();
+    return result;
+  }
+
+  async getTodayHydration(userId: string): Promise<number> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const result = await db.select({ total: sql<number>`sum(amount)` }).from(hydrationLogs).where(and(eq(hydrationLogs.userId, userId), gte(hydrationLogs.loggedAt, today), lt(hydrationLogs.loggedAt, tomorrow)));
+    return result[0]?.total || 0;
+  }
+
+  // Exercise Goals
+  async getUserExerciseGoal(userId: string): Promise<any | undefined> {
+    const [goal] = await db.select().from(exerciseGoals).where(eq(exerciseGoals.userId, userId));
+    return goal;
+  }
+
+  async createOrUpdateExerciseGoal(userId: string, goal: any): Promise<any> {
+    const existing = await this.getUserExerciseGoal(userId);
+    if (existing) {
+      const [result] = await db.update(exerciseGoals).set(goal).where(eq(exerciseGoals.userId, userId)).returning();
+      return result;
+    }
+    const [result] = await db.insert(exerciseGoals).values({ ...goal, userId }).returning();
+    return result;
+  }
+
+  async logExercise(userId: string, type: string, duration: number, intensity?: string): Promise<any> {
+    const [result] = await db.insert(exerciseLogs).values({ userId, type, duration, intensity }).returning();
+    return result;
+  }
+
+  async getTodayExercise(userId: string): Promise<number> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const result = await db.select({ total: sql<number>`sum(duration)` }).from(exerciseLogs).where(and(eq(exerciseLogs.userId, userId), gte(exerciseLogs.loggedAt, today), lt(exerciseLogs.loggedAt, tomorrow)));
+    return result[0]?.total || 0;
   }
 }
 
