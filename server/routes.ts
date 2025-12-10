@@ -711,6 +711,238 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================================================
+  // RECOVERY DASHBOARD ROUTES
+  // ============================================================================
+
+  // Get comprehensive dashboard data
+  app.get('/api/recovery/dashboard', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const enrollment = await storage.getUserEnrollment(userId);
+      const streak = await storage.getUserStreak(userId);
+      const todayCheckin = await storage.getDailyCheckin(userId, new Date());
+      const habits = await storage.getUserHabits(userId);
+      const milestones = await storage.getUserMilestones(userId);
+      const recentCheckins = await storage.getRecentCheckins(userId, 7);
+      
+      const totalPoints = milestones.reduce((sum: number, m: any) => sum + (m.pointsAwarded || 0), 0);
+      
+      res.json({
+        enrollment,
+        streak,
+        todayCheckin,
+        habits,
+        milestones,
+        recentCheckins,
+        totalPoints,
+        recoveryScore: enrollment?.recoveryScore || 0,
+      });
+    } catch (error) {
+      console.error("Error fetching recovery dashboard:", error);
+      res.status(500).json({ message: "Failed to fetch recovery dashboard" });
+    }
+  });
+
+  // Get user enrollment
+  app.get('/api/recovery/enrollment', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const enrollment = await storage.getUserEnrollment(userId);
+      res.json(enrollment || null);
+    } catch (error) {
+      console.error("Error fetching enrollment:", error);
+      res.status(500).json({ message: "Failed to fetch enrollment" });
+    }
+  });
+
+  // Create enrollment (from builder)
+  app.post('/api/recovery/enrollment', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { programId } = req.body;
+      
+      const existing = await storage.getUserEnrollment(userId);
+      if (existing) {
+        return res.status(400).json({ message: "Already enrolled in a program" });
+      }
+      
+      const enrollment = await storage.createUserEnrollment({
+        userId,
+        programId,
+        status: 'active',
+        progressPercentage: 0,
+        recoveryScore: 0,
+      });
+      res.json(enrollment);
+    } catch (error) {
+      console.error("Error creating enrollment:", error);
+      res.status(500).json({ message: "Failed to create enrollment" });
+    }
+  });
+
+  // Get user streak
+  app.get('/api/recovery/streak', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const streak = await storage.getUserStreak(userId);
+      res.json(streak || { currentStreak: 0, longestStreak: 0, totalActiveDays: 0 });
+    } catch (error) {
+      console.error("Error fetching streak:", error);
+      res.status(500).json({ message: "Failed to fetch streak" });
+    }
+  });
+
+  // Get today's check-in
+  app.get('/api/recovery/checkin/today', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const checkin = await storage.getDailyCheckin(userId, new Date());
+      res.json(checkin || null);
+    } catch (error) {
+      console.error("Error fetching today's checkin:", error);
+      res.status(500).json({ message: "Failed to fetch today's checkin" });
+    }
+  });
+
+  // Create daily check-in
+  app.post('/api/recovery/checkin', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { moodScore, energyScore, painScore, effortScore, winsToday, challengesToday, gratitude } = req.body;
+      
+      const existing = await storage.getDailyCheckin(userId, new Date());
+      if (existing) {
+        return res.status(400).json({ message: "Already checked in today" });
+      }
+      
+      const checkin = await storage.createDailyCheckin({
+        userId,
+        checkinDate: new Date(),
+        moodScore,
+        energyScore,
+        painScore,
+        effortScore,
+        winsToday,
+        challengesToday,
+        gratitude,
+      });
+      
+      const streak = await storage.getUserStreak(userId);
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      
+      let newCurrentStreak = 1;
+      if (streak?.lastActivityDate) {
+        const lastDate = new Date(streak.lastActivityDate);
+        lastDate.setHours(0, 0, 0, 0);
+        yesterday.setHours(0, 0, 0, 0);
+        if (lastDate.getTime() === yesterday.getTime()) {
+          newCurrentStreak = (streak.currentStreak || 0) + 1;
+        }
+      }
+      
+      await storage.createOrUpdateUserStreak(userId, {
+        currentStreak: newCurrentStreak,
+        longestStreak: Math.max(newCurrentStreak, streak?.longestStreak || 0),
+        lastActivityDate: today,
+        totalActiveDays: (streak?.totalActiveDays || 0) + 1,
+      });
+      
+      res.json(checkin);
+    } catch (error) {
+      console.error("Error creating checkin:", error);
+      res.status(500).json({ message: "Failed to create checkin" });
+    }
+  });
+
+  // Get user habits
+  app.get('/api/recovery/habits', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const habits = await storage.getUserHabits(userId);
+      res.json(habits);
+    } catch (error) {
+      console.error("Error fetching habits:", error);
+      res.status(500).json({ message: "Failed to fetch habits" });
+    }
+  });
+
+  // Get default habits (for adding new ones)
+  app.get('/api/recovery/habits/defaults', isAuthenticated, async (req: any, res) => {
+    try {
+      const defaults = await storage.getDefaultHabits();
+      res.json(defaults);
+    } catch (error) {
+      console.error("Error fetching default habits:", error);
+      res.status(500).json({ message: "Failed to fetch default habits" });
+    }
+  });
+
+  // Add new habit
+  app.post('/api/recovery/habits', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { habitId, customName, targetDays = 66 } = req.body;
+      
+      if (!habitId) {
+        return res.status(400).json({ message: "habitId is required" });
+      }
+      
+      const habit = await storage.createUserHabit({
+        userId,
+        habitId,
+        customName: customName || null,
+        targetDays,
+        startDate: new Date(),
+        status: 'active',
+      });
+      res.json(habit);
+    } catch (error) {
+      console.error("Error creating habit:", error);
+      res.status(500).json({ message: "Failed to create habit" });
+    }
+  });
+
+  // Log habit completion
+  app.post('/api/recovery/habits/:id/log', isAuthenticated, async (req: any, res) => {
+    try {
+      const userHabitId = parseInt(req.params.id);
+      const { notes } = req.body;
+      
+      const log = await storage.logHabitCompletion(userHabitId, new Date(), notes);
+      res.json(log);
+    } catch (error) {
+      console.error("Error logging habit:", error);
+      res.status(500).json({ message: "Failed to log habit" });
+    }
+  });
+
+  // Get user milestones
+  app.get('/api/recovery/milestones', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const milestones = await storage.getUserMilestones(userId);
+      const allMilestones = await storage.getRecoveryMilestones();
+      res.json({ earned: milestones, available: allMilestones });
+    } catch (error) {
+      console.error("Error fetching milestones:", error);
+      res.status(500).json({ message: "Failed to fetch milestones" });
+    }
+  });
+
+  // Get recovery programs (for enrollment)
+  app.get('/api/recovery/programs', async (req, res) => {
+    try {
+      const programs = await storage.getRecoveryPrograms();
+      res.json(programs);
+    } catch (error) {
+      console.error("Error fetching programs:", error);
+      res.status(500).json({ message: "Failed to fetch programs" });
+    }
+  });
+
+  // ============================================================================
   // STROKE LYFE PUBLISHING ROUTES
   // ============================================================================
 

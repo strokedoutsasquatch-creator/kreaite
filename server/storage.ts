@@ -15,7 +15,12 @@ import {
   books, aiChatSessions, aiChatMessages,
   marketplaceCategories, marketplaceProducts,
   publishingProjects,
+  recoveryPrograms, programModules, programLessons,
+  userEnrollments, dailyCheckins, userStreaks,
+  userHabits, habitLogs, recoveryHabits,
+  recoveryMilestones, userMilestoneLogs,
 } from "@shared/schema";
+import { gte } from "drizzle-orm";
 import { db } from "./db";
 import { eq, desc, and, sql, count, ilike, or } from "drizzle-orm";
 
@@ -58,6 +63,25 @@ export interface IStorage {
   getPublishingProject(id: number): Promise<PublishingProject | undefined>;
   updatePublishingProject(id: number, updates: Partial<PublishingProject>): Promise<PublishingProject | undefined>;
   deletePublishingProject(id: number): Promise<boolean>;
+  
+  // Recovery Dashboard
+  getRecoveryPrograms(): Promise<any[]>;
+  getRecoveryProgramBySlug(slug: string): Promise<any | undefined>;
+  getUserEnrollment(userId: string): Promise<any | undefined>;
+  createUserEnrollment(enrollment: any): Promise<any>;
+  updateUserEnrollment(id: number, updates: any): Promise<any | undefined>;
+  getDailyCheckin(userId: string, date: Date): Promise<any | undefined>;
+  createDailyCheckin(checkin: any): Promise<any>;
+  getRecentCheckins(userId: string, days: number): Promise<any[]>;
+  getUserStreak(userId: string): Promise<any | undefined>;
+  createOrUpdateUserStreak(userId: string, data: any): Promise<any>;
+  getUserHabits(userId: string): Promise<any[]>;
+  createUserHabit(habit: any): Promise<any>;
+  logHabitCompletion(userHabitId: number, date: Date, notes?: string): Promise<any>;
+  getRecoveryMilestones(): Promise<any[]>;
+  getUserMilestones(userId: string): Promise<any[]>;
+  awardMilestone(userId: string, milestoneId: number, notes?: string): Promise<any>;
+  getDefaultHabits(): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -383,6 +407,232 @@ export class DatabaseStorage implements IStorage {
   async deletePublishingProject(id: number): Promise<boolean> {
     await db.delete(publishingProjects).where(eq(publishingProjects.id, id));
     return true;
+  }
+
+  // Recovery Dashboard Methods
+  async getRecoveryPrograms(): Promise<any[]> {
+    return db.select().from(recoveryPrograms)
+      .where(eq(recoveryPrograms.isActive, true))
+      .orderBy(recoveryPrograms.id);
+  }
+
+  async getRecoveryProgramBySlug(slug: string): Promise<any | undefined> {
+    const [program] = await db.select().from(recoveryPrograms)
+      .where(eq(recoveryPrograms.slug, slug));
+    return program;
+  }
+
+  async getUserEnrollment(userId: string): Promise<any | undefined> {
+    const [enrollment] = await db.select().from(userEnrollments)
+      .where(eq(userEnrollments.userId, userId));
+    if (enrollment) {
+      const [program] = await db.select().from(recoveryPrograms)
+        .where(eq(recoveryPrograms.id, enrollment.programId));
+      const modules = await db.select().from(programModules)
+        .where(eq(programModules.programId, enrollment.programId))
+        .orderBy(programModules.order);
+      let currentModule = null;
+      let currentLesson = null;
+      if (enrollment.currentModuleId) {
+        [currentModule] = await db.select().from(programModules)
+          .where(eq(programModules.id, enrollment.currentModuleId));
+      }
+      if (enrollment.currentLessonId) {
+        [currentLesson] = await db.select().from(programLessons)
+          .where(eq(programLessons.id, enrollment.currentLessonId));
+      }
+      return { ...enrollment, program, modules, currentModule, currentLesson };
+    }
+    return undefined;
+  }
+
+  async createUserEnrollment(enrollment: any): Promise<any> {
+    const [newEnrollment] = await db.insert(userEnrollments).values(enrollment).returning();
+    return newEnrollment;
+  }
+
+  async updateUserEnrollment(id: number, updates: any): Promise<any | undefined> {
+    const [enrollment] = await db.update(userEnrollments)
+      .set({ ...updates, lastActivityAt: new Date() })
+      .where(eq(userEnrollments.id, id))
+      .returning();
+    return enrollment;
+  }
+
+  async getDailyCheckin(userId: string, date: Date): Promise<any | undefined> {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    const [checkin] = await db.select().from(dailyCheckins)
+      .where(and(
+        eq(dailyCheckins.userId, userId),
+        gte(dailyCheckins.checkinDate, startOfDay),
+        sql`${dailyCheckins.checkinDate} <= ${endOfDay}`
+      ));
+    return checkin;
+  }
+
+  async createDailyCheckin(checkin: any): Promise<any> {
+    const [newCheckin] = await db.insert(dailyCheckins).values(checkin).returning();
+    return newCheckin;
+  }
+
+  async getRecentCheckins(userId: string, days: number): Promise<any[]> {
+    const daysAgo = new Date();
+    daysAgo.setDate(daysAgo.getDate() - days);
+    
+    return db.select().from(dailyCheckins)
+      .where(and(
+        eq(dailyCheckins.userId, userId),
+        gte(dailyCheckins.checkinDate, daysAgo)
+      ))
+      .orderBy(desc(dailyCheckins.checkinDate));
+  }
+
+  async getUserStreak(userId: string): Promise<any | undefined> {
+    const [streak] = await db.select().from(userStreaks)
+      .where(eq(userStreaks.userId, userId));
+    return streak;
+  }
+
+  async createOrUpdateUserStreak(userId: string, data: any): Promise<any> {
+    const existing = await this.getUserStreak(userId);
+    if (existing) {
+      const [streak] = await db.update(userStreaks)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(userStreaks.userId, userId))
+        .returning();
+      return streak;
+    }
+    const [streak] = await db.insert(userStreaks)
+      .values({ userId, ...data })
+      .returning();
+    return streak;
+  }
+
+  async getUserHabits(userId: string): Promise<any[]> {
+    const habits = await db.select({
+      userHabit: userHabits,
+      habit: recoveryHabits
+    })
+      .from(userHabits)
+      .innerJoin(recoveryHabits, eq(userHabits.habitId, recoveryHabits.id))
+      .where(eq(userHabits.userId, userId));
+    
+    const result = [];
+    for (const row of habits) {
+      const daysAgo = new Date();
+      daysAgo.setDate(daysAgo.getDate() - 66);
+      const logs = await db.select().from(habitLogs)
+        .where(and(
+          eq(habitLogs.userHabitId, row.userHabit.id),
+          gte(habitLogs.logDate, daysAgo)
+        ))
+        .orderBy(desc(habitLogs.logDate));
+      result.push({
+        ...row.userHabit,
+        habitName: row.habit.name,
+        habitDescription: row.habit.description,
+        habitCategory: row.habit.category,
+        logs
+      });
+    }
+    return result;
+  }
+
+  async createUserHabit(habit: any): Promise<any> {
+    const [newHabit] = await db.insert(userHabits).values(habit).returning();
+    return newHabit;
+  }
+
+  async logHabitCompletion(userHabitId: number, date: Date, notes?: string): Promise<any> {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    const [existing] = await db.select().from(habitLogs)
+      .where(and(
+        eq(habitLogs.userHabitId, userHabitId),
+        gte(habitLogs.logDate, startOfDay),
+        sql`${habitLogs.logDate} <= ${endOfDay}`
+      ));
+    
+    if (existing) {
+      const [log] = await db.update(habitLogs)
+        .set({ isCompleted: !existing.isCompleted, notes })
+        .where(eq(habitLogs.id, existing.id))
+        .returning();
+      
+      await db.update(userHabits)
+        .set({ 
+          totalCompletions: log.isCompleted 
+            ? sql`${userHabits.totalCompletions} + 1`
+            : sql`GREATEST(${userHabits.totalCompletions} - 1, 0)`
+        })
+        .where(eq(userHabits.id, userHabitId));
+      
+      return log;
+    }
+    
+    const [log] = await db.insert(habitLogs)
+      .values({ userHabitId, logDate: date, isCompleted: true, notes })
+      .returning();
+    
+    await db.update(userHabits)
+      .set({ totalCompletions: sql`${userHabits.totalCompletions} + 1` })
+      .where(eq(userHabits.id, userHabitId));
+    
+    return log;
+  }
+
+  async getRecoveryMilestones(): Promise<any[]> {
+    return db.select().from(recoveryMilestones)
+      .orderBy(recoveryMilestones.order);
+  }
+
+  async getUserMilestones(userId: string): Promise<any[]> {
+    const milestones = await db.select({
+      log: userMilestoneLogs,
+      milestone: recoveryMilestones
+    })
+      .from(userMilestoneLogs)
+      .innerJoin(recoveryMilestones, eq(userMilestoneLogs.milestoneId, recoveryMilestones.id))
+      .where(eq(userMilestoneLogs.userId, userId))
+      .orderBy(desc(userMilestoneLogs.achievedAt));
+    
+    return milestones.map(m => ({
+      ...m.log,
+      name: m.milestone.name,
+      description: m.milestone.description,
+      category: m.milestone.category,
+      iconUrl: m.milestone.iconUrl,
+      badgeUrl: m.milestone.badgeUrl,
+      pointsAwarded: m.milestone.pointsAwarded
+    }));
+  }
+
+  async awardMilestone(userId: string, milestoneId: number, notes?: string): Promise<any> {
+    const [existing] = await db.select().from(userMilestoneLogs)
+      .where(and(
+        eq(userMilestoneLogs.userId, userId),
+        eq(userMilestoneLogs.milestoneId, milestoneId)
+      ));
+    
+    if (existing) return existing;
+    
+    const [log] = await db.insert(userMilestoneLogs)
+      .values({ userId, milestoneId, celebrationNotes: notes })
+      .returning();
+    return log;
+  }
+
+  async getDefaultHabits(): Promise<any[]> {
+    return db.select().from(recoveryHabits)
+      .where(eq(recoveryHabits.isDefault, true))
+      .orderBy(recoveryHabits.id);
   }
 }
 
