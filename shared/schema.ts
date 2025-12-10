@@ -668,6 +668,93 @@ export const recoveryExperiments = pgTable("recovery_experiments", {
 });
 
 // ============================================================================
+// RECOVERY UNIVERSITY - Reminders & Wellness
+// ============================================================================
+
+export const recoveryReminders = pgTable("recovery_reminders", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  type: text("type").notNull(), // medication, appointment, hydration, exercise, stand
+  title: text("title").notNull(),
+  description: text("description"),
+  time: text("time").notNull(), // HH:MM format
+  days: text("days").array().notNull(), // ["monday", "tuesday", etc.] or ["daily"]
+  isActive: boolean("is_active").notNull().default(true),
+  lastTriggered: timestamp("last_triggered"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const reminderLogs = pgTable("reminder_logs", {
+  id: serial("id").primaryKey(),
+  reminderId: integer("reminder_id").notNull().references(() => recoveryReminders.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  status: text("status").notNull(), // completed, dismissed, snoozed, missed
+  completedAt: timestamp("completed_at"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const standGoals = pgTable("stand_goals", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  hourlyGoal: integer("hourly_goal").notNull().default(1), // stand up every X hours
+  dailyStandTarget: integer("daily_stand_target").notNull().default(12), // total stands per day
+  startHour: integer("start_hour").notNull().default(8), // 8 AM
+  endHour: integer("end_hour").notNull().default(20), // 8 PM
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const standLogs = pgTable("stand_logs", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  standAt: timestamp("stand_at").notNull().defaultNow(),
+  duration: integer("duration"), // seconds standing
+  notes: text("notes"),
+});
+
+export const hydrationGoals = pgTable("hydration_goals", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  dailyTarget: integer("daily_target").notNull().default(8), // glasses per day
+  glassSize: integer("glass_size").notNull().default(8), // oz per glass
+  reminderInterval: integer("reminder_interval").notNull().default(60), // minutes
+  startHour: integer("start_hour").notNull().default(7),
+  endHour: integer("end_hour").notNull().default(21),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const hydrationLogs = pgTable("hydration_logs", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  amount: integer("amount").notNull(), // oz
+  loggedAt: timestamp("logged_at").notNull().defaultNow(),
+  notes: text("notes"),
+});
+
+export const exerciseGoals = pgTable("exercise_goals", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  dailyMinutes: integer("daily_minutes").notNull().default(30),
+  weeklyDays: integer("weekly_days").notNull().default(5),
+  preferredTime: text("preferred_time"), // morning, afternoon, evening
+  exerciseTypes: text("exercise_types").array(), // walking, stretching, therapy, etc.
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const exerciseLogs = pgTable("exercise_logs", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  type: text("type").notNull(), // walking, stretching, therapy, etc.
+  duration: integer("duration").notNull(), // minutes
+  intensity: text("intensity"), // light, moderate, intense
+  notes: text("notes"),
+  loggedAt: timestamp("logged_at").notNull().defaultNow(),
+});
+
+// ============================================================================
 // INSERT SCHEMAS & TYPES
 // ============================================================================
 
@@ -680,6 +767,16 @@ export const insertHabitLogSchema = createInsertSchema(habitLogs).omit({ id: tru
 export const insertRecoveryExperimentSchema = createInsertSchema(recoveryExperiments).omit({ id: true, createdAt: true });
 export const insertAccountabilityPodSchema = createInsertSchema(accountabilityPods).omit({ id: true, createdAt: true, memberCount: true });
 export const insertPodMemberSchema = createInsertSchema(podMembers).omit({ id: true, joinedAt: true });
+
+// Reminders & Wellness Insert Schemas
+export const insertRecoveryReminderSchema = createInsertSchema(recoveryReminders).omit({ id: true, createdAt: true, lastTriggered: true });
+export const insertReminderLogSchema = createInsertSchema(reminderLogs).omit({ id: true, createdAt: true });
+export const insertStandGoalSchema = createInsertSchema(standGoals).omit({ id: true, createdAt: true });
+export const insertStandLogSchema = createInsertSchema(standLogs).omit({ id: true });
+export const insertHydrationGoalSchema = createInsertSchema(hydrationGoals).omit({ id: true, createdAt: true });
+export const insertHydrationLogSchema = createInsertSchema(hydrationLogs).omit({ id: true });
+export const insertExerciseGoalSchema = createInsertSchema(exerciseGoals).omit({ id: true, createdAt: true });
+export const insertExerciseLogSchema = createInsertSchema(exerciseLogs).omit({ id: true });
 
 export const insertPublishingProjectSchema = createInsertSchema(publishingProjects).omit({ id: true, createdAt: true, updatedAt: true, wordCount: true, chapterCount: true });
 export const insertManuscriptChapterSchema = createInsertSchema(manuscriptChapters).omit({ id: true, createdAt: true, updatedAt: true, wordCount: true });
