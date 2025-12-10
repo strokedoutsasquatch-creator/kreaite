@@ -7,12 +7,17 @@
 Stroke Recovery Academy (strokerecoveryacademy.com) is a comprehensive web platform designed to support stroke survivors, caregivers, and professionals in their recovery journey. Built by Nick "The Stroked Out Sasquatch" Kremers, a stroke survivor who achieved 90% recovery, the platform combines personal recovery expertise with modern neuroscience.
 
 ### Key Features:
+- **Recovery University** - Comprehensive tiered curriculum (Explorer/Warrior/Champion) with 18 modules and 15+ lessons
+- **Recovery Dashboard** - Personalized command center with check-ins, habit tracker, streaks, milestones, and AI insights
+- **66-Day Habit Tracker** - Visual grid tracking for building lasting recovery habits
+- **Accountability Pods** - Small group support system with activity feeds and pod-based community
+- **Achievements System** - Badges, milestones, shareable cards, and recovery report cards
 - **Academy** - Digital courses from 3 recovery books (The Stroked Out Sasquatch, Ultimate Stroke Recovery Bible, Wheeled Out)
 - **Stroke Lyfe Publishing** - AI-powered book writing studio with Gemini ghostwriting and course builder
 - **AI Sasquatch Coach** - Interactive chat for motivation and guidance
 - **Community Forum** - Support network for survivors to share stories
 - **Survival Grid** - 16 battle-tested exercise protocols (Upper Body, Lower Body, Cognitive, Daily Living)
-- **Recovery Builder** - 4-step assessment wizard for personalized recovery plans
+- **Recovery Builder** - 4-step assessment wizard mapping to personalized curriculum and auto-enrollment
 - **Marketplace** - Premium books, coaching, and courses with Amazon affiliate integration
 
 ### Platform Model:
