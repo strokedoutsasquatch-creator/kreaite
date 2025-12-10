@@ -9,6 +9,29 @@ import {
   type MarketplaceCategory, type InsertMarketplaceCategory,
   type MarketplaceProduct, type InsertMarketplaceProduct,
   type PublishingProject, type InsertPublishingProject,
+  type UserSettings, type InsertUserSettings,
+  type TherapistProfile, type InsertTherapistProfile,
+  type PatientAssignment, type InsertPatientAssignment,
+  type TherapySession, type InsertTherapySession,
+  type ExercisePrescription, type InsertExercisePrescription,
+  type ActivityPost, type InsertActivityPost,
+  type ActivityMedia, type InsertActivityMedia,
+  type ActivityReaction, type InsertActivityReaction,
+  type ActivityComment, type InsertActivityComment,
+  type TherapeuticExercise, type InsertTherapeuticExercise,
+  type ExerciseSession, type InsertExerciseSession,
+  type ExerciseScore,
+  type SpeechExercise, type InsertSpeechExercise,
+  type CognitiveExercise, type InsertCognitiveExercise,
+  type WearableConnection, type InsertWearableConnection,
+  type WearableMetric, type InsertWearableMetric,
+  type Conversation, type InsertConversation,
+  type ConversationParticipant,
+  type DirectMessage, type InsertDirectMessage,
+  type ForumPostMedia, type InsertForumPostMedia,
+  type VideoSession, type InsertVideoSession,
+  type VideoSessionParticipant,
+  type SeoPage, type InsertSeoPage,
 } from "@shared/schema";
 import { 
   users, forumCategories, forumThreads, forumPosts, forumReactions,
@@ -25,6 +48,14 @@ import {
   standGoals, standLogs,
   hydrationGoals, hydrationLogs,
   exerciseGoals, exerciseLogs,
+  userSettings,
+  therapistProfiles, patientAssignments, therapySessions, exercisePrescriptions,
+  activityPosts, activityMedia, activityReactions, activityComments,
+  therapeuticExercises, exerciseSessions, exerciseScores,
+  speechExercises, cognitiveExercises,
+  wearableConnections, wearableMetrics,
+  conversations, conversationParticipants, directMessages,
+  forumPostMedia, videoSessions, videoSessionParticipants, seoPages,
   type AccountabilityPod, type InsertAccountabilityPod,
   type PodMember, type InsertPodMember,
 } from "@shared/schema";
@@ -134,6 +165,76 @@ export interface IStorage {
   createOrUpdateExerciseGoal(userId: string, goal: any): Promise<any>;
   logExercise(userId: string, type: string, duration: number, intensity?: string): Promise<any>;
   getTodayExercise(userId: string): Promise<number>;
+  
+  // User Settings
+  getUserSettings(userId: string): Promise<UserSettings | undefined>;
+  createOrUpdateUserSettings(userId: string, settings: Partial<InsertUserSettings>): Promise<UserSettings>;
+  updateUsername(userId: string, username: string): Promise<UserSettings | undefined>;
+  isUsernameAvailable(username: string): Promise<boolean>;
+  
+  // Activity Wall
+  getActivityPosts(options?: { limit?: number; offset?: number; visibility?: string; podId?: number; authorId?: string }): Promise<ActivityPost[]>;
+  getActivityPost(id: number): Promise<ActivityPost | undefined>;
+  createActivityPost(post: InsertActivityPost): Promise<ActivityPost>;
+  updateActivityPost(id: number, updates: Partial<InsertActivityPost>): Promise<ActivityPost | undefined>;
+  deleteActivityPost(id: number): Promise<boolean>;
+  addActivityMedia(media: InsertActivityMedia): Promise<ActivityMedia>;
+  getActivityMedia(postId: number): Promise<ActivityMedia[]>;
+  toggleActivityReaction(postId: number, userId: string, reactionType: string): Promise<{ added: boolean }>;
+  getActivityReactions(postId: number): Promise<{ reactionType: string; count: number }[]>;
+  getActivityComments(postId: number): Promise<ActivityComment[]>;
+  createActivityComment(comment: InsertActivityComment): Promise<ActivityComment>;
+  deleteActivityComment(id: number): Promise<boolean>;
+  
+  // Therapist System
+  getTherapistProfile(userId: string): Promise<TherapistProfile | undefined>;
+  createTherapistProfile(profile: InsertTherapistProfile): Promise<TherapistProfile>;
+  updateTherapistProfile(userId: string, updates: Partial<InsertTherapistProfile>): Promise<TherapistProfile | undefined>;
+  getVerifiedTherapists(filters?: { specialization?: string; acceptingPatients?: boolean }): Promise<TherapistProfile[]>;
+  getPatientAssignments(therapistId: string): Promise<PatientAssignment[]>;
+  getTherapistForPatient(patientId: string): Promise<PatientAssignment | undefined>;
+  createPatientAssignment(assignment: InsertPatientAssignment): Promise<PatientAssignment>;
+  updatePatientAssignment(id: number, updates: Partial<InsertPatientAssignment>): Promise<PatientAssignment | undefined>;
+  getTherapySessions(assignmentId?: number, userId?: string): Promise<TherapySession[]>;
+  createTherapySession(session: InsertTherapySession): Promise<TherapySession>;
+  updateTherapySession(id: number, updates: Partial<TherapySession>): Promise<TherapySession | undefined>;
+  getExercisePrescriptions(patientId: string): Promise<ExercisePrescription[]>;
+  createExercisePrescription(prescription: InsertExercisePrescription): Promise<ExercisePrescription>;
+  
+  // Therapeutic Exercises
+  getTherapeuticExercises(filters?: { category?: string; difficulty?: string }): Promise<TherapeuticExercise[]>;
+  getTherapeuticExercise(id: number): Promise<TherapeuticExercise | undefined>;
+  getTherapeuticExerciseBySlug(slug: string): Promise<TherapeuticExercise | undefined>;
+  createTherapeuticExercise(exercise: InsertTherapeuticExercise): Promise<TherapeuticExercise>;
+  recordExerciseSession(session: InsertExerciseSession): Promise<ExerciseSession>;
+  getExerciseSessions(userId: string, exerciseId?: number): Promise<ExerciseSession[]>;
+  getUserExerciseScores(userId: string): Promise<ExerciseScore[]>;
+  updateExerciseScore(userId: string, exerciseId: number, score: number, accuracy: number, time: number): Promise<ExerciseScore>;
+  getSpeechExercises(category?: string): Promise<SpeechExercise[]>;
+  getCognitiveExercises(category?: string): Promise<CognitiveExercise[]>;
+  
+  // Direct Messaging
+  getConversations(userId: string): Promise<Conversation[]>;
+  getConversation(id: number): Promise<Conversation | undefined>;
+  createConversation(conversation: InsertConversation, participantIds: string[]): Promise<Conversation>;
+  getConversationMessages(conversationId: number, limit?: number, offset?: number): Promise<DirectMessage[]>;
+  sendDirectMessage(message: InsertDirectMessage): Promise<DirectMessage>;
+  markMessagesAsRead(conversationId: number, userId: string): Promise<void>;
+  
+  // Video Sessions
+  getVideoSessions(userId: string, status?: string): Promise<VideoSession[]>;
+  getVideoSession(id: number): Promise<VideoSession | undefined>;
+  createVideoSession(session: InsertVideoSession): Promise<VideoSession>;
+  updateVideoSession(id: number, updates: Partial<VideoSession>): Promise<VideoSession | undefined>;
+  
+  // Forum Media
+  addForumPostMedia(media: InsertForumPostMedia): Promise<ForumPostMedia>;
+  getForumPostMedia(postId: number): Promise<ForumPostMedia[]>;
+  
+  // SEO
+  getSeoPage(slug: string): Promise<SeoPage | undefined>;
+  getAllSeoPages(): Promise<SeoPage[]>;
+  createOrUpdateSeoPage(page: InsertSeoPage & { slug: string }): Promise<SeoPage>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1015,6 +1116,507 @@ export class DatabaseStorage implements IStorage {
     tomorrow.setDate(tomorrow.getDate() + 1);
     const result = await db.select({ total: sql<number>`sum(duration)` }).from(exerciseLogs).where(and(eq(exerciseLogs.userId, userId), gte(exerciseLogs.loggedAt, today), lt(exerciseLogs.loggedAt, tomorrow)));
     return result[0]?.total || 0;
+  }
+
+  // ============================================================================
+  // USER SETTINGS
+  // ============================================================================
+
+  async getUserSettings(userId: string): Promise<UserSettings | undefined> {
+    const [settings] = await db.select().from(userSettings).where(eq(userSettings.userId, userId));
+    return settings;
+  }
+
+  async createOrUpdateUserSettings(userId: string, settings: Partial<InsertUserSettings>): Promise<UserSettings> {
+    const existing = await this.getUserSettings(userId);
+    if (existing) {
+      const [result] = await db.update(userSettings)
+        .set({ ...settings, updatedAt: new Date() })
+        .where(eq(userSettings.userId, userId))
+        .returning();
+      return result;
+    }
+    const [result] = await db.insert(userSettings)
+      .values({ ...settings, userId })
+      .returning();
+    return result;
+  }
+
+  async updateUsername(userId: string, username: string): Promise<UserSettings | undefined> {
+    const [result] = await db.update(userSettings)
+      .set({ username, updatedAt: new Date() })
+      .where(eq(userSettings.userId, userId))
+      .returning();
+    return result;
+  }
+
+  async isUsernameAvailable(username: string): Promise<boolean> {
+    const [existing] = await db.select().from(userSettings).where(eq(userSettings.username, username));
+    return !existing;
+  }
+
+  // ============================================================================
+  // ACTIVITY WALL
+  // ============================================================================
+
+  async getActivityPosts(options: { limit?: number; offset?: number; visibility?: string; podId?: number; authorId?: string } = {}): Promise<ActivityPost[]> {
+    const { limit = 20, offset = 0, visibility, podId, authorId } = options;
+    let query = db.select().from(activityPosts);
+    
+    const conditions = [];
+    if (visibility) conditions.push(eq(activityPosts.visibility, visibility));
+    if (podId) conditions.push(eq(activityPosts.podId, podId));
+    if (authorId) conditions.push(eq(activityPosts.authorId, authorId));
+    
+    if (conditions.length > 0) {
+      return db.select().from(activityPosts)
+        .where(and(...conditions))
+        .orderBy(desc(activityPosts.createdAt))
+        .limit(limit)
+        .offset(offset);
+    }
+    
+    return db.select().from(activityPosts)
+      .orderBy(desc(activityPosts.createdAt))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async getActivityPost(id: number): Promise<ActivityPost | undefined> {
+    const [post] = await db.select().from(activityPosts).where(eq(activityPosts.id, id));
+    return post;
+  }
+
+  async createActivityPost(post: InsertActivityPost): Promise<ActivityPost> {
+    const [result] = await db.insert(activityPosts).values(post).returning();
+    return result;
+  }
+
+  async updateActivityPost(id: number, updates: Partial<InsertActivityPost>): Promise<ActivityPost | undefined> {
+    const [result] = await db.update(activityPosts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(activityPosts.id, id))
+      .returning();
+    return result;
+  }
+
+  async deleteActivityPost(id: number): Promise<boolean> {
+    await db.delete(activityPosts).where(eq(activityPosts.id, id));
+    return true;
+  }
+
+  async addActivityMedia(media: InsertActivityMedia): Promise<ActivityMedia> {
+    const [result] = await db.insert(activityMedia).values(media).returning();
+    return result;
+  }
+
+  async getActivityMedia(postId: number): Promise<ActivityMedia[]> {
+    return db.select().from(activityMedia)
+      .where(eq(activityMedia.postId, postId))
+      .orderBy(activityMedia.order);
+  }
+
+  async toggleActivityReaction(postId: number, userId: string, reactionType: string): Promise<{ added: boolean }> {
+    const [existing] = await db.select().from(activityReactions)
+      .where(and(eq(activityReactions.postId, postId), eq(activityReactions.userId, userId)));
+    
+    if (existing) {
+      if (existing.reactionType === reactionType) {
+        await db.delete(activityReactions)
+          .where(and(eq(activityReactions.postId, postId), eq(activityReactions.userId, userId)));
+        await db.update(activityPosts)
+          .set({ likeCount: sql`${activityPosts.likeCount} - 1` })
+          .where(eq(activityPosts.id, postId));
+        return { added: false };
+      } else {
+        await db.update(activityReactions)
+          .set({ reactionType })
+          .where(and(eq(activityReactions.postId, postId), eq(activityReactions.userId, userId)));
+        return { added: true };
+      }
+    }
+    
+    await db.insert(activityReactions).values({ postId, userId, reactionType });
+    await db.update(activityPosts)
+      .set({ likeCount: sql`${activityPosts.likeCount} + 1` })
+      .where(eq(activityPosts.id, postId));
+    return { added: true };
+  }
+
+  async getActivityReactions(postId: number): Promise<{ reactionType: string; count: number }[]> {
+    const result = await db
+      .select({ reactionType: activityReactions.reactionType, count: sql<number>`count(*)` })
+      .from(activityReactions)
+      .where(eq(activityReactions.postId, postId))
+      .groupBy(activityReactions.reactionType);
+    return result;
+  }
+
+  async getActivityComments(postId: number): Promise<ActivityComment[]> {
+    return db.select().from(activityComments)
+      .where(eq(activityComments.postId, postId))
+      .orderBy(activityComments.createdAt);
+  }
+
+  async createActivityComment(comment: InsertActivityComment): Promise<ActivityComment> {
+    const [result] = await db.insert(activityComments).values(comment).returning();
+    await db.update(activityPosts)
+      .set({ commentCount: sql`${activityPosts.commentCount} + 1` })
+      .where(eq(activityPosts.id, comment.postId));
+    return result;
+  }
+
+  async deleteActivityComment(id: number): Promise<boolean> {
+    const [comment] = await db.select().from(activityComments).where(eq(activityComments.id, id));
+    if (comment) {
+      await db.delete(activityComments).where(eq(activityComments.id, id));
+      await db.update(activityPosts)
+        .set({ commentCount: sql`${activityPosts.commentCount} - 1` })
+        .where(eq(activityPosts.id, comment.postId));
+    }
+    return true;
+  }
+
+  // ============================================================================
+  // THERAPIST SYSTEM
+  // ============================================================================
+
+  async getTherapistProfile(userId: string): Promise<TherapistProfile | undefined> {
+    const [profile] = await db.select().from(therapistProfiles).where(eq(therapistProfiles.userId, userId));
+    return profile;
+  }
+
+  async createTherapistProfile(profile: InsertTherapistProfile): Promise<TherapistProfile> {
+    const [result] = await db.insert(therapistProfiles).values(profile).returning();
+    return result;
+  }
+
+  async updateTherapistProfile(userId: string, updates: Partial<InsertTherapistProfile>): Promise<TherapistProfile | undefined> {
+    const [result] = await db.update(therapistProfiles)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(therapistProfiles.userId, userId))
+      .returning();
+    return result;
+  }
+
+  async getVerifiedTherapists(filters: { specialization?: string; acceptingPatients?: boolean } = {}): Promise<TherapistProfile[]> {
+    const conditions = [eq(therapistProfiles.isVerified, true)];
+    if (filters.acceptingPatients !== undefined) {
+      conditions.push(eq(therapistProfiles.acceptingPatients, filters.acceptingPatients));
+    }
+    return db.select().from(therapistProfiles).where(and(...conditions));
+  }
+
+  async getPatientAssignments(therapistId: string): Promise<PatientAssignment[]> {
+    return db.select().from(patientAssignments)
+      .where(eq(patientAssignments.therapistId, therapistId))
+      .orderBy(desc(patientAssignments.createdAt));
+  }
+
+  async getTherapistForPatient(patientId: string): Promise<PatientAssignment | undefined> {
+    const [assignment] = await db.select().from(patientAssignments)
+      .where(and(eq(patientAssignments.patientId, patientId), eq(patientAssignments.status, "active")));
+    return assignment;
+  }
+
+  async createPatientAssignment(assignment: InsertPatientAssignment): Promise<PatientAssignment> {
+    const [result] = await db.insert(patientAssignments).values(assignment).returning();
+    return result;
+  }
+
+  async updatePatientAssignment(id: number, updates: Partial<InsertPatientAssignment>): Promise<PatientAssignment | undefined> {
+    const [result] = await db.update(patientAssignments)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(patientAssignments.id, id))
+      .returning();
+    return result;
+  }
+
+  async getTherapySessions(assignmentId?: number, userId?: string): Promise<TherapySession[]> {
+    if (assignmentId) {
+      return db.select().from(therapySessions)
+        .where(eq(therapySessions.assignmentId, assignmentId))
+        .orderBy(desc(therapySessions.scheduledAt));
+    }
+    if (userId) {
+      return db.select().from(therapySessions)
+        .where(or(eq(therapySessions.therapistId, userId), eq(therapySessions.patientId, userId)))
+        .orderBy(desc(therapySessions.scheduledAt));
+    }
+    return [];
+  }
+
+  async createTherapySession(session: InsertTherapySession): Promise<TherapySession> {
+    const [result] = await db.insert(therapySessions).values(session).returning();
+    return result;
+  }
+
+  async updateTherapySession(id: number, updates: Partial<TherapySession>): Promise<TherapySession | undefined> {
+    const [result] = await db.update(therapySessions)
+      .set(updates)
+      .where(eq(therapySessions.id, id))
+      .returning();
+    return result;
+  }
+
+  async getExercisePrescriptions(patientId: string): Promise<ExercisePrescription[]> {
+    return db.select().from(exercisePrescriptions)
+      .where(and(eq(exercisePrescriptions.patientId, patientId), eq(exercisePrescriptions.isActive, true)))
+      .orderBy(exercisePrescriptions.createdAt);
+  }
+
+  async createExercisePrescription(prescription: InsertExercisePrescription): Promise<ExercisePrescription> {
+    const [result] = await db.insert(exercisePrescriptions).values(prescription).returning();
+    return result;
+  }
+
+  // ============================================================================
+  // THERAPEUTIC EXERCISES
+  // ============================================================================
+
+  async getTherapeuticExercises(filters: { category?: string; difficulty?: string } = {}): Promise<TherapeuticExercise[]> {
+    const conditions = [eq(therapeuticExercises.isActive, true)];
+    if (filters.category) conditions.push(eq(therapeuticExercises.category, filters.category));
+    if (filters.difficulty) conditions.push(eq(therapeuticExercises.difficulty, filters.difficulty));
+    return db.select().from(therapeuticExercises).where(and(...conditions));
+  }
+
+  async getTherapeuticExercise(id: number): Promise<TherapeuticExercise | undefined> {
+    const [exercise] = await db.select().from(therapeuticExercises).where(eq(therapeuticExercises.id, id));
+    return exercise;
+  }
+
+  async getTherapeuticExerciseBySlug(slug: string): Promise<TherapeuticExercise | undefined> {
+    const [exercise] = await db.select().from(therapeuticExercises).where(eq(therapeuticExercises.slug, slug));
+    return exercise;
+  }
+
+  async createTherapeuticExercise(exercise: InsertTherapeuticExercise): Promise<TherapeuticExercise> {
+    const [result] = await db.insert(therapeuticExercises).values(exercise).returning();
+    return result;
+  }
+
+  async recordExerciseSession(session: InsertExerciseSession): Promise<ExerciseSession> {
+    const [result] = await db.insert(exerciseSessions).values(session).returning();
+    return result;
+  }
+
+  async getExerciseSessions(userId: string, exerciseId?: number): Promise<ExerciseSession[]> {
+    const conditions = [eq(exerciseSessions.userId, userId)];
+    if (exerciseId) conditions.push(eq(exerciseSessions.exerciseId, exerciseId));
+    return db.select().from(exerciseSessions)
+      .where(and(...conditions))
+      .orderBy(desc(exerciseSessions.startedAt))
+      .limit(50);
+  }
+
+  async getUserExerciseScores(userId: string): Promise<ExerciseScore[]> {
+    return db.select().from(exerciseScores).where(eq(exerciseScores.userId, userId));
+  }
+
+  async updateExerciseScore(userId: string, exerciseId: number, score: number, accuracy: number, time: number): Promise<ExerciseScore> {
+    const [existing] = await db.select().from(exerciseScores)
+      .where(and(eq(exerciseScores.userId, userId), eq(exerciseScores.exerciseId, exerciseId)));
+    
+    if (existing) {
+      const newHighScore = Math.max(existing.highScore, score);
+      const newTotalSessions = existing.totalSessions + 1;
+      const newTotalTime = existing.totalTime + time;
+      const newAvgScore = Math.round((existing.averageScore * existing.totalSessions + score) / newTotalSessions);
+      const newAvgAccuracy = Math.round((existing.averageAccuracy * existing.totalSessions + accuracy) / newTotalSessions);
+      
+      const [result] = await db.update(exerciseScores)
+        .set({
+          highScore: newHighScore,
+          totalSessions: newTotalSessions,
+          totalTime: newTotalTime,
+          averageScore: newAvgScore,
+          averageAccuracy: newAvgAccuracy,
+          lastPlayedAt: new Date(),
+          streak: existing.streak + 1,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(exerciseScores.userId, userId), eq(exerciseScores.exerciseId, exerciseId)))
+        .returning();
+      return result;
+    }
+    
+    const [result] = await db.insert(exerciseScores).values({
+      userId,
+      exerciseId,
+      highScore: score,
+      totalSessions: 1,
+      totalTime: time,
+      averageScore: score,
+      averageAccuracy: accuracy,
+      lastPlayedAt: new Date(),
+      streak: 1,
+    }).returning();
+    return result;
+  }
+
+  async getSpeechExercises(category?: string): Promise<SpeechExercise[]> {
+    if (category) {
+      return db.select().from(speechExercises)
+        .where(and(eq(speechExercises.category, category), eq(speechExercises.isActive, true)))
+        .orderBy(speechExercises.order);
+    }
+    return db.select().from(speechExercises)
+      .where(eq(speechExercises.isActive, true))
+      .orderBy(speechExercises.order);
+  }
+
+  async getCognitiveExercises(category?: string): Promise<CognitiveExercise[]> {
+    if (category) {
+      return db.select().from(cognitiveExercises)
+        .where(and(eq(cognitiveExercises.category, category), eq(cognitiveExercises.isActive, true)));
+    }
+    return db.select().from(cognitiveExercises).where(eq(cognitiveExercises.isActive, true));
+  }
+
+  // ============================================================================
+  // DIRECT MESSAGING
+  // ============================================================================
+
+  async getConversations(userId: string): Promise<Conversation[]> {
+    const participations = await db.select({ conversationId: conversationParticipants.conversationId })
+      .from(conversationParticipants)
+      .where(eq(conversationParticipants.userId, userId));
+    
+    if (participations.length === 0) return [];
+    
+    const conversationIds = participations.map(p => p.conversationId);
+    return db.select().from(conversations)
+      .where(sql`${conversations.id} IN (${sql.join(conversationIds.map(id => sql`${id}`), sql`, `)})`)
+      .orderBy(desc(conversations.lastMessageAt));
+  }
+
+  async getConversation(id: number): Promise<Conversation | undefined> {
+    const [conversation] = await db.select().from(conversations).where(eq(conversations.id, id));
+    return conversation;
+  }
+
+  async createConversation(conversation: InsertConversation, participantIds: string[]): Promise<Conversation> {
+    const [result] = await db.insert(conversations).values(conversation).returning();
+    for (const participantId of participantIds) {
+      await db.insert(conversationParticipants).values({ conversationId: result.id, userId: participantId });
+    }
+    return result;
+  }
+
+  async getConversationMessages(conversationId: number, limit = 50, offset = 0): Promise<DirectMessage[]> {
+    return db.select().from(directMessages)
+      .where(eq(directMessages.conversationId, conversationId))
+      .orderBy(desc(directMessages.createdAt))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async sendDirectMessage(message: InsertDirectMessage): Promise<DirectMessage> {
+    const [result] = await db.insert(directMessages).values(message).returning();
+    await db.update(conversations)
+      .set({ lastMessageAt: new Date() })
+      .where(eq(conversations.id, message.conversationId));
+    return result;
+  }
+
+  async markMessagesAsRead(conversationId: number, userId: string): Promise<void> {
+    await db.update(directMessages)
+      .set({ isRead: true })
+      .where(and(
+        eq(directMessages.conversationId, conversationId),
+        sql`${directMessages.senderId} != ${userId}`
+      ));
+    await db.update(conversationParticipants)
+      .set({ lastReadAt: new Date() })
+      .where(and(
+        eq(conversationParticipants.conversationId, conversationId),
+        eq(conversationParticipants.userId, userId)
+      ));
+  }
+
+  // ============================================================================
+  // VIDEO SESSIONS
+  // ============================================================================
+
+  async getVideoSessions(userId: string, status?: string): Promise<VideoSession[]> {
+    const participations = await db.select({ sessionId: videoSessionParticipants.sessionId })
+      .from(videoSessionParticipants)
+      .where(eq(videoSessionParticipants.userId, userId));
+    
+    if (participations.length === 0) return [];
+    
+    const sessionIds = participations.map(p => p.sessionId);
+    const conditions = [sql`${videoSessions.id} IN (${sql.join(sessionIds.map(id => sql`${id}`), sql`, `)})`];
+    if (status) conditions.push(eq(videoSessions.status, status));
+    
+    return db.select().from(videoSessions)
+      .where(and(...conditions))
+      .orderBy(desc(videoSessions.scheduledAt));
+  }
+
+  async getVideoSession(id: number): Promise<VideoSession | undefined> {
+    const [session] = await db.select().from(videoSessions).where(eq(videoSessions.id, id));
+    return session;
+  }
+
+  async createVideoSession(session: InsertVideoSession): Promise<VideoSession> {
+    const [result] = await db.insert(videoSessions).values(session).returning();
+    await db.insert(videoSessionParticipants).values({
+      sessionId: result.id,
+      userId: session.hostId,
+      role: "host",
+    });
+    return result;
+  }
+
+  async updateVideoSession(id: number, updates: Partial<VideoSession>): Promise<VideoSession | undefined> {
+    const [result] = await db.update(videoSessions)
+      .set(updates)
+      .where(eq(videoSessions.id, id))
+      .returning();
+    return result;
+  }
+
+  // ============================================================================
+  // FORUM MEDIA
+  // ============================================================================
+
+  async addForumPostMedia(media: InsertForumPostMedia): Promise<ForumPostMedia> {
+    const [result] = await db.insert(forumPostMedia).values(media).returning();
+    return result;
+  }
+
+  async getForumPostMedia(postId: number): Promise<ForumPostMedia[]> {
+    return db.select().from(forumPostMedia)
+      .where(eq(forumPostMedia.postId, postId))
+      .orderBy(forumPostMedia.order);
+  }
+
+  // ============================================================================
+  // SEO
+  // ============================================================================
+
+  async getSeoPage(slug: string): Promise<SeoPage | undefined> {
+    const [page] = await db.select().from(seoPages).where(eq(seoPages.slug, slug));
+    return page;
+  }
+
+  async getAllSeoPages(): Promise<SeoPage[]> {
+    return db.select().from(seoPages).orderBy(desc(seoPages.priority));
+  }
+
+  async createOrUpdateSeoPage(page: InsertSeoPage & { slug: string }): Promise<SeoPage> {
+    const existing = await this.getSeoPage(page.slug);
+    if (existing) {
+      const [result] = await db.update(seoPages)
+        .set({ ...page, lastModified: new Date() })
+        .where(eq(seoPages.slug, page.slug))
+        .returning();
+      return result;
+    }
+    const [result] = await db.insert(seoPages).values(page).returning();
+    return result;
   }
 }
 
