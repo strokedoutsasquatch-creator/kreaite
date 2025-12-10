@@ -16,6 +16,10 @@ import Publishing from "@/pages/Publishing";
 import RecoveryDashboard from "@/pages/RecoveryDashboard";
 import Achievements from "@/pages/Achievements";
 import Reminders from "@/pages/Reminders";
+import Settings from "@/pages/Settings";
+import Activity from "@/pages/Activity";
+import Exercises from "@/pages/Exercises";
+import TherapistDashboard from "@/pages/TherapistDashboard";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 import SasquatchChatWidget from "@/components/SasquatchChatWidget";
@@ -50,6 +54,26 @@ function Router() {
       <Route path="/reminders">
         <ProtectedRoute>
           <Reminders />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/settings">
+        <ProtectedRoute>
+          <Settings />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/activity">
+        <ProtectedRoute>
+          <Activity />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/exercises">
+        <ProtectedRoute>
+          <Exercises />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/therapist">
+        <ProtectedRoute>
+          <TherapistDashboard />
         </ProtectedRoute>
       </Route>
       <Route component={NotFound} />
