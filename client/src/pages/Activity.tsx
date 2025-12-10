@@ -139,7 +139,7 @@ export default function Activity() {
   const getPostTypeBadgeColor = (type: string) => {
     switch (type) {
       case "milestone": return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
-      case "victory": return "bg-orange-500/20 text-orange-400 border-orange-500/30";
+      case "victory": return "bg-primary/20 text-primary border-primary/30";
       case "goal": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
       case "question": return "bg-purple-500/20 text-purple-400 border-purple-500/30";
       default: return "bg-gray-500/20 text-gray-400 border-gray-500/30";
@@ -170,7 +170,7 @@ export default function Activity() {
 
         <Card className="bg-gray-900 border-gray-800 p-6 mb-8">
           <div className="flex gap-4">
-            <Avatar className="w-12 h-12 border border-orange-500">
+            <Avatar className="w-12 h-12 border border-primary">
               <AvatarImage src={user.profileImageUrl || undefined} />
               <AvatarFallback className="bg-gray-800">
                 {user.firstName?.[0] || user.email?.[0]?.toUpperCase() || "U"}
@@ -240,7 +240,7 @@ export default function Activity() {
                   <Button 
                     onClick={handleCreatePost}
                     disabled={!newPostContent.trim() || createPostMutation.isPending}
-                    className="bg-orange-500 hover:bg-orange-600"
+                    className="bg-primary hover:bg-primary/90"
                     data-testid="button-post"
                   >
                     {createPostMutation.isPending ? (
@@ -262,28 +262,28 @@ export default function Activity() {
           <TabsList className="bg-gray-900 border border-gray-800">
             <TabsTrigger 
               value="all" 
-              className="data-[state=active]:bg-orange-500 data-[state=active]:text-white"
+              className="data-[state=active]:bg-primary data-[state=active]:text-white"
               data-testid="tab-all"
             >
               All Posts
             </TabsTrigger>
             <TabsTrigger 
               value="victories"
-              className="data-[state=active]:bg-orange-500 data-[state=active]:text-white"
+              className="data-[state=active]:bg-primary data-[state=active]:text-white"
               data-testid="tab-victories"
             >
               Victories
             </TabsTrigger>
             <TabsTrigger 
               value="milestones"
-              className="data-[state=active]:bg-orange-500 data-[state=active]:text-white"
+              className="data-[state=active]:bg-primary data-[state=active]:text-white"
               data-testid="tab-milestones"
             >
               Milestones
             </TabsTrigger>
             <TabsTrigger 
               value="questions"
-              className="data-[state=active]:bg-orange-500 data-[state=active]:text-white"
+              className="data-[state=active]:bg-primary data-[state=active]:text-white"
               data-testid="tab-questions"
             >
               Questions
@@ -293,7 +293,7 @@ export default function Activity() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
           </div>
         ) : posts && posts.length > 0 ? (
           <div className="space-y-6">
@@ -315,7 +315,7 @@ export default function Activity() {
                   >
                     <div className="flex gap-4">
                       <Avatar className="w-12 h-12">
-                        <AvatarFallback className="bg-gray-800 text-orange-500">
+                        <AvatarFallback className="bg-gray-800 text-primary">
                           U
                         </AvatarFallback>
                       </Avatar>
@@ -380,7 +380,7 @@ export default function Activity() {
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
-                                className="text-gray-400 hover:text-orange-400 gap-2"
+                                className="text-gray-400 hover:text-primary gap-2"
                                 data-testid={`button-react-${post.id}`}
                               >
                                 <Heart className="w-4 h-4" />
@@ -443,7 +443,7 @@ export default function Activity() {
                                   size="icon"
                                   onClick={() => commentMutation.mutate({ postId: post.id, content: commentText })}
                                   disabled={!commentText.trim() || commentMutation.isPending}
-                                  className="bg-orange-500 hover:bg-orange-600"
+                                  className="bg-primary hover:bg-primary/90"
                                   data-testid={`button-submit-comment-${post.id}`}
                                 >
                                   {commentMutation.isPending ? (
@@ -491,7 +491,7 @@ export default function Activity() {
               Be the first to share your recovery journey with the community!
             </p>
             <Button 
-              className="bg-orange-500 hover:bg-orange-600"
+              className="bg-primary hover:bg-primary/90"
               onClick={() => document.querySelector<HTMLTextAreaElement>('[data-testid="input-new-post"]')?.focus()}
               data-testid="button-first-post"
             >

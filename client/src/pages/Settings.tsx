@@ -123,7 +123,7 @@ export default function Settings() {
           <TabsList className="bg-gray-900 border border-gray-800 p-1">
             <TabsTrigger 
               value="profile" 
-              className="data-[state=active]:bg-orange-500 data-[state=active]:text-white"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               data-testid="tab-profile"
             >
               <User className="w-4 h-4 mr-2" />
@@ -131,7 +131,7 @@ export default function Settings() {
             </TabsTrigger>
             <TabsTrigger 
               value="notifications" 
-              className="data-[state=active]:bg-orange-500 data-[state=active]:text-white"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               data-testid="tab-notifications"
             >
               <Bell className="w-4 h-4 mr-2" />
@@ -139,7 +139,7 @@ export default function Settings() {
             </TabsTrigger>
             <TabsTrigger 
               value="privacy" 
-              className="data-[state=active]:bg-orange-500 data-[state=active]:text-white"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               data-testid="tab-privacy"
             >
               <Shield className="w-4 h-4 mr-2" />
@@ -147,7 +147,7 @@ export default function Settings() {
             </TabsTrigger>
             <TabsTrigger 
               value="accessibility" 
-              className="data-[state=active]:bg-orange-500 data-[state=active]:text-white"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               data-testid="tab-accessibility"
             >
               <Volume2 className="w-4 h-4 mr-2" />
@@ -160,14 +160,14 @@ export default function Settings() {
               <h2 className="text-xl font-semibold text-white mb-6">Profile Picture</h2>
               <div className="flex items-center gap-6">
                 <div className="relative">
-                  <Avatar className="w-24 h-24 border-2 border-orange-500">
+                  <Avatar className="w-24 h-24 border-2 border-primary">
                     <AvatarImage src={settings?.customAvatarUrl || user.profileImageUrl} />
                     <AvatarFallback className="bg-gray-800 text-2xl">
                       {user.firstName?.[0] || user.email?.[0]?.toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
                   <button 
-                    className="absolute bottom-0 right-0 w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center hover-elevate"
+                    className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center hover-elevate"
                     data-testid="button-change-avatar"
                   >
                     <Camera className="w-4 h-4 text-white" />
@@ -176,7 +176,7 @@ export default function Settings() {
                 <div>
                   <p className="text-white font-medium">{user.firstName} {user.lastName}</p>
                   <p className="text-gray-400 text-sm">{user.email}</p>
-                  <p className="text-orange-500 text-sm mt-1">
+                  <p className="text-primary text-sm mt-1">
                     @{settings?.username || "set-username"}
                   </p>
                 </div>
@@ -213,7 +213,7 @@ export default function Settings() {
                   <Button
                     onClick={() => updateUsernameMutation.mutate(usernameInput)}
                     disabled={!usernameAvailable || updateUsernameMutation.isPending}
-                    className="bg-orange-500 hover:bg-orange-600"
+                    className="bg-primary hover:bg-primary/90"
                     data-testid="button-save-username"
                   >
                     {updateUsernameMutation.isPending ? (

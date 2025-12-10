@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 
 const CATEGORIES = [
-  { id: "upper_extremity", name: "Upper Extremity", icon: Hand, description: "Hand, arm, and shoulder exercises", color: "text-orange-400" },
+  { id: "upper_extremity", name: "Upper Extremity", icon: Hand, description: "Hand, arm, and shoulder exercises", color: "text-primary" },
   { id: "cognitive", name: "Cognitive", icon: Brain, description: "Memory, attention, and problem-solving", color: "text-purple-400" },
   { id: "speech_language", name: "Speech & Language", icon: MessageSquare, description: "Aphasia and communication exercises", color: "text-blue-400" },
   { id: "balance_gait", name: "Balance & Gait", icon: Footprints, description: "Walking, posture, and balance", color: "text-green-400" },
@@ -32,7 +32,7 @@ const CATEGORIES = [
 const DIFFICULTY_COLORS: Record<string, string> = {
   beginner: "bg-green-500/20 text-green-400 border-green-500/30",
   intermediate: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  advanced: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+  advanced: "bg-primary/20 text-primary border-primary/30",
   expert: "bg-red-500/20 text-red-400 border-red-500/30",
 };
 
@@ -71,8 +71,12 @@ export default function Exercises() {
   const [gameScore, setGameScore] = useState(0);
   const [gameStartTime, setGameStartTime] = useState<Date | null>(null);
 
+  const exerciseUrl = selectedCategory === "all" 
+    ? "/api/exercises" 
+    : `/api/exercises?category=${selectedCategory}`;
+  
   const { data: exercises, isLoading } = useQuery<Exercise[]>({
-    queryKey: ["/api/exercises", selectedCategory !== "all" ? selectedCategory : undefined],
+    queryKey: [exerciseUrl],
   });
 
   const { data: userScores } = useQuery<ExerciseScore[]>({
@@ -153,8 +157,8 @@ export default function Exercises() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <Card className="bg-gray-900 border-gray-800 p-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-lg bg-orange-500/20 flex items-center justify-center">
-                <Trophy className="w-6 h-6 text-orange-400" />
+              <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center">
+                <Trophy className="w-6 h-6 text-primary" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-white">{userScores?.length || 0}</p>
@@ -203,7 +207,7 @@ export default function Exercises() {
           <Button
             variant={selectedCategory === "all" ? "default" : "outline"}
             onClick={() => setSelectedCategory("all")}
-            className={selectedCategory === "all" ? "bg-orange-500 hover:bg-orange-600" : "border-gray-700 text-gray-300"}
+            className={selectedCategory === "all" ? "bg-primary hover:bg-primary/90" : "border-gray-700 text-gray-300"}
             data-testid="button-category-all"
           >
             All Categories
@@ -215,7 +219,7 @@ export default function Exercises() {
                 key={category.id}
                 variant={selectedCategory === category.id ? "default" : "outline"}
                 onClick={() => setSelectedCategory(category.id)}
-                className={selectedCategory === category.id ? "bg-orange-500 hover:bg-orange-600" : "border-gray-700 text-gray-300"}
+                className={selectedCategory === category.id ? "bg-primary hover:bg-primary/90" : "border-gray-700 text-gray-300"}
                 data-testid={`button-category-${category.id}`}
               >
                 <Icon className={`w-4 h-4 mr-2 ${category.color}`} />
@@ -227,7 +231,7 @@ export default function Exercises() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
           </div>
         ) : filteredExercises && filteredExercises.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -244,7 +248,7 @@ export default function Exercises() {
                   <div className="p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 flex items-center justify-center">
-                        <CategoryIcon className="w-7 h-7 text-orange-400" />
+                        <CategoryIcon className="w-7 h-7 text-primary" />
                       </div>
                       <Badge 
                         variant="outline" 
@@ -272,7 +276,7 @@ export default function Exercises() {
                       <div className="bg-gray-800 rounded-lg p-3 mb-4">
                         <div className="flex items-center justify-between text-sm mb-2">
                           <span className="text-gray-400">High Score</span>
-                          <span className="text-orange-400 font-bold">{score.highScore}</span>
+                          <span className="text-primary font-bold">{score.highScore}</span>
                         </div>
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-gray-400">Sessions</span>
@@ -282,7 +286,7 @@ export default function Exercises() {
                     )}
 
                     <Button 
-                      className="w-full bg-orange-500 hover:bg-orange-600"
+                      className="w-full bg-primary hover:bg-primary/90"
                       onClick={() => startExercise(exercise)}
                       data-testid={`button-play-${exercise.id}`}
                     >
@@ -333,14 +337,14 @@ export default function Exercises() {
                 )}
                 {!["finger_tap", "memory"].includes(selectedExercise?.gameType || "") && (
                   <div className="text-center">
-                    <Zap className="w-16 h-16 text-orange-500 mx-auto mb-4" />
+                    <Zap className="w-16 h-16 text-primary mx-auto mb-4" />
                     <p className="text-xl text-white mb-4">Exercise Demo</p>
                     <p className="text-gray-400 mb-6">
                       Follow the on-screen instructions to complete this exercise.
                     </p>
                     <Button 
                       onClick={() => endExercise(Math.floor(Math.random() * 50) + 50, Math.floor(Math.random() * 30) + 70)}
-                      className="bg-orange-500 hover:bg-orange-600"
+                      className="bg-primary hover:bg-primary/90"
                     >
                       Complete Exercise
                     </Button>
@@ -388,7 +392,7 @@ function FingerTapGame({ onComplete, pointsValue }: { onComplete: (score: number
         <Trophy className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
         <p className="text-3xl font-bold text-white mb-2">{taps} Taps!</p>
         <p className="text-gray-400 mb-4">Score: {score} | Accuracy: {accuracy}%</p>
-        <Button onClick={() => onComplete(score, accuracy)} className="bg-orange-500 hover:bg-orange-600">
+        <Button onClick={() => onComplete(score, accuracy)} className="bg-primary hover:bg-primary/90">
           Save Results
         </Button>
       </div>
@@ -398,10 +402,10 @@ function FingerTapGame({ onComplete, pointsValue }: { onComplete: (score: number
   if (!gameStarted) {
     return (
       <div className="text-center">
-        <Hand className="w-16 h-16 text-orange-500 mx-auto mb-4" />
+        <Hand className="w-16 h-16 text-primary mx-auto mb-4" />
         <p className="text-xl text-white mb-4">Finger Tap Challenge</p>
         <p className="text-gray-400 mb-6">Tap the button as many times as you can in 30 seconds!</p>
-        <Button onClick={startGame} className="bg-orange-500 hover:bg-orange-600">
+        <Button onClick={startGame} className="bg-primary hover:bg-primary/90">
           Start Game
         </Button>
       </div>
@@ -410,11 +414,11 @@ function FingerTapGame({ onComplete, pointsValue }: { onComplete: (score: number
 
   return (
     <div className="text-center">
-      <p className="text-5xl font-bold text-orange-500 mb-2">{timeLeft}s</p>
+      <p className="text-5xl font-bold text-primary mb-2">{timeLeft}s</p>
       <p className="text-2xl text-white mb-6">Taps: {taps}</p>
       <button
         onClick={handleTap}
-        className="w-32 h-32 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 text-white text-2xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-transform"
+        className="w-32 h-32 rounded-full bg-gradient-to-br from-primary to-primary/80 text-white text-2xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-transform"
       >
         TAP!
       </button>
@@ -479,7 +483,7 @@ function MemoryGame({ onComplete, pointsValue }: { onComplete: (score: number, a
         <Brain className="w-16 h-16 text-purple-500 mx-auto mb-4" />
         <p className="text-3xl font-bold text-white mb-2">Round {round - 1} Complete!</p>
         <p className="text-gray-400 mb-4">Score: {score} | Accuracy: {accuracy}%</p>
-        <Button onClick={() => onComplete(score, accuracy)} className="bg-orange-500 hover:bg-orange-600">
+        <Button onClick={() => onComplete(score, accuracy)} className="bg-primary hover:bg-primary/90">
           Save Results
         </Button>
       </div>
@@ -492,7 +496,7 @@ function MemoryGame({ onComplete, pointsValue }: { onComplete: (score: number, a
         <Brain className="w-16 h-16 text-purple-500 mx-auto mb-4" />
         <p className="text-xl text-white mb-4">Memory Sequence Game</p>
         <p className="text-gray-400 mb-6">Watch the sequence and repeat it back!</p>
-        <Button onClick={startRound} className="bg-orange-500 hover:bg-orange-600">
+        <Button onClick={startRound} className="bg-primary hover:bg-primary/90">
           Start Game
         </Button>
       </div>

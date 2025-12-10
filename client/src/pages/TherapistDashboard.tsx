@@ -113,7 +113,7 @@ export default function TherapistDashboard() {
   if (profileLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
   }
@@ -124,8 +124,8 @@ export default function TherapistDashboard() {
         <div className="max-w-2xl mx-auto px-4 py-12">
           <Card className="bg-gray-900 border-gray-800 p-8">
             <div className="text-center mb-8">
-              <div className="w-20 h-20 rounded-full bg-orange-500/20 flex items-center justify-center mx-auto mb-4">
-                <Users className="w-10 h-10 text-orange-400" />
+              <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
+                <Users className="w-10 h-10 text-primary" />
               </div>
               <h1 className="text-2xl font-bold text-white mb-2">Create Therapist Profile</h1>
               <p className="text-gray-400">
@@ -183,8 +183,8 @@ export default function TherapistDashboard() {
           </Card>
           <Card className="bg-gray-900 border-gray-800 p-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-lg bg-orange-500/20 flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-orange-400" />
+              <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center">
+                <Calendar className="w-6 h-6 text-primary" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-white">{upcomingSessions?.length || 0}</p>
@@ -224,7 +224,7 @@ export default function TherapistDashboard() {
           <TabsList className="bg-gray-900 border border-gray-800 p-1">
             <TabsTrigger 
               value="patients" 
-              className="data-[state=active]:bg-orange-500 data-[state=active]:text-white"
+              className="data-[state=active]:bg-primary data-[state=active]:text-white"
               data-testid="tab-patients"
             >
               <Users className="w-4 h-4 mr-2" />
@@ -232,7 +232,7 @@ export default function TherapistDashboard() {
             </TabsTrigger>
             <TabsTrigger 
               value="sessions" 
-              className="data-[state=active]:bg-orange-500 data-[state=active]:text-white"
+              className="data-[state=active]:bg-primary data-[state=active]:text-white"
               data-testid="tab-sessions"
             >
               <Calendar className="w-4 h-4 mr-2" />
@@ -240,7 +240,7 @@ export default function TherapistDashboard() {
             </TabsTrigger>
             <TabsTrigger 
               value="prescriptions" 
-              className="data-[state=active]:bg-orange-500 data-[state=active]:text-white"
+              className="data-[state=active]:bg-primary data-[state=active]:text-white"
               data-testid="tab-prescriptions"
             >
               <ClipboardList className="w-4 h-4 mr-2" />
@@ -248,7 +248,7 @@ export default function TherapistDashboard() {
             </TabsTrigger>
             <TabsTrigger 
               value="analytics" 
-              className="data-[state=active]:bg-orange-500 data-[state=active]:text-white"
+              className="data-[state=active]:bg-primary data-[state=active]:text-white"
               data-testid="tab-analytics"
             >
               <BarChart3 className="w-4 h-4 mr-2" />
@@ -259,7 +259,7 @@ export default function TherapistDashboard() {
           <TabsContent value="patients" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-white">Your Patients</h2>
-              <Button className="bg-orange-500 hover:bg-orange-600" data-testid="button-add-patient">
+              <Button className="bg-primary hover:bg-primary/90" data-testid="button-add-patient">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Patient
               </Button>
@@ -267,7 +267,7 @@ export default function TherapistDashboard() {
             
             {patientsLoading ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
               </div>
             ) : activePatients.length > 0 ? (
               <div className="grid gap-4">
@@ -280,7 +280,7 @@ export default function TherapistDashboard() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <Avatar className="w-12 h-12">
-                          <AvatarFallback className="bg-gray-800 text-orange-400">
+                          <AvatarFallback className="bg-gray-800 text-primary">
                             P
                           </AvatarFallback>
                         </Avatar>
@@ -327,7 +327,7 @@ export default function TherapistDashboard() {
                 <p className="text-gray-400 mb-6">
                   Add patients to start managing their recovery journey.
                 </p>
-                <Button className="bg-orange-500 hover:bg-orange-600">
+                <Button className="bg-primary hover:bg-primary/90">
                   <Plus className="w-4 h-4 mr-2" />
                   Add Your First Patient
                 </Button>
@@ -340,7 +340,7 @@ export default function TherapistDashboard() {
               <h2 className="text-xl font-semibold text-white">Therapy Sessions</h2>
               <Dialog open={newSessionOpen} onOpenChange={setNewSessionOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-orange-500 hover:bg-orange-600" data-testid="button-schedule-session">
+                  <Button className="bg-primary hover:bg-primary/90" data-testid="button-schedule-session">
                     <Plus className="w-4 h-4 mr-2" />
                     Schedule Session
                   </Button>
@@ -391,7 +391,7 @@ export default function TherapistDashboard() {
                       Cancel
                     </Button>
                     <Button 
-                      className="bg-orange-500 hover:bg-orange-600"
+                      className="bg-primary hover:bg-primary/90"
                       onClick={() => createSessionMutation.mutate({ 
                         patientId: selectedPatient,
                         sessionType: "video",
@@ -432,7 +432,7 @@ export default function TherapistDashboard() {
                           {session.status}
                         </Badge>
                         {session.sessionType === "video" && (
-                          <Button className="bg-orange-500 hover:bg-orange-600">
+                          <Button className="bg-primary hover:bg-primary/90">
                             <Video className="w-4 h-4 mr-2" />
                             Join Call
                           </Button>
@@ -461,7 +461,7 @@ export default function TherapistDashboard() {
               <p className="text-gray-400 mb-6">
                 Create custom exercise programs for your patients.
               </p>
-              <Button className="bg-orange-500 hover:bg-orange-600">
+              <Button className="bg-primary hover:bg-primary/90">
                 <Plus className="w-4 h-4 mr-2" />
                 Create Prescription
               </Button>
@@ -555,7 +555,7 @@ function TherapistProfileForm({ onSave }: { onSave: (data: any) => void }) {
         />
       </div>
       
-      <Button onClick={handleSubmit} className="w-full bg-orange-500 hover:bg-orange-600">
+      <Button onClick={handleSubmit} className="w-full bg-primary hover:bg-primary/90">
         Create Profile
       </Button>
     </div>
