@@ -9,6 +9,7 @@ import { getStripeSync, getStripePublishableKey } from "./stripeClient";
 import { runMigrations } from "stripe-replit-sync";
 import { generateCoachResponse, getRandomQuote } from "./geminiService";
 import { searchAmazonProducts, getAmazonProduct, isConfigured as isAmazonConfigured } from "./amazonService";
+import { seedRecoveryData } from "./seedRecoveryData";
 
 async function initStripe() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -1218,6 +1219,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating enrollment:", error);
       res.status(500).json({ message: "Failed to create enrollment" });
+    }
+  });
+
+  app.post('/api/admin/seed-recovery-data', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const result = await seedRecoveryData();
+      res.json({ 
+        success: true, 
+        message: "Recovery data seeded successfully",
+        ...result
+      });
+    } catch (error) {
+      console.error("Error seeding recovery data:", error);
+      res.status(500).json({ message: "Failed to seed recovery data" });
     }
   });
 
