@@ -1223,6 +1223,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================================================
+  // ACHIEVEMENTS API
+  // ============================================================================
+
+  // Get user's earned achievements
+  app.get('/api/achievements', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const achievements = await storage.getUserAchievements(userId);
+      res.json(achievements);
+    } catch (error) {
+      console.error("Error fetching achievements:", error);
+      res.status(500).json({ message: "Failed to fetch achievements" });
+    }
+  });
+
+  // Get all available milestones
+  app.get('/api/achievements/available', isAuthenticated, async (req: any, res) => {
+    try {
+      const milestones = await storage.getAvailableMilestones();
+      res.json(milestones);
+    } catch (error) {
+      console.error("Error fetching available milestones:", error);
+      res.status(500).json({ message: "Failed to fetch available milestones" });
+    }
+  });
+
+  // Check and award streak-based milestones
+  app.get('/api/achievements/check-streaks', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const streak = await storage.getUserStreak(userId);
+      const currentStreak = streak?.currentStreak || 0;
+      const awarded = await storage.checkAndAwardStreakMilestones(userId, currentStreak);
+      res.json({ awarded, currentStreak });
+    } catch (error) {
+      console.error("Error checking streak milestones:", error);
+      res.status(500).json({ message: "Failed to check streak milestones" });
+    }
+  });
+
+  // Claim a milestone achievement
+  app.post('/api/achievements/:milestoneId/claim', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const milestoneId = parseInt(req.params.milestoneId);
+      const { notes } = req.body;
+      
+      if (isNaN(milestoneId)) {
+        return res.status(400).json({ message: "Invalid milestone ID" });
+      }
+      
+      const awarded = await storage.awardMilestone(userId, milestoneId, notes);
+      const milestones = await storage.getAvailableMilestones();
+      const milestone = milestones.find(m => m.id === milestoneId);
+      
+      res.json({
+        ...awarded,
+        name: milestone?.name,
+        description: milestone?.description,
+        category: milestone?.category,
+        pointsAwarded: milestone?.pointsAwarded,
+      });
+    } catch (error) {
+      console.error("Error claiming milestone:", error);
+      res.status(500).json({ message: "Failed to claim milestone" });
+    }
+  });
+
+  // Get achievement stats for report card
+  app.get('/api/achievements/stats', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const achievements = await storage.getUserAchievements(userId);
+      const streak = await storage.getUserStreak(userId);
+      const milestones = await storage.getAvailableMilestones();
+      
+      const totalPoints = achievements.reduce((sum, a) => sum + (a.pointsAwarded || 0), 0);
+      const badgesEarned = achievements.length;
+      const currentStreak = streak?.currentStreak || 0;
+      const longestStreak = streak?.longestStreak || 0;
+      const totalActiveDays = streak?.totalActiveDays || 0;
+      
+      const categoryStats = {
+        physical: achievements.filter(a => a.category === 'physical').length,
+        emotional: achievements.filter(a => a.category === 'emotional').length,
+        cognitive: achievements.filter(a => a.category === 'cognitive').length,
+        social: achievements.filter(a => a.category === 'social' || a.category === 'streak').length,
+      };
+      
+      res.json({
+        totalPoints,
+        badgesEarned,
+        totalMilestones: milestones.length,
+        currentStreak,
+        longestStreak,
+        totalActiveDays,
+        categoryStats,
+      });
+    } catch (error) {
+      console.error("Error fetching achievement stats:", error);
+      res.status(500).json({ message: "Failed to fetch achievement stats" });
+    }
+  });
+
+  // ============================================================================
   // ACCOUNTABILITY PODS API
   // ============================================================================
 

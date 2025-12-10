@@ -14,6 +14,7 @@ import Builder from "@/pages/Builder";
 import SurvivalGrid from "@/pages/SurvivalGrid";
 import Publishing from "@/pages/Publishing";
 import RecoveryDashboard from "@/pages/RecoveryDashboard";
+import Achievements from "@/pages/Achievements";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 import SasquatchChatWidget from "@/components/SasquatchChatWidget";
@@ -38,6 +39,11 @@ function Router() {
       <Route path="/recovery">
         <ProtectedRoute>
           <RecoveryDashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/achievements">
+        <ProtectedRoute>
+          <Achievements />
         </ProtectedRoute>
       </Route>
       <Route component={NotFound} />

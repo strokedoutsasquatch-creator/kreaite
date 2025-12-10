@@ -505,11 +505,29 @@ export default function RecoveryDashboard() {
                     <Badge className="bg-gray-700 text-gray-300">+{milestone.pointsAwarded}</Badge>
                   </div>
                 ))}
+                <Link href="/achievements">
+                  <Button 
+                    variant="outline" 
+                    className="w-full mt-4 border-orange-500 text-orange-500 hover:bg-orange-500/10"
+                    data-testid="button-view-achievements"
+                  >
+                    View All Achievements
+                  </Button>
+                </Link>
               </div>
             ) : (
               <div className="text-center py-8">
                 <Trophy className="h-12 w-12 text-gray-600 mx-auto mb-4" />
                 <p className="text-gray-400">Complete check-ins and habits to earn milestones!</p>
+                <Link href="/achievements">
+                  <Button 
+                    variant="outline" 
+                    className="mt-4 border-orange-500 text-orange-500 hover:bg-orange-500/10"
+                    data-testid="button-view-achievements-empty"
+                  >
+                    View Achievement Center
+                  </Button>
+                </Link>
               </div>
             )}
           </Card>

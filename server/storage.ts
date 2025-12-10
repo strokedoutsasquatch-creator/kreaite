@@ -92,6 +92,11 @@ export interface IStorage {
   createUserProfile(profile: any): Promise<any>;
   updateUserProfile(userId: string, updates: any): Promise<any | undefined>;
   
+  // Achievements
+  getUserAchievements(userId: string): Promise<any[]>;
+  getAvailableMilestones(): Promise<any[]>;
+  checkAndAwardStreakMilestones(userId: string, currentStreak: number): Promise<any[]>;
+  
   // Accountability Pods
   getAccountabilityPod(podId: number): Promise<AccountabilityPod | null>;
   getUserPod(userId: string): Promise<AccountabilityPod | null>;
@@ -332,8 +337,8 @@ export class DatabaseStorage implements IStorage {
   async getCategoryStats(): Promise<{ categoryId: number; threadCount: number; postCount: number }[]> {
     const stats = await db.select({
       categoryId: forumCategories.id,
-      threadCount: sql<number>`(SELECT COUNT(*) FROM ${forumThreads} WHERE ${forumThreads.categoryId} = ${forumCategories.id})::int`,
-      postCount: sql<number>`(SELECT COUNT(*) FROM ${forumPosts} p JOIN ${forumThreads} t ON p.thread_id = t.id WHERE t.category_id = ${forumCategories.id})::int`
+      threadCount: sql<number>`COALESCE((SELECT COUNT(*) FROM forum_threads ft WHERE ft.category_id = forum_categories.id), 0)::int`,
+      postCount: sql<number>`COALESCE((SELECT COUNT(*) FROM forum_posts fp JOIN forum_threads ft ON fp.thread_id = ft.id WHERE ft.category_id = forum_categories.id), 0)::int`
     }).from(forumCategories);
     
     return stats.map(s => ({
@@ -797,6 +802,76 @@ export class DatabaseStorage implements IStorage {
       winsToday: c.checkin.winsToday,
       createdAt: c.checkin.checkinDate,
     }));
+  }
+
+  // Achievements Methods
+  async getUserAchievements(userId: string): Promise<any[]> {
+    const milestones = await db.select({
+      log: userMilestoneLogs,
+      milestone: recoveryMilestones
+    })
+      .from(userMilestoneLogs)
+      .innerJoin(recoveryMilestones, eq(userMilestoneLogs.milestoneId, recoveryMilestones.id))
+      .where(eq(userMilestoneLogs.userId, userId))
+      .orderBy(desc(userMilestoneLogs.achievedAt));
+    
+    return milestones.map(m => ({
+      id: m.log.id,
+      milestoneId: m.milestone.id,
+      userId: m.log.userId,
+      name: m.milestone.name,
+      description: m.milestone.description,
+      category: m.milestone.category,
+      iconUrl: m.milestone.iconUrl,
+      badgeUrl: m.milestone.badgeUrl,
+      pointsAwarded: m.milestone.pointsAwarded,
+      celebrationNotes: m.log.celebrationNotes,
+      achievedAt: m.log.achievedAt,
+    }));
+  }
+
+  async getAvailableMilestones(): Promise<any[]> {
+    return db.select().from(recoveryMilestones)
+      .orderBy(recoveryMilestones.category, recoveryMilestones.order);
+  }
+
+  async checkAndAwardStreakMilestones(userId: string, currentStreak: number): Promise<any[]> {
+    const streakMilestones = [
+      { streak: 3, name: "3 Day Warrior" },
+      { streak: 7, name: "Week Warrior" },
+      { streak: 14, name: "Two Week Champion" },
+      { streak: 21, name: "21 Day Habit Builder" },
+      { streak: 30, name: "30 Day Veteran" },
+      { streak: 66, name: "66 Day Master" },
+      { streak: 100, name: "Century Champion" },
+    ];
+    
+    const awardedMilestones: any[] = [];
+    const allMilestones = await this.getAvailableMilestones();
+    const userMilestones = await this.getUserMilestones(userId);
+    const userMilestoneIds = new Set(userMilestones.map(m => m.milestoneId));
+    
+    for (const streakMilestone of streakMilestones) {
+      if (currentStreak >= streakMilestone.streak) {
+        const milestone = allMilestones.find(m => 
+          m.name.toLowerCase().includes(streakMilestone.name.toLowerCase()) ||
+          (m.category === 'streak' && m.name.includes(String(streakMilestone.streak)))
+        );
+        
+        if (milestone && !userMilestoneIds.has(milestone.id)) {
+          const awarded = await this.awardMilestone(userId, milestone.id, `Achieved ${streakMilestone.streak} day streak!`);
+          awardedMilestones.push({
+            ...awarded,
+            name: milestone.name,
+            description: milestone.description,
+            category: milestone.category,
+            pointsAwarded: milestone.pointsAwarded,
+          });
+        }
+      }
+    }
+    
+    return awardedMilestones;
   }
 }
 
