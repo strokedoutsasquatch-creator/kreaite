@@ -199,13 +199,12 @@ export default function Footer() {
             </a>
           </div>
           
-          <div className="flex flex-col items-center gap-3" data-testid="powered-by-kremersx">
+          <div className="flex flex-col items-center gap-2" data-testid="powered-by-kremersx">
             <span className="text-xs uppercase tracking-wider text-muted-foreground">Powered by</span>
             <img 
-              src="/attached_assets/LOGO_SLIM_1766353371039.png"
-              alt="KremersX"
-              className="h-10 w-auto object-contain"
-              style={{ maxWidth: '200px' }}
+              src="/attached_assets/Kremersx_1766356484817.png"
+              alt="KremersX - Stroked Out Sasquatch"
+              className="h-24 w-auto object-contain"
             />
           </div>
         </div>
