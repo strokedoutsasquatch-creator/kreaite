@@ -1165,6 +1165,50 @@ export const seoPages = pgTable("seo_pages", {
 });
 
 // ============================================================================
+// BLOGGING SUITE - USER STORIES
+// ============================================================================
+
+export const blogPosts = pgTable("blog_posts", {
+  id: serial("id").primaryKey(),
+  authorId: varchar("author_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  excerpt: text("excerpt"),
+  content: text("content").notNull(),
+  heroImageUrl: text("hero_image_url"),
+  status: text("status").notNull().default("draft"), // draft, published, archived
+  visibility: text("visibility").notNull().default("public"), // public, private, followers
+  tags: text("tags").array(),
+  readingTime: integer("reading_time").default(5),
+  viewCount: integer("view_count").notNull().default(0),
+  likeCount: integer("like_count").notNull().default(0),
+  commentCount: integer("comment_count").notNull().default(0),
+  isFeatured: boolean("is_featured").notNull().default(false),
+  publishedAt: timestamp("published_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const blogPostReactions = pgTable("blog_post_reactions", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").notNull().references(() => blogPosts.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  reactionType: text("reaction_type").notNull().default("like"), // like, love, inspire, support
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const blogPostComments = pgTable("blog_post_comments", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").notNull().references(() => blogPosts.id, { onDelete: "cascade" }),
+  authorId: varchar("author_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  parentId: integer("parent_id"),
+  content: text("content").notNull(),
+  isEdited: boolean("is_edited").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// ============================================================================
 // INSERT SCHEMAS & TYPES
 // ============================================================================
 
@@ -1255,6 +1299,11 @@ export const insertVideoSessionParticipantSchema = createInsertSchema(videoSessi
 
 // SEO Insert Schemas
 export const insertSeoPageSchema = createInsertSchema(seoPages).omit({ id: true, createdAt: true, lastModified: true });
+
+// Blogging Suite Insert Schemas
+export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({ id: true, createdAt: true, updatedAt: true, viewCount: true, likeCount: true, commentCount: true });
+export const insertBlogPostReactionSchema = createInsertSchema(blogPostReactions).omit({ id: true, createdAt: true });
+export const insertBlogPostCommentSchema = createInsertSchema(blogPostComments).omit({ id: true, createdAt: true, updatedAt: true, isEdited: true });
 
 // ============================================================================
 // EXPORT TYPES
@@ -1401,3 +1450,11 @@ export type InsertVideoSessionParticipant = z.infer<typeof insertVideoSessionPar
 // SEO Types
 export type SeoPage = typeof seoPages.$inferSelect;
 export type InsertSeoPage = z.infer<typeof insertSeoPageSchema>;
+
+// Blogging Suite Types
+export type BlogPost = typeof blogPosts.$inferSelect;
+export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
+export type BlogPostReaction = typeof blogPostReactions.$inferSelect;
+export type InsertBlogPostReaction = z.infer<typeof insertBlogPostReactionSchema>;
+export type BlogPostComment = typeof blogPostComments.$inferSelect;
+export type InsertBlogPostComment = z.infer<typeof insertBlogPostCommentSchema>;
