@@ -8,6 +8,7 @@ import Dashboard from "@/pages/Dashboard";
 import Community from "@/pages/Community";
 import Thread from "@/pages/Thread";
 import About from "@/pages/About";
+import AboutUs from "@/pages/AboutUs";
 import Marketplace from "@/pages/Marketplace";
 import Academy from "@/pages/Academy";
 import Builder from "@/pages/Builder";
@@ -27,6 +28,10 @@ import VideoSessions from "@/pages/VideoSessions";
 import SocialNetwork from "@/pages/SocialNetwork";
 import TherapistMarketplace from "@/pages/TherapistMarketplace";
 import AdminPlanBuilder from "@/pages/AdminPlanBuilder";
+import Stories from "@/pages/Stories";
+import StoryView from "@/pages/StoryView";
+import StoryEditor from "@/pages/StoryEditor";
+import MyStories from "@/pages/MyStories";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 import SasquatchChatWidget from "@/components/SasquatchChatWidget";
@@ -118,6 +123,24 @@ function Router() {
           <AdminPlanBuilder />
         </ProtectedRoute>
       </Route>
+      <Route path="/about-us" component={AboutUs} />
+      <Route path="/stories" component={Stories} />
+      <Route path="/stories/new">
+        <ProtectedRoute>
+          <StoryEditor />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/stories/my">
+        <ProtectedRoute>
+          <MyStories />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/stories/edit/:id">
+        <ProtectedRoute>
+          <StoryEditor />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/stories/:slug" component={StoryView} />
       <Route component={NotFound} />
     </Switch>
   );
