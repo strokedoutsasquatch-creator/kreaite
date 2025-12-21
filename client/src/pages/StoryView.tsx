@@ -151,9 +151,9 @@ export default function StoryView() {
         <article>
           <header className="mb-8">
             {post.tags && post.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-4">
+              <div className="flex flex-wrap gap-2 mb-4" data-testid="story-tags">
                 {post.tags.map((tag, index) => (
-                  <Badge key={index} variant="outline">{tag}</Badge>
+                  <Badge key={index} variant="outline" data-testid={`tag-${index}`}>{tag}</Badge>
                 ))}
               </div>
             )}
@@ -171,19 +171,19 @@ export default function StoryView() {
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <div className="font-medium text-foreground">
+                  <div className="font-medium text-foreground" data-testid="text-author-name">
                     {author?.firstName} {author?.lastName}
                   </div>
-                  <div className="text-sm">{formattedDate}</div>
+                  <div className="text-sm" data-testid="text-publish-date">{formattedDate}</div>
                 </div>
               </div>
               
               <div className="flex items-center gap-4 text-sm">
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1" data-testid="text-reading-time">
                   <Clock className="w-4 h-4" />
                   {post.readingTime} min read
                 </span>
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1" data-testid="text-view-count">
                   <Eye className="w-4 h-4" />
                   {post.viewCount} views
                 </span>
@@ -230,8 +230,8 @@ export default function StoryView() {
               </Button>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground mr-2">Share:</span>
+            <div className="flex items-center gap-2" data-testid="share-controls">
+              <span className="text-sm text-muted-foreground mr-2" data-testid="text-share-label">Share:</span>
               <Button 
                 variant="outline" 
                 size="icon"

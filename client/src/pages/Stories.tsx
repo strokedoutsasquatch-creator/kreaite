@@ -39,47 +39,48 @@ function StoryCard({ post }: { post: BlogPost }) {
             src={post.heroImageUrl} 
             alt={post.title}
             className="w-full h-full object-cover"
+            data-testid={`story-image-${post.id}`}
           />
         </div>
       )}
       <CardHeader>
         <div className="flex items-center gap-2 mb-2">
           {post.tags?.slice(0, 2).map((tag, index) => (
-            <Badge key={index} variant="outline" className="text-xs">
+            <Badge key={index} variant="outline" className="text-xs" data-testid={`story-tag-${post.id}-${index}`}>
               {tag}
             </Badge>
           ))}
           {post.isFeatured && (
-            <Badge className="text-xs">
+            <Badge className="text-xs" data-testid={`story-featured-${post.id}`}>
               <Sparkles className="w-3 h-3 mr-1" />
               Featured
             </Badge>
           )}
         </div>
-        <Link href={`/stories/${post.slug}`}>
-          <CardTitle className="hover:text-primary transition-colors cursor-pointer line-clamp-2">
+        <Link href={`/stories/${post.slug}`} data-testid={`link-story-${post.id}`}>
+          <CardTitle className="hover:text-primary transition-colors cursor-pointer line-clamp-2" data-testid={`story-title-${post.id}`}>
             {post.title}
           </CardTitle>
         </Link>
-        <CardDescription className="line-clamp-3">
+        <CardDescription className="line-clamp-3" data-testid={`story-excerpt-${post.id}`}>
           {post.excerpt || post.content.substring(0, 150) + '...'}
         </CardDescription>
       </CardHeader>
       <CardFooter className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="w-4 h-4" />
-          <span>{post.readingTime} min read</span>
+          <span data-testid={`story-readtime-${post.id}`}>{post.readingTime} min read</span>
         </div>
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1" data-testid={`story-views-${post.id}`}>
             <Eye className="w-4 h-4" />
             {post.viewCount}
           </span>
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1" data-testid={`story-likes-${post.id}`}>
             <Heart className="w-4 h-4" />
             {post.likeCount}
           </span>
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1" data-testid={`story-comments-${post.id}`}>
             <MessageCircle className="w-4 h-4" />
             {post.commentCount}
           </span>

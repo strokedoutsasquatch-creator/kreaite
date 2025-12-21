@@ -145,10 +145,10 @@ export default function AboutUs() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
               <div key={index} className="text-center" data-testid={`stat-${index}`}>
-                <div className="text-4xl md:text-5xl font-black text-primary mb-2">
+                <div className="text-4xl md:text-5xl font-black text-primary mb-2" data-testid={`stat-value-${index}`}>
                   {stat.value}
                 </div>
-                <div className="text-muted-foreground">{stat.label}</div>
+                <div className="text-muted-foreground" data-testid={`stat-label-${index}`}>{stat.label}</div>
               </div>
             ))}
           </div>
