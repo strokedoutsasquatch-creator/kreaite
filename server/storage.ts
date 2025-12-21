@@ -32,6 +32,9 @@ import {
   type VideoSession, type InsertVideoSession,
   type VideoSessionParticipant,
   type SeoPage, type InsertSeoPage,
+  type BlogPost, type InsertBlogPost,
+  type BlogPostReaction, type InsertBlogPostReaction,
+  type BlogPostComment, type InsertBlogPostComment,
 } from "@shared/schema";
 import { 
   users, forumCategories, forumThreads, forumPosts, forumReactions,
@@ -56,6 +59,7 @@ import {
   wearableConnections, wearableMetrics,
   conversations, conversationParticipants, directMessages,
   forumPostMedia, videoSessions, videoSessionParticipants, seoPages,
+  blogPosts, blogPostReactions, blogPostComments,
   type AccountabilityPod, type InsertAccountabilityPod,
   type PodMember, type InsertPodMember,
 } from "@shared/schema";
@@ -275,6 +279,21 @@ export interface IStorage {
   createRecoveryPlan(plan: any): Promise<any>;
   deleteRecoveryPlan(id: number): Promise<boolean>;
   assignRecoveryPlan(planId: number, userIds: string[]): Promise<void>;
+  
+  // Blogging Suite
+  getBlogPosts(filters?: { authorId?: string; status?: string; featured?: boolean }): Promise<BlogPost[]>;
+  getBlogPost(id: number): Promise<BlogPost | undefined>;
+  getBlogPostBySlug(slug: string): Promise<BlogPost | undefined>;
+  createBlogPost(post: InsertBlogPost): Promise<BlogPost>;
+  updateBlogPost(id: number, updates: Partial<InsertBlogPost>): Promise<BlogPost | undefined>;
+  deleteBlogPost(id: number): Promise<boolean>;
+  publishBlogPost(id: number): Promise<BlogPost | undefined>;
+  getUserBlogPosts(userId: string): Promise<BlogPost[]>;
+  toggleBlogReaction(postId: number, userId: string, reactionType: string): Promise<{ added: boolean }>;
+  getBlogComments(postId: number): Promise<BlogPostComment[]>;
+  createBlogComment(comment: InsertBlogPostComment): Promise<BlogPostComment>;
+  deleteBlogComment(id: number): Promise<boolean>;
+  incrementBlogViews(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1889,6 +1908,140 @@ export class DatabaseStorage implements IStorage {
         status: 'active',
       }).onConflictDoNothing();
     }
+  }
+
+  // ============================================================================
+  // BLOGGING SUITE
+  // ============================================================================
+
+  async getBlogPosts(filters?: { authorId?: string; status?: string; featured?: boolean }): Promise<BlogPost[]> {
+    let query = db.select().from(blogPosts);
+    
+    if (filters?.authorId) {
+      query = query.where(eq(blogPosts.authorId, filters.authorId)) as any;
+    }
+    if (filters?.status) {
+      query = query.where(eq(blogPosts.status, filters.status)) as any;
+    }
+    if (filters?.featured) {
+      query = query.where(eq(blogPosts.isFeatured, true)) as any;
+    }
+    
+    return query.orderBy(desc(blogPosts.publishedAt));
+  }
+
+  async getBlogPost(id: number): Promise<BlogPost | undefined> {
+    const [post] = await db.select().from(blogPosts).where(eq(blogPosts.id, id));
+    return post;
+  }
+
+  async getBlogPostBySlug(slug: string): Promise<BlogPost | undefined> {
+    const [post] = await db.select().from(blogPosts).where(eq(blogPosts.slug, slug));
+    return post;
+  }
+
+  async createBlogPost(post: InsertBlogPost): Promise<BlogPost> {
+    const slug = post.slug || post.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const wordCount = post.content.split(/\s+/).length;
+    const readingTime = Math.max(1, Math.ceil(wordCount / 200));
+    
+    const [result] = await db.insert(blogPosts).values({
+      ...post,
+      slug,
+      readingTime,
+    }).returning();
+    return result;
+  }
+
+  async updateBlogPost(id: number, updates: Partial<InsertBlogPost>): Promise<BlogPost | undefined> {
+    const updateData: any = { ...updates, updatedAt: new Date() };
+    
+    if (updates.content) {
+      const wordCount = updates.content.split(/\s+/).length;
+      updateData.readingTime = Math.max(1, Math.ceil(wordCount / 200));
+    }
+    
+    const [result] = await db.update(blogPosts)
+      .set(updateData)
+      .where(eq(blogPosts.id, id))
+      .returning();
+    return result;
+  }
+
+  async deleteBlogPost(id: number): Promise<boolean> {
+    await db.delete(blogPosts).where(eq(blogPosts.id, id));
+    return true;
+  }
+
+  async publishBlogPost(id: number): Promise<BlogPost | undefined> {
+    const [result] = await db.update(blogPosts)
+      .set({ 
+        status: 'published', 
+        publishedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(blogPosts.id, id))
+      .returning();
+    return result;
+  }
+
+  async getUserBlogPosts(userId: string): Promise<BlogPost[]> {
+    return db.select().from(blogPosts)
+      .where(eq(blogPosts.authorId, userId))
+      .orderBy(desc(blogPosts.createdAt));
+  }
+
+  async toggleBlogReaction(postId: number, userId: string, reactionType: string): Promise<{ added: boolean }> {
+    const [existing] = await db.select().from(blogPostReactions)
+      .where(and(
+        eq(blogPostReactions.postId, postId),
+        eq(blogPostReactions.userId, userId)
+      ));
+    
+    if (existing) {
+      await db.delete(blogPostReactions).where(eq(blogPostReactions.id, existing.id));
+      await db.update(blogPosts)
+        .set({ likeCount: sql`${blogPosts.likeCount} - 1` })
+        .where(eq(blogPosts.id, postId));
+      return { added: false };
+    } else {
+      await db.insert(blogPostReactions).values({ postId, userId, reactionType });
+      await db.update(blogPosts)
+        .set({ likeCount: sql`${blogPosts.likeCount} + 1` })
+        .where(eq(blogPosts.id, postId));
+      return { added: true };
+    }
+  }
+
+  async getBlogComments(postId: number): Promise<BlogPostComment[]> {
+    return db.select().from(blogPostComments)
+      .where(eq(blogPostComments.postId, postId))
+      .orderBy(desc(blogPostComments.createdAt));
+  }
+
+  async createBlogComment(comment: InsertBlogPostComment): Promise<BlogPostComment> {
+    const [result] = await db.insert(blogPostComments).values(comment).returning();
+    await db.update(blogPosts)
+      .set({ commentCount: sql`${blogPosts.commentCount} + 1` })
+      .where(eq(blogPosts.id, comment.postId));
+    return result;
+  }
+
+  async deleteBlogComment(id: number): Promise<boolean> {
+    const [comment] = await db.select().from(blogPostComments).where(eq(blogPostComments.id, id));
+    if (comment) {
+      await db.delete(blogPostComments).where(eq(blogPostComments.id, id));
+      await db.update(blogPosts)
+        .set({ commentCount: sql`${blogPosts.commentCount} - 1` })
+        .where(eq(blogPosts.id, comment.postId));
+    }
+    return true;
+  }
+
+  async incrementBlogViews(id: number): Promise<void> {
+    await db.update(blogPosts)
+      .set({ viewCount: sql`${blogPosts.viewCount} + 1` })
+      .where(eq(blogPosts.id, id));
   }
 }
 
