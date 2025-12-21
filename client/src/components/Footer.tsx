@@ -199,9 +199,14 @@ export default function Footer() {
             </a>
           </div>
           
-          <div className="flex items-center gap-2 text-muted-foreground" data-testid="powered-by-kremersx">
-            <span className="text-xs uppercase tracking-wider">Powered by</span>
-            <span className="font-bold text-primary text-lg tracking-tight">KremersX</span>
+          <div className="flex flex-col items-center gap-3" data-testid="powered-by-kremersx">
+            <span className="text-xs uppercase tracking-wider text-muted-foreground">Powered by</span>
+            <img 
+              src="/attached_assets/LOGO_SLIM_1766353371039.png"
+              alt="KremersX"
+              className="h-10 w-auto object-contain"
+              style={{ maxWidth: '200px' }}
+            />
           </div>
         </div>
       </div>
