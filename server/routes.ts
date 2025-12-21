@@ -2495,6 +2495,158 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================================================
+  // BLOGGING SUITE - USER STORIES
+  // ============================================================================
+
+  app.get('/api/blog', async (req, res) => {
+    try {
+      const { authorId, status, featured } = req.query;
+      const posts = await storage.getBlogPosts({
+        authorId: authorId as string,
+        status: status as string || 'published',
+        featured: featured === 'true'
+      });
+      res.json(posts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch blog posts" });
+    }
+  });
+
+  app.get('/api/blog/featured', async (req, res) => {
+    try {
+      const posts = await storage.getBlogPosts({ status: 'published', featured: true });
+      res.json(posts.slice(0, 6));
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch featured posts" });
+    }
+  });
+
+  app.get('/api/blog/me', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const posts = await storage.getUserBlogPosts(userId);
+      res.json(posts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch your posts" });
+    }
+  });
+
+  app.get('/api/blog/:slug', async (req, res) => {
+    try {
+      const post = await storage.getBlogPostBySlug(req.params.slug);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      await storage.incrementBlogViews(post.id);
+      res.json(post);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch post" });
+    }
+  });
+
+  app.post('/api/blog', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const post = await storage.createBlogPost({ ...req.body, authorId: userId });
+      res.json(post);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create post" });
+    }
+  });
+
+  app.patch('/api/blog/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const postId = parseInt(req.params.id);
+      const existing = await storage.getBlogPost(postId);
+      if (!existing || existing.authorId !== userId) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      const post = await storage.updateBlogPost(postId, req.body);
+      res.json(post);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update post" });
+    }
+  });
+
+  app.post('/api/blog/:id/publish', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const postId = parseInt(req.params.id);
+      const existing = await storage.getBlogPost(postId);
+      if (!existing || existing.authorId !== userId) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      const post = await storage.publishBlogPost(postId);
+      res.json(post);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to publish post" });
+    }
+  });
+
+  app.delete('/api/blog/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const postId = parseInt(req.params.id);
+      const existing = await storage.getBlogPost(postId);
+      if (!existing || existing.authorId !== userId) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      await storage.deleteBlogPost(postId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete post" });
+    }
+  });
+
+  app.post('/api/blog/:id/react', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const postId = parseInt(req.params.id);
+      const { reactionType } = req.body;
+      const result = await storage.toggleBlogReaction(postId, userId, reactionType || 'like');
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to react to post" });
+    }
+  });
+
+  app.get('/api/blog/:id/comments', async (req, res) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const comments = await storage.getBlogComments(postId);
+      res.json(comments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
+
+  app.post('/api/blog/:id/comments', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const postId = parseInt(req.params.id);
+      const comment = await storage.createBlogComment({
+        postId,
+        authorId: userId,
+        content: req.body.content,
+        parentId: req.body.parentId
+      });
+      res.json(comment);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to add comment" });
+    }
+  });
+
+  app.delete('/api/blog/comments/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      await storage.deleteBlogComment(parseInt(req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete comment" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
