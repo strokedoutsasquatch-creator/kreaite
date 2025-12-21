@@ -184,6 +184,26 @@ export default function Footer() {
             before beginning any new recovery protocol.
           </p>
         </div>
+
+        <Separator className="my-8" />
+
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex items-center gap-2 text-sm">
+            <Mail className="h-4 w-4 text-primary" />
+            <a 
+              href="mailto:info@strokerecoveryacademy.com" 
+              className="text-muted-foreground hover:text-primary transition-colors"
+              data-testid="link-contact-email"
+            >
+              info@strokerecoveryacademy.com
+            </a>
+          </div>
+          
+          <div className="flex items-center gap-2 text-muted-foreground" data-testid="powered-by-kremersx">
+            <span className="text-xs uppercase tracking-wider">Powered by</span>
+            <span className="font-bold text-primary text-lg tracking-tight">KremersX</span>
+          </div>
+        </div>
       </div>
     </footer>
   );

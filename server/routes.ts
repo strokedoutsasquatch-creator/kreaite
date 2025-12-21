@@ -2113,6 +2113,364 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================================================
+  // VITALS TRACKING
+  // ============================================================================
+
+  app.get('/api/vitals', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const vitals = await storage.getVitals(userId);
+      res.json(vitals);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch vitals" });
+    }
+  });
+
+  app.post('/api/vitals', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const vital = await storage.createVital({ userId, ...req.body });
+      res.json(vital);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create vital" });
+    }
+  });
+
+  // ============================================================================
+  // WEARABLES
+  // ============================================================================
+
+  app.get('/api/wearables/connections', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const connections = await storage.getWearableConnections(userId);
+      res.json(connections);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch wearable connections" });
+    }
+  });
+
+  app.post('/api/wearables/connect', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { provider } = req.body;
+      const connection = await storage.createWearableConnection({
+        userId,
+        provider,
+        deviceName: `${provider} Device`,
+        syncEnabled: true,
+        metricsEnabled: { steps: true, heart_rate: true, sleep: true, calories: true, active_minutes: true },
+      });
+      res.json(connection);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to connect wearable" });
+    }
+  });
+
+  app.delete('/api/wearables/connections/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      await storage.deleteWearableConnection(parseInt(req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to disconnect wearable" });
+    }
+  });
+
+  app.post('/api/wearables/connections/:id/sync', isAuthenticated, async (req: any, res) => {
+    try {
+      const connectionId = parseInt(req.params.id);
+      await storage.syncWearableData(connectionId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to sync wearable" });
+    }
+  });
+
+  app.get('/api/wearables/metrics', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const metrics = await storage.getWearableMetrics(userId);
+      res.json(metrics);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch metrics" });
+    }
+  });
+
+  app.get('/api/wearables/today', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const today = await storage.getWearableTodayStats(userId);
+      res.json(today);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch today stats" });
+    }
+  });
+
+  // ============================================================================
+  // SOCIAL NETWORK
+  // ============================================================================
+
+  app.get('/api/social/followers', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const followers = await storage.getFollowers(userId);
+      res.json(followers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch followers" });
+    }
+  });
+
+  app.get('/api/social/following', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const following = await storage.getFollowing(userId);
+      res.json(following);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch following" });
+    }
+  });
+
+  app.post('/api/social/follow/:userId', isAuthenticated, async (req: any, res) => {
+    try {
+      const followerId = req.user.claims.sub;
+      const followingId = req.params.userId;
+      await storage.followUser(followerId, followingId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to follow user" });
+    }
+  });
+
+  app.delete('/api/social/follow/:userId', isAuthenticated, async (req: any, res) => {
+    try {
+      const followerId = req.user.claims.sub;
+      const followingId = req.params.userId;
+      await storage.unfollowUser(followerId, followingId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to unfollow user" });
+    }
+  });
+
+  app.get('/api/users/search', async (req: any, res) => {
+    try {
+      const { q } = req.query;
+      const users = await storage.searchUsers(q as string);
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to search users" });
+    }
+  });
+
+  // ============================================================================
+  // MESSAGES (updating existing routes for frontend compatibility)
+  // ============================================================================
+
+  app.get('/api/messages/conversations', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const conversations = await storage.getConversations(userId);
+      res.json(conversations);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch conversations" });
+    }
+  });
+
+  app.post('/api/messages/conversations', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { participantIds } = req.body;
+      const conversation = await storage.createConversation(userId, participantIds);
+      res.json(conversation);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create conversation" });
+    }
+  });
+
+  app.get('/api/messages/conversations/:id/messages', isAuthenticated, async (req: any, res) => {
+    try {
+      const conversationId = parseInt(req.params.id);
+      const messages = await storage.getMessages(conversationId);
+      res.json(messages);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch messages" });
+    }
+  });
+
+  app.post('/api/messages/conversations/:id/messages', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const conversationId = parseInt(req.params.id);
+      const { content } = req.body;
+      const message = await storage.createMessage({ conversationId, senderId: userId, content });
+      res.json(message);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to send message" });
+    }
+  });
+
+  // ============================================================================
+  // VIDEO SESSIONS (frontend compatibility)
+  // ============================================================================
+
+  app.get('/api/video/sessions', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const sessions = await storage.getVideoSessions(userId);
+      res.json(sessions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch video sessions" });
+    }
+  });
+
+  app.post('/api/video/sessions', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const session = await storage.createVideoSession({ hostId: userId, ...req.body });
+      res.json(session);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create video session" });
+    }
+  });
+
+  app.post('/api/video/sessions/:id/join', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const sessionId = parseInt(req.params.id);
+      await storage.joinVideoSession(sessionId, userId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to join session" });
+    }
+  });
+
+  app.post('/api/video/sessions/:id/end', isAuthenticated, async (req: any, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+      await storage.endVideoSession(sessionId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to end session" });
+    }
+  });
+
+  // ============================================================================
+  // THERAPIST MARKETPLACE
+  // ============================================================================
+
+  app.get('/api/therapist-marketplace', async (req, res) => {
+    try {
+      const storefronts = await storage.getTherapistStorefronts();
+      res.json(storefronts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch storefronts" });
+    }
+  });
+
+  app.get('/api/therapist-marketplace/my-products', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const products = await storage.getTherapistProducts(userId);
+      res.json(products);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch products" });
+    }
+  });
+
+  app.post('/api/therapist-marketplace/products', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const product = await storage.createTherapistProduct({ therapistId: userId, ...req.body });
+      res.json(product);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create product" });
+    }
+  });
+
+  app.get('/api/therapist-marketplace/earnings', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const earnings = await storage.getTherapistEarnings(userId);
+      res.json(earnings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch earnings" });
+    }
+  });
+
+  app.post('/api/therapist-marketplace/products/:id/purchase', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const productId = parseInt(req.params.id);
+      const checkoutUrl = await storage.purchaseTherapistProduct(userId, productId);
+      res.json({ checkoutUrl });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to initiate purchase" });
+    }
+  });
+
+  // ============================================================================
+  // ADMIN PLAN BUILDER
+  // ============================================================================
+
+  app.get('/api/admin/plans', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      const plans = await storage.getRecoveryPlans();
+      res.json(plans);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch plans" });
+    }
+  });
+
+  app.post('/api/admin/plans', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      const plan = await storage.createRecoveryPlan({ createdBy: userId, ...req.body });
+      res.json(plan);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create plan" });
+    }
+  });
+
+  app.delete('/api/admin/plans/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      await storage.deleteRecoveryPlan(parseInt(req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete plan" });
+    }
+  });
+
+  app.post('/api/admin/plans/:id/assign', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      const planId = parseInt(req.params.id);
+      const { userIds } = req.body;
+      await storage.assignRecoveryPlan(planId, userIds);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to assign plan" });
+    }
+  });
+
+  // ============================================================================
   // SEO PAGES
   // ============================================================================
 

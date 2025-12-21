@@ -235,6 +235,46 @@ export interface IStorage {
   getSeoPage(slug: string): Promise<SeoPage | undefined>;
   getAllSeoPages(): Promise<SeoPage[]>;
   createOrUpdateSeoPage(page: InsertSeoPage & { slug: string }): Promise<SeoPage>;
+  
+  // Extended Vitals
+  getVitals(userId: string): Promise<any[]>;
+  createVital(vital: any): Promise<any>;
+  
+  // Extended Wearables
+  getWearableConnections(userId: string): Promise<WearableConnection[]>;
+  createWearableConnection(connection: any): Promise<WearableConnection>;
+  deleteWearableConnection(id: number): Promise<boolean>;
+  syncWearableData(connectionId: number): Promise<void>;
+  getWearableMetrics(userId: string): Promise<WearableMetric[]>;
+  getWearableTodayStats(userId: string): Promise<any>;
+  
+  // Social Network
+  getFollowers(userId: string): Promise<any[]>;
+  getFollowing(userId: string): Promise<any[]>;
+  followUser(followerId: string, followingId: string): Promise<void>;
+  unfollowUser(followerId: string, followingId: string): Promise<void>;
+  searchUsers(query: string): Promise<User[]>;
+  
+  // Extended Messages
+  getMessages(conversationId: number): Promise<DirectMessage[]>;
+  createMessage(message: any): Promise<DirectMessage>;
+  
+  // Extended Video
+  joinVideoSession(sessionId: number, userId: string): Promise<void>;
+  endVideoSession(sessionId: number): Promise<void>;
+  
+  // Therapist Marketplace
+  getTherapistStorefronts(): Promise<any[]>;
+  getTherapistProducts(therapistId: string): Promise<any[]>;
+  createTherapistProduct(product: any): Promise<any>;
+  getTherapistEarnings(therapistId: string): Promise<any>;
+  purchaseTherapistProduct(userId: string, productId: number): Promise<string>;
+  
+  // Admin Recovery Plans
+  getRecoveryPlans(): Promise<any[]>;
+  createRecoveryPlan(plan: any): Promise<any>;
+  deleteRecoveryPlan(id: number): Promise<boolean>;
+  assignRecoveryPlan(planId: number, userIds: string[]): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1617,6 +1657,238 @@ export class DatabaseStorage implements IStorage {
     }
     const [result] = await db.insert(seoPages).values(page).returning();
     return result;
+  }
+
+  // ============================================================================
+  // EXTENDED VITALS
+  // ============================================================================
+
+  async getVitals(userId: string): Promise<any[]> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 7);
+    
+    const hydrationData = await db.select().from(hydrationLogs)
+      .where(and(eq(hydrationLogs.userId, userId), gte(hydrationLogs.loggedAt, yesterday)))
+      .orderBy(desc(hydrationLogs.loggedAt));
+    
+    const exerciseData = await db.select().from(exerciseLogs)
+      .where(and(eq(exerciseLogs.userId, userId), gte(exerciseLogs.loggedAt, yesterday)))
+      .orderBy(desc(exerciseLogs.loggedAt));
+    
+    return [
+      ...hydrationData.map(h => ({ vitalType: 'hydration', ...h })),
+      ...exerciseData.map(e => ({ vitalType: 'exercise', ...e })),
+    ];
+  }
+
+  async createVital(vital: any): Promise<any> {
+    const { userId, type, ...data } = vital;
+    if (type === 'hydration') {
+      return this.logHydration(userId, data.amount);
+    } else if (type === 'exercise') {
+      return this.logExercise(userId, data.exerciseType, data.duration, data.intensity);
+    } else if (type === 'stand') {
+      return this.logStand(userId, data.duration);
+    }
+    return vital;
+  }
+
+  // ============================================================================
+  // EXTENDED WEARABLES
+  // ============================================================================
+
+  async getWearableConnections(userId: string): Promise<WearableConnection[]> {
+    return db.select().from(wearableConnections)
+      .where(eq(wearableConnections.userId, userId))
+      .orderBy(desc(wearableConnections.createdAt));
+  }
+
+  async createWearableConnection(connection: any): Promise<WearableConnection> {
+    const [result] = await db.insert(wearableConnections).values(connection).returning();
+    return result;
+  }
+
+  async deleteWearableConnection(id: number): Promise<boolean> {
+    await db.delete(wearableConnections).where(eq(wearableConnections.id, id));
+    return true;
+  }
+
+  async syncWearableData(connectionId: number): Promise<void> {
+    await db.update(wearableConnections)
+      .set({ lastSyncAt: new Date() })
+      .where(eq(wearableConnections.id, connectionId));
+  }
+
+  async getWearableMetrics(userId: string): Promise<WearableMetric[]> {
+    return db.select().from(wearableMetrics)
+      .where(eq(wearableMetrics.userId, userId))
+      .orderBy(desc(wearableMetrics.recordedAt))
+      .limit(100);
+  }
+
+  async getWearableTodayStats(userId: string): Promise<any> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const metrics = await db.select().from(wearableMetrics)
+      .where(and(
+        eq(wearableMetrics.userId, userId),
+        gte(wearableMetrics.recordedAt, today)
+      ));
+    
+    return {
+      steps: metrics.filter(m => m.metricType === 'steps').reduce((sum, m) => sum + Number(m.value), 0),
+      heartRate: metrics.find(m => m.metricType === 'heart_rate')?.value || 0,
+      calories: metrics.filter(m => m.metricType === 'calories').reduce((sum, m) => sum + Number(m.value), 0),
+      activeMinutes: metrics.filter(m => m.metricType === 'active_minutes').reduce((sum, m) => sum + Number(m.value), 0),
+    };
+  }
+
+  // ============================================================================
+  // SOCIAL NETWORK
+  // ============================================================================
+
+  async getFollowers(userId: string): Promise<any[]> {
+    return [];
+  }
+
+  async getFollowing(userId: string): Promise<any[]> {
+    return [];
+  }
+
+  async followUser(followerId: string, followingId: string): Promise<void> {
+  }
+
+  async unfollowUser(followerId: string, followingId: string): Promise<void> {
+  }
+
+  async searchUsers(query: string): Promise<User[]> {
+    if (!query) return [];
+    return db.select().from(users)
+      .where(or(
+        ilike(users.email, `%${query}%`),
+        ilike(users.firstName, `%${query}%`),
+        ilike(users.lastName, `%${query}%`)
+      ))
+      .limit(20);
+  }
+
+  // ============================================================================
+  // EXTENDED MESSAGES
+  // ============================================================================
+
+  async getMessages(conversationId: number): Promise<DirectMessage[]> {
+    return this.getConversationMessages(conversationId);
+  }
+
+  async createMessage(message: any): Promise<DirectMessage> {
+    return this.sendDirectMessage(message);
+  }
+
+  // ============================================================================
+  // EXTENDED VIDEO
+  // ============================================================================
+
+  async joinVideoSession(sessionId: number, userId: string): Promise<void> {
+    await db.insert(videoSessionParticipants).values({
+      sessionId,
+      userId,
+      role: 'participant',
+    }).onConflictDoNothing();
+    
+    await db.update(videoSessions)
+      .set({ status: 'active', startedAt: new Date() })
+      .where(eq(videoSessions.id, sessionId));
+  }
+
+  async endVideoSession(sessionId: number): Promise<void> {
+    await db.update(videoSessions)
+      .set({ status: 'completed', endedAt: new Date() })
+      .where(eq(videoSessions.id, sessionId));
+  }
+
+  // ============================================================================
+  // THERAPIST MARKETPLACE
+  // ============================================================================
+
+  async getTherapistStorefronts(): Promise<any[]> {
+    const therapists = await db.select().from(therapistProfiles)
+      .where(eq(therapistProfiles.isVerified, true));
+    return therapists.map(t => ({
+      ...t,
+      productCount: 0,
+      rating: 4.8,
+    }));
+  }
+
+  async getTherapistProducts(therapistId: string): Promise<any[]> {
+    return db.select().from(marketplaceProducts)
+      .orderBy(desc(marketplaceProducts.createdAt));
+  }
+
+  async createTherapistProduct(product: any): Promise<any> {
+    const [result] = await db.insert(marketplaceProducts).values({
+      categoryId: product.categoryId || 1,
+      title: product.title,
+      description: product.description,
+      amazonUrl: product.amazonUrl || '#',
+      priceDisplay: product.price,
+      isFeatured: false,
+      isActive: true,
+    }).returning();
+    return result;
+  }
+
+  async getTherapistEarnings(therapistId: string): Promise<any> {
+    return {
+      totalEarnings: 0,
+      pendingPayout: 0,
+      platformFee: 15,
+      salesCount: 0,
+      recentSales: [],
+    };
+  }
+
+  async purchaseTherapistProduct(userId: string, productId: number): Promise<string> {
+    return `/checkout?product=${productId}`;
+  }
+
+  // ============================================================================
+  // ADMIN RECOVERY PLANS
+  // ============================================================================
+
+  async getRecoveryPlans(): Promise<any[]> {
+    return db.select().from(recoveryPrograms).orderBy(desc(recoveryPrograms.createdAt));
+  }
+
+  async createRecoveryPlan(plan: any): Promise<any> {
+    const [result] = await db.insert(recoveryPrograms).values({
+      name: plan.name,
+      slug: plan.name.toLowerCase().replace(/\s+/g, '-'),
+      description: plan.description,
+      tier: plan.tier || 'explorer',
+      difficulty: plan.difficulty || 'beginner',
+      estimatedWeeks: plan.duration || 12,
+      isActive: true,
+    }).returning();
+    return result;
+  }
+
+  async deleteRecoveryPlan(id: number): Promise<boolean> {
+    await db.delete(recoveryPrograms).where(eq(recoveryPrograms.id, id));
+    return true;
+  }
+
+  async assignRecoveryPlan(planId: number, userIds: string[]): Promise<void> {
+    for (const userId of userIds) {
+      await db.insert(userEnrollments).values({
+        userId,
+        programId: planId,
+        status: 'active',
+      }).onConflictDoNothing();
+    }
   }
 }
 

@@ -2,9 +2,14 @@
 
 **"REBUILD. REWIRE. RISE."**
 
+**Powered by KremersX**
+
 ## Overview
 
 Stroke Recovery Academy (strokerecoveryacademy.com) is a comprehensive web platform designed to support stroke survivors, caregivers, and professionals in their recovery journey. Built by Nick "The Stroked Out Sasquatch" Kremers, a stroke survivor who achieved 90% recovery, the platform combines personal recovery expertise with modern neuroscience.
+
+**Contact:** info@strokerecoveryacademy.com
+**Parent Company:** KremersX
 
 ### Key Features:
 - **Recovery University** - Comprehensive tiered curriculum (Explorer/Warrior/Champion) with 18 modules and 15+ lessons

@@ -20,6 +20,13 @@ import Settings from "@/pages/Settings";
 import Activity from "@/pages/Activity";
 import Exercises from "@/pages/Exercises";
 import TherapistDashboard from "@/pages/TherapistDashboard";
+import CommandCenter from "@/pages/CommandCenter";
+import Wearables from "@/pages/Wearables";
+import Messages from "@/pages/Messages";
+import VideoSessions from "@/pages/VideoSessions";
+import SocialNetwork from "@/pages/SocialNetwork";
+import TherapistMarketplace from "@/pages/TherapistMarketplace";
+import AdminPlanBuilder from "@/pages/AdminPlanBuilder";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 import SasquatchChatWidget from "@/components/SasquatchChatWidget";
@@ -74,6 +81,41 @@ function Router() {
       <Route path="/therapist">
         <ProtectedRoute>
           <TherapistDashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/command-center">
+        <ProtectedRoute>
+          <CommandCenter />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/wearables">
+        <ProtectedRoute>
+          <Wearables />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/messages">
+        <ProtectedRoute>
+          <Messages />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/video">
+        <ProtectedRoute>
+          <VideoSessions />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/social">
+        <ProtectedRoute>
+          <SocialNetwork />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/therapist-marketplace">
+        <ProtectedRoute>
+          <TherapistMarketplace />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/plans">
+        <ProtectedRoute>
+          <AdminPlanBuilder />
         </ProtectedRoute>
       </Route>
       <Route component={NotFound} />
