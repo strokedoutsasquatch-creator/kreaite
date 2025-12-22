@@ -1458,3 +1458,126 @@ export type BlogPostReaction = typeof blogPostReactions.$inferSelect;
 export type InsertBlogPostReaction = z.infer<typeof insertBlogPostReactionSchema>;
 export type BlogPostComment = typeof blogPostComments.$inferSelect;
 export type InsertBlogPostComment = z.infer<typeof insertBlogPostCommentSchema>;
+
+// ============================================================================
+// SUBSCRIPTION TIERS
+// ============================================================================
+
+export const subscriptionTiers = pgTable("subscription_tiers", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // explorer, warrior, champion, platinum
+  displayName: text("display_name").notNull(),
+  description: text("description").notNull(),
+  monthlyPrice: integer("monthly_price").notNull(), // in cents
+  annualPrice: integer("annual_price").notNull(), // in cents
+  stripePriceIdMonthly: text("stripe_price_id_monthly"),
+  stripePriceIdAnnual: text("stripe_price_id_annual"),
+  stripeProductId: text("stripe_product_id"),
+  features: jsonb("features").notNull(), // array of feature strings
+  limits: jsonb("limits").notNull(), // { aiMessages: number, courses: number, etc }
+  isActive: boolean("is_active").notNull().default(true),
+  order: integer("order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertSubscriptionTierSchema = createInsertSchema(subscriptionTiers).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Recovery University Curriculum (from The Ultimate Stroke Recovery Bible)
+export const curriculumParts = pgTable("curriculum_parts", {
+  id: serial("id").primaryKey(),
+  partNumber: integer("part_number").notNull(),
+  title: text("title").notNull(),
+  subtitle: text("subtitle"),
+  description: text("description"),
+  iconName: text("icon_name"),
+  order: integer("order").notNull(),
+  requiredTier: text("required_tier").notNull().default("explorer"), // explorer, warrior, champion, platinum
+  isPublished: boolean("is_published").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const curriculumChapters = pgTable("curriculum_chapters", {
+  id: serial("id").primaryKey(),
+  partId: integer("part_id").notNull().references(() => curriculumParts.id, { onDelete: "cascade" }),
+  chapterNumber: integer("chapter_number").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  content: text("content"), // Full chapter content
+  videoUrl: text("video_url"), // AI-generated or uploaded video
+  audioUrl: text("audio_url"), // Audio narration
+  estimatedMinutes: integer("estimated_minutes"),
+  keyTakeaways: text("key_takeaways").array(),
+  exercises: jsonb("exercises"), // Interactive exercises
+  requiredTier: text("required_tier").notNull().default("warrior"),
+  order: integer("order").notNull(),
+  isPublished: boolean("is_published").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const userCurriculumProgress = pgTable("user_curriculum_progress", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  chapterId: integer("chapter_id").notNull().references(() => curriculumChapters.id, { onDelete: "cascade" }),
+  status: text("status").notNull().default("not_started"), // not_started, in_progress, completed
+  progressPercentage: integer("progress_percentage").notNull().default(0),
+  completedAt: timestamp("completed_at"),
+  notes: text("notes"),
+  lastAccessedAt: timestamp("last_accessed_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertCurriculumPartSchema = createInsertSchema(curriculumParts).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertCurriculumChapterSchema = createInsertSchema(curriculumChapters).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserCurriculumProgressSchema = createInsertSchema(userCurriculumProgress).omit({
+  id: true,
+  createdAt: true,
+});
+
+// AI Video Content
+export const aiGeneratedVideos = pgTable("ai_generated_videos", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  prompt: text("prompt").notNull(),
+  videoUrl: text("video_url"),
+  thumbnailUrl: text("thumbnail_url"),
+  duration: integer("duration"), // in seconds
+  contentType: text("content_type").notNull(), // chapter_intro, exercise_demo, motivation, celebration
+  contentId: integer("content_id"), // Reference to chapter or exercise
+  status: text("status").notNull().default("pending"), // pending, generating, completed, failed
+  cost: integer("cost"), // in cents
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  completedAt: timestamp("completed_at"),
+});
+
+export const insertAiGeneratedVideoSchema = createInsertSchema(aiGeneratedVideos).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Subscription Types
+export type SubscriptionTier = typeof subscriptionTiers.$inferSelect;
+export type InsertSubscriptionTier = z.infer<typeof insertSubscriptionTierSchema>;
+
+// Curriculum Types
+export type CurriculumPart = typeof curriculumParts.$inferSelect;
+export type InsertCurriculumPart = z.infer<typeof insertCurriculumPartSchema>;
+export type CurriculumChapter = typeof curriculumChapters.$inferSelect;
+export type InsertCurriculumChapter = z.infer<typeof insertCurriculumChapterSchema>;
+export type UserCurriculumProgress = typeof userCurriculumProgress.$inferSelect;
+export type InsertUserCurriculumProgress = z.infer<typeof insertUserCurriculumProgressSchema>;
+
+// AI Video Types
+export type AiGeneratedVideo = typeof aiGeneratedVideos.$inferSelect;
+export type InsertAiGeneratedVideo = z.infer<typeof insertAiGeneratedVideoSchema>;

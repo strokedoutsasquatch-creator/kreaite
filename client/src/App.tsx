@@ -32,6 +32,7 @@ import Stories from "@/pages/Stories";
 import StoryView from "@/pages/StoryView";
 import StoryEditor from "@/pages/StoryEditor";
 import MyStories from "@/pages/MyStories";
+import Pricing from "@/pages/Pricing";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 import SasquatchChatWidget from "@/components/SasquatchChatWidget";
@@ -124,6 +125,7 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/about-us" component={AboutUs} />
+      <Route path="/pricing" component={Pricing} />
       <Route path="/stories" component={Stories} />
       <Route path="/stories/new">
         <ProtectedRoute>
