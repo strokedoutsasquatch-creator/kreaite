@@ -1,171 +1,151 @@
 /**
  * Production-Grade Voice Cloning & Synthesis Service
+ * Uses Google Cloud TTS with Chirp 3 for instant voice cloning
  * 
  * Features:
- * - Voice cloning via ElevenLabs
- * - Multi-genre singing (rap, opera, metal, punk, classical, novelty)
- * - Auto-tune and pitch correction
- * - Voice styling (raspy, smooth, aggressive, theatrical)
- * - Character voice creation for AI movies
+ * - Voice cloning from 10 seconds of audio
+ * - Multi-genre singing styles
+ * - Character voice presets for AI movies
  */
 
-import fetch from 'node-fetch';
-import FormData from 'form-data';
-
-const ELEVENLABS_BASE_URL = 'https://api.elevenlabs.io/v1';
+const GOOGLE_TTS_BASE = 'https://texttospeech.googleapis.com/v1';
 
 // Voice style presets for different genres
 export const voiceStyles = {
   southernRap: {
-    stability: 0.3,
-    similarity_boost: 0.8,
-    style: 0.7,
-    use_speaker_boost: true,
+    speakingRate: 1.1,
+    pitch: -2,
     description: "Raspy southern drawl with rhythmic flow"
   },
   opera: {
-    stability: 0.9,
-    similarity_boost: 0.75,
-    style: 0.9,
-    use_speaker_boost: true,
+    speakingRate: 0.85,
+    pitch: 4,
     description: "Powerful operatic projection with vibrato"
   },
   deathMetal: {
-    stability: 0.2,
-    similarity_boost: 0.6,
-    style: 0.4,
-    use_speaker_boost: true,
+    speakingRate: 1.2,
+    pitch: -6,
     description: "Guttural growls and aggressive delivery"
   },
   punk: {
-    stability: 0.35,
-    similarity_boost: 0.7,
-    style: 0.5,
-    use_speaker_boost: true,
+    speakingRate: 1.3,
+    pitch: -1,
     description: "Raw, aggressive, rebellious energy"
   },
   pop: {
-    stability: 0.6,
-    similarity_boost: 0.85,
-    style: 0.7,
-    use_speaker_boost: true,
+    speakingRate: 1.0,
+    pitch: 2,
     description: "Polished, smooth, radio-ready"
   },
   classical: {
-    stability: 0.85,
-    similarity_boost: 0.8,
-    style: 0.85,
-    use_speaker_boost: true,
+    speakingRate: 0.9,
+    pitch: 0,
     description: "Refined, theatrical, precise articulation"
   },
   threeStooges: {
-    stability: 0.15,
-    similarity_boost: 0.5,
-    style: 0.2,
-    use_speaker_boost: false,
-    description: "Comedic timing with 'nyuk nyuk' and 'whoop whoop' inflections"
+    speakingRate: 1.4,
+    pitch: 6,
+    description: "Comedic timing with nyuk nyuk inflections"
   },
   villain: {
-    stability: 0.4,
-    similarity_boost: 0.7,
-    style: 0.6,
-    use_speaker_boost: true,
+    speakingRate: 0.8,
+    pitch: -4,
     description: "Menacing, theatrical, dramatic pauses"
   },
   hero: {
-    stability: 0.7,
-    similarity_boost: 0.85,
-    style: 0.8,
-    use_speaker_boost: true,
+    speakingRate: 1.0,
+    pitch: 1,
     description: "Confident, inspiring, commanding presence"
   }
 };
 
 // Character voice presets for AI movies
 export const characterVoices = {
-  hero: {
-    name: "The Protagonist",
-    style: voiceStyles.hero,
-    pitchShift: 0,
-    tempoShift: 1.0
-  },
-  villain: {
-    name: "The Antagonist", 
-    style: voiceStyles.villain,
-    pitchShift: -2,
-    tempoShift: 0.9
-  },
-  sidekick: {
-    name: "The Ally",
-    style: voiceStyles.pop,
-    pitchShift: 2,
-    tempoShift: 1.1
-  },
-  narrator: {
-    name: "The Narrator",
-    style: voiceStyles.classical,
-    pitchShift: -1,
-    tempoShift: 0.95
-  }
+  hero: { name: "The Protagonist", style: "hero", pitchShift: 0 },
+  villain: { name: "The Antagonist", style: "villain", pitchShift: -2 },
+  sidekick: { name: "The Ally", style: "pop", pitchShift: 2 },
+  narrator: { name: "The Narrator", style: "classical", pitchShift: -1 }
 };
 
-interface VoiceCloneRequest {
-  name: string;
-  audioFiles: Buffer[];
-  description?: string;
-  removeBackgroundNoise?: boolean;
+// Available Google TTS voices
+const googleVoices = {
+  male: [
+    { name: 'en-US-Chirp3-HD-Achird', lang: 'en-US' },
+    { name: 'en-US-Chirp3-HD-Autonoe', lang: 'en-US' },
+    { name: 'en-US-Chirp3-HD-Charon', lang: 'en-US' },
+    { name: 'en-US-Neural2-D', lang: 'en-US' },
+    { name: 'en-US-Neural2-J', lang: 'en-US' }
+  ],
+  female: [
+    { name: 'en-US-Chirp3-HD-Aoede', lang: 'en-US' },
+    { name: 'en-US-Chirp3-HD-Kore', lang: 'en-US' },
+    { name: 'en-US-Chirp3-HD-Leda', lang: 'en-US' },
+    { name: 'en-US-Neural2-C', lang: 'en-US' },
+    { name: 'en-US-Neural2-F', lang: 'en-US' }
+  ]
+};
+
+interface SynthesizeRequest {
+  text: string;
+  voiceName?: string;
+  languageCode?: string;
+  style?: keyof typeof voiceStyles;
+  ssml?: boolean;
 }
 
-interface SpeechRequest {
-  text: string;
-  voiceId: string;
-  modelId?: string;
-  style?: keyof typeof voiceStyles;
-  pitchShift?: number;
-  tempoShift?: number;
+interface CloneVoiceRequest {
+  audioBase64: string;
+  name: string;
 }
 
 /**
- * Clone a voice using ElevenLabs Instant Voice Cloning
+ * Synthesize speech using Google Cloud TTS
  */
-export async function cloneVoice(request: VoiceCloneRequest): Promise<{
+export async function synthesizeSpeech(request: SynthesizeRequest): Promise<{
   success: boolean;
-  voiceId?: string;
+  audioBase64?: string;
   error?: string;
 }> {
-  const apiKey = process.env.ELEVENLABS_API_KEY;
+  const apiKey = process.env.CLOUD_TEXT_TO_SPEECH_API_KEY;
   
   if (!apiKey) {
-    return { success: false, error: "ElevenLabs API key not configured" };
+    return { success: false, error: "Google TTS API key not configured" };
   }
 
-  try {
-    const formData = new FormData();
-    formData.append('name', request.name);
-    if (request.description) {
-      formData.append('description', request.description);
-    }
-    formData.append('remove_background_noise', request.removeBackgroundNoise ? 'true' : 'false');
-    
-    request.audioFiles.forEach((file, index) => {
-      formData.append('files', file, `sample_${index}.mp3`);
-    });
+  const styleSettings = request.style ? voiceStyles[request.style] : voiceStyles.pop;
+  const voice = request.voiceName || googleVoices.male[0].name;
+  const langCode = request.languageCode || 'en-US';
 
-    const response = await fetch(`${ELEVENLABS_BASE_URL}/voices/add`, {
-      method: 'POST',
-      headers: {
-        'xi-api-key': apiKey
+  try {
+    const payload = {
+      input: request.ssml 
+        ? { ssml: request.text }
+        : { text: request.text },
+      voice: {
+        languageCode: langCode,
+        name: voice
       },
-      body: formData as any
+      audioConfig: {
+        audioEncoding: 'MP3',
+        speakingRate: styleSettings.speakingRate,
+        pitch: styleSettings.pitch,
+        effectsProfileId: ['headphone-class-device']
+      }
+    };
+
+    const response = await fetch(`${GOOGLE_TTS_BASE}/text:synthesize?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
       const error = await response.text();
-      return { success: false, error: `Voice cloning failed: ${error}` };
+      return { success: false, error: `TTS failed: ${error}` };
     }
 
-    const result = await response.json() as { voice_id: string };
-    return { success: true, voiceId: result.voice_id };
+    const result = await response.json() as { audioContent: string };
+    return { success: true, audioBase64: result.audioContent };
   } catch (error) {
     return { 
       success: false, 
@@ -175,38 +155,89 @@ export async function cloneVoice(request: VoiceCloneRequest): Promise<{
 }
 
 /**
- * Generate speech with a cloned or preset voice
+ * Create instant voice clone using Chirp 3
+ * Requires 10+ seconds of clear audio
  */
-export async function generateSpeech(request: SpeechRequest): Promise<{
+export async function createVoiceClone(request: CloneVoiceRequest): Promise<{
   success: boolean;
-  audioBuffer?: Buffer;
+  voiceCloneKey?: string;
   error?: string;
 }> {
-  const apiKey = process.env.ELEVENLABS_API_KEY;
+  const apiKey = process.env.CLOUD_TEXT_TO_SPEECH_API_KEY;
   
   if (!apiKey) {
-    return { success: false, error: "ElevenLabs API key not configured" };
+    return { success: false, error: "Google TTS API key not configured" };
   }
 
-  const styleSettings = request.style ? voiceStyles[request.style] : voiceStyles.pop;
+  try {
+    // Chirp 3 instant voice cloning endpoint
+    const response = await fetch(
+      `https://texttospeech.googleapis.com/v1beta1/voices:clone?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          referenceAudio: {
+            audioContent: request.audioBase64
+          },
+          voiceName: request.name
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.text();
+      return { success: false, error: `Voice cloning failed: ${error}` };
+    }
+
+    const result = await response.json() as { voiceCloningKey: string };
+    return { success: true, voiceCloneKey: result.voiceCloningKey };
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    };
+  }
+}
+
+/**
+ * Synthesize with cloned voice
+ */
+export async function synthesizeWithClone(
+  text: string,
+  voiceCloneKey: string,
+  style?: keyof typeof voiceStyles
+): Promise<{
+  success: boolean;
+  audioBase64?: string;
+  error?: string;
+}> {
+  const apiKey = process.env.CLOUD_TEXT_TO_SPEECH_API_KEY;
+  
+  if (!apiKey) {
+    return { success: false, error: "Google TTS API key not configured" };
+  }
+
+  const styleSettings = style ? voiceStyles[style] : voiceStyles.pop;
 
   try {
     const response = await fetch(
-      `${ELEVENLABS_BASE_URL}/text-to-speech/${request.voiceId}`,
+      `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${apiKey}`,
       {
         method: 'POST',
-        headers: {
-          'xi-api-key': apiKey,
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          text: request.text,
-          model_id: request.modelId || 'eleven_multilingual_v2',
-          voice_settings: {
-            stability: styleSettings.stability,
-            similarity_boost: styleSettings.similarity_boost,
-            style: styleSettings.style,
-            use_speaker_boost: styleSettings.use_speaker_boost
+          input: { text },
+          voice: {
+            languageCode: 'en-US',
+            voiceClone: {
+              voiceCloningKey: voiceCloneKey
+            }
+          },
+          audioConfig: {
+            audioEncoding: 'MP3',
+            speakingRate: styleSettings.speakingRate,
+            pitch: styleSettings.pitch
           }
         })
       }
@@ -214,11 +245,11 @@ export async function generateSpeech(request: SpeechRequest): Promise<{
 
     if (!response.ok) {
       const error = await response.text();
-      return { success: false, error: `Speech generation failed: ${error}` };
+      return { success: false, error: `Synthesis failed: ${error}` };
     }
 
-    const audioBuffer = Buffer.from(await response.arrayBuffer());
-    return { success: true, audioBuffer };
+    const result = await response.json() as { audioContent: string };
+    return { success: true, audioBase64: result.audioContent };
   } catch (error) {
     return { 
       success: false, 
@@ -228,28 +259,23 @@ export async function generateSpeech(request: SpeechRequest): Promise<{
 }
 
 /**
- * List available voices (both cloned and library)
+ * List available voices
  */
 export async function listVoices(): Promise<{
   success: boolean;
-  voices?: Array<{
-    voice_id: string;
-    name: string;
-    category: string;
-    description?: string;
-  }>;
+  voices?: Array<{ name: string; gender: string; languageCodes: string[] }>;
   error?: string;
 }> {
-  const apiKey = process.env.ELEVENLABS_API_KEY;
+  const apiKey = process.env.CLOUD_TEXT_TO_SPEECH_API_KEY;
   
   if (!apiKey) {
-    return { success: false, error: "ElevenLabs API key not configured" };
+    return { success: false, error: "Google TTS API key not configured" };
   }
 
   try {
-    const response = await fetch(`${ELEVENLABS_BASE_URL}/voices`, {
-      headers: { 'xi-api-key': apiKey }
-    });
+    const response = await fetch(
+      `${GOOGLE_TTS_BASE}/voices?key=${apiKey}&languageCode=en-US`
+    );
 
     if (!response.ok) {
       return { success: false, error: "Failed to fetch voices" };
@@ -258,12 +284,11 @@ export async function listVoices(): Promise<{
     const result = await response.json() as { voices: any[] };
     return { 
       success: true, 
-      voices: result.voices.map(v => ({
-        voice_id: v.voice_id,
+      voices: result.voices?.map(v => ({
         name: v.name,
-        category: v.category,
-        description: v.description
-      }))
+        gender: v.ssmlGender,
+        languageCodes: v.languageCodes
+      })) || []
     };
   } catch (error) {
     return { 
@@ -274,64 +299,10 @@ export async function listVoices(): Promise<{
 }
 
 /**
- * Speech-to-Speech voice conversion (voice changer)
- */
-export async function convertVoice(
-  audioBuffer: Buffer,
-  targetVoiceId: string,
-  style?: keyof typeof voiceStyles
-): Promise<{
-  success: boolean;
-  audioBuffer?: Buffer;
-  error?: string;
-}> {
-  const apiKey = process.env.ELEVENLABS_API_KEY;
-  
-  if (!apiKey) {
-    return { success: false, error: "ElevenLabs API key not configured" };
-  }
-
-  const styleSettings = style ? voiceStyles[style] : voiceStyles.pop;
-
-  try {
-    const formData = new FormData();
-    formData.append('audio', audioBuffer, 'input.mp3');
-    formData.append('model_id', 'eleven_multilingual_sts_v2');
-    formData.append('voice_settings', JSON.stringify({
-      stability: styleSettings.stability,
-      similarity_boost: styleSettings.similarity_boost,
-      style: styleSettings.style
-    }));
-
-    const response = await fetch(
-      `${ELEVENLABS_BASE_URL}/speech-to-speech/${targetVoiceId}`,
-      {
-        method: 'POST',
-        headers: { 'xi-api-key': apiKey },
-        body: formData as any
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.text();
-      return { success: false, error: `Voice conversion failed: ${error}` };
-    }
-
-    const resultBuffer = Buffer.from(await response.arrayBuffer());
-    return { success: true, audioBuffer: resultBuffer };
-  } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
-    };
-  }
-}
-
-/**
- * Check if ElevenLabs is configured
+ * Check if voice service is configured
  */
 export function isVoiceServiceConfigured(): boolean {
-  return !!process.env.ELEVENLABS_API_KEY;
+  return !!process.env.CLOUD_TEXT_TO_SPEECH_API_KEY;
 }
 
 /**
@@ -341,18 +312,27 @@ export function getVoiceStyles() {
   return Object.entries(voiceStyles).map(([key, value]) => ({
     id: key,
     name: key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()),
-    description: value.description
+    description: value.description,
+    speakingRate: value.speakingRate,
+    pitch: value.pitch
   }));
 }
 
 /**
- * Get character presets for AI movies
+ * Get character presets
  */
 export function getCharacterPresets() {
   return Object.entries(characterVoices).map(([key, value]) => ({
     id: key,
     name: value.name,
-    pitchShift: value.pitchShift,
-    tempoShift: value.tempoShift
+    style: value.style,
+    pitchShift: value.pitchShift
   }));
+}
+
+/**
+ * Get available Google voices
+ */
+export function getGoogleVoices() {
+  return googleVoices;
 }

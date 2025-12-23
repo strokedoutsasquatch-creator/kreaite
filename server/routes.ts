@@ -10,6 +10,9 @@ import { runMigrations } from "stripe-replit-sync";
 import { generateCoachResponse, getRandomQuote } from "./geminiService";
 import { searchAmazonProducts, getAmazonProduct, isConfigured as isAmazonConfigured } from "./amazonService";
 import { generateInstrumental, buildMusicPrompt, isLyriaConfigured, estimateCost } from "./lyriaService";
+import { synthesizeSpeech, createVoiceClone, synthesizeWithClone, listVoices, isVoiceServiceConfigured, getVoiceStyles, getCharacterPresets, getGoogleVoices } from "./voiceService";
+import { generateImage, generateMovieScript, generateStoryboard, isVideoServiceConfigured, getMovieStyles, movieStyles } from "./videoService";
+import { getAllPresets, getMusicalScales, getMusicalKeys, calculateSyncedDelay } from "./audioProcessingService";
 import { seedRecoveryData } from "./seedRecoveryData";
 
 async function initStripe() {
@@ -641,8 +644,199 @@ Include recovery metaphors and triumphant imagery.`;
   app.get('/api/music/status', async (req, res) => {
     res.json({
       lyriaConfigured: isLyriaConfigured(),
+      voiceConfigured: isVoiceServiceConfigured(),
+      videoConfigured: isVideoServiceConfigured(),
       estimatedCostPer30Seconds: 0.06
     });
+  });
+
+  // ============ VOICE CLONING & SYNTHESIS ROUTES ============
+  
+  // Get available voice styles
+  app.get('/api/voice/styles', (req, res) => {
+    res.json({
+      styles: getVoiceStyles(),
+      characters: getCharacterPresets(),
+      googleVoices: getGoogleVoices()
+    });
+  });
+
+  // Synthesize speech with style
+  app.post('/api/voice/synthesize', isAuthenticated, async (req: any, res) => {
+    try {
+      const { text, voiceName, style, ssml } = req.body;
+      
+      if (!text) {
+        return res.status(400).json({ error: "Text is required" });
+      }
+
+      const result = await synthesizeSpeech({
+        text,
+        voiceName,
+        style,
+        ssml
+      });
+
+      if (result.success) {
+        res.json({ success: true, audioBase64: result.audioBase64 });
+      } else {
+        res.status(500).json({ success: false, error: result.error });
+      }
+    } catch (error) {
+      console.error("Voice synthesis error:", error);
+      res.status(500).json({ error: "Voice synthesis failed" });
+    }
+  });
+
+  // Clone voice from audio
+  app.post('/api/voice/clone', isAuthenticated, async (req: any, res) => {
+    try {
+      const { audioBase64, name } = req.body;
+      
+      if (!audioBase64 || !name) {
+        return res.status(400).json({ error: "Audio and name are required" });
+      }
+
+      const result = await createVoiceClone({ audioBase64, name });
+
+      if (result.success) {
+        res.json({ success: true, voiceCloneKey: result.voiceCloneKey });
+      } else {
+        res.status(500).json({ success: false, error: result.error });
+      }
+    } catch (error) {
+      console.error("Voice cloning error:", error);
+      res.status(500).json({ error: "Voice cloning failed" });
+    }
+  });
+
+  // Synthesize with cloned voice
+  app.post('/api/voice/synthesize-clone', isAuthenticated, async (req: any, res) => {
+    try {
+      const { text, voiceCloneKey, style } = req.body;
+      
+      if (!text || !voiceCloneKey) {
+        return res.status(400).json({ error: "Text and voiceCloneKey are required" });
+      }
+
+      const result = await synthesizeWithClone(text, voiceCloneKey, style);
+
+      if (result.success) {
+        res.json({ success: true, audioBase64: result.audioBase64 });
+      } else {
+        res.status(500).json({ success: false, error: result.error });
+      }
+    } catch (error) {
+      console.error("Clone synthesis error:", error);
+      res.status(500).json({ error: "Clone synthesis failed" });
+    }
+  });
+
+  // List available voices
+  app.get('/api/voice/list', async (req, res) => {
+    try {
+      const result = await listVoices();
+      if (result.success) {
+        res.json({ success: true, voices: result.voices });
+      } else {
+        res.status(500).json({ success: false, error: result.error });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to list voices" });
+    }
+  });
+
+  // ============ VIDEO & MOVIE GENERATION ROUTES ============
+
+  // Get movie styles
+  app.get('/api/video/styles', (req, res) => {
+    res.json({ styles: getMovieStyles() });
+  });
+
+  // Generate image
+  app.post('/api/video/generate-image', isAuthenticated, async (req: any, res) => {
+    try {
+      const { prompt } = req.body;
+      
+      if (!prompt) {
+        return res.status(400).json({ error: "Prompt is required" });
+      }
+
+      const result = await generateImage(prompt);
+
+      if (result.success) {
+        res.json({ success: true, imageUrl: result.imageUrl });
+      } else {
+        res.status(500).json({ success: false, error: result.error });
+      }
+    } catch (error) {
+      console.error("Image generation error:", error);
+      res.status(500).json({ error: "Image generation failed" });
+    }
+  });
+
+  // Generate movie script
+  app.post('/api/video/generate-script', isAuthenticated, async (req: any, res) => {
+    try {
+      const { premise, genre, sceneCount } = req.body;
+      
+      if (!premise) {
+        return res.status(400).json({ error: "Premise is required" });
+      }
+
+      const result = await generateMovieScript(premise, genre || 'action', sceneCount || 5);
+
+      if (result.success) {
+        res.json({ success: true, script: result.script });
+      } else {
+        res.status(500).json({ success: false, error: result.error });
+      }
+    } catch (error) {
+      console.error("Script generation error:", error);
+      res.status(500).json({ error: "Script generation failed" });
+    }
+  });
+
+  // Generate storyboard for a scene
+  app.post('/api/video/generate-storyboard', isAuthenticated, async (req: any, res) => {
+    try {
+      const { scene, style, frameCount } = req.body;
+      
+      if (!scene) {
+        return res.status(400).json({ error: "Scene is required" });
+      }
+
+      const result = await generateStoryboard(scene, style || 'action', frameCount || 3);
+
+      if (result.success) {
+        res.json({ success: true, frames: result.frames });
+      } else {
+        res.status(500).json({ success: false, error: result.error });
+      }
+    } catch (error) {
+      console.error("Storyboard generation error:", error);
+      res.status(500).json({ error: "Storyboard generation failed" });
+    }
+  });
+
+  // ============ AUDIO PROCESSING ROUTES ============
+
+  // Get all audio processing presets
+  app.get('/api/audio/presets', (req, res) => {
+    res.json({
+      presets: getAllPresets(),
+      scales: getMusicalScales(),
+      keys: getMusicalKeys()
+    });
+  });
+
+  // Calculate synced delay time
+  app.get('/api/audio/sync-delay', (req, res) => {
+    const bpm = parseInt(req.query.bpm as string) || 120;
+    const division = (req.query.division as string) || '1/4';
+    
+    const delayMs = calculateSyncedDelay(bpm, division as any);
+    res.json({ bpm, division, delayMs });
   });
 
   // Get music projects for user
