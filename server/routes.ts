@@ -9,6 +9,7 @@ import { getStripeSync, getStripePublishableKey } from "./stripeClient";
 import { runMigrations } from "stripe-replit-sync";
 import { generateCoachResponse, getRandomQuote } from "./geminiService";
 import { searchAmazonProducts, getAmazonProduct, isConfigured as isAmazonConfigured } from "./amazonService";
+import { generateInstrumental, buildMusicPrompt, isLyriaConfigured, estimateCost } from "./lyriaService";
 import { seedRecoveryData } from "./seedRecoveryData";
 
 async function initStripe() {
@@ -546,6 +547,152 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error getting quote:", error);
       res.status(500).json({ quote: "Your recovery is possible. Your story matters." });
+    }
+  });
+
+  // ============================================================================
+  // STROKE LYFE MUSIC STUDIO API
+  // ============================================================================
+
+  // Generate lyrics using Gemini
+  app.post('/api/music/generate-lyrics', isAuthenticated, async (req: any, res) => {
+    try {
+      const { genre, theme, mood } = req.body;
+      
+      const prompt = `You are a professional songwriter. Write original song lyrics for a ${genre} song about ${theme}. 
+The mood should be ${mood}.
+
+Format the lyrics with clear sections like:
+[Verse 1]
+...lyrics...
+
+[Chorus]
+...lyrics...
+
+[Verse 2]
+...lyrics...
+
+[Bridge]
+...lyrics...
+
+[Chorus]
+...lyrics...
+
+Make the lyrics powerful, emotional, and authentic to the ${genre} genre. 
+The theme is stroke recovery - rising from adversity, proving doubters wrong, reclaiming your life.
+Include recovery metaphors and triumphant imagery.`;
+
+      const result = await generateCoachResponse(prompt, []);
+      res.json({ lyrics: result.response });
+    } catch (error) {
+      console.error("Error generating lyrics:", error);
+      res.status(500).json({ message: "Failed to generate lyrics" });
+    }
+  });
+
+  // Generate instrumental using Vertex AI Lyria
+  app.post('/api/music/generate-instrumental', isAuthenticated, async (req: any, res) => {
+    try {
+      const { genre, bpm, key, scale, description, seed } = req.body;
+      
+      if (!isLyriaConfigured()) {
+        // Fallback: Return prompt for manual generation
+        const { prompt, negativePrompt } = buildMusicPrompt(genre, bpm || 120, key || 'C', scale || 'minor', description);
+        return res.json({
+          success: false,
+          message: "Lyria not configured. Use this prompt with Vertex AI Media Studio:",
+          prompt,
+          negativePrompt,
+          estimatedCost: estimateCost(1)
+        });
+      }
+      
+      const result = await generateInstrumental(
+        genre,
+        bpm || 120,
+        key || 'C',
+        scale || 'minor',
+        description,
+        seed
+      );
+      
+      if (result.success && result.audioBase64) {
+        res.json({
+          success: true,
+          audioBase64: result.audioBase64,
+          mimeType: result.mimeType,
+          prompt: result.prompt,
+          estimatedCost: estimateCost(1)
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message: result.error || "Failed to generate instrumental",
+          prompt: result.prompt
+        });
+      }
+    } catch (error) {
+      console.error("Error generating instrumental:", error);
+      res.status(500).json({ message: "Failed to generate instrumental" });
+    }
+  });
+
+  // Check Lyria configuration status
+  app.get('/api/music/status', async (req, res) => {
+    res.json({
+      lyriaConfigured: isLyriaConfigured(),
+      estimatedCostPer30Seconds: 0.06
+    });
+  });
+
+  // Get music projects for user
+  app.get('/api/music/projects', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      // TODO: Implement storage.getMusicProjects(userId)
+      res.json([]);
+    } catch (error) {
+      console.error("Error fetching music projects:", error);
+      res.status(500).json({ message: "Failed to fetch music projects" });
+    }
+  });
+
+  // Create music project
+  app.post('/api/music/projects', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const projectData = { ...req.body, userId };
+      // TODO: Implement storage.createMusicProject(projectData)
+      res.json({ id: Date.now(), ...projectData });
+    } catch (error) {
+      console.error("Error creating music project:", error);
+      res.status(500).json({ message: "Failed to create music project" });
+    }
+  });
+
+  // Generate music video prompt
+  app.post('/api/music/generate-video-prompt', isAuthenticated, async (req: any, res) => {
+    try {
+      const { genre, lyrics, mood } = req.body;
+      
+      const prompt = `Create a detailed video prompt for a ${genre} music video. 
+The song is about stroke recovery and triumph over adversity.
+Mood: ${mood}
+${lyrics ? `Key lyrics themes: ${lyrics.substring(0, 500)}` : ''}
+
+Generate a cinematic video description that could be used with an AI video generator.
+Include:
+- Visual style (gritty, polished, abstract, etc.)
+- Color palette
+- Scene descriptions (3-4 distinct scenes)
+- Camera movements
+- Symbolic imagery related to recovery and strength`;
+
+      const result = await generateCoachResponse(prompt, []);
+      res.json({ videoPrompt: result.response });
+    } catch (error) {
+      console.error("Error generating video prompt:", error);
+      res.status(500).json({ message: "Failed to generate video prompt" });
     }
   });
 

@@ -1581,3 +1581,187 @@ export type InsertUserCurriculumProgress = z.infer<typeof insertUserCurriculumPr
 // AI Video Types
 export type AiGeneratedVideo = typeof aiGeneratedVideos.$inferSelect;
 export type InsertAiGeneratedVideo = z.infer<typeof insertAiGeneratedVideoSchema>;
+
+// ============================================================================
+// STROKE LYFE MUSIC STUDIO
+// ============================================================================
+
+export const musicProjects = pgTable("music_projects", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  genre: text("genre").notNull(), // rap, pop, country, metal, rock, punk, edm, ambient
+  subGenre: text("sub_genre"),
+  bpm: integer("bpm").notNull().default(120),
+  key: text("key").notNull().default("C"),
+  scale: text("scale").notNull().default("major"), // major, minor, pentatonic, etc.
+  description: text("description"),
+  coverArtUrl: text("cover_art_url"),
+  status: text("status").notNull().default("draft"), // draft, mixing, mastering, completed
+  isPublished: boolean("is_published").notNull().default(false),
+  duration: integer("duration"), // in seconds
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const musicStems = pgTable("music_stems", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => musicProjects.id, { onDelete: "cascade" }),
+  name: text("name").notNull(), // drums, bass, guitar, synth, vocals, etc.
+  stemType: text("stem_type").notNull(), // instrumental, vocal, ai_generated, sample, recorded
+  sourceModel: text("source_model"), // lyria, tonej, user_upload
+  audioUrl: text("audio_url"),
+  waveformData: jsonb("waveform_data"), // for visualization
+  volume: integer("volume").notNull().default(80), // 0-100
+  pan: integer("pan").notNull().default(50), // 0-100, 50 = center
+  muted: boolean("muted").notNull().default(false),
+  solo: boolean("solo").notNull().default(false),
+  effects: jsonb("effects"), // reverb, delay, eq settings
+  startTime: integer("start_time").notNull().default(0), // ms offset
+  duration: integer("duration"), // in ms
+  order: integer("order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const musicLyrics = pgTable("music_lyrics", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => musicProjects.id, { onDelete: "cascade" }),
+  version: integer("version").notNull().default(1),
+  content: text("content").notNull(),
+  structure: jsonb("structure"), // verse, chorus, bridge markers with timestamps
+  aiGenerated: boolean("ai_generated").notNull().default(false),
+  aiPrompt: text("ai_prompt"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const vocalRenders = pgTable("vocal_renders", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => musicProjects.id, { onDelete: "cascade" }),
+  lyricsId: integer("lyrics_id").references(() => musicLyrics.id),
+  singerProfile: text("singer_profile").notNull(), // voice type/character
+  language: text("language").notNull().default("en"),
+  audioUrl: text("audio_url"),
+  phonemeMap: jsonb("phoneme_map"), // timing data for lip sync
+  style: text("style"), // rap, sing, scream, whisper
+  pitch: integer("pitch").notNull().default(0), // -12 to +12 semitones
+  status: text("status").notNull().default("pending"), // pending, rendering, completed, failed
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const mixSessions = pgTable("mix_sessions", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => musicProjects.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  masterVolume: integer("master_volume").notNull().default(80),
+  masterEffects: jsonb("master_effects"), // master chain: compressor, limiter, eq
+  automationCurves: jsonb("automation_curves"), // volume/pan automation over time
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const musicExports = pgTable("music_exports", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => musicProjects.id, { onDelete: "cascade" }),
+  mixSessionId: integer("mix_session_id").references(() => mixSessions.id),
+  format: text("format").notNull(), // wav, mp3, flac
+  quality: text("quality").notNull(), // 320kbps, lossless, etc.
+  audioUrl: text("audio_url"),
+  status: text("status").notNull().default("pending"), // pending, processing, completed, failed
+  fileSize: integer("file_size"), // in bytes
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  completedAt: timestamp("completed_at"),
+});
+
+export const musicVideos = pgTable("music_videos", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => musicProjects.id, { onDelete: "cascade" }),
+  exportId: integer("export_id").references(() => musicExports.id),
+  title: text("title").notNull(),
+  prompt: text("prompt").notNull(),
+  style: text("style"), // cinematic, lyric_video, performance, abstract
+  videoUrl: text("video_url"),
+  thumbnailUrl: text("thumbnail_url"),
+  duration: integer("duration"), // in seconds
+  beatMarkers: jsonb("beat_markers"), // sync points for audio-reactive visuals
+  status: text("status").notNull().default("pending"), // pending, generating, completed, failed
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  completedAt: timestamp("completed_at"),
+});
+
+export const aiMusicJobs = pgTable("ai_music_jobs", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => musicProjects.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  jobType: text("job_type").notNull(), // instrumental, vocal, lyrics, video, mastering
+  provider: text("provider").notNull(), // lyria, gemini, veo, openai
+  prompt: text("prompt").notNull(),
+  parameters: jsonb("parameters"), // genre, bpm, key, etc.
+  resultUrl: text("result_url"),
+  status: text("status").notNull().default("queued"), // queued, processing, completed, failed
+  errorMessage: text("error_message"),
+  cost: integer("cost"), // in cents
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+});
+
+// Insert schemas
+export const insertMusicProjectSchema = createInsertSchema(musicProjects).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertMusicStemSchema = createInsertSchema(musicStems).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertMusicLyricsSchema = createInsertSchema(musicLyrics).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertVocalRenderSchema = createInsertSchema(vocalRenders).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertMixSessionSchema = createInsertSchema(mixSessions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertMusicExportSchema = createInsertSchema(musicExports).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertMusicVideoSchema = createInsertSchema(musicVideos).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAiMusicJobSchema = createInsertSchema(aiMusicJobs).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Music Studio Types
+export type MusicProject = typeof musicProjects.$inferSelect;
+export type InsertMusicProject = z.infer<typeof insertMusicProjectSchema>;
+export type MusicStem = typeof musicStems.$inferSelect;
+export type InsertMusicStem = z.infer<typeof insertMusicStemSchema>;
+export type MusicLyrics = typeof musicLyrics.$inferSelect;
+export type InsertMusicLyrics = z.infer<typeof insertMusicLyricsSchema>;
+export type VocalRender = typeof vocalRenders.$inferSelect;
+export type InsertVocalRender = z.infer<typeof insertVocalRenderSchema>;
+export type MixSession = typeof mixSessions.$inferSelect;
+export type InsertMixSession = z.infer<typeof insertMixSessionSchema>;
+export type MusicExport = typeof musicExports.$inferSelect;
+export type InsertMusicExport = z.infer<typeof insertMusicExportSchema>;
+export type MusicVideo = typeof musicVideos.$inferSelect;
+export type InsertMusicVideo = z.infer<typeof insertMusicVideoSchema>;
+export type AiMusicJob = typeof aiMusicJobs.$inferSelect;
+export type InsertAiMusicJob = z.infer<typeof insertAiMusicJobSchema>;
