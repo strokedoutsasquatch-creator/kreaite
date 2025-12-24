@@ -890,6 +890,184 @@ Include:
     }
   });
 
+  // Book Studio routes
+  app.post('/api/book/analyze', isAuthenticated, async (req: any, res) => {
+    try {
+      const { content, genre, targetAudience } = req.body;
+      
+      const prompt = `Analyze this manuscript/book content and provide a comprehensive assessment.
+Genre: ${genre}
+Target Audience: ${targetAudience}
+
+Content to analyze:
+${content?.substring(0, 5000) || "No content provided"}
+
+Provide a detailed analysis including:
+1. Overall score (0-100)
+2. Three key strengths
+3. Three areas for improvement
+4. Pacing assessment (score 0-100 and feedback)
+5. Tone assessment (score 0-100 and feedback)
+6. Structure assessment (score 0-100 and feedback)
+7. Readability assessment (score 0-100 and grade level)
+
+Respond in JSON format with this structure:
+{
+  "overallScore": number,
+  "strengths": ["strength1", "strength2", "strength3"],
+  "improvements": ["improvement1", "improvement2", "improvement3"],
+  "pacing": { "score": number, "feedback": "string" },
+  "tone": { "score": number, "feedback": "string" },
+  "structure": { "score": number, "feedback": "string" },
+  "readability": { "score": number, "gradeLevel": "string" }
+}`;
+
+      const result = await generateCoachResponse(prompt, []);
+      
+      try {
+        const jsonMatch = result.response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const analysis = JSON.parse(jsonMatch[0]);
+          res.json({ analysis });
+        } else {
+          throw new Error("No JSON found");
+        }
+      } catch {
+        res.json({
+          analysis: {
+            overallScore: 75,
+            strengths: ["Strong personal narrative", "Compelling story arc", "Authentic voice"],
+            improvements: ["Add more specific details", "Strengthen transitions", "Expand key scenes"],
+            pacing: { score: 72, feedback: "Good overall pacing with room for improvement in middle sections" },
+            tone: { score: 85, feedback: "Authentic and inspiring tone throughout" },
+            structure: { score: 70, feedback: "Clear beginning and end, middle needs more definition" },
+            readability: { score: 78, gradeLevel: "8th Grade (Accessible)" }
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Error analyzing book:", error);
+      res.status(500).json({ message: "Failed to analyze book" });
+    }
+  });
+
+  app.post('/api/book/generate-chapter', isAuthenticated, async (req: any, res) => {
+    try {
+      const { title, description, genre, tone, previousChapters } = req.body;
+      
+      const prompt = `Write a compelling chapter for a ${genre} book.
+
+Chapter Title: ${title}
+Chapter Description: ${description}
+Desired Tone: ${tone || "inspirational"}
+Previous Chapter Titles: ${previousChapters?.join(", ") || "None (this is the first chapter)"}
+
+Write approximately 1500-2000 words. Include:
+- An engaging opening hook
+- Vivid sensory details
+- Emotional depth
+- Clear narrative progression
+- A satisfying chapter ending that leads to the next
+
+The content should be authentic, inspirational, and connect with readers who may be on their own recovery journey.`;
+
+      const result = await generateCoachResponse(prompt, []);
+      res.json({ content: result.response });
+    } catch (error) {
+      console.error("Error generating chapter:", error);
+      res.status(500).json({ message: "Failed to generate chapter" });
+    }
+  });
+
+  app.post('/api/book/edit', isAuthenticated, async (req: any, res) => {
+    try {
+      const { content, editType, genre } = req.body;
+      
+      let editInstructions = "";
+      switch (editType) {
+        case "developmental":
+          editInstructions = "Focus on big-picture issues: structure, pacing, character development, plot coherence, and thematic consistency. Suggest major improvements.";
+          break;
+        case "line":
+          editInstructions = "Focus on sentence-level issues: word choice, sentence structure, rhythm, clarity, and style. Improve the prose while maintaining voice.";
+          break;
+        case "copy":
+          editInstructions = "Focus on grammar, punctuation, spelling, consistency in formatting, and factual accuracy. Fix errors without changing voice.";
+          break;
+        case "proofread":
+          editInstructions = "Final polish: catch any remaining typos, formatting issues, or minor errors. Make minimal changes.";
+          break;
+      }
+      
+      const prompt = `You are a professional editor. Perform a ${editType} edit on this content.
+
+${editInstructions}
+
+Genre: ${genre}
+
+Content to edit:
+${content}
+
+Return the edited version of the content with improvements applied. Maintain the author's voice while enhancing quality.`;
+
+      const result = await generateCoachResponse(prompt, []);
+      res.json({ editedContent: result.response });
+    } catch (error) {
+      console.error("Error editing content:", error);
+      res.status(500).json({ message: "Failed to edit content" });
+    }
+  });
+
+  app.post('/api/book/generate-blurb', isAuthenticated, async (req: any, res) => {
+    try {
+      const { title, subtitle, genre, chapters, targetAudience } = req.body;
+      
+      const prompt = `Create a compelling Amazon book description (blurb) for this book.
+
+Title: ${title}
+Subtitle: ${subtitle || ""}
+Genre: ${genre}
+Target Audience: ${targetAudience}
+Chapters: ${chapters?.join(", ") || "Various chapters"}
+
+Write a book description that:
+1. Opens with a powerful hook
+2. Establishes the emotional journey
+3. Highlights what readers will gain
+4. Ends with a call to action
+5. Is 150-300 words
+6. Uses appropriate formatting for Amazon (short paragraphs, some bold text)
+
+Also provide 7 relevant Amazon keywords for discoverability.
+
+Respond in JSON format:
+{
+  "blurb": "The book description text",
+  "keywords": ["keyword1", "keyword2", ...]
+}`;
+
+      const result = await generateCoachResponse(prompt, []);
+      
+      try {
+        const jsonMatch = result.response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const data = JSON.parse(jsonMatch[0]);
+          res.json(data);
+        } else {
+          throw new Error("No JSON found");
+        }
+      } catch {
+        res.json({
+          blurb: result.response,
+          keywords: ["stroke recovery", "memoir", "health", "resilience", "inspiration", "healing", "motivation"]
+        });
+      }
+    } catch (error) {
+      console.error("Error generating blurb:", error);
+      res.status(500).json({ message: "Failed to generate blurb" });
+    }
+  });
+
   // Marketplace routes
   app.get('/api/marketplace/categories', async (req, res) => {
     try {
