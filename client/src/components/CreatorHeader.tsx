@@ -94,12 +94,12 @@ export default function CreatorHeader() {
                 ))}
                 <DropdownMenuSeparator className="bg-orange-500/20" />
                 <DropdownMenuItem asChild>
-                  <Link href="/recovery">
-                    <div className="flex items-start gap-3 py-1 cursor-pointer w-full">
+                  <Link href="/stroke-recovery">
+                    <div className="flex items-start gap-3 py-1 cursor-pointer w-full" data-testid="link-stroke-recovery">
                       <Sparkles className="w-5 h-5 text-orange-500 mt-0.5" />
                       <div>
-                        <div className="font-medium text-white">Stroke Recovery</div>
-                        <div className="text-xs text-muted-foreground">Recovery-focused tools</div>
+                        <div className="font-medium text-white">Stroke Recovery Academy</div>
+                        <div className="text-xs text-muted-foreground">Recovery-focused tools & community</div>
                       </div>
                     </div>
                   </Link>
@@ -176,6 +176,17 @@ export default function CreatorHeader() {
                 </Button>
               </Link>
             ))}
+            <Link href="/stroke-recovery">
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-white gap-3"
+                onClick={() => setMobileMenuOpen(false)}
+                data-testid="mobile-link-stroke-recovery"
+              >
+                <Sparkles className="w-5 h-5 text-orange-500" />
+                Stroke Recovery Academy
+              </Button>
+            </Link>
             <div className="border-t border-orange-500/20 my-2" />
             {navLinks.map((link) => (
               <Link key={link.href} href={link.href}>

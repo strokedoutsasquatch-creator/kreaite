@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2 } from "lucide-react";
-import Header from "@/components/Header";
+import CreatorHeader from "@/components/CreatorHeader";
 import HeroSection from "@/components/HeroSection";
 import RecoveryByDesign from "@/components/RecoveryByDesign";
 import TestimonyVideo from "@/components/TestimonyVideo";
@@ -50,8 +50,8 @@ export default function Landing() {
   }
 
   return (
-    <div className="min-h-screen">
-      <Header />
+    <div className="min-h-screen bg-black">
+      <CreatorHeader />
       <main>
         <HeroSection />
         <RecoveryByDesign />
