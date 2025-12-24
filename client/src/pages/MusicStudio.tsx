@@ -102,6 +102,15 @@ export default function MusicStudio() {
   const [isGeneratingScript, setIsGeneratingScript] = useState(false);
   const [storyboardFrames, setStoryboardFrames] = useState<string[]>([]);
   
+  // Song Creator Wizard state
+  const [creatorStep, setCreatorStep] = useState(1);
+  const [songTheme, setSongTheme] = useState("");
+  const [songMood, setSongMood] = useState("triumphant");
+  const [songInfluences, setSongInfluences] = useState("");
+  const [generatedBeat, setGeneratedBeat] = useState<string | null>(null);
+  const [selectedFlow, setSelectedFlow] = useState("melodic");
+  const [isGeneratingBeat, setIsGeneratingBeat] = useState(false);
+  
   // EQ state (8-band parametric)
   const [eqBands, setEqBands] = useState<EQBand[]>([
     { frequency: 60, gain: 0, Q: 1 },
@@ -672,8 +681,9 @@ export default function MusicStudio() {
         {/* Main Content */}
         <div className="flex-1 flex flex-col">
           <div className="flex-1 p-4 overflow-hidden">
-            <Tabs defaultValue="arrange" className="h-full flex flex-col">
+            <Tabs defaultValue="create" className="h-full flex flex-col">
               <TabsList className="mb-4">
+                <TabsTrigger value="create" data-testid="tab-create" className="bg-primary/20">Create Song</TabsTrigger>
                 <TabsTrigger value="arrange" data-testid="tab-arrange">Arrange</TabsTrigger>
                 <TabsTrigger value="mixer" data-testid="tab-mixer">Mixer</TabsTrigger>
                 <TabsTrigger value="effects" data-testid="tab-effects">Effects & EQ</TabsTrigger>
@@ -681,6 +691,496 @@ export default function MusicStudio() {
                 <TabsTrigger value="lyrics" data-testid="tab-lyrics">Lyrics</TabsTrigger>
                 <TabsTrigger value="movie" data-testid="tab-movie">Movie Studio</TabsTrigger>
               </TabsList>
+
+              {/* Create Song Wizard Tab */}
+              <TabsContent value="create" className="flex-1 overflow-auto">
+                <div className="space-y-6">
+                  {/* Progress Stepper */}
+                  <div className="flex items-center justify-between px-4">
+                    {[
+                      { step: 1, label: "Write Lyrics" },
+                      { step: 2, label: "Choose Style" },
+                      { step: 3, label: "Generate Beat" },
+                      { step: 4, label: "Select Voice" },
+                      { step: 5, label: "Preview & Export" },
+                    ].map((s, i) => (
+                      <div key={s.step} className="flex items-center">
+                        <button
+                          onClick={() => setCreatorStep(s.step)}
+                          className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all
+                            ${creatorStep === s.step ? 'bg-primary text-primary-foreground' : 
+                              creatorStep > s.step ? 'bg-primary/50 text-white' : 'bg-muted text-muted-foreground'}`}
+                          data-testid={`button-step-${s.step}`}
+                        >
+                          {s.step}
+                        </button>
+                        <span className={`ml-2 text-sm hidden md:block ${creatorStep === s.step ? 'text-primary font-bold' : 'text-muted-foreground'}`}>
+                          {s.label}
+                        </span>
+                        {i < 4 && <div className={`w-8 md:w-16 h-1 mx-2 ${creatorStep > s.step ? 'bg-primary' : 'bg-muted'}`} />}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Step 1: Write Lyrics */}
+                  {creatorStep === 1 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <PenTool className="w-5 h-5 text-primary" /> Step 1: Write Your Lyrics
+                        </CardTitle>
+                        <CardDescription>Start with your message. What's the song about?</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-4">
+                            <div>
+                              <Label>Song Theme / Topic</Label>
+                              <Input 
+                                value={songTheme} 
+                                onChange={(e) => setSongTheme(e.target.value)}
+                                placeholder="e.g., Rising from stroke, never giving up, comeback story..."
+                                data-testid="input-song-theme"
+                              />
+                            </div>
+                            <div>
+                              <Label>Mood / Energy</Label>
+                              <Select value={songMood} onValueChange={setSongMood}>
+                                <SelectTrigger data-testid="select-song-mood"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="triumphant">Triumphant - Victory energy</SelectItem>
+                                  <SelectItem value="aggressive">Aggressive - Raw power</SelectItem>
+                                  <SelectItem value="emotional">Emotional - Deep feeling</SelectItem>
+                                  <SelectItem value="motivational">Motivational - Pump up</SelectItem>
+                                  <SelectItem value="reflective">Reflective - Looking back</SelectItem>
+                                  <SelectItem value="defiant">Defiant - Against all odds</SelectItem>
+                                  <SelectItem value="healing">Healing - Peace & recovery</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>
+                              <Label>Influences (Optional)</Label>
+                              <Input 
+                                value={songInfluences}
+                                onChange={(e) => setSongInfluences(e.target.value)}
+                                placeholder="e.g., Eminem, Johnny Cash, Metallica..."
+                                data-testid="input-influences"
+                              />
+                            </div>
+                            <Button 
+                              onClick={async () => {
+                                setIsGeneratingLyrics(true);
+                                try {
+                                  const response = await apiRequest("POST", "/api/music/generate-lyrics", {
+                                    genre: selectedGenre,
+                                    theme: songTheme || "stroke recovery warrior rising up",
+                                    mood: songMood,
+                                    influences: songInfluences,
+                                  });
+                                  const data = await response.json();
+                                  if (data.lyrics) {
+                                    setLyrics(data.lyrics);
+                                    toast({ title: "Lyrics Generated", description: "AI wrote your lyrics. Edit as needed!" });
+                                  }
+                                } catch (error) {
+                                  toast({ title: "Error", description: "Failed to generate lyrics", variant: "destructive" });
+                                } finally {
+                                  setIsGeneratingLyrics(false);
+                                }
+                              }}
+                              disabled={isGeneratingLyrics}
+                              className="w-full"
+                              data-testid="button-ai-write-lyrics"
+                            >
+                              {isGeneratingLyrics ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Wand2 className="w-4 h-4 mr-2" />}
+                              AI Write Lyrics
+                            </Button>
+                          </div>
+                          <div>
+                            <Label>Your Lyrics</Label>
+                            <Textarea 
+                              value={lyrics}
+                              onChange={(e) => setLyrics(e.target.value)}
+                              placeholder={`[Verse 1]
+Write your first verse here...
+
+[Chorus]
+Write the hook that repeats...
+
+[Verse 2]
+Continue your story...
+
+[Bridge]
+Change it up...
+
+[Chorus]
+Repeat the hook...`}
+                              className="min-h-[300px] font-mono text-sm"
+                              data-testid="textarea-lyrics-creator"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <Button onClick={() => setCreatorStep(2)} disabled={!lyrics.trim()} data-testid="button-next-step-1">
+                            Next: Choose Style
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Step 2: Choose Style */}
+                  {creatorStep === 2 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Music className="w-5 h-5 text-primary" /> Step 2: Choose Your Style
+                        </CardTitle>
+                        <CardDescription>Define the sound - genre, tempo, key</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div>
+                          <Label className="mb-3 block">Genre</Label>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {genres.map((g) => {
+                              const Icon = g.icon;
+                              return (
+                                <button
+                                  key={g.value}
+                                  onClick={() => setSelectedGenre(g.value)}
+                                  className={`p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 hover-elevate
+                                    ${selectedGenre === g.value ? 'border-primary bg-primary/10' : 'border-border'}`}
+                                  data-testid={`button-genre-${g.value}`}
+                                >
+                                  <Icon className={`w-8 h-8 ${selectedGenre === g.value ? 'text-primary' : ''}`} />
+                                  <span className="font-medium text-sm">{g.label}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <div>
+                            <Label>Tempo (BPM): {bpm}</Label>
+                            <Slider 
+                              value={[bpm]} 
+                              onValueChange={([v]) => setBpm(v)} 
+                              min={60} max={200} 
+                              className="mt-2"
+                              data-testid="slider-tempo-creator"
+                            />
+                            <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                              <span>Slow (60)</span>
+                              <span>Fast (200)</span>
+                            </div>
+                          </div>
+                          <div>
+                            <Label>Key</Label>
+                            <Select value={selectedKey} onValueChange={setSelectedKey}>
+                              <SelectTrigger className="mt-2" data-testid="select-key-creator"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {keys.map((k) => (
+                                  <SelectItem key={k} value={k}>{k}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label>Scale</Label>
+                            <Select value={selectedScale} onValueChange={setSelectedScale}>
+                              <SelectTrigger className="mt-2" data-testid="select-scale-creator"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {scales.map((s) => (
+                                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-between">
+                          <Button variant="outline" onClick={() => setCreatorStep(1)} data-testid="button-back-step-2">
+                            Back
+                          </Button>
+                          <Button onClick={() => setCreatorStep(3)} data-testid="button-next-step-2">
+                            Next: Generate Beat
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Step 3: Generate Beat */}
+                  {creatorStep === 3 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Disc className="w-5 h-5 text-primary" /> Step 3: Generate Your Beat
+                        </CardTitle>
+                        <CardDescription>
+                          AI will create a {genres.find(g => g.value === selectedGenre)?.label} instrumental at {bpm} BPM in {selectedKey} {selectedScale}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div className="p-6 bg-muted/50 rounded-lg text-center">
+                          <div className="mb-4">
+                            <Badge variant="outline" className="mb-2">{genres.find(g => g.value === selectedGenre)?.label}</Badge>
+                            <Badge variant="outline" className="ml-2">{bpm} BPM</Badge>
+                            <Badge variant="outline" className="ml-2">{selectedKey} {selectedScale}</Badge>
+                          </div>
+                          
+                          {generatedBeat ? (
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-center gap-4">
+                                <Button size="lg" onClick={handlePlay} data-testid="button-play-beat">
+                                  {isPlaying ? <Pause className="w-5 h-5 mr-2" /> : <Play className="w-5 h-5 mr-2" />}
+                                  {isPlaying ? "Pause" : "Play"} Beat
+                                </Button>
+                                <Button variant="outline" size="lg" onClick={() => {
+                                  setGeneratedBeat(null);
+                                }} data-testid="button-regenerate-beat">
+                                  <RefreshCw className="w-4 h-4 mr-2" />
+                                  Regenerate
+                                </Button>
+                              </div>
+                              <audio src={generatedBeat} controls className="w-full max-w-md mx-auto" data-testid="audio-generated-beat" />
+                            </div>
+                          ) : (
+                            <Button 
+                              size="lg"
+                              onClick={async () => {
+                                setIsGeneratingBeat(true);
+                                setGenerationProgress(0);
+                                const interval = setInterval(() => {
+                                  setGenerationProgress(p => Math.min(p + 10, 90));
+                                }, 500);
+                                try {
+                                  const response = await apiRequest("POST", "/api/music/generate-instrumental", {
+                                    genre: selectedGenre,
+                                    bpm,
+                                    key: selectedKey,
+                                    scale: selectedScale,
+                                    mood: songMood,
+                                  });
+                                  const data = await response.json();
+                                  if (data.audioUrl) {
+                                    setGeneratedBeat(data.audioUrl);
+                                    toast({ title: "Beat Generated!", description: "Your AI instrumental is ready!" });
+                                  }
+                                } catch (error) {
+                                  toast({ title: "Error", description: "Beat generation failed", variant: "destructive" });
+                                } finally {
+                                  clearInterval(interval);
+                                  setGenerationProgress(100);
+                                  setIsGeneratingBeat(false);
+                                }
+                              }}
+                              disabled={isGeneratingBeat}
+                              data-testid="button-generate-beat-main"
+                            >
+                              {isGeneratingBeat ? (
+                                <>
+                                  <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+                                  Generating... ({generationProgress}%)
+                                </>
+                              ) : (
+                                <>
+                                  <Sparkles className="w-5 h-5 mr-2" />
+                                  Generate Beat with Lyria AI
+                                </>
+                              )}
+                            </Button>
+                          )}
+                          
+                          {isGeneratingBeat && <Progress value={generationProgress} className="mt-4 max-w-md mx-auto" />}
+                        </div>
+                        
+                        <div className="flex justify-between">
+                          <Button variant="outline" onClick={() => setCreatorStep(2)} data-testid="button-back-step-3">
+                            Back
+                          </Button>
+                          <Button onClick={() => setCreatorStep(4)} disabled={!generatedBeat} data-testid="button-next-step-3">
+                            Next: Select Voice
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Step 4: Select Voice & Flow */}
+                  {creatorStep === 4 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Mic className="w-5 h-5 text-primary" /> Step 4: Choose Your Voice & Flow
+                        </CardTitle>
+                        <CardDescription>How should the vocals sound and be delivered?</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <Label className="mb-3 block">Voice Style</Label>
+                            <div className="space-y-2">
+                              {voiceStyles?.styles?.slice(0, 6).map((style: any) => (
+                                <button
+                                  key={style.id}
+                                  onClick={() => setSelectedVoiceStyle(style.id)}
+                                  className={`w-full p-3 rounded-lg border-2 text-left transition-all hover-elevate
+                                    ${selectedVoiceStyle === style.id ? 'border-primary bg-primary/10' : 'border-border'}`}
+                                  data-testid={`button-voice-style-${style.id}`}
+                                >
+                                  <div className="font-medium">{style.name}</div>
+                                  <div className="text-sm text-muted-foreground">{style.description}</div>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <Label className="mb-3 block">Flow / Delivery</Label>
+                            <div className="space-y-2">
+                              {[
+                                { id: "melodic", name: "Melodic", desc: "Sung with melody and hooks" },
+                                { id: "aggressive", name: "Aggressive", desc: "Hard, punchy delivery" },
+                                { id: "smooth", name: "Smooth", desc: "Laid-back, flowing" },
+                                { id: "fast", name: "Fast Flow", desc: "Rapid-fire, technical" },
+                                { id: "storytelling", name: "Storytelling", desc: "Narrative, conversational" },
+                                { id: "anthemic", name: "Anthemic", desc: "Big, arena-ready" },
+                              ].map((flow) => (
+                                <button
+                                  key={flow.id}
+                                  onClick={() => setSelectedFlow(flow.id)}
+                                  className={`w-full p-3 rounded-lg border-2 text-left transition-all hover-elevate
+                                    ${selectedFlow === flow.id ? 'border-primary bg-primary/10' : 'border-border'}`}
+                                  data-testid={`button-flow-${flow.id}`}
+                                >
+                                  <div className="font-medium">{flow.name}</div>
+                                  <div className="text-sm text-muted-foreground">{flow.desc}</div>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <Separator />
+                        
+                        <div className="p-4 bg-muted/50 rounded-lg">
+                          <h4 className="font-bold mb-2 flex items-center gap-2">
+                            <Mic className="w-4 h-4" /> Clone Your Own Voice (Optional)
+                          </h4>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Record 10+ seconds of your voice to create a voice clone using Google Chirp 3 HD
+                          </p>
+                          <Button variant="outline" onClick={() => {
+                            setCreatorStep(4);
+                            toast({ title: "Voice Studio", description: "Go to Voice Studio tab to record and clone your voice" });
+                          }} data-testid="button-go-voice-studio">
+                            Open Voice Studio
+                          </Button>
+                        </div>
+                        
+                        <div className="flex justify-between">
+                          <Button variant="outline" onClick={() => setCreatorStep(3)} data-testid="button-back-step-4">
+                            Back
+                          </Button>
+                          <Button onClick={() => setCreatorStep(5)} data-testid="button-next-step-4">
+                            Next: Preview & Export
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Step 5: Preview & Export */}
+                  {creatorStep === 5 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Download className="w-5 h-5 text-primary" /> Step 5: Preview & Export
+                        </CardTitle>
+                        <CardDescription>Review your song and export</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-4">
+                            <h4 className="font-bold">Song Summary</h4>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                <span className="text-muted-foreground">Genre:</span>
+                                <Badge>{genres.find(g => g.value === selectedGenre)?.label}</Badge>
+                              </div>
+                              <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                <span className="text-muted-foreground">Tempo:</span>
+                                <span>{bpm} BPM</span>
+                              </div>
+                              <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                <span className="text-muted-foreground">Key:</span>
+                                <span>{selectedKey} {selectedScale}</span>
+                              </div>
+                              <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                <span className="text-muted-foreground">Voice:</span>
+                                <span>{voiceStyles?.styles?.find((s: any) => s.id === selectedVoiceStyle)?.name || selectedVoiceStyle}</span>
+                              </div>
+                              <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                <span className="text-muted-foreground">Flow:</span>
+                                <span className="capitalize">{selectedFlow}</span>
+                              </div>
+                              <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                <span className="text-muted-foreground">Mood:</span>
+                                <span className="capitalize">{songMood}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-4">
+                            <h4 className="font-bold">Lyrics Preview</h4>
+                            <div className="p-3 bg-muted/50 rounded-lg max-h-48 overflow-y-auto">
+                              <pre className="text-sm whitespace-pre-wrap font-mono">{lyrics.substring(0, 500)}{lyrics.length > 500 && "..."}</pre>
+                            </div>
+                            
+                            {generatedBeat && (
+                              <div>
+                                <h4 className="font-bold mb-2">Generated Beat</h4>
+                                <audio src={generatedBeat} controls className="w-full" data-testid="audio-final-preview" />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <Separator />
+                        
+                        <div className="flex flex-col md:flex-row gap-4 justify-center">
+                          <Button size="lg" className="gap-2" data-testid="button-export-project">
+                            <Save className="w-5 h-5" />
+                            Save Project
+                          </Button>
+                          <Button size="lg" variant="outline" className="gap-2" data-testid="button-export-stems">
+                            <Download className="w-5 h-5" />
+                            Export Stems
+                          </Button>
+                          <Button size="lg" variant="outline" className="gap-2" data-testid="button-create-video">
+                            <Video className="w-5 h-5" />
+                            Create Music Video
+                          </Button>
+                        </div>
+                        
+                        <div className="flex justify-between">
+                          <Button variant="outline" onClick={() => setCreatorStep(4)} data-testid="button-back-step-5">
+                            Back
+                          </Button>
+                          <Button variant="outline" onClick={() => {
+                            setCreatorStep(1);
+                            toast({ title: "Start New Song", description: "Beginning a fresh project" });
+                          }} data-testid="button-start-new">
+                            Start New Song
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </TabsContent>
 
               {/* Arrange Tab */}
               <TabsContent value="arrange" className="flex-1 overflow-hidden">

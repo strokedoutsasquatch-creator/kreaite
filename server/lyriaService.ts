@@ -7,6 +7,17 @@
  * Cost: ~$0.06 per 30-second generation
  */
 
+// Vertex AI configuration constants
+const VERTEX_AI_LOCATION = "us-central1";
+const LYRIA_MODEL = "lyria-002";
+
+interface LyriaResponse {
+  predictions: Array<{
+    audioContent: string;
+    mimeType?: string;
+  }>;
+}
+
 interface LyriaRequest {
   prompt: string;
   negativePrompt?: string;
