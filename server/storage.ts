@@ -35,11 +35,18 @@ import {
   type BlogPost, type InsertBlogPost,
   type BlogPostReaction, type InsertBlogPostReaction,
   type BlogPostComment, type InsertBlogPostComment,
+  type MarketplaceListing, type InsertMarketplaceListing,
+  type BookEdition, type InsertBookEdition,
+  type BookOrder, type InsertBookOrder,
+  type OrderItem, type InsertOrderItem,
+  type BookReview, type InsertBookReview,
+  type AuthorEarnings, type InsertAuthorEarnings,
 } from "@shared/schema";
 import { 
   users, forumCategories, forumThreads, forumPosts, forumReactions,
   books, aiChatSessions, aiChatMessages,
   marketplaceCategories, marketplaceProducts,
+  marketplaceListings, bookEditions, bookOrders, orderItems, bookReviews, authorEarnings,
   publishingProjects,
   recoveryPrograms, programModules, programLessons,
   userEnrollments, dailyCheckins, userStreaks,
@@ -294,6 +301,28 @@ export interface IStorage {
   createBlogComment(comment: InsertBlogPostComment): Promise<BlogPostComment>;
   deleteBlogComment(id: number): Promise<boolean>;
   incrementBlogViews(id: number): Promise<void>;
+  
+  // Book Marketplace
+  getMarketplaceListings(filters?: { genre?: string; sortBy?: string; featuredOnly?: boolean; status?: string }): Promise<MarketplaceListing[]>;
+  getMarketplaceListing(id: number): Promise<MarketplaceListing | undefined>;
+  getAuthorListings(authorId: string): Promise<MarketplaceListing[]>;
+  createMarketplaceListing(listing: InsertMarketplaceListing): Promise<MarketplaceListing>;
+  updateMarketplaceListing(id: number, updates: Partial<MarketplaceListing>): Promise<MarketplaceListing | undefined>;
+  getBookEditions(listingId: number): Promise<BookEdition[]>;
+  getBookEdition(id: number): Promise<BookEdition | undefined>;
+  createBookEdition(edition: InsertBookEdition): Promise<BookEdition>;
+  getBookReviews(listingId: number): Promise<BookReview[]>;
+  createBookReview(review: InsertBookReview): Promise<BookReview>;
+  updateListingRating(listingId: number): Promise<void>;
+  createBookOrder(order: InsertBookOrder): Promise<BookOrder>;
+  getBookOrder(id: number): Promise<BookOrder | undefined>;
+  updateBookOrder(id: number, updates: Partial<BookOrder>): Promise<BookOrder | undefined>;
+  getCustomerOrders(customerId: string): Promise<BookOrder[]>;
+  createOrderItem(item: InsertOrderItem): Promise<OrderItem>;
+  getOrderItems(orderId: number): Promise<OrderItem[]>;
+  getAuthorEarnings(authorId: string): Promise<AuthorEarnings[]>;
+  getAuthorEarningsSummary(authorId: string): Promise<{ total: number; pending: number; available: number; paid: number }>;
+  getAuthorAnalytics(authorId: string): Promise<{ totalSales: number; totalRevenue: number; topBooks: any[] }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2042,6 +2071,204 @@ export class DatabaseStorage implements IStorage {
     await db.update(blogPosts)
       .set({ viewCount: sql`${blogPosts.viewCount} + 1` })
       .where(eq(blogPosts.id, id));
+  }
+
+  // ============================================================================
+  // BOOK MARKETPLACE
+  // ============================================================================
+
+  async getMarketplaceListings(filters: { genre?: string; sortBy?: string; featuredOnly?: boolean; status?: string } = {}): Promise<MarketplaceListing[]> {
+    const conditions = [];
+    
+    if (filters.genre) {
+      conditions.push(eq(marketplaceListings.genre, filters.genre));
+    }
+    if (filters.featuredOnly) {
+      conditions.push(eq(marketplaceListings.isFeatured, true));
+    }
+    if (filters.status) {
+      conditions.push(eq(marketplaceListings.status, filters.status));
+    } else {
+      conditions.push(eq(marketplaceListings.status, 'published'));
+    }
+    
+    let query = db.select().from(marketplaceListings);
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+    
+    if (filters.sortBy === 'sales') {
+      return query.orderBy(desc(marketplaceListings.totalSales));
+    } else if (filters.sortBy === 'rating') {
+      return query.orderBy(desc(marketplaceListings.averageRating));
+    } else if (filters.sortBy === 'newest') {
+      return query.orderBy(desc(marketplaceListings.publishedAt));
+    }
+    
+    return query.orderBy(desc(marketplaceListings.createdAt));
+  }
+
+  async getMarketplaceListing(id: number): Promise<MarketplaceListing | undefined> {
+    const [listing] = await db.select().from(marketplaceListings).where(eq(marketplaceListings.id, id));
+    return listing;
+  }
+
+  async getAuthorListings(authorId: string): Promise<MarketplaceListing[]> {
+    return db.select().from(marketplaceListings)
+      .where(eq(marketplaceListings.authorId, authorId))
+      .orderBy(desc(marketplaceListings.createdAt));
+  }
+
+  async createMarketplaceListing(listing: InsertMarketplaceListing): Promise<MarketplaceListing> {
+    const [result] = await db.insert(marketplaceListings).values(listing).returning();
+    return result;
+  }
+
+  async updateMarketplaceListing(id: number, updates: Partial<MarketplaceListing>): Promise<MarketplaceListing | undefined> {
+    const [result] = await db.update(marketplaceListings)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(marketplaceListings.id, id))
+      .returning();
+    return result;
+  }
+
+  async getBookEditions(listingId: number): Promise<BookEdition[]> {
+    return db.select().from(bookEditions)
+      .where(eq(bookEditions.listingId, listingId))
+      .orderBy(bookEditions.editionType);
+  }
+
+  async getBookEdition(id: number): Promise<BookEdition | undefined> {
+    const [edition] = await db.select().from(bookEditions).where(eq(bookEditions.id, id));
+    return edition;
+  }
+
+  async createBookEdition(edition: InsertBookEdition): Promise<BookEdition> {
+    const [result] = await db.insert(bookEditions).values(edition).returning();
+    return result;
+  }
+
+  async getBookReviews(listingId: number): Promise<BookReview[]> {
+    return db.select().from(bookReviews)
+      .where(and(eq(bookReviews.listingId, listingId), eq(bookReviews.isApproved, true)))
+      .orderBy(desc(bookReviews.createdAt));
+  }
+
+  async createBookReview(review: InsertBookReview): Promise<BookReview> {
+    const [result] = await db.insert(bookReviews).values(review).returning();
+    await this.updateListingRating(review.listingId);
+    return result;
+  }
+
+  async updateListingRating(listingId: number): Promise<void> {
+    const reviews = await db.select({
+      avgRating: sql<number>`AVG(${bookReviews.rating})`,
+      count: count()
+    })
+      .from(bookReviews)
+      .where(and(eq(bookReviews.listingId, listingId), eq(bookReviews.isApproved, true)));
+    
+    if (reviews[0]) {
+      await db.update(marketplaceListings)
+        .set({
+          averageRating: Math.round((reviews[0].avgRating || 0) * 10),
+          reviewCount: Number(reviews[0].count),
+          updatedAt: new Date()
+        })
+        .where(eq(marketplaceListings.id, listingId));
+    }
+  }
+
+  async createBookOrder(order: InsertBookOrder): Promise<BookOrder> {
+    const [result] = await db.insert(bookOrders).values(order).returning();
+    return result;
+  }
+
+  async getBookOrder(id: number): Promise<BookOrder | undefined> {
+    const [order] = await db.select().from(bookOrders).where(eq(bookOrders.id, id));
+    return order;
+  }
+
+  async updateBookOrder(id: number, updates: Partial<BookOrder>): Promise<BookOrder | undefined> {
+    const [result] = await db.update(bookOrders)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(bookOrders.id, id))
+      .returning();
+    return result;
+  }
+
+  async getCustomerOrders(customerId: string): Promise<BookOrder[]> {
+    return db.select().from(bookOrders)
+      .where(eq(bookOrders.customerId, customerId))
+      .orderBy(desc(bookOrders.createdAt));
+  }
+
+  async createOrderItem(item: InsertOrderItem): Promise<OrderItem> {
+    const [result] = await db.insert(orderItems).values(item).returning();
+    return result;
+  }
+
+  async getOrderItems(orderId: number): Promise<OrderItem[]> {
+    return db.select().from(orderItems)
+      .where(eq(orderItems.orderId, orderId));
+  }
+
+  async getAuthorEarnings(authorId: string): Promise<AuthorEarnings[]> {
+    return db.select().from(authorEarnings)
+      .where(eq(authorEarnings.authorId, authorId))
+      .orderBy(desc(authorEarnings.createdAt));
+  }
+
+  async getAuthorEarningsSummary(authorId: string): Promise<{ total: number; pending: number; available: number; paid: number }> {
+    const earnings = await db.select({
+      status: authorEarnings.status,
+      total: sql<number>`SUM(${authorEarnings.netEarnings})`
+    })
+      .from(authorEarnings)
+      .where(eq(authorEarnings.authorId, authorId))
+      .groupBy(authorEarnings.status);
+    
+    let total = 0;
+    let pending = 0;
+    let available = 0;
+    let paid = 0;
+    
+    for (const row of earnings) {
+      const amount = Number(row.total) || 0;
+      total += amount;
+      if (row.status === 'pending') pending = amount;
+      else if (row.status === 'available') available = amount;
+      else if (row.status === 'paid') paid = amount;
+    }
+    
+    return { total, pending, available, paid };
+  }
+
+  async getAuthorAnalytics(authorId: string): Promise<{ totalSales: number; totalRevenue: number; topBooks: any[] }> {
+    const listings = await db.select({
+      id: marketplaceListings.id,
+      title: marketplaceListings.title,
+      totalSales: marketplaceListings.totalSales,
+      totalRevenue: marketplaceListings.totalRevenue
+    })
+      .from(marketplaceListings)
+      .where(eq(marketplaceListings.authorId, authorId))
+      .orderBy(desc(marketplaceListings.totalSales))
+      .limit(5);
+    
+    const totals = await db.select({
+      totalSales: sql<number>`SUM(${marketplaceListings.totalSales})`,
+      totalRevenue: sql<number>`SUM(${marketplaceListings.totalRevenue})`
+    })
+      .from(marketplaceListings)
+      .where(eq(marketplaceListings.authorId, authorId));
+    
+    return {
+      totalSales: Number(totals[0]?.totalSales) || 0,
+      totalRevenue: Number(totals[0]?.totalRevenue) || 0,
+      topBooks: listings
+    };
   }
 }
 

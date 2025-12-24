@@ -1765,3 +1765,263 @@ export type MusicVideo = typeof musicVideos.$inferSelect;
 export type InsertMusicVideo = z.infer<typeof insertMusicVideoSchema>;
 export type AiMusicJob = typeof aiMusicJobs.$inferSelect;
 export type InsertAiMusicJob = z.infer<typeof insertAiMusicJobSchema>;
+
+// ============================================================================
+// BOOK MARKETPLACE - Lulu Print-on-Demand Integration
+// ============================================================================
+
+export const marketplaceListings = pgTable("marketplace_listings", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => publishingProjects.id, { onDelete: "cascade" }),
+  authorId: varchar("author_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  subtitle: text("subtitle"),
+  description: text("description").notNull(),
+  coverImageUrl: text("cover_image_url"),
+  previewUrl: text("preview_url"),
+  genre: text("genre").notNull(),
+  tags: text("tags").array(),
+  status: text("status").notNull().default("draft"), // draft, pending_review, approved, published, suspended
+  isFeatured: boolean("is_featured").notNull().default(false),
+  isDigitalOnly: boolean("is_digital_only").notNull().default(false),
+  totalSales: integer("total_sales").notNull().default(0),
+  totalRevenue: integer("total_revenue").notNull().default(0), // in cents
+  averageRating: integer("average_rating"), // 1-50 (x10 for precision)
+  reviewCount: integer("review_count").notNull().default(0),
+  pageCount: integer("page_count"),
+  wordCount: integer("word_count"),
+  publishedAt: timestamp("published_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const bookEditions = pgTable("book_editions", {
+  id: serial("id").primaryKey(),
+  listingId: integer("listing_id").notNull().references(() => marketplaceListings.id, { onDelete: "cascade" }),
+  editionType: text("edition_type").notNull(), // digital_ebook, digital_pdf, print_paperback, print_hardcover
+  isActive: boolean("is_active").notNull().default(true),
+  // Pricing
+  price: integer("price").notNull(), // in cents
+  currency: text("currency").notNull().default("USD"),
+  printCost: integer("print_cost"), // Lulu print cost in cents (null for digital)
+  authorRoyalty: integer("author_royalty").notNull(), // author's cut in cents
+  // Print specs (for physical books)
+  trimSize: text("trim_size"), // 5x8, 5.5x8.5, 6x9, etc.
+  paperType: text("paper_type"), // white, cream
+  bindingType: text("binding_type"), // paperback, hardcover, case_laminate
+  colorInterior: boolean("color_interior").notNull().default(false),
+  luluPackageId: text("lulu_package_id"), // Lulu's product spec code
+  luluProductId: text("lulu_product_id"), // Lulu's product ID once created
+  // Digital files
+  interiorPdfUrl: text("interior_pdf_url"),
+  coverPdfUrl: text("cover_pdf_url"),
+  epubUrl: text("epub_url"),
+  // ISBN
+  isbn: text("isbn"),
+  isbn13: text("isbn13"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const bookOrders = pgTable("book_orders", {
+  id: serial("id").primaryKey(),
+  orderNumber: text("order_number").notNull().unique(),
+  customerId: varchar("customer_id").references(() => users.id, { onDelete: "set null" }),
+  customerEmail: text("customer_email").notNull(),
+  customerName: text("customer_name").notNull(),
+  status: text("status").notNull().default("pending"), // pending, paid, processing, shipped, delivered, cancelled, refunded
+  // Payment
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  stripeCheckoutSessionId: text("stripe_checkout_session_id"),
+  subtotal: integer("subtotal").notNull(), // in cents
+  shippingCost: integer("shipping_cost").notNull().default(0),
+  tax: integer("tax").notNull().default(0),
+  total: integer("total").notNull(),
+  currency: text("currency").notNull().default("USD"),
+  // Shipping
+  shippingMethod: text("shipping_method"), // ground, expedited, express
+  shippingName: text("shipping_name"),
+  shippingStreet1: text("shipping_street1"),
+  shippingStreet2: text("shipping_street2"),
+  shippingCity: text("shipping_city"),
+  shippingState: text("shipping_state"),
+  shippingPostcode: text("shipping_postcode"),
+  shippingCountry: text("shipping_country"),
+  shippingPhone: text("shipping_phone"),
+  trackingNumber: text("tracking_number"),
+  trackingUrl: text("tracking_url"),
+  // Timestamps
+  paidAt: timestamp("paid_at"),
+  shippedAt: timestamp("shipped_at"),
+  deliveredAt: timestamp("delivered_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const orderItems = pgTable("order_items", {
+  id: serial("id").primaryKey(),
+  orderId: integer("order_id").notNull().references(() => bookOrders.id, { onDelete: "cascade" }),
+  listingId: integer("listing_id").notNull().references(() => marketplaceListings.id),
+  editionId: integer("edition_id").notNull().references(() => bookEditions.id),
+  quantity: integer("quantity").notNull().default(1),
+  unitPrice: integer("unit_price").notNull(), // in cents
+  printCost: integer("print_cost"), // null for digital
+  authorRoyalty: integer("author_royalty").notNull(), // author's cut per unit
+  subtotal: integer("subtotal").notNull(),
+  // Digital delivery
+  downloadUrl: text("download_url"),
+  downloadExpiresAt: timestamp("download_expires_at"),
+  downloadCount: integer("download_count").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const luluPrintJobs = pgTable("lulu_print_jobs", {
+  id: serial("id").primaryKey(),
+  orderId: integer("order_id").notNull().references(() => bookOrders.id, { onDelete: "cascade" }),
+  orderItemId: integer("order_item_id").notNull().references(() => orderItems.id, { onDelete: "cascade" }),
+  luluOrderId: text("lulu_order_id"), // Lulu's order ID
+  luluLineItemId: text("lulu_line_item_id"),
+  status: text("status").notNull().default("pending"), // pending, submitted, accepted, in_production, shipped, delivered, cancelled, failed
+  // Job details
+  productId: text("product_id"),
+  quantity: integer("quantity").notNull(),
+  interiorSourceUrl: text("interior_source_url"),
+  coverSourceUrl: text("cover_source_url"),
+  // Shipping
+  shippingLevel: text("shipping_level"), // GROUND, EXPEDITED, EXPRESS
+  estimatedShipDate: timestamp("estimated_ship_date"),
+  actualShipDate: timestamp("actual_ship_date"),
+  trackingNumber: text("tracking_number"),
+  trackingUrl: text("tracking_url"),
+  carrier: text("carrier"),
+  // Cost
+  productionCost: integer("production_cost"), // in cents
+  shippingCost: integer("shipping_cost"), // in cents
+  // Error handling
+  errorMessage: text("error_message"),
+  retryCount: integer("retry_count").notNull().default(0),
+  lastWebhookAt: timestamp("last_webhook_at"),
+  webhookPayload: jsonb("webhook_payload"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const authorEarnings = pgTable("author_earnings", {
+  id: serial("id").primaryKey(),
+  authorId: varchar("author_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  orderId: integer("order_id").notNull().references(() => bookOrders.id, { onDelete: "cascade" }),
+  orderItemId: integer("order_item_id").notNull().references(() => orderItems.id, { onDelete: "cascade" }),
+  listingId: integer("listing_id").notNull().references(() => marketplaceListings.id),
+  // Earnings breakdown
+  saleAmount: integer("sale_amount").notNull(), // in cents
+  printCost: integer("print_cost").notNull().default(0), // in cents
+  platformFee: integer("platform_fee").notNull(), // in cents
+  netEarnings: integer("net_earnings").notNull(), // in cents
+  // Payout status
+  status: text("status").notNull().default("pending"), // pending, available, paid, held
+  availableAt: timestamp("available_at"), // when earnings become available (after refund window)
+  paidAt: timestamp("paid_at"),
+  payoutId: integer("payout_id").references(() => creatorPayouts.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const bookReviews = pgTable("book_reviews", {
+  id: serial("id").primaryKey(),
+  listingId: integer("listing_id").notNull().references(() => marketplaceListings.id, { onDelete: "cascade" }),
+  reviewerId: varchar("reviewer_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  orderId: integer("order_id").references(() => bookOrders.id, { onDelete: "set null" }), // verified purchase
+  rating: integer("rating").notNull(), // 1-5
+  title: text("title"),
+  content: text("content"),
+  isVerifiedPurchase: boolean("is_verified_purchase").notNull().default(false),
+  helpfulCount: integer("helpful_count").notNull().default(0),
+  isApproved: boolean("is_approved").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// AI Provider Usage Tracking
+export const aiProviderUsage = pgTable("ai_provider_usage", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  provider: text("provider").notNull(), // gemini, openai, anthropic, xai, perplexity
+  model: text("model").notNull(),
+  operation: text("operation").notNull(), // text_generation, image_generation, music_generation, etc.
+  inputTokens: integer("input_tokens"),
+  outputTokens: integer("output_tokens"),
+  cost: integer("cost"), // in microcents (1/10000 of a cent)
+  requestId: text("request_id"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Insert schemas for marketplace
+export const insertMarketplaceListingSchema = createInsertSchema(marketplaceListings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  totalSales: true,
+  totalRevenue: true,
+  averageRating: true,
+  reviewCount: true,
+});
+
+export const insertBookEditionSchema = createInsertSchema(bookEditions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertBookOrderSchema = createInsertSchema(bookOrders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertOrderItemSchema = createInsertSchema(orderItems).omit({
+  id: true,
+  createdAt: true,
+  downloadCount: true,
+});
+
+export const insertLuluPrintJobSchema = createInsertSchema(luluPrintJobs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  retryCount: true,
+});
+
+export const insertAuthorEarningsSchema = createInsertSchema(authorEarnings).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertBookReviewSchema = createInsertSchema(bookReviews).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  helpfulCount: true,
+});
+
+export const insertAiProviderUsageSchema = createInsertSchema(aiProviderUsage).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Marketplace Types
+export type MarketplaceListing = typeof marketplaceListings.$inferSelect;
+export type InsertMarketplaceListing = z.infer<typeof insertMarketplaceListingSchema>;
+export type BookEdition = typeof bookEditions.$inferSelect;
+export type InsertBookEdition = z.infer<typeof insertBookEditionSchema>;
+export type BookOrder = typeof bookOrders.$inferSelect;
+export type InsertBookOrder = z.infer<typeof insertBookOrderSchema>;
+export type OrderItem = typeof orderItems.$inferSelect;
+export type InsertOrderItem = z.infer<typeof insertOrderItemSchema>;
+export type LuluPrintJob = typeof luluPrintJobs.$inferSelect;
+export type InsertLuluPrintJob = z.infer<typeof insertLuluPrintJobSchema>;
+export type AuthorEarnings = typeof authorEarnings.$inferSelect;
+export type InsertAuthorEarnings = z.infer<typeof insertAuthorEarningsSchema>;
+export type BookReview = typeof bookReviews.$inferSelect;
+export type InsertBookReview = z.infer<typeof insertBookReviewSchema>;
+export type AiProviderUsage = typeof aiProviderUsage.$inferSelect;
+export type InsertAiProviderUsage = z.infer<typeof insertAiProviderUsageSchema>;

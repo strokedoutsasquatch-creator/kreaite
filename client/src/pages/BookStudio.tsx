@@ -86,6 +86,12 @@ import {
   X,
   ArrowDown,
   ArrowUp,
+  Store,
+  Printer,
+  DollarSign,
+  Globe,
+  Zap,
+  Loader2,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -490,6 +496,7 @@ export default function BookStudio() {
   const [amazonKeywords, setAmazonKeywords] = useState<string[]>([]);
   const [bookBlurb, setBookBlurb] = useState("");
   const [isGeneratingBlurb, setIsGeneratingBlurb] = useState(false);
+  const [showPublishDialog, setShowPublishDialog] = useState(false);
   
   // AI Chat state for manuscript analysis
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
@@ -3149,6 +3156,62 @@ Tips:
                               <div className="text-xs text-muted-foreground">Save to continue later</div>
                             </div>
                           </Button>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border-orange-500/30">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <Store className="w-5 h-5 text-orange-500" /> Publish to Marketplace
+                          </CardTitle>
+                          <CardDescription>Sell your book on Stroke Recovery Academy</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Printer className="w-4 h-4" />
+                              <span>Print-on-demand</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <DollarSign className="w-4 h-4" />
+                              <span>Set your own price</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Globe className="w-4 h-4" />
+                              <span>Worldwide shipping</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Zap className="w-4 h-4" />
+                              <span>Instant digital delivery</span>
+                            </div>
+                          </div>
+                          <Separator />
+                          <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-muted-foreground">Estimated Print Cost:</span>
+                              <span className="font-medium">${((0.90 + (estimatedPages || 200) * 0.012) || 3.30).toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-muted-foreground">Suggested Retail:</span>
+                              <span className="font-medium text-primary">${Math.max(9.99, ((0.90 + (estimatedPages || 200) * 0.012) * 2.5)).toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between text-sm text-muted-foreground">
+                              <span>Your Profit (est.):</span>
+                              <span className="font-medium text-green-500">${(Math.max(9.99, ((0.90 + (estimatedPages || 200) * 0.012) * 2.5)) * 0.85 - (0.90 + (estimatedPages || 200) * 0.012)).toFixed(2)}</span>
+                            </div>
+                          </div>
+                          <Button 
+                            className="w-full"
+                            size="lg"
+                            onClick={() => setShowPublishDialog(true)}
+                            data-testid="button-publish-marketplace"
+                          >
+                            <Rocket className="w-5 h-5 mr-2" />
+                            Publish to Marketplace
+                          </Button>
+                          <p className="text-xs text-muted-foreground text-center">
+                            Powered by Lulu print-on-demand. No inventory, no upfront costs.
+                          </p>
                         </CardContent>
                       </Card>
                     </div>

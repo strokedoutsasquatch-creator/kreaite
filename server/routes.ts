@@ -4106,6 +4106,442 @@ Respond in JSON format:
     }
   });
 
+  // ============================================================================
+  // BOOK MARKETPLACE ROUTES
+  // ============================================================================
+
+  // Get all published marketplace listings
+  app.get('/api/marketplace/books', async (req, res) => {
+    try {
+      const { genre, sort, featured } = req.query;
+      const listings = await storage.getMarketplaceListings({
+        genre: genre as string,
+        sortBy: sort as string,
+        featuredOnly: featured === 'true',
+        status: 'published'
+      });
+      res.json(listings);
+    } catch (error) {
+      console.error("Error fetching marketplace listings:", error);
+      res.status(500).json({ message: "Failed to fetch books" });
+    }
+  });
+
+  // Get single book listing with editions
+  app.get('/api/marketplace/books/:id', async (req, res) => {
+    try {
+      const listingId = parseInt(req.params.id);
+      const listing = await storage.getMarketplaceListing(listingId);
+      if (!listing) {
+        return res.status(404).json({ message: "Book not found" });
+      }
+      const editions = await storage.getBookEditions(listingId);
+      const reviews = await storage.getBookReviews(listingId);
+      res.json({ ...listing, editions, reviews });
+    } catch (error) {
+      console.error("Error fetching book:", error);
+      res.status(500).json({ message: "Failed to fetch book" });
+    }
+  });
+
+  // Get author's listings
+  app.get('/api/marketplace/my-books', isAuthenticated, async (req: any, res) => {
+    try {
+      const authorId = req.user.claims.sub;
+      const listings = await storage.getAuthorListings(authorId);
+      res.json(listings);
+    } catch (error) {
+      console.error("Error fetching author listings:", error);
+      res.status(500).json({ message: "Failed to fetch your books" });
+    }
+  });
+
+  // Create marketplace listing from publishing project
+  app.post('/api/marketplace/publish', isAuthenticated, async (req: any, res) => {
+    try {
+      const authorId = req.user.claims.sub;
+      const { projectId, title, subtitle, description, coverImageUrl, genre, tags, editions } = req.body;
+
+      if (!projectId || !title || !description || !genre) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      // Verify project ownership
+      const project = await storage.getPublishingProject(projectId);
+      if (!project || project.authorId !== authorId) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      // Create the marketplace listing
+      const listing = await storage.createMarketplaceListing({
+        projectId,
+        authorId,
+        title,
+        subtitle,
+        description,
+        coverImageUrl,
+        genre,
+        tags,
+        pageCount: project.wordCount ? Math.ceil(project.wordCount / 250) : undefined,
+        wordCount: project.wordCount,
+        status: 'pending_review'
+      });
+
+      // Create editions if provided
+      if (editions && editions.length > 0) {
+        for (const edition of editions) {
+          await storage.createBookEdition({
+            listingId: listing.id,
+            ...edition
+          });
+        }
+      }
+
+      res.json(listing);
+    } catch (error) {
+      console.error("Error creating listing:", error);
+      res.status(500).json({ message: "Failed to publish book" });
+    }
+  });
+
+  // Update marketplace listing
+  app.patch('/api/marketplace/books/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const authorId = req.user.claims.sub;
+      const listingId = parseInt(req.params.id);
+      
+      const existing = await storage.getMarketplaceListing(listingId);
+      if (!existing || existing.authorId !== authorId) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      const updated = await storage.updateMarketplaceListing(listingId, req.body);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating listing:", error);
+      res.status(500).json({ message: "Failed to update book" });
+    }
+  });
+
+  // Add/update book edition
+  app.post('/api/marketplace/books/:id/editions', isAuthenticated, async (req: any, res) => {
+    try {
+      const authorId = req.user.claims.sub;
+      const listingId = parseInt(req.params.id);
+      
+      const listing = await storage.getMarketplaceListing(listingId);
+      if (!listing || listing.authorId !== authorId) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      const edition = await storage.createBookEdition({
+        listingId,
+        ...req.body
+      });
+      res.json(edition);
+    } catch (error) {
+      console.error("Error adding edition:", error);
+      res.status(500).json({ message: "Failed to add edition" });
+    }
+  });
+
+  // Get print cost estimate
+  app.post('/api/marketplace/print-cost', isAuthenticated, async (req: any, res) => {
+    try {
+      const { pageCount, trimSize, bindingType, paperType, colorInterior, quantity } = req.body;
+      
+      const { calculatePrintCost, suggestRetailPrice } = await import('./luluService');
+      const printCost = calculatePrintCost({
+        pageCount: pageCount || 200,
+        trimSize: trimSize || 'us_trade',
+        bindingType: bindingType || 'perfect',
+        paperType: paperType || 'standard_white',
+        colorInterior: colorInterior || false
+      });
+      
+      const pricing = suggestRetailPrice(printCost);
+      
+      res.json({
+        printCost,
+        quantity: quantity || 1,
+        totalPrintCost: printCost * (quantity || 1),
+        ...pricing
+      });
+    } catch (error) {
+      console.error("Error calculating print cost:", error);
+      res.status(500).json({ message: "Failed to calculate print cost" });
+    }
+  });
+
+  // Get shipping options
+  app.post('/api/marketplace/shipping-options', async (req, res) => {
+    try {
+      const { countryCode, pageCount, quantity } = req.body;
+      
+      const { getShippingOptions } = await import('./luluService');
+      const options = await getShippingOptions(
+        countryCode || 'US',
+        pageCount || 200,
+        quantity || 1
+      );
+      
+      res.json(options);
+    } catch (error) {
+      console.error("Error getting shipping options:", error);
+      res.status(500).json({ message: "Failed to get shipping options" });
+    }
+  });
+
+  // Create checkout session for book purchase
+  app.post('/api/marketplace/checkout', isAuthenticated, async (req: any, res) => {
+    try {
+      const customerId = req.user.claims.sub;
+      const customerEmail = req.user.claims.email;
+      const customerName = req.user.claims.name || 'Customer';
+      const { items, shippingAddress } = req.body;
+
+      if (!items || items.length === 0) {
+        return res.status(400).json({ message: "No items in cart" });
+      }
+
+      const { generateOrderNumber, estimateShippingCost } = await import('./luluService');
+      const orderNumber = generateOrderNumber();
+
+      // Calculate totals
+      let subtotal = 0;
+      const orderItems = [];
+
+      for (const item of items) {
+        const edition = await storage.getBookEdition(item.editionId);
+        if (!edition) {
+          return res.status(400).json({ message: `Edition ${item.editionId} not found` });
+        }
+        
+        const itemSubtotal = edition.price * item.quantity;
+        subtotal += itemSubtotal;
+        
+        orderItems.push({
+          editionId: edition.id,
+          listingId: edition.listingId,
+          quantity: item.quantity,
+          unitPrice: edition.price,
+          printCost: edition.printCost,
+          authorRoyalty: edition.authorRoyalty,
+          subtotal: itemSubtotal
+        });
+      }
+
+      // Calculate shipping for print orders
+      let shippingCost = 0;
+      const hasPrintItems = orderItems.some(item => item.printCost);
+      if (hasPrintItems && shippingAddress) {
+        shippingCost = estimateShippingCost(
+          shippingAddress.countryCode || 'US',
+          orderItems.reduce((sum, item) => sum + item.quantity, 0),
+          'GROUND'
+        );
+      }
+
+      const total = subtotal + shippingCost;
+
+      // Create order in database
+      const order = await storage.createBookOrder({
+        orderNumber,
+        customerId,
+        customerEmail,
+        customerName,
+        status: 'pending',
+        subtotal,
+        shippingCost,
+        tax: 0,
+        total,
+        shippingName: shippingAddress?.name,
+        shippingStreet1: shippingAddress?.street1,
+        shippingStreet2: shippingAddress?.street2,
+        shippingCity: shippingAddress?.city,
+        shippingState: shippingAddress?.state,
+        shippingPostcode: shippingAddress?.postcode,
+        shippingCountry: shippingAddress?.countryCode,
+        shippingPhone: shippingAddress?.phone
+      });
+
+      // Create order items
+      for (const item of orderItems) {
+        await storage.createOrderItem({
+          orderId: order.id,
+          ...item
+        });
+      }
+
+      // Create Stripe checkout session
+      const { getUncachableStripeClient } = await import('./stripeClient');
+      const stripe = await getUncachableStripeClient();
+      if (!stripe) {
+        return res.status(500).json({ message: "Payment not configured" });
+      }
+
+      const lineItems = await Promise.all(orderItems.map(async (item) => {
+        const listing = await storage.getMarketplaceListing(item.listingId);
+        const edition = await storage.getBookEdition(item.editionId);
+        return {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: listing?.title || 'Book',
+              description: edition?.editionType || 'Edition',
+            },
+            unit_amount: item.unitPrice,
+          },
+          quantity: item.quantity,
+        };
+      }));
+
+      if (shippingCost > 0) {
+        lineItems.push({
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Shipping',
+              description: 'Ground shipping',
+            },
+            unit_amount: shippingCost,
+          },
+          quantity: 1,
+        });
+      }
+
+      const domain = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: lineItems,
+        mode: 'payment',
+        success_url: `${domain}/marketplace/order/${order.id}?success=true`,
+        cancel_url: `${domain}/marketplace/cart?cancelled=true`,
+        metadata: {
+          orderId: order.id.toString(),
+          orderNumber,
+        },
+      });
+
+      // Update order with Stripe session ID
+      await storage.updateBookOrder(order.id, {
+        stripeCheckoutSessionId: session.id
+      });
+
+      res.json({ 
+        orderId: order.id,
+        orderNumber,
+        checkoutUrl: session.url 
+      });
+    } catch (error) {
+      console.error("Error creating checkout:", error);
+      res.status(500).json({ message: "Failed to create checkout" });
+    }
+  });
+
+  // Get order details
+  app.get('/api/marketplace/orders/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const customerId = req.user.claims.sub;
+      const orderId = parseInt(req.params.id);
+      
+      const order = await storage.getBookOrder(orderId);
+      if (!order || order.customerId !== customerId) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+      
+      const items = await storage.getOrderItems(orderId);
+      res.json({ ...order, items });
+    } catch (error) {
+      console.error("Error fetching order:", error);
+      res.status(500).json({ message: "Failed to fetch order" });
+    }
+  });
+
+  // Get customer's orders
+  app.get('/api/marketplace/my-orders', isAuthenticated, async (req: any, res) => {
+    try {
+      const customerId = req.user.claims.sub;
+      const orders = await storage.getCustomerOrders(customerId);
+      res.json(orders);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      res.status(500).json({ message: "Failed to fetch orders" });
+    }
+  });
+
+  // Author dashboard - earnings
+  app.get('/api/marketplace/author/earnings', isAuthenticated, async (req: any, res) => {
+    try {
+      const authorId = req.user.claims.sub;
+      const earnings = await storage.getAuthorEarnings(authorId);
+      const totals = await storage.getAuthorEarningsSummary(authorId);
+      res.json({ earnings, totals });
+    } catch (error) {
+      console.error("Error fetching earnings:", error);
+      res.status(500).json({ message: "Failed to fetch earnings" });
+    }
+  });
+
+  // Author dashboard - sales analytics
+  app.get('/api/marketplace/author/analytics', isAuthenticated, async (req: any, res) => {
+    try {
+      const authorId = req.user.claims.sub;
+      const analytics = await storage.getAuthorAnalytics(authorId);
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
+  // Submit book review
+  app.post('/api/marketplace/books/:id/reviews', isAuthenticated, async (req: any, res) => {
+    try {
+      const reviewerId = req.user.claims.sub;
+      const listingId = parseInt(req.params.id);
+      const { rating, title, content, orderId } = req.body;
+
+      if (!rating || rating < 1 || rating > 5) {
+        return res.status(400).json({ message: "Invalid rating" });
+      }
+
+      // Check if verified purchase
+      let isVerifiedPurchase = false;
+      if (orderId) {
+        const order = await storage.getBookOrder(orderId);
+        if (order && order.customerId === reviewerId && order.status !== 'cancelled') {
+          const items = await storage.getOrderItems(orderId);
+          isVerifiedPurchase = items.some(item => item.listingId === listingId);
+        }
+      }
+
+      const review = await storage.createBookReview({
+        listingId,
+        reviewerId,
+        orderId: orderId || null,
+        rating,
+        title,
+        content,
+        isVerifiedPurchase
+      });
+
+      // Update listing's average rating
+      await storage.updateListingRating(listingId);
+
+      res.json(review);
+    } catch (error) {
+      console.error("Error creating review:", error);
+      res.status(500).json({ message: "Failed to submit review" });
+    }
+  });
+
+  // Lulu print specifications
+  app.get('/api/marketplace/print-specs', (req, res) => {
+    const { trimSizes, bindingTypes, paperTypes } = require('./luluService');
+    res.json({ trimSizes, bindingTypes, paperTypes });
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

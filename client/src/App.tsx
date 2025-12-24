@@ -36,6 +36,8 @@ import Pricing from "@/pages/Pricing";
 import RecoveryUniversity from "@/pages/RecoveryUniversity";
 import MusicStudio from "@/pages/MusicStudio";
 import BookStudio from "@/pages/BookStudio";
+import BookMarketplace from "@/pages/BookMarketplace";
+import AuthorDashboard from "@/pages/AuthorDashboard";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 import SasquatchChatWidget from "@/components/SasquatchChatWidget";
@@ -53,6 +55,12 @@ function Router() {
       <Route path="/community/thread/:id" component={Thread} />
       <Route path="/about" component={About} />
       <Route path="/marketplace" component={Marketplace} />
+      <Route path="/books" component={BookMarketplace} />
+      <Route path="/author-dashboard">
+        <ProtectedRoute>
+          <AuthorDashboard />
+        </ProtectedRoute>
+      </Route>
       <Route path="/academy" component={Academy} />
       <Route path="/builder" component={Builder} />
       <Route path="/survival-grid" component={SurvivalGrid} />
