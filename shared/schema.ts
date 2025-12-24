@@ -1943,13 +1943,14 @@ export const bookReviews = pgTable("book_reviews", {
 // AI Provider Usage Tracking
 export const aiProviderUsage = pgTable("ai_provider_usage", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
   provider: text("provider").notNull(), // gemini, openai, anthropic, xai, perplexity
   model: text("model").notNull(),
   operation: text("operation").notNull(), // text_generation, image_generation, music_generation, etc.
-  inputTokens: integer("input_tokens"),
-  outputTokens: integer("output_tokens"),
-  cost: integer("cost"), // in microcents (1/10000 of a cent)
+  inputTokens: integer("input_tokens").notNull().default(0),
+  outputTokens: integer("output_tokens").notNull().default(0),
+  costCents: integer("cost_cents").notNull().default(0), // in cents
+  cached: boolean("cached").notNull().default(false),
   requestId: text("request_id"),
   metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -2025,3 +2026,216 @@ export type BookReview = typeof bookReviews.$inferSelect;
 export type InsertBookReview = z.infer<typeof insertBookReviewSchema>;
 export type AiProviderUsage = typeof aiProviderUsage.$inferSelect;
 export type InsertAiProviderUsage = z.infer<typeof insertAiProviderUsageSchema>;
+
+// ============================================================================
+// CHILDREN'S BOOK CREATION SYSTEM
+// ============================================================================
+
+// Age band configuration for children's books
+export const ageBandSchema = z.enum([
+  "board-book",      // 0-3 years: 50-200 words, simple concepts
+  "picture-book",    // 4-8 years: 500-1000 words, illustrated
+  "early-reader",    // 5-7 years: 200-1500 words, simple sentences
+  "chapter-book",    // 7-10 years: 4000-15000 words
+  "middle-grade",    // 8-12 years: 20000-50000 words
+]);
+
+export type AgeBand = z.infer<typeof ageBandSchema>;
+
+// Character definition for consistent illustrations
+export const childBookCharacterSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  visualTraits: z.object({
+    species: z.string(), // human, animal, fantasy creature
+    age: z.string(),
+    height: z.string(),
+    bodyType: z.string(),
+    skinTone: z.string().optional(),
+    hairColor: z.string().optional(),
+    hairStyle: z.string().optional(),
+    eyeColor: z.string().optional(),
+    clothingStyle: z.string(),
+    distinctiveFeatures: z.array(z.string()),
+  }),
+  personalityTraits: z.array(z.string()),
+  role: z.enum(["protagonist", "sidekick", "mentor", "antagonist", "supporting"]),
+  illustrationPrompt: z.string(), // AI-generated consistent prompt
+  colorPalette: z.array(z.string()), // Hex colors for this character
+});
+
+export type ChildBookCharacter = z.infer<typeof childBookCharacterSchema>;
+
+// Page spread layout options
+export const pageLayoutSchema = z.enum([
+  "full-bleed-illustration",     // Full page image
+  "illustration-left-text-right", // Split layout
+  "illustration-right-text-left", // Split layout
+  "text-over-illustration",       // Text overlays image
+  "illustration-top-text-bottom", // Vertical split
+  "text-top-illustration-bottom", // Vertical split
+  "centered-vignette",           // Small centered illustration
+  "spread-illustration",         // Illustration spans 2 pages
+  "text-only",                   // Text page only
+]);
+
+export type PageLayout = z.infer<typeof pageLayoutSchema>;
+
+// Single page spread in children's book
+export const childBookSpreadSchema = z.object({
+  id: z.string(),
+  pageNumber: z.number(),
+  layout: pageLayoutSchema,
+  text: z.string(),
+  readAloudText: z.string().optional(), // With phonetic hints
+  syllableCount: z.number().optional(),
+  rhymeScheme: z.string().optional(),
+  illustrationPrompt: z.string(),
+  illustrationUrl: z.string().optional(),
+  characterIds: z.array(z.string()), // Characters appearing on this page
+  emotionalTone: z.string().optional(), // happy, scary, mysterious, etc.
+  actionDescription: z.string().optional(),
+});
+
+export type ChildBookSpread = z.infer<typeof childBookSpreadSchema>;
+
+// Moral/theme options for children's books
+export const childBookThemeSchema = z.enum([
+  "friendship",
+  "kindness",
+  "courage",
+  "honesty",
+  "sharing",
+  "perseverance",
+  "self-confidence",
+  "empathy",
+  "family-love",
+  "accepting-differences",
+  "handling-emotions",
+  "trying-new-things",
+  "problem-solving",
+  "environmental-care",
+  "gratitude",
+  "patience",
+  "teamwork",
+  "creativity",
+  "dealing-with-loss",
+  "overcoming-fear",
+]);
+
+export type ChildBookTheme = z.infer<typeof childBookThemeSchema>;
+
+// Educational alignment tags
+export const educationalTagSchema = z.enum([
+  "social-emotional-learning",
+  "early-literacy",
+  "counting-numbers",
+  "colors-shapes",
+  "alphabet-phonics",
+  "rhyming-patterns",
+  "vocabulary-building",
+  "science-nature",
+  "cultural-awareness",
+  "problem-solving-skills",
+  "motor-skills",
+  "sensory-exploration",
+]);
+
+export type EducationalTag = z.infer<typeof educationalTagSchema>;
+
+// Illustration style presets
+export const illustrationStyleSchema = z.enum([
+  "whimsical-watercolor",
+  "bold-cartoon",
+  "soft-pastel",
+  "digital-modern",
+  "classic-storybook",
+  "collage-mixed-media",
+  "minimalist-nordic",
+  "vibrant-tropical",
+  "cozy-handdrawn",
+  "retro-vintage",
+  "anime-influenced",
+  "realistic-detailed",
+]);
+
+export type IllustrationStyle = z.infer<typeof illustrationStyleSchema>;
+
+// Complete children's book project
+export const childBookProjectSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  subtitle: z.string().optional(),
+  authorName: z.string(),
+  illustratorName: z.string().optional(),
+  ageBand: ageBandSchema,
+  themes: z.array(childBookThemeSchema),
+  educationalTags: z.array(educationalTagSchema),
+  illustrationStyle: illustrationStyleSchema,
+  storyPremise: z.string(),
+  characters: z.array(childBookCharacterSchema),
+  spreads: z.array(childBookSpreadSchema),
+  rhymingMode: z.boolean(),
+  targetWordCount: z.number(),
+  trimSize: z.string(),
+  colorPalette: z.array(z.string()),
+  coverImageUrl: z.string().optional(),
+  backCoverImageUrl: z.string().optional(),
+  dedication: z.string().optional(),
+  aboutAuthorPage: z.string().optional(),
+});
+
+export type ChildBookProject = z.infer<typeof childBookProjectSchema>;
+
+// Request schemas for API endpoints
+export const generateChildStoryRequestSchema = z.object({
+  ageBand: ageBandSchema,
+  themes: z.array(childBookThemeSchema),
+  educationalTags: z.array(educationalTagSchema).optional(),
+  mainCharacter: z.object({
+    name: z.string(),
+    species: z.string(),
+    traits: z.array(z.string()),
+  }),
+  storyPremise: z.string(),
+  rhymingMode: z.boolean().optional(),
+  targetPageCount: z.number().optional(),
+  illustrationStyle: illustrationStyleSchema.optional(),
+});
+
+export type GenerateChildStoryRequest = z.infer<typeof generateChildStoryRequestSchema>;
+
+export const generateCharacterPromptRequestSchema = z.object({
+  character: childBookCharacterSchema,
+  illustrationStyle: illustrationStyleSchema,
+  consistencySeed: z.string().optional(),
+});
+
+export type GenerateCharacterPromptRequest = z.infer<typeof generateCharacterPromptRequestSchema>;
+
+export const generatePageIllustrationRequestSchema = z.object({
+  spread: childBookSpreadSchema,
+  characters: z.array(childBookCharacterSchema),
+  illustrationStyle: illustrationStyleSchema,
+  projectColorPalette: z.array(z.string()).optional(),
+});
+
+export type GeneratePageIllustrationRequest = z.infer<typeof generatePageIllustrationRequestSchema>;
+
+// Rhyme conversion request schema
+export const rhymeConvertRequestSchema = z.object({
+  text: z.string().min(1, "Text is required"),
+  ageBand: ageBandSchema,
+  rhymeScheme: z.enum(["AABB", "ABAB", "ABCB"]).optional().default("AABB"),
+});
+
+export type RhymeConvertRequest = z.infer<typeof rhymeConvertRequestSchema>;
+
+// Read-aloud analysis request schema
+export const readAloudAnalyzeRequestSchema = z.object({
+  text: z.string().min(1, "Text is required"),
+  ageBand: ageBandSchema,
+});
+
+export type ReadAloudAnalyzeRequest = z.infer<typeof readAloudAnalyzeRequestSchema>;

@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import Header from "@/components/Header";
+import CreatorHeader from "@/components/CreatorHeader";
 import Footer from "@/components/Footer";
+import ChildrensBookMode from "@/components/ChildrensBookMode";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -237,6 +238,9 @@ interface Chapter {
   wordCount: number;
   status: "outline" | "draft" | "edited" | "complete";
   content?: string;
+  imageUrl?: string;
+  illustrationPrompt?: string;
+  readAloudText?: string;
 }
 
 interface BookAnalysis {
@@ -1129,7 +1133,7 @@ export default function BookStudio() {
         if (imagePlacementMode === 'auto' && selectedImageChapter) {
           updateChapter(selectedImageChapter, { 
             imageUrl,
-            imagePrompt: imagePrompt 
+            illustrationPrompt: imagePrompt 
           });
         }
         
@@ -1215,9 +1219,32 @@ Your journey to healing starts here.`);
   const totalWordCount = chapters.reduce((sum, c) => sum + c.wordCount, 0);
   const estimatedPages = Math.ceil(totalWordCount / 250);
 
+  // Check if this is a children's book genre
+  const isChildrensGenre = selectedGenre === "childrens" || selectedGenre === "childrens-middle";
+
+  // If children's genre is selected, show the dedicated ChildrensBookMode
+  if (isChildrensGenre && !uploadedContent) {
+    return (
+      <div className="min-h-screen bg-black">
+        <CreatorHeader />
+        <ChildrensBookMode 
+          onStoryGenerated={(story) => {
+            setBookTitle(story.title);
+            toast({ title: "Story Generated!", description: `${story.pages?.length || 0} pages created` });
+          }}
+          onExport={(project) => {
+            setShowPublishDialog(true);
+            toast({ title: "Ready to Publish", description: "Your children's book is ready" });
+          }}
+        />
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <CreatorHeader />
       
       <main className="py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">

@@ -76,7 +76,8 @@ function getCacheKey(prompt: string, systemPrompt: string, model: string): strin
 // Clean expired cache entries
 function cleanCache() {
   const now = Date.now();
-  for (const [key, entry] of responseCache.entries()) {
+  const entries = Array.from(responseCache.entries());
+  for (const [key, entry] of entries) {
     if (now - entry.timestamp > CACHE_TTL) {
       responseCache.delete(key);
     }
@@ -90,12 +91,12 @@ function estimateTokens(text: string): number {
 
 // Track usage in database
 async function trackUsage(
-  userId: number | null,
+  userId: string | null,
   provider: string,
   model: string,
   inputTokens: number,
   outputTokens: number,
-  taskType: string,
+  operation: string,
   cached: boolean
 ) {
   const costs = PROVIDER_COSTS[model as keyof typeof PROVIDER_COSTS] || { input: 100, output: 400 };
@@ -105,13 +106,13 @@ async function trackUsage(
 
   try {
     await db.insert(aiProviderUsage).values({
-      userId,
+      userId: userId || undefined,
       provider,
       model,
+      operation,
       inputTokens,
       outputTokens,
       costCents,
-      taskType,
       cached,
     });
   } catch (error) {
@@ -120,7 +121,7 @@ async function trackUsage(
 }
 
 // Get user's daily token usage
-async function getDailyUsage(userId: number): Promise<number> {
+async function getDailyUsage(userId: string): Promise<number> {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -144,7 +145,7 @@ export interface GenerateOptions {
   prompt: string;
   systemPrompt?: string;
   taskType: TaskType;
-  userId?: number;
+  userId?: string;
   maxTokens?: number;
   temperature?: number;
   forceModel?: string;
@@ -417,7 +418,7 @@ export const bookGenerator = {
     genre: string,
     description: string,
     chapterCount: number = 12,
-    userId?: number
+    userId?: string
   ): Promise<GenerateResult> {
     const prompt = `Create a detailed book outline for:
 Title: "${title}"
@@ -448,7 +449,7 @@ Format as JSON: { "chapters": [{ "number": 1, "title": "", "scenes": [], "summar
     outline: string,
     previousContext: string,
     targetWords: number = 3000,
-    userId?: number
+    userId?: string
   ): Promise<GenerateResult> {
     const prompt = `Write Chapter ${chapterNumber}: "${chapterTitle}" for the book "${bookTitle}".
 
@@ -479,7 +480,7 @@ Write the full chapter content now:`;
   async refineContent(
     content: string,
     instructions: string,
-    userId?: number
+    userId?: string
   ): Promise<GenerateResult> {
     return generate({
       prompt: `Refine the following content according to these instructions:
@@ -505,7 +506,7 @@ export const marketingGenerator = {
     genre: string,
     synopsis: string,
     targetAudience: string,
-    userId?: number
+    userId?: string
   ): Promise<GenerateResult> {
     return generate({
       prompt: `Create a compelling book blurb for:
@@ -531,7 +532,7 @@ Format as JSON: { "short": "", "medium": "", "long": "" }`,
     bookTitle: string,
     blurb: string,
     platforms: string[],
-    userId?: number
+    userId?: string
   ): Promise<GenerateResult> {
     return generate({
       prompt: `Create social media posts for the book "${bookTitle}":
@@ -560,7 +561,7 @@ export const screenplayGenerator = {
     logline: string,
     genre: string,
     targetLength: string,
-    userId?: number
+    userId?: string
   ): Promise<GenerateResult> {
     return generate({
       prompt: `Create a screenplay treatment for:
@@ -589,7 +590,7 @@ Write a detailed 2-3 page treatment:`,
     context: string,
     sceneDescription: string,
     characters: string[],
-    userId?: number
+    userId?: string
   ): Promise<GenerateResult> {
     return generate({
       prompt: `Write a screenplay scene:
@@ -620,7 +621,7 @@ export const courseGenerator = {
     description: string,
     targetAudience: string,
     duration: string,
-    userId?: number
+    userId?: string
   ): Promise<GenerateResult> {
     return generate({
       prompt: `Create a comprehensive course curriculum for:
@@ -654,7 +655,7 @@ Format as JSON with full structure.`,
     lessonTitle: string,
     learningObjectives: string[],
     duration: number,
-    userId?: number
+    userId?: string
   ): Promise<GenerateResult> {
     return generate({
       prompt: `Create lesson content for:
@@ -686,7 +687,7 @@ export const researchGenerator = {
     topic: string,
     sources: string[],
     outputFormat: "summary" | "report" | "article",
-    userId?: number
+    userId?: string
   ): Promise<GenerateResult> {
     return generate({
       prompt: `Synthesize research on: "${topic}"
@@ -711,7 +712,7 @@ Write the ${outputFormat}:`,
 };
 
 // Get usage statistics
-export async function getUsageStats(userId: number, days: number = 30) {
+export async function getUsageStats(userId: string, days: number = 30) {
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
 

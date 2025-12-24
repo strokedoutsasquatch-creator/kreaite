@@ -14,6 +14,14 @@ import { synthesizeSpeech, createVoiceClone, synthesizeWithClone, listVoices, is
 import { generateImage, generateMovieScript, generateStoryboard, isVideoServiceConfigured, getMovieStyles, movieStyles } from "./videoService";
 import { getAllPresets, getMusicalScales, getMusicalKeys, calculateSyncedDelay } from "./audioProcessingService";
 import { seedRecoveryData } from "./seedRecoveryData";
+import { generate, generateStream, bookGenerator, marketingGenerator, screenplayGenerator, courseGenerator, researchGenerator, getUsageStats } from "./aiOrchestrator";
+import { 
+  generateChildStoryRequestSchema,
+  generateCharacterPromptRequestSchema,
+  generatePageIllustrationRequestSchema,
+  rhymeConvertRequestSchema,
+  readAloudAnalyzeRequestSchema
+} from "../shared/schema";
 
 async function initStripe() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -4540,6 +4548,700 @@ Respond in JSON format:
   app.get('/api/marketplace/print-specs', (req, res) => {
     const { trimSizes, bindingTypes, paperTypes } = require('./luluService');
     res.json({ trimSizes, bindingTypes, paperTypes });
+  });
+
+  // ============================================================================
+  // AI ORCHESTRATOR ROUTES - Unified Content Generation
+  // ============================================================================
+
+  // Unified content generation endpoint
+  app.post('/api/ai/generate', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { prompt, systemPrompt, taskType, maxTokens, temperature, jsonMode } = req.body;
+
+      if (!prompt || !taskType) {
+        return res.status(400).json({ message: "prompt and taskType are required" });
+      }
+
+      const result = await generate({
+        prompt,
+        systemPrompt,
+        taskType,
+        userId,
+        maxTokens,
+        temperature,
+        jsonMode,
+      });
+
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error in AI generate:", error);
+      res.status(500).json({ message: error.message || "Failed to generate content" });
+    }
+  });
+
+  // Streaming content generation with Server-Sent Events
+  app.post('/api/ai/generate-stream', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { prompt, systemPrompt, taskType, maxTokens, temperature } = req.body;
+
+      if (!prompt || !taskType) {
+        return res.status(400).json({ message: "prompt and taskType are required" });
+      }
+
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+
+      const result = await generateStream(
+        {
+          prompt,
+          systemPrompt,
+          taskType,
+          userId,
+          maxTokens,
+          temperature,
+        },
+        (chunk) => {
+          res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
+        }
+      );
+
+      res.write(`data: ${JSON.stringify({ done: true, ...result })}\n\n`);
+      res.end();
+    } catch (error: any) {
+      console.error("Error in AI stream:", error);
+      res.write(`data: ${JSON.stringify({ error: error.message || "Stream failed" })}\n\n`);
+      res.end();
+    }
+  });
+
+  // Book outline generation
+  app.post('/api/ai/book/outline', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { title, genre, description, chapterCount } = req.body;
+
+      if (!title || !genre || !description) {
+        return res.status(400).json({ message: "title, genre, and description are required" });
+      }
+
+      const result = await bookGenerator.generateOutline(title, genre, description, chapterCount || 12, userId);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error generating book outline:", error);
+      res.status(500).json({ message: error.message || "Failed to generate outline" });
+    }
+  });
+
+  // Book chapter generation
+  app.post('/api/ai/book/chapter', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { bookTitle, chapterNumber, chapterTitle, outline, previousContext, targetWords } = req.body;
+
+      if (!bookTitle || !chapterNumber || !chapterTitle || !outline) {
+        return res.status(400).json({ message: "bookTitle, chapterNumber, chapterTitle, and outline are required" });
+      }
+
+      const result = await bookGenerator.generateChapter(
+        bookTitle,
+        chapterNumber,
+        chapterTitle,
+        outline,
+        previousContext || "",
+        targetWords || 3000,
+        userId
+      );
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error generating book chapter:", error);
+      res.status(500).json({ message: error.message || "Failed to generate chapter" });
+    }
+  });
+
+  // Content refinement
+  app.post('/api/ai/book/refine', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { content, instructions } = req.body;
+
+      if (!content || !instructions) {
+        return res.status(400).json({ message: "content and instructions are required" });
+      }
+
+      const result = await bookGenerator.refineContent(content, instructions, userId);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error refining content:", error);
+      res.status(500).json({ message: error.message || "Failed to refine content" });
+    }
+  });
+
+  // Book blurb generation
+  app.post('/api/ai/marketing/blurb', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { title, genre, synopsis, targetAudience } = req.body;
+
+      if (!title || !genre || !synopsis || !targetAudience) {
+        return res.status(400).json({ message: "title, genre, synopsis, and targetAudience are required" });
+      }
+
+      const result = await marketingGenerator.generateBookBlurb(title, genre, synopsis, targetAudience, userId);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error generating blurb:", error);
+      res.status(500).json({ message: error.message || "Failed to generate blurb" });
+    }
+  });
+
+  // Social media posts generation
+  app.post('/api/ai/marketing/social', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { bookTitle, blurb, platforms } = req.body;
+
+      if (!bookTitle || !blurb || !platforms || !Array.isArray(platforms)) {
+        return res.status(400).json({ message: "bookTitle, blurb, and platforms array are required" });
+      }
+
+      const result = await marketingGenerator.generateSocialPosts(bookTitle, blurb, platforms, userId);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error generating social posts:", error);
+      res.status(500).json({ message: error.message || "Failed to generate social posts" });
+    }
+  });
+
+  // Screenplay treatment generation
+  app.post('/api/ai/screenplay/treatment', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { title, logline, genre, targetLength } = req.body;
+
+      if (!title || !logline || !genre || !targetLength) {
+        return res.status(400).json({ message: "title, logline, genre, and targetLength are required" });
+      }
+
+      const result = await screenplayGenerator.generateTreatment(title, logline, genre, targetLength, userId);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error generating treatment:", error);
+      res.status(500).json({ message: error.message || "Failed to generate treatment" });
+    }
+  });
+
+  // Screenplay scene generation
+  app.post('/api/ai/screenplay/scene', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { context, sceneDescription, characters } = req.body;
+
+      if (!context || !sceneDescription || !characters || !Array.isArray(characters)) {
+        return res.status(400).json({ message: "context, sceneDescription, and characters array are required" });
+      }
+
+      const result = await screenplayGenerator.generateScene(context, sceneDescription, characters, userId);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error generating scene:", error);
+      res.status(500).json({ message: error.message || "Failed to generate scene" });
+    }
+  });
+
+  // Course curriculum generation
+  app.post('/api/ai/course/curriculum', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { courseName, description, targetAudience, duration } = req.body;
+
+      if (!courseName || !description || !targetAudience || !duration) {
+        return res.status(400).json({ message: "courseName, description, targetAudience, and duration are required" });
+      }
+
+      const result = await courseGenerator.generateCurriculum(courseName, description, targetAudience, duration, userId);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error generating curriculum:", error);
+      res.status(500).json({ message: error.message || "Failed to generate curriculum" });
+    }
+  });
+
+  // Course lesson generation
+  app.post('/api/ai/course/lesson', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { moduleName, lessonTitle, learningObjectives, duration } = req.body;
+
+      if (!moduleName || !lessonTitle || !learningObjectives || !Array.isArray(learningObjectives) || !duration) {
+        return res.status(400).json({ message: "moduleName, lessonTitle, learningObjectives array, and duration are required" });
+      }
+
+      const result = await courseGenerator.generateLesson(moduleName, lessonTitle, learningObjectives, duration, userId);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error generating lesson:", error);
+      res.status(500).json({ message: error.message || "Failed to generate lesson" });
+    }
+  });
+
+  // Research synthesis
+  app.post('/api/ai/research/synthesize', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { topic, sources, outputFormat } = req.body;
+
+      if (!topic || !sources || !Array.isArray(sources) || !outputFormat) {
+        return res.status(400).json({ message: "topic, sources array, and outputFormat are required" });
+      }
+
+      if (!['summary', 'report', 'article'].includes(outputFormat)) {
+        return res.status(400).json({ message: "outputFormat must be 'summary', 'report', or 'article'" });
+      }
+
+      const result = await researchGenerator.synthesize(topic, sources, outputFormat, userId);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error synthesizing research:", error);
+      res.status(500).json({ message: error.message || "Failed to synthesize research" });
+    }
+  });
+
+  // AI usage statistics
+  app.get('/api/ai/usage', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const days = parseInt(req.query.days as string) || 30;
+
+      const stats = await getUsageStats(userId, days);
+      res.json(stats);
+    } catch (error: any) {
+      console.error("Error fetching AI usage:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch usage stats" });
+    }
+  });
+
+  // ============================================================================
+  // CHILDREN'S BOOK CREATION ROUTES
+  // ============================================================================
+
+  // Age band configuration for word counts and complexity
+  const ageBandConfig = {
+    "board-book": { minWords: 50, maxWords: 200, pageCount: 12, sentenceLength: "very short", vocabulary: "basic" },
+    "picture-book": { minWords: 500, maxWords: 1000, pageCount: 32, sentenceLength: "short", vocabulary: "simple" },
+    "early-reader": { minWords: 200, maxWords: 1500, pageCount: 24, sentenceLength: "short", vocabulary: "controlled" },
+    "chapter-book": { minWords: 4000, maxWords: 15000, pageCount: 80, sentenceLength: "medium", vocabulary: "growing" },
+    "middle-grade": { minWords: 20000, maxWords: 50000, pageCount: 200, sentenceLength: "varied", vocabulary: "advanced" },
+  };
+
+  // Generate complete children's story with pages
+  app.post('/api/books/childrens/generate-story', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Validate request body with Zod
+      const parseResult = generateChildStoryRequestSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid request data",
+          errors: parseResult.error.errors
+        });
+      }
+      
+      const { 
+        ageBand, 
+        themes, 
+        educationalTags,
+        mainCharacter, 
+        storyPremise, 
+        rhymingMode,
+        targetPageCount,
+        illustrationStyle 
+      } = parseResult.data;
+
+      const config = ageBandConfig[ageBand as keyof typeof ageBandConfig] || ageBandConfig["picture-book"];
+      const pageCount = targetPageCount || config.pageCount;
+
+      const systemPrompt = `You are an expert children's book author specializing in ${ageBand} books. 
+You create engaging, age-appropriate stories with clear moral lessons.
+
+CRITICAL REQUIREMENTS for ${ageBand} books:
+- Word count: ${config.minWords}-${config.maxWords} words total
+- Page count: ${pageCount} pages (including front matter)
+- Sentence length: ${config.sentenceLength}
+- Vocabulary level: ${config.vocabulary}
+${rhymingMode ? '- MUST use rhyming text with consistent meter and AABB or ABAB rhyme scheme' : '- Use clear, rhythmic prose'}
+- Each page should have 1-4 sentences maximum
+- Include sensory details children can relate to
+- End with a satisfying resolution that reinforces the moral
+
+THEMES TO INCORPORATE: ${themes.join(', ')}
+${educationalTags ? `EDUCATIONAL FOCUS: ${educationalTags.join(', ')}` : ''}
+
+CHARACTER: ${mainCharacter.name} (${mainCharacter.species}) - ${mainCharacter.traits.join(', ')}
+
+OUTPUT FORMAT: Return valid JSON with this structure:
+{
+  "title": "Book title",
+  "targetAge": "${ageBand}",
+  "totalWordCount": number,
+  "moralLesson": "The main lesson",
+  "pages": [
+    {
+      "pageNumber": 1,
+      "text": "Page text...",
+      "readAloudHints": "Emphasis words, pause points",
+      "illustrationDescription": "What should be illustrated",
+      "emotionalTone": "happy/curious/worried/etc",
+      "charactersPresent": ["${mainCharacter.name}"]
+    }
+  ]
+}`;
+
+      const prompt = `Create a ${pageCount}-page children's ${ageBand} story based on this premise:
+
+"${storyPremise}"
+
+Main character: ${mainCharacter.name}, a ${mainCharacter.species} who is ${mainCharacter.traits.join(' and ')}.
+
+Themes: ${themes.join(', ')}
+
+${rhymingMode ? 'Write the entire story in rhyming verse with consistent meter.' : 'Use engaging, rhythmic prose.'}
+
+Generate the complete story with all ${pageCount} pages.`;
+
+      const result = await generate({
+        prompt,
+        systemPrompt,
+        taskType: "draft",
+        userId,
+        maxTokens: 8000,
+        temperature: 0.8,
+        jsonMode: true,
+      });
+
+      // Parse the generated story
+      let story;
+      try {
+        // Extract JSON from response
+        const jsonMatch = result.content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          story = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error("No JSON found in response");
+        }
+      } catch (parseError) {
+        console.error("Failed to parse story JSON:", parseError);
+        return res.status(500).json({ 
+          message: "Failed to parse generated story",
+          raw: result.content
+        });
+      }
+
+      res.json({
+        success: true,
+        story,
+        model: result.model,
+        cached: result.cached,
+        costCents: result.costCents,
+      });
+    } catch (error: any) {
+      console.error("Error generating children's story:", error);
+      res.status(500).json({ message: error.message || "Failed to generate story" });
+    }
+  });
+
+  // Generate consistent character illustration prompt
+  app.post('/api/books/childrens/character-prompt', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { character, illustrationStyle } = req.body;
+
+      if (!character || !illustrationStyle) {
+        return res.status(400).json({ 
+          message: "character and illustrationStyle are required" 
+        });
+      }
+
+      const systemPrompt = `You are an expert at creating consistent character descriptions for children's book illustrators.
+Your prompts must ensure the character looks IDENTICAL across all illustrations.
+Focus on specific, measurable visual details.`;
+
+      const prompt = `Create a detailed illustration prompt for this character that will ensure visual consistency across all pages:
+
+Character Name: ${character.name}
+Role: ${character.role}
+Description: ${character.description}
+
+Visual Traits:
+- Species: ${character.visualTraits?.species || 'human'}
+- Age: ${character.visualTraits?.age || 'child'}
+- Height: ${character.visualTraits?.height || 'average'}
+- Body Type: ${character.visualTraits?.bodyType || 'normal'}
+${character.visualTraits?.skinTone ? `- Skin Tone: ${character.visualTraits.skinTone}` : ''}
+${character.visualTraits?.hairColor ? `- Hair Color: ${character.visualTraits.hairColor}` : ''}
+${character.visualTraits?.hairStyle ? `- Hair Style: ${character.visualTraits.hairStyle}` : ''}
+${character.visualTraits?.eyeColor ? `- Eye Color: ${character.visualTraits.eyeColor}` : ''}
+- Clothing Style: ${character.visualTraits?.clothingStyle || 'casual'}
+- Distinctive Features: ${character.visualTraits?.distinctiveFeatures?.join(', ') || 'none'}
+
+Personality: ${character.personalityTraits?.join(', ') || 'friendly'}
+
+Illustration Style: ${illustrationStyle}
+
+OUTPUT FORMAT: Return valid JSON:
+{
+  "basePrompt": "Detailed prompt for consistent character rendering...",
+  "colorPalette": ["#hex1", "#hex2", "#hex3"],
+  "keyFeatures": ["Feature that must appear in every illustration"],
+  "expressionVariants": {
+    "happy": "Modification for happy expression",
+    "sad": "Modification for sad expression",
+    "curious": "Modification for curious expression",
+    "scared": "Modification for scared expression",
+    "determined": "Modification for determined expression"
+  },
+  "poseVariants": {
+    "standing": "Pose modification",
+    "sitting": "Pose modification",
+    "running": "Pose modification",
+    "sleeping": "Pose modification"
+  }
+}`;
+
+      const result = await generate({
+        prompt,
+        systemPrompt,
+        taskType: "image_prompt",
+        userId,
+        maxTokens: 2000,
+        temperature: 0.6,
+        jsonMode: true,
+      });
+
+      let characterPrompt;
+      try {
+        const jsonMatch = result.content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          characterPrompt = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error("No JSON found in response");
+        }
+      } catch (parseError) {
+        console.error("Failed to parse character prompt JSON:", parseError);
+        return res.status(500).json({ 
+          message: "Failed to parse character prompt",
+          raw: result.content
+        });
+      }
+
+      res.json({
+        success: true,
+        characterPrompt,
+        model: result.model,
+        cached: result.cached,
+      });
+    } catch (error: any) {
+      console.error("Error generating character prompt:", error);
+      res.status(500).json({ message: error.message || "Failed to generate character prompt" });
+    }
+  });
+
+  // Generate page illustration prompt
+  app.post('/api/books/childrens/page-illustration', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { spread, characters, illustrationStyle, projectColorPalette } = req.body;
+
+      if (!spread || !illustrationStyle) {
+        return res.status(400).json({ 
+          message: "spread and illustrationStyle are required" 
+        });
+      }
+
+      const characterPrompts = characters?.map((c: any) => 
+        `${c.name}: ${c.illustrationPrompt || c.description}`
+      ).join('\n') || '';
+
+      const systemPrompt = `You are an expert at creating illustration prompts for children's book pages.
+Your prompts must be detailed enough for AI image generation to create consistent, beautiful illustrations.
+Style: ${illustrationStyle}
+${projectColorPalette ? `Color Palette: ${projectColorPalette.join(', ')}` : ''}`;
+
+      const prompt = `Create a detailed illustration prompt for this page:
+
+Page Number: ${spread.pageNumber}
+Layout: ${spread.layout}
+Page Text: "${spread.text}"
+Emotional Tone: ${spread.emotionalTone || 'neutral'}
+${spread.actionDescription ? `Action: ${spread.actionDescription}` : ''}
+
+Characters in scene:
+${characterPrompts || 'No specific characters defined'}
+
+OUTPUT FORMAT: Return valid JSON:
+{
+  "illustrationPrompt": "Complete prompt for image generation...",
+  "negativePrompt": "Things to avoid in the image",
+  "composition": "Description of layout and focal points",
+  "lightingMood": "Description of lighting",
+  "backgroundElements": ["List of background elements"],
+  "suggestedAspectRatio": "4:3 or 3:2 or 1:1"
+}`;
+
+      const result = await generate({
+        prompt,
+        systemPrompt,
+        taskType: "image_prompt",
+        userId,
+        maxTokens: 1500,
+        temperature: 0.7,
+        jsonMode: true,
+      });
+
+      let pagePrompt;
+      try {
+        const jsonMatch = result.content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          pagePrompt = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error("No JSON found in response");
+        }
+      } catch (parseError) {
+        console.error("Failed to parse page prompt JSON:", parseError);
+        return res.status(500).json({ 
+          message: "Failed to parse page prompt",
+          raw: result.content
+        });
+      }
+
+      res.json({
+        success: true,
+        pagePrompt,
+        model: result.model,
+        cached: result.cached,
+      });
+    } catch (error: any) {
+      console.error("Error generating page illustration:", error);
+      res.status(500).json({ message: error.message || "Failed to generate page illustration" });
+    }
+  });
+
+  // Convert prose to rhyming text
+  app.post('/api/books/childrens/rhyme-convert', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Validate request body with Zod
+      const parseResult = rhymeConvertRequestSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid request data",
+          errors: parseResult.error.errors
+        });
+      }
+      
+      const { text, rhymeScheme, ageBand } = parseResult.data;
+
+      const systemPrompt = `You are an expert children's book poet. Convert prose into rhyming verse.
+Maintain the meaning while adding rhythm and rhyme.
+Use age-appropriate vocabulary for ${ageBand || 'picture-book'} readers.
+Rhyme scheme: ${rhymeScheme || 'AABB'}`;
+
+      const prompt = `Convert this children's book prose into rhyming verse:
+
+Original text:
+"${text}"
+
+Requirements:
+- Maintain the same story and message
+- Use ${rhymeScheme || 'AABB'} rhyme scheme
+- Keep it age-appropriate for ${ageBand || 'picture-book'} readers
+- Ensure consistent meter/rhythm
+- Each verse should be 4-8 lines
+
+Return the rhyming version only, no explanation.`;
+
+      const result = await generate({
+        prompt,
+        systemPrompt,
+        taskType: "draft",
+        userId,
+        maxTokens: 2000,
+        temperature: 0.8,
+      });
+
+      res.json({
+        success: true,
+        rhymingText: result.content,
+        model: result.model,
+        cached: result.cached,
+      });
+    } catch (error: any) {
+      console.error("Error converting to rhyme:", error);
+      res.status(500).json({ message: error.message || "Failed to convert to rhyme" });
+    }
+  });
+
+  // Analyze text for read-aloud optimization
+  app.post('/api/books/childrens/read-aloud-analyze', isAuthenticated, async (req: any, res) => {
+    try {
+      // Validate request body with Zod
+      const parseResult = readAloudAnalyzeRequestSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid request data",
+          errors: parseResult.error.errors
+        });
+      }
+      
+      const { text, ageBand } = parseResult.data;
+
+      const words = text.split(/\s+/).filter(Boolean);
+      const sentences = text.split(/[.!?]+/).filter(Boolean);
+      const avgWordsPerSentence = words.length / Math.max(sentences.length, 1);
+      
+      // Simple syllable estimation
+      const syllableCount = words.reduce((count: number, word: string) => {
+        const syllables = word.toLowerCase().replace(/[^a-z]/g, '')
+          .replace(/e$/, '').match(/[aeiouy]+/g);
+        return count + (syllables ? syllables.length : 1);
+      }, 0);
+
+      // Estimate reading time (younger readers = slower)
+      const readingSpeed = {
+        "board-book": 30,
+        "picture-book": 60,
+        "early-reader": 80,
+        "chapter-book": 100,
+        "middle-grade": 120,
+      };
+      const wpm = readingSpeed[ageBand as keyof typeof readingSpeed] || 60;
+      const readingTimeSeconds = Math.ceil((words.length / wpm) * 60);
+
+      res.json({
+        success: true,
+        analysis: {
+          wordCount: words.length,
+          sentenceCount: sentences.length,
+          avgWordsPerSentence: Math.round(avgWordsPerSentence * 10) / 10,
+          syllableCount,
+          estimatedReadingTimeSeconds: readingTimeSeconds,
+          readingTimeFormatted: `${Math.floor(readingTimeSeconds / 60)}:${String(readingTimeSeconds % 60).padStart(2, '0')}`,
+          complexWords: words.filter((w: string) => w.length > 8).slice(0, 10),
+          suggestions: [
+            avgWordsPerSentence > 12 ? "Consider shorter sentences for easier reading" : null,
+            words.some((w: string) => w.length > 10) ? "Some long words may be difficult for young readers" : null,
+          ].filter(Boolean),
+        }
+      });
+    } catch (error: any) {
+      console.error("Error analyzing text:", error);
+      res.status(500).json({ message: error.message || "Failed to analyze text" });
+    }
   });
 
   const httpServer = createServer(app);
