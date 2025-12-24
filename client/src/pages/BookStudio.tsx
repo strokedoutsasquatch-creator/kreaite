@@ -46,6 +46,8 @@ import {
   Edit3,
   Type,
   AlignLeft,
+  AlignCenter,
+  AlignJustify,
   Image,
   Palette,
   BookMarked,
@@ -56,14 +58,28 @@ import {
   Lightbulb,
   Quote,
   ListOrdered,
+  List,
   Heading1,
   Heading2,
+  Heading3,
   Wand2,
   MessageCircle,
   Send,
   Bot,
   User,
   Paperclip,
+  Bold,
+  Italic,
+  Underline,
+  Strikethrough,
+  Undo,
+  Redo,
+  Copy,
+  Scissors,
+  FileImage,
+  Maximize2,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -147,9 +163,89 @@ export default function BookStudio() {
   ]);
   const [selectedChapter, setSelectedChapter] = useState<string>("1");
   const [chapterContent, setChapterContent] = useState("");
+  const editorRef = useRef<HTMLTextAreaElement>(null);
+  const [undoStack, setUndoStack] = useState<string[]>([]);
+  const [redoStack, setRedoStack] = useState<string[]>([]);
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [editingPass, setEditingPass] = useState<"developmental" | "line" | "copy" | "proofread">("developmental");
+
+  // Formatting helpers for the editor
+  const insertFormatting = (prefix: string, suffix: string = prefix) => {
+    const textarea = editorRef.current;
+    if (!textarea) return;
+    
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = chapterContent.substring(start, end);
+    const beforeText = chapterContent.substring(0, start);
+    const afterText = chapterContent.substring(end);
+    
+    // Save to undo stack
+    setUndoStack(prev => [...prev, chapterContent]);
+    setRedoStack([]);
+    
+    const newText = beforeText + prefix + selectedText + suffix + afterText;
+    setChapterContent(newText);
+    updateChapter(selectedChapter, { 
+      content: newText, 
+      wordCount: newText.split(/\s+/).filter(Boolean).length 
+    });
+    
+    // Restore cursor position
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + prefix.length, end + prefix.length);
+    }, 0);
+  };
+
+  const insertLineFormatting = (prefix: string) => {
+    const textarea = editorRef.current;
+    if (!textarea) return;
+    
+    const start = textarea.selectionStart;
+    const lineStart = chapterContent.lastIndexOf('\n', start - 1) + 1;
+    const lineEnd = chapterContent.indexOf('\n', start);
+    const actualLineEnd = lineEnd === -1 ? chapterContent.length : lineEnd;
+    
+    setUndoStack(prev => [...prev, chapterContent]);
+    setRedoStack([]);
+    
+    const newText = chapterContent.substring(0, lineStart) + prefix + chapterContent.substring(lineStart);
+    setChapterContent(newText);
+    updateChapter(selectedChapter, { 
+      content: newText, 
+      wordCount: newText.split(/\s+/).filter(Boolean).length 
+    });
+  };
+
+  const handleUndo = () => {
+    if (undoStack.length === 0) return;
+    const previousContent = undoStack[undoStack.length - 1];
+    setRedoStack(prev => [...prev, chapterContent]);
+    setUndoStack(prev => prev.slice(0, -1));
+    setChapterContent(previousContent);
+    updateChapter(selectedChapter, { 
+      content: previousContent, 
+      wordCount: previousContent.split(/\s+/).filter(Boolean).length 
+    });
+  };
+
+  const handleRedo = () => {
+    if (redoStack.length === 0) return;
+    const nextContent = redoStack[redoStack.length - 1];
+    setUndoStack(prev => [...prev, chapterContent]);
+    setRedoStack(prev => prev.slice(0, -1));
+    setChapterContent(nextContent);
+    updateChapter(selectedChapter, { 
+      content: nextContent, 
+      wordCount: nextContent.split(/\s+/).filter(Boolean).length 
+    });
+  };
+
+  const handleSave = () => {
+    toast({ title: "Saved", description: "Your chapter has been saved" });
+  };
   
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
@@ -206,12 +302,38 @@ export default function BookStudio() {
     const file = event.target.files?.[0];
     if (!file) return;
     
+    // File size limit: 5MB
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      toast({ 
+        title: "File Too Large", 
+        description: "Please upload a file smaller than 5MB. For larger manuscripts, try splitting into chapters.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const reader = new FileReader();
+    reader.onerror = () => {
+      toast({ 
+        title: "Upload Error", 
+        description: "Failed to read file. Please try again.",
+        variant: "destructive"
+      });
+    };
     reader.onload = async (e) => {
       const content = e.target?.result as string;
+      if (!content || content.length === 0) {
+        toast({ 
+          title: "Empty File", 
+          description: "The file appears to be empty.",
+          variant: "destructive"
+        });
+        return;
+      }
       setUploadedContent(content);
       setUploadedFileName(file.name);
-      toast({ title: "File Uploaded", description: `${file.name} loaded successfully` });
+      toast({ title: "File Uploaded", description: `${file.name} loaded successfully (${(file.size / 1024).toFixed(1)}KB)` });
       
       // Add user message with attachment
       const userMessage: ChatMessage = {
@@ -257,6 +379,16 @@ export default function BookStudio() {
     reader.readAsText(file);
   };
 
+  // Scroll to bottom when new messages are added
+  useEffect(() => {
+    if (chatScrollRef.current) {
+      const scrollContainer = chatScrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      }
+    }
+  }, [chatMessages]);
+
   const sendChatMessage = async () => {
     if (!chatInput.trim() || isChatLoading) return;
     
@@ -289,6 +421,7 @@ export default function BookStudio() {
       };
       setChatMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
+      console.error("Chat error:", error);
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
@@ -551,208 +684,273 @@ Your journey to healing starts here.`);
 
           {currentStep === 1 && (
             <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Upload className="w-5 h-5 text-primary" /> Step 1: Upload & Analyze Your Manuscript
-                  </CardTitle>
-                  <CardDescription>Upload your notes, manuscript, or start fresh. AI will analyze and provide recommendations.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div 
-                        className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
-                        onClick={() => fileInputRef.current?.click()}
-                        data-testid="upload-zone"
-                      >
-                        <input 
-                          type="file" 
-                          ref={fileInputRef}
-                          onChange={handleFileUpload}
-                          accept=".txt,.md,.doc,.docx"
-                          className="hidden"
-                          data-testid="input-file-upload"
-                        />
-                        <FileUp className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                        <p className="font-medium">Drop your manuscript here</p>
-                        <p className="text-sm text-muted-foreground mt-1">Supports .txt, .md, .doc, .docx</p>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* AI Chat Panel - Left Side */}
+                <Card className="flex flex-col h-[700px]">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2">
+                      <MessageCircle className="w-5 h-5 text-primary" /> AI Publishing Assistant
+                    </CardTitle>
+                    <CardDescription>Upload your manuscript and chat about it. I'll help you analyze and improve your book.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex-1 flex flex-col min-h-0">
+                    {/* Chat Messages */}
+                    <ScrollArea className="flex-1 pr-4 mb-4" ref={chatScrollRef}>
+                      <div className="space-y-4">
+                        {chatMessages.map((msg) => (
+                          <div
+                            key={msg.id}
+                            className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
+                          >
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                              msg.role === 'assistant' ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                            }`}>
+                              {msg.role === 'assistant' ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
+                            </div>
+                            <div className={`flex-1 max-w-[85%] ${msg.role === 'user' ? 'text-right' : ''}`}>
+                              {msg.hasAttachment && (
+                                <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 mb-2 ${
+                                  msg.role === 'user' ? 'ml-auto' : ''
+                                }`}>
+                                  <Paperclip className="w-3 h-3 text-primary" />
+                                  <span className="text-xs font-medium text-primary">{msg.attachmentName}</span>
+                                </div>
+                              )}
+                              <div className={`rounded-lg px-4 py-3 ${
+                                msg.role === 'assistant' 
+                                  ? 'bg-muted text-foreground' 
+                                  : 'bg-primary text-primary-foreground ml-auto'
+                              }`}>
+                                <div className="text-sm whitespace-pre-wrap prose prose-sm dark:prose-invert max-w-none">
+                                  {msg.content.split('\n').map((line, i) => {
+                                    if (line.startsWith('**') && line.endsWith('**')) {
+                                      return <p key={i} className="font-bold mt-2 first:mt-0">{line.slice(2, -2)}</p>;
+                                    }
+                                    if (line.startsWith('- ')) {
+                                      return <p key={i} className="ml-2">{line}</p>;
+                                    }
+                                    if (line.match(/^\d+\.\s/)) {
+                                      return <p key={i} className="ml-2">{line}</p>;
+                                    }
+                                    return line ? <p key={i}>{line}</p> : <br key={i} />;
+                                  })}
+                                </div>
+                              </div>
+                              <span className="text-xs text-muted-foreground mt-1 block">
+                                {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                        {isChatLoading && (
+                          <div className="flex gap-3">
+                            <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                              <Bot className="w-4 h-4" />
+                            </div>
+                            <div className="bg-muted rounded-lg px-4 py-3">
+                              <div className="flex items-center gap-2">
+                                <RefreshCw className="w-4 h-4 animate-spin" />
+                                <span className="text-sm">Analyzing...</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      
-                      <div className="text-center text-muted-foreground">— or —</div>
-                      
-                      <div>
-                        <Label>Paste or type your content</Label>
-                        <Textarea
-                          value={uploadedContent}
-                          onChange={(e) => setUploadedContent(e.target.value)}
-                          placeholder="Paste your manuscript, notes, or ideas here..."
-                          className="min-h-[200px] font-mono text-sm"
-                          data-testid="textarea-manuscript"
-                        />
-                      </div>
-                    </div>
+                    </ScrollArea>
                     
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Book Title</Label>
-                        <Input
-                          value={bookTitle}
-                          onChange={(e) => setBookTitle(e.target.value)}
-                          placeholder="My Recovery Story"
-                          data-testid="input-book-title"
-                        />
-                      </div>
-                      <div>
-                        <Label>Subtitle (Optional)</Label>
-                        <Input
-                          value={bookSubtitle}
-                          onChange={(e) => setBookSubtitle(e.target.value)}
-                          placeholder="A Journey of Hope and Healing"
-                          data-testid="input-book-subtitle"
-                        />
-                      </div>
-                      <div>
-                        <Label>Genre</Label>
-                        <div className="grid grid-cols-2 gap-2 mt-2">
-                          {genres.map((g) => {
-                            const Icon = g.icon;
-                            return (
-                              <button
-                                key={g.value}
-                                onClick={() => setSelectedGenre(g.value)}
-                                className={`p-3 rounded-lg border-2 flex items-center gap-2 transition-all hover-elevate
-                                  ${selectedGenre === g.value ? 'border-primary bg-primary/10' : 'border-border'}`}
-                                data-testid={`button-genre-${g.value}`}
-                              >
-                                <Icon className={`w-4 h-4 ${selectedGenre === g.value ? 'text-primary' : ''}`} />
-                                <span className="text-sm font-medium">{g.label}</span>
-                              </button>
-                            );
-                          })}
+                    {/* File Upload Zone */}
+                    <div 
+                      className="border-2 border-dashed border-border rounded-lg p-4 text-center hover:border-primary/50 transition-colors cursor-pointer mb-3"
+                      onClick={() => fileInputRef.current?.click()}
+                      data-testid="upload-zone"
+                    >
+                      <input 
+                        type="file" 
+                        ref={fileInputRef}
+                        onChange={handleFileUpload}
+                        accept=".txt,.md,.doc,.docx"
+                        className="hidden"
+                        data-testid="input-file-upload"
+                      />
+                      <div className="flex items-center justify-center gap-3">
+                        <FileUp className="w-6 h-6 text-muted-foreground" />
+                        <div className="text-left">
+                          <p className="font-medium text-sm">
+                            {uploadedFileName ? `Uploaded: ${uploadedFileName}` : 'Drop manuscript or click to upload'}
+                          </p>
+                          <p className="text-xs text-muted-foreground">.txt, .md, .doc, .docx</p>
                         </div>
                       </div>
-                      <div>
-                        <Label>Target Audience</Label>
-                        <Input
-                          value={targetAudience}
-                          onChange={(e) => setTargetAudience(e.target.value)}
-                          placeholder="Stroke survivors, caregivers, healthcare professionals..."
-                          data-testid="input-target-audience"
-                        />
-                      </div>
-                      <div>
-                        <Label>Brief Description</Label>
-                        <Textarea
-                          value={bookDescription}
-                          onChange={(e) => setBookDescription(e.target.value)}
-                          placeholder="What is your book about? What message do you want to share?"
-                          className="min-h-[80px]"
-                          data-testid="textarea-description"
-                        />
+                    </div>
+                    
+                    {/* Chat Input */}
+                    <div className="flex gap-2">
+                      <Input
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        placeholder="Ask about your manuscript..."
+                        className="flex-1"
+                        onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendChatMessage()}
+                        disabled={isChatLoading}
+                        data-testid="input-chat"
+                      />
+                      <Button 
+                        onClick={sendChatMessage} 
+                        disabled={!chatInput.trim() || isChatLoading}
+                        size="icon"
+                        data-testid="button-send-chat"
+                      >
+                        <Send className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Book Details Panel - Right Side */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BookOpen className="w-5 h-5 text-primary" /> Book Details
+                    </CardTitle>
+                    <CardDescription>Tell us about your book project</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label>Book Title *</Label>
+                      <Input
+                        value={bookTitle}
+                        onChange={(e) => setBookTitle(e.target.value)}
+                        placeholder="My Recovery Story"
+                        data-testid="input-book-title"
+                      />
+                    </div>
+                    <div>
+                      <Label>Subtitle (Optional)</Label>
+                      <Input
+                        value={bookSubtitle}
+                        onChange={(e) => setBookSubtitle(e.target.value)}
+                        placeholder="A Journey of Hope and Healing"
+                        data-testid="input-book-subtitle"
+                      />
+                    </div>
+                    <div>
+                      <Label>Genre</Label>
+                      <div className="grid grid-cols-2 gap-2 mt-2">
+                        {genres.map((g) => {
+                          const Icon = g.icon;
+                          return (
+                            <button
+                              key={g.value}
+                              onClick={() => setSelectedGenre(g.value)}
+                              className={`p-2 rounded-lg border-2 flex items-center gap-2 transition-all hover-elevate
+                                ${selectedGenre === g.value ? 'border-primary bg-primary/10' : 'border-border'}`}
+                              data-testid={`button-genre-${g.value}`}
+                            >
+                              <Icon className={`w-4 h-4 ${selectedGenre === g.value ? 'text-primary' : ''}`} />
+                              <span className="text-xs font-medium">{g.label}</span>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div className="space-y-4">
-                    <Button
-                      onClick={analyzeManuscript}
-                      disabled={isAnalyzing || (!uploadedContent && !bookDescription)}
-                      className="w-full"
-                      size="lg"
-                      data-testid="button-analyze"
-                    >
-                      {isAnalyzing ? (
-                        <>
-                          <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
-                          Analyzing... ({analysisProgress}%)
-                        </>
-                      ) : (
-                        <>
-                          <Brain className="w-5 h-5 mr-2" />
-                          Analyze with AI
-                        </>
-                      )}
-                    </Button>
-                    {isAnalyzing && <Progress value={analysisProgress} />}
+                    <div>
+                      <Label>Target Audience</Label>
+                      <Input
+                        value={targetAudience}
+                        onChange={(e) => setTargetAudience(e.target.value)}
+                        placeholder="Stroke survivors, caregivers..."
+                        data-testid="input-target-audience"
+                      />
+                    </div>
+                    <div>
+                      <Label>Brief Description</Label>
+                      <Textarea
+                        value={bookDescription}
+                        onChange={(e) => setBookDescription(e.target.value)}
+                        placeholder="What is your book about? What message do you want to share?"
+                        className="min-h-[100px]"
+                        data-testid="textarea-description"
+                      />
+                    </div>
                     
-                    {analysis && (
-                      <Card className="bg-muted/50">
-                        <CardHeader>
-                          <CardTitle className="flex items-center justify-between">
-                            <span className="flex items-center gap-2">
-                              <CheckCircle className="w-5 h-5 text-primary" /> Analysis Results
-                            </span>
-                            <Badge className="text-lg px-3 py-1">{analysis.overallScore}/100</Badge>
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <div className="p-3 bg-background rounded-lg">
-                              <div className="text-sm text-muted-foreground">Pacing</div>
-                              <div className="text-2xl font-bold text-primary">{analysis.pacing.score}</div>
-                              <p className="text-xs text-muted-foreground mt-1">{analysis.pacing.feedback}</p>
-                            </div>
-                            <div className="p-3 bg-background rounded-lg">
-                              <div className="text-sm text-muted-foreground">Tone</div>
-                              <div className="text-2xl font-bold text-primary">{analysis.tone.score}</div>
-                              <p className="text-xs text-muted-foreground mt-1">{analysis.tone.feedback}</p>
-                            </div>
-                            <div className="p-3 bg-background rounded-lg">
-                              <div className="text-sm text-muted-foreground">Structure</div>
-                              <div className="text-2xl font-bold text-primary">{analysis.structure.score}</div>
-                              <p className="text-xs text-muted-foreground mt-1">{analysis.structure.feedback}</p>
-                            </div>
-                            <div className="p-3 bg-background rounded-lg">
-                              <div className="text-sm text-muted-foreground">Readability</div>
-                              <div className="text-2xl font-bold text-primary">{analysis.readability.score}</div>
-                              <p className="text-xs text-muted-foreground mt-1">{analysis.readability.gradeLevel}</p>
-                            </div>
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <h4 className="font-semibold text-green-500 flex items-center gap-2 mb-2">
-                                <CheckCircle className="w-4 h-4" /> Strengths
-                              </h4>
-                              <ul className="space-y-1">
-                                {analysis.strengths.map((s, i) => (
-                                  <li key={i} className="text-sm flex items-start gap-2">
-                                    <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                                    {s}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-yellow-500 flex items-center gap-2 mb-2">
-                                <AlertCircle className="w-4 h-4" /> Areas for Improvement
-                              </h4>
-                              <ul className="space-y-1">
-                                {analysis.improvements.map((s, i) => (
-                                  <li key={i} className="text-sm flex items-start gap-2">
-                                    <Lightbulb className="w-4 h-4 text-yellow-500 flex-shrink-0 mt-0.5" />
-                                    {s}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
+                    {/* Manuscript Preview */}
+                    {uploadedContent && (
+                      <div>
+                        <Label>Manuscript Preview</Label>
+                        <div className="border rounded-lg p-3 bg-muted/50 max-h-[150px] overflow-y-auto">
+                          <p className="text-xs text-muted-foreground font-mono whitespace-pre-wrap">
+                            {uploadedContent.substring(0, 500)}
+                            {uploadedContent.length > 500 && '...'}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                          <span>{uploadedContent.split(/\s+/).length.toLocaleString()} words</span>
+                          <span>~{Math.ceil(uploadedContent.split(/\s+/).length / 250)} pages</span>
+                        </div>
+                      </div>
                     )}
-                  </div>
-                  
-                  <div className="flex justify-end">
-                    <Button onClick={() => setCurrentStep(2)} disabled={!bookTitle} data-testid="button-next-step-1">
-                      Next: Structure & Outline
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+
+                    {/* Quick Actions */}
+                    <Separator />
+                    <div className="space-y-2">
+                      <Label>Quick Actions</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            setChatInput("What are the main strengths of my manuscript?");
+                            sendChatMessage();
+                          }}
+                          disabled={!uploadedContent || isChatLoading}
+                        >
+                          <Sparkles className="w-3 h-3 mr-1" /> Analyze Strengths
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            setChatInput("Suggest a chapter outline for my book");
+                            sendChatMessage();
+                          }}
+                          disabled={!uploadedContent || isChatLoading}
+                        >
+                          <Layers className="w-3 h-3 mr-1" /> Suggest Outline
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            setChatInput("How can I improve the pacing and flow?");
+                            sendChatMessage();
+                          }}
+                          disabled={!uploadedContent || isChatLoading}
+                        >
+                          <Target className="w-3 h-3 mr-1" /> Improve Pacing
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            setChatInput("What's missing that would make this book stronger?");
+                            sendChatMessage();
+                          }}
+                          disabled={!uploadedContent || isChatLoading}
+                        >
+                          <Lightbulb className="w-3 h-3 mr-1" /> Find Gaps
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-end pt-4">
+                      <Button onClick={() => setCurrentStep(2)} disabled={!bookTitle} data-testid="button-next-step-1">
+                        Next: Structure & Outline
+                        <ChevronRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           )}
 
@@ -894,68 +1092,169 @@ Your journey to healing starts here.`);
 
           {currentStep === 3 && (
             <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Edit3 className="w-5 h-5 text-primary" /> Step 3: Generate & Edit Content
-                  </CardTitle>
-                  <CardDescription>AI ghostwriting with multi-pass professional editing</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                    <div className="space-y-4">
-                      <h4 className="font-semibold">Chapters</h4>
-                      <ScrollArea className="h-[400px]">
-                        <div className="space-y-2 pr-2">
-                          {chapters.map((chapter, index) => (
-                            <button
-                              key={chapter.id}
-                              onClick={() => {
-                                setSelectedChapter(chapter.id);
-                                setChapterContent(chapter.content || "");
-                              }}
-                              className={`w-full p-3 rounded-lg text-left transition-all hover-elevate
-                                ${selectedChapter === chapter.id ? 'bg-primary/20 border-primary border' : 'bg-muted/50'}`}
-                              data-testid={`button-select-chapter-${chapter.id}`}
-                            >
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-muted-foreground">Ch. {index + 1}</span>
-                                <Badge 
-                                  variant={chapter.status === "complete" ? "default" : "secondary"}
-                                  className="text-xs"
-                                >
-                                  {chapter.status}
-                                </Badge>
-                              </div>
-                              <div className="font-medium truncate">{chapter.title}</div>
-                              <div className="text-xs text-muted-foreground">{chapter.wordCount} words</div>
-                            </button>
-                          ))}
-                        </div>
-                      </ScrollArea>
-                    </div>
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                {/* Chapter Navigation Sidebar */}
+                <Card className="h-fit">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm flex items-center justify-between">
+                      Chapters
+                      <Button size="sm" variant="ghost" onClick={addChapter}>
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-2">
+                    <ScrollArea className="h-[500px]">
+                      <div className="space-y-1 pr-2">
+                        {chapters.map((chapter, index) => (
+                          <button
+                            key={chapter.id}
+                            onClick={() => {
+                              setSelectedChapter(chapter.id);
+                              setChapterContent(chapter.content || "");
+                            }}
+                            className={`w-full p-3 rounded-lg text-left transition-all hover-elevate
+                              ${selectedChapter === chapter.id ? 'bg-primary/20 border-primary border' : 'bg-muted/30 hover:bg-muted/50'}`}
+                            data-testid={`button-select-chapter-${chapter.id}`}
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs text-muted-foreground font-medium">Ch. {index + 1}</span>
+                              <Badge 
+                                variant={chapter.status === "complete" ? "default" : "secondary"}
+                                className="text-[10px] px-1.5 py-0"
+                              >
+                                {chapter.status}
+                              </Badge>
+                            </div>
+                            <div className="font-medium text-sm truncate">{chapter.title}</div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              {chapter.wordCount.toLocaleString()} words
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </ScrollArea>
                     
-                    <div className="lg:col-span-3 space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-semibold">
-                          {chapters.find(c => c.id === selectedChapter)?.title || "Select a chapter"}
-                        </h4>
-                        <div className="flex gap-2">
+                    {/* Chapter Stats */}
+                    <div className="mt-4 p-3 bg-muted/30 rounded-lg">
+                      <div className="text-xs text-muted-foreground space-y-1">
+                        <div className="flex justify-between">
+                          <span>Total chapters:</span>
+                          <span className="font-medium">{chapters.length}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Total words:</span>
+                          <span className="font-medium">{chapters.reduce((a, c) => a + c.wordCount, 0).toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Est. pages:</span>
+                          <span className="font-medium">~{Math.ceil(chapters.reduce((a, c) => a + c.wordCount, 0) / 250)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Word Processor Editor */}
+                <div className="lg:col-span-3">
+                  <Card className="border-0 shadow-lg">
+                    {/* Formatting Toolbar */}
+                    <div className="border-b bg-muted/30 p-2">
+                      <div className="flex items-center gap-1 flex-wrap">
+                        {/* File Actions */}
+                        <div className="flex items-center gap-0.5 pr-2 border-r border-border">
+                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Save" onClick={handleSave}>
+                            <Save className="w-4 h-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Undo" onClick={handleUndo} disabled={undoStack.length === 0}>
+                            <Undo className="w-4 h-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Redo" onClick={handleRedo} disabled={redoStack.length === 0}>
+                            <Redo className="w-4 h-4" />
+                          </Button>
+                        </div>
+
+                        {/* Text Formatting */}
+                        <div className="flex items-center gap-0.5 px-2 border-r border-border">
+                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Bold (Ctrl+B)" onClick={() => insertFormatting('**')}>
+                            <Bold className="w-4 h-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Italic (Ctrl+I)" onClick={() => insertFormatting('*')}>
+                            <Italic className="w-4 h-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Underline" onClick={() => insertFormatting('<u>', '</u>')}>
+                            <Underline className="w-4 h-4" />
+                          </Button>
+                        </div>
+
+                        {/* Headings */}
+                        <div className="flex items-center gap-0.5 px-2 border-r border-border">
+                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Heading 1" onClick={() => insertLineFormatting('# ')}>
+                            <Heading1 className="w-4 h-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Heading 2" onClick={() => insertLineFormatting('## ')}>
+                            <Heading2 className="w-4 h-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Heading 3" onClick={() => insertLineFormatting('### ')}>
+                            <Heading3 className="w-4 h-4" />
+                          </Button>
+                        </div>
+
+                        {/* Lists & Quote */}
+                        <div className="flex items-center gap-0.5 px-2 border-r border-border">
+                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Bullet List" onClick={() => insertLineFormatting('- ')}>
+                            <List className="w-4 h-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Numbered List" onClick={() => insertLineFormatting('1. ')}>
+                            <ListOrdered className="w-4 h-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Quote" onClick={() => insertLineFormatting('> ')}>
+                            <Quote className="w-4 h-4" />
+                          </Button>
+                        </div>
+
+                        {/* Alignment - Display only, text is left-aligned by default */}
+                        <div className="flex items-center gap-0.5 px-2 border-r border-border">
+                          <Button size="icon" variant="ghost" className="h-8 w-8 bg-muted/50" title="Align Left (Default)" disabled>
+                            <AlignLeft className="w-4 h-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Center (Use HTML)" onClick={() => insertFormatting('<center>', '</center>')}>
+                            <AlignCenter className="w-4 h-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Separator" onClick={() => insertLineFormatting('\n---\n')}>
+                            <AlignJustify className="w-4 h-4" />
+                          </Button>
+                        </div>
+
+                        {/* Insert Image */}
+                        <div className="flex items-center gap-0.5 px-2">
+                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Insert Image Placeholder" onClick={() => insertFormatting('\n![Image description](image-url)\n', '')}>
+                            <FileImage className="w-4 h-4" />
+                          </Button>
+                        </div>
+
+                        {/* Spacer */}
+                        <div className="flex-1" />
+
+                        {/* AI Actions */}
+                        <div className="flex items-center gap-2">
                           <Button 
                             onClick={generateChapterContent}
                             disabled={isGenerating}
+                            size="sm"
                             variant="outline"
+                            className="h-8"
                             data-testid="button-generate-chapter"
                           >
-                            {isGenerating ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                            {isGenerating ? <RefreshCw className="w-3 h-3 mr-1 animate-spin" /> : <Wand2 className="w-3 h-3 mr-1" />}
                             AI Write
                           </Button>
                           <Select value={editingPass} onValueChange={(v: any) => setEditingPass(v)}>
-                            <SelectTrigger className="w-[160px]" data-testid="select-editing-pass">
+                            <SelectTrigger className="w-[130px] h-8 text-xs" data-testid="select-editing-pass">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="developmental">Developmental Edit</SelectItem>
+                              <SelectItem value="developmental">Developmental</SelectItem>
                               <SelectItem value="line">Line Edit</SelectItem>
                               <SelectItem value="copy">Copy Edit</SelectItem>
                               <SelectItem value="proofread">Proofread</SelectItem>
@@ -964,15 +1263,32 @@ Your journey to healing starts here.`);
                           <Button 
                             onClick={runEditingPass}
                             disabled={isGenerating || !chapterContent}
+                            size="sm"
+                            className="h-8"
                             data-testid="button-run-edit"
                           >
-                            <Edit3 className="w-4 h-4 mr-2" />
-                            Run Edit
+                            <Edit3 className="w-3 h-3 mr-1" />
+                            Edit
                           </Button>
                         </div>
                       </div>
-                      
+                    </div>
+
+                    {/* Chapter Title */}
+                    <div className="px-6 pt-4 pb-2 border-b">
+                      <Input
+                        value={chapters.find(c => c.id === selectedChapter)?.title || ""}
+                        onChange={(e) => updateChapter(selectedChapter, { title: e.target.value })}
+                        className="text-xl font-bold border-0 px-0 focus-visible:ring-0 bg-transparent"
+                        placeholder="Chapter Title"
+                        data-testid="input-chapter-title-editor"
+                      />
+                    </div>
+
+                    {/* Editor Content Area - Styled like a document */}
+                    <div className="bg-white dark:bg-zinc-900 min-h-[500px] p-8 mx-4 my-4 rounded shadow-inner border">
                       <Textarea
+                        ref={editorRef}
                         value={chapterContent}
                         onChange={(e) => {
                           setChapterContent(e.target.value);
@@ -981,34 +1297,76 @@ Your journey to healing starts here.`);
                             wordCount: e.target.value.split(/\s+/).filter(Boolean).length 
                           });
                         }}
-                        placeholder="Start writing your chapter, or click 'AI Write' to generate content..."
-                        className="min-h-[400px] font-mono text-sm leading-relaxed"
+                        onKeyDown={(e) => {
+                          // Keyboard shortcuts
+                          if (e.ctrlKey || e.metaKey) {
+                            if (e.key === 'b') {
+                              e.preventDefault();
+                              insertFormatting('**');
+                            } else if (e.key === 'i') {
+                              e.preventDefault();
+                              insertFormatting('*');
+                            } else if (e.key === 'z') {
+                              e.preventDefault();
+                              if (e.shiftKey) {
+                                handleRedo();
+                              } else {
+                                handleUndo();
+                              }
+                            } else if (e.key === 's') {
+                              e.preventDefault();
+                              handleSave();
+                            }
+                          }
+                        }}
+                        placeholder="Start writing your chapter here, or click 'AI Write' to generate content based on your chapter outline...
+
+Tips:
+• Use the formatting toolbar above to style your text
+• Click 'AI Write' to have AI generate this chapter
+• Keyboard shortcuts: Ctrl+B (bold), Ctrl+I (italic), Ctrl+Z (undo), Ctrl+S (save)
+• Use editing passes to polish your writing:
+  - Developmental: Structure & narrative
+  - Line Edit: Sentence flow & clarity
+  - Copy Edit: Grammar & consistency
+  - Proofread: Final polish"
+                        className="min-h-[450px] w-full border-0 resize-none focus-visible:ring-0 bg-transparent 
+                          text-base leading-relaxed font-serif dark:text-zinc-100"
+                        style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
                         data-testid="textarea-chapter-content"
                       />
-                      
-                      <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    </div>
+
+                    {/* Status Bar */}
+                    <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-4">
                         <span>{chapterContent.split(/\s+/).filter(Boolean).length.toLocaleString()} words</span>
-                        <div className="flex gap-4">
-                          <button className="hover:text-primary"><Heading1 className="w-4 h-4" /></button>
-                          <button className="hover:text-primary"><Heading2 className="w-4 h-4" /></button>
-                          <button className="hover:text-primary"><Quote className="w-4 h-4" /></button>
-                          <button className="hover:text-primary"><ListOrdered className="w-4 h-4" /></button>
-                        </div>
+                        <span>{chapterContent.length.toLocaleString()} characters</span>
+                        <span>~{Math.ceil(chapterContent.split(/\s+/).filter(Boolean).length / 250)} pages</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {isGenerating && (
+                          <span className="flex items-center gap-1 text-primary">
+                            <RefreshCw className="w-3 h-3 animate-spin" />
+                            Processing...
+                          </span>
+                        )}
+                        <span className="text-green-500">Auto-saved</span>
                       </div>
                     </div>
-                  </div>
+                  </Card>
+                </div>
+              </div>
                   
-                  <div className="flex justify-between mt-6">
-                    <Button variant="outline" onClick={() => setCurrentStep(2)} data-testid="button-back-step-3">
-                      <ChevronLeft className="w-4 h-4 mr-2" /> Back
-                    </Button>
-                    <Button onClick={() => setCurrentStep(4)} data-testid="button-next-step-3">
-                      Next: Images & Cover
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="flex justify-between">
+                <Button variant="outline" onClick={() => setCurrentStep(2)} data-testid="button-back-step-3">
+                  <ChevronLeft className="w-4 h-4 mr-2" /> Back
+                </Button>
+                <Button onClick={() => setCurrentStep(4)} data-testid="button-next-step-3">
+                  Next: Images & Cover
+                  <ChevronRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
             </div>
           )}
 

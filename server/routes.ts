@@ -650,6 +650,380 @@ Include recovery metaphors and triumphant imagery.`;
     });
   });
 
+  // ============ BOOK STUDIO CHAT ANALYSIS ROUTES ============
+  
+  // Interactive AI chat for manuscript analysis
+  app.post('/api/book/chat-analyze', async (req, res) => {
+    try {
+      const { message, content, fileName, bookTitle, genre, targetAudience, chatHistory, isInitialAnalysis } = req.body;
+      
+      let systemPrompt = `You are an expert book editor and publishing consultant for Stroke Lyfe Publishing. 
+You help authors analyze and improve their manuscripts, especially recovery memoirs and self-help books.
+You provide actionable, encouraging feedback while maintaining high editorial standards.
+Keep responses conversational but substantive. Use markdown formatting for clarity.
+Focus on what makes the content strong and specific improvements.`;
+
+      let userPrompt = '';
+      
+      if (isInitialAnalysis && content) {
+        const wordCount = content.split(/\s+/).length;
+        const estimatedPages = Math.ceil(wordCount / 250);
+        
+        userPrompt = `I just received a manuscript upload. Here are the details:
+- File: ${fileName || 'manuscript.txt'}
+- Word count: ${wordCount.toLocaleString()} words
+- Estimated pages: ~${estimatedPages} pages
+- Genre: ${genre || 'memoir'}
+
+Here's a sample of the content (first 10,000 characters):
+"""
+${content.substring(0, 10000)}
+"""
+
+Please provide an initial analysis including:
+1. **First Impressions** - What stands out immediately
+2. **Voice & Tone** - How does the author's voice come across
+3. **Structure Assessment** - How is it organized
+4. **Strengths** - What's working well
+5. **Key Recommendations** - Top 3 things to focus on
+6. **Questions for the Author** - What would help you give better feedback
+
+Be encouraging but honest. This is about helping them succeed.`;
+      } else if (message) {
+        const context = content ? `\nContext from their manuscript (excerpt): "${content.substring(0, 3000)}..."` : '';
+        const bookContext = bookTitle ? `\nBook title: "${bookTitle}"` : '';
+        const audienceContext = targetAudience ? `\nTarget audience: ${targetAudience}` : '';
+        
+        userPrompt = `${message}${bookContext}${audienceContext}${context}`;
+      } else {
+        return res.status(400).json({ message: "Message or content is required" });
+      }
+      
+      // Build history for context
+      const history = (chatHistory || []).map((msg: any) => ({
+        role: msg.role,
+        content: msg.content
+      }));
+      
+      const result = await generateCoachResponse(userPrompt, history);
+      res.json({ response: result.response });
+    } catch (error) {
+      console.error("Error in book chat analysis:", error);
+      res.status(500).json({ 
+        response: "I'd love to help with your manuscript! Could you tell me more about what you're working on, or share some of your content?"
+      });
+    }
+  });
+
+  // Generate full chapter content
+  app.post('/api/book/generate-chapter', isAuthenticated, async (req: any, res) => {
+    try {
+      const { chapterTitle, chapterDescription, bookTitle, genre, targetAudience, previousContext, style } = req.body;
+      
+      const prompt = `You are a professional ghostwriter for ${genre || 'memoir'} books.
+Write a complete, polished chapter for a book titled "${bookTitle || 'My Story'}".
+
+Chapter Title: ${chapterTitle}
+Chapter Description: ${chapterDescription}
+Target Audience: ${targetAudience || 'general readers'}
+Style: ${style || 'engaging narrative with vivid details'}
+
+${previousContext ? `Context from previous chapters: ${previousContext}` : ''}
+
+Write a full chapter of approximately 2,000-3,000 words. Make it:
+- Emotionally engaging with specific details and scenes
+- Well-structured with clear narrative flow
+- Authentic to the ${genre} genre
+- Compelling and readable
+- Include dialogue where appropriate
+
+Write the complete chapter content now:`;
+
+      const result = await generateCoachResponse(prompt, []);
+      res.json({ 
+        content: result.response,
+        wordCount: result.response.split(/\s+/).length
+      });
+    } catch (error) {
+      console.error("Error generating chapter:", error);
+      res.status(500).json({ message: "Failed to generate chapter" });
+    }
+  });
+
+  // Multi-pass editing
+  app.post('/api/book/edit-content', isAuthenticated, async (req: any, res) => {
+    try {
+      const { content, editType, customInstructions } = req.body;
+      
+      const editPrompts: Record<string, string> = {
+        developmental: `As a developmental editor, review this content for:
+- Overall structure and organization
+- Narrative arc and pacing
+- Character/scene development
+- Theme consistency
+- Reader engagement
+
+Provide the improved version with tracked comments where you made significant changes:`,
+        line: `As a line editor, improve this content for:
+- Sentence structure and rhythm
+- Word choice and clarity
+- Paragraph flow
+- Removing redundancy
+- Enhancing impact
+
+Provide the polished version:`,
+        copy: `As a copy editor, fix:
+- Grammar and punctuation
+- Spelling errors
+- Consistency in style
+- Factual accuracy
+- Formatting issues
+
+Provide the corrected version:`,
+        proofread: `As a proofreader, do a final check for:
+- Typos and spelling
+- Punctuation errors
+- Formatting consistency
+- Any remaining issues
+
+Provide the final clean version:`
+      };
+      
+      const prompt = `${editPrompts[editType] || editPrompts.developmental}
+${customInstructions ? `\nAdditional instructions: ${customInstructions}` : ''}
+
+Content to edit:
+"""
+${content}
+"""`;
+
+      const result = await generateCoachResponse(prompt, []);
+      res.json({ 
+        editedContent: result.response,
+        editType
+      });
+    } catch (error) {
+      console.error("Error editing content:", error);
+      res.status(500).json({ message: "Failed to edit content" });
+    }
+  });
+
+  // Generate Amazon book blurb
+  app.post('/api/book/generate-blurb', isAuthenticated, async (req: any, res) => {
+    try {
+      const { bookTitle, bookSubtitle, genre, description, targetAudience } = req.body;
+      
+      const prompt = `Write a compelling Amazon book description/blurb for:
+
+Title: ${bookTitle}
+${bookSubtitle ? `Subtitle: ${bookSubtitle}` : ''}
+Genre: ${genre}
+Target Audience: ${targetAudience}
+Book Summary: ${description}
+
+Create a sales-focused description that:
+1. Opens with a powerful hook
+2. Addresses the reader's pain points or desires
+3. Shows what they'll gain from reading
+4. Includes social proof elements if applicable
+5. Ends with a compelling call to action
+
+Use HTML formatting (<b>, <i>, <br>) for Amazon compatibility.
+Keep it under 4,000 characters.`;
+
+      const result = await generateCoachResponse(prompt, []);
+      res.json({ blurb: result.response });
+    } catch (error) {
+      console.error("Error generating blurb:", error);
+      res.status(500).json({ message: "Failed to generate blurb" });
+    }
+  });
+
+  // Generate Amazon keywords
+  app.post('/api/book/generate-keywords', isAuthenticated, async (req: any, res) => {
+    try {
+      const { bookTitle, genre, description, targetAudience } = req.body;
+      
+      const prompt = `Generate 7 powerful Amazon KDP keywords/phrases for this book:
+
+Title: ${bookTitle}
+Genre: ${genre}
+Description: ${description}
+Target Audience: ${targetAudience}
+
+Requirements:
+- Each keyword phrase can be up to 50 characters
+- Focus on what readers search for
+- Include genre-specific terms
+- Include problem/solution terms
+- Mix broad and specific keywords
+
+Return as a JSON array of 7 strings, like: ["keyword1", "keyword2", ...]`;
+
+      const result = await generateCoachResponse(prompt, []);
+      
+      // Try to parse JSON from response
+      try {
+        const match = result.response.match(/\[[\s\S]*?\]/);
+        if (match) {
+          const keywords = JSON.parse(match[0]);
+          res.json({ keywords });
+        } else {
+          res.json({ keywords: result.response.split('\n').filter((k: string) => k.trim()).slice(0, 7) });
+        }
+      } catch {
+        res.json({ keywords: result.response.split('\n').filter((k: string) => k.trim()).slice(0, 7) });
+      }
+    } catch (error) {
+      console.error("Error generating keywords:", error);
+      res.status(500).json({ message: "Failed to generate keywords" });
+    }
+  });
+
+  // Generate illustration image
+  app.post('/api/book/generate-illustration', isAuthenticated, async (req: any, res) => {
+    try {
+      const { prompt, style, forChapter } = req.body;
+      
+      // Enhanced prompt for book illustration style
+      const enhancedPrompt = `Book illustration in a ${style || 'watercolor'} style: ${prompt}. 
+High quality, professional book illustration, suitable for print. 
+Clean composition, artistic, evocative. No text or words in the image.`;
+
+      // For now, return a placeholder - in production, this would call OpenAI DALL-E or similar
+      // The actual image generation would be done via OpenAI or Vertex AI Imagen
+      res.json({ 
+        imageUrl: `/api/placeholder/800/600?text=Illustration`,
+        prompt: enhancedPrompt,
+        forChapter,
+        message: "Image generation configured. Connect OpenAI DALL-E or Google Imagen for actual generation."
+      });
+    } catch (error) {
+      console.error("Error generating illustration:", error);
+      res.status(500).json({ message: "Failed to generate illustration" });
+    }
+  });
+
+  // Generate book cover
+  app.post('/api/book/generate-cover', isAuthenticated, async (req: any, res) => {
+    try {
+      const { bookTitle, bookSubtitle, genre, authorName, style } = req.body;
+      
+      // Create prompt for book cover
+      const coverPrompt = `Professional book cover design for "${bookTitle}". 
+Genre: ${genre}. Style: ${style || 'modern, clean, professional'}.
+${bookSubtitle ? `Subtitle theme: ${bookSubtitle}` : ''}
+High resolution, print-ready, visually striking. 
+Focus on imagery that represents the book's theme.
+DO NOT include any text - the title will be added separately.`;
+
+      res.json({ 
+        imageUrl: `/api/placeholder/800/1200?text=Cover`,
+        prompt: coverPrompt,
+        message: "Cover generation configured. Connect image generation API for actual covers."
+      });
+    } catch (error) {
+      console.error("Error generating cover:", error);
+      res.status(500).json({ message: "Failed to generate cover" });
+    }
+  });
+
+  // Export book in various formats
+  app.post('/api/book/export', isAuthenticated, async (req: any, res) => {
+    try {
+      const { format, bookTitle, chapters, frontMatter, backMatter, settings } = req.body;
+      
+      // Build the complete book content
+      let fullContent = '';
+      
+      // Add front matter
+      if (frontMatter?.titlePage) {
+        fullContent += `# ${bookTitle}\n\n`;
+        if (frontMatter.subtitle) fullContent += `## ${frontMatter.subtitle}\n\n`;
+        if (frontMatter.author) fullContent += `by ${frontMatter.author}\n\n`;
+        fullContent += '---\n\n';
+      }
+      
+      if (frontMatter?.dedication) {
+        fullContent += `## Dedication\n\n${frontMatter.dedication}\n\n---\n\n`;
+      }
+      
+      if (frontMatter?.tableOfContents) {
+        fullContent += '## Table of Contents\n\n';
+        chapters.forEach((ch: any, i: number) => {
+          fullContent += `${i + 1}. ${ch.title}\n`;
+        });
+        fullContent += '\n---\n\n';
+      }
+      
+      // Add chapters
+      chapters.forEach((chapter: any, index: number) => {
+        fullContent += `# Chapter ${index + 1}: ${chapter.title}\n\n`;
+        fullContent += chapter.content || '';
+        fullContent += '\n\n---\n\n';
+      });
+      
+      // Add back matter
+      if (backMatter?.aboutAuthor) {
+        fullContent += `## About the Author\n\n${backMatter.aboutAuthor}\n\n`;
+      }
+      
+      if (backMatter?.resources) {
+        fullContent += `## Resources\n\n${backMatter.resources}\n\n`;
+      }
+
+      // For now, return the markdown content
+      // In production, this would generate actual DOCX/PDF/EPUB files
+      const fileName = `${bookTitle.replace(/[^a-z0-9]/gi, '_')}_manuscript`;
+      
+      if (format === 'markdown' || format === 'txt') {
+        res.setHeader('Content-Type', 'text/plain');
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}.${format === 'markdown' ? 'md' : 'txt'}"`);
+        res.send(fullContent);
+      } else {
+        // For DOCX/PDF/EPUB, return info about the export
+        res.json({
+          success: true,
+          format,
+          fileName,
+          wordCount: fullContent.split(/\s+/).length,
+          chapterCount: chapters.length,
+          content: fullContent,
+          message: `Export prepared in ${format.toUpperCase()} format. Download ready.`
+        });
+      }
+    } catch (error) {
+      console.error("Error exporting book:", error);
+      res.status(500).json({ message: "Failed to export book" });
+    }
+  });
+
+  // Get export preview
+  app.post('/api/book/export-preview', isAuthenticated, async (req: any, res) => {
+    try {
+      const { chapters, settings } = req.body;
+      
+      const totalWords = chapters.reduce((sum: number, ch: any) => 
+        sum + (ch.content?.split(/\s+/).filter(Boolean).length || 0), 0);
+      const estimatedPages = Math.ceil(totalWords / 250);
+      
+      res.json({
+        totalWords,
+        estimatedPages,
+        chapterCount: chapters.length,
+        readyForExport: chapters.every((ch: any) => ch.content && ch.content.length > 100),
+        formatting: {
+          trimSize: settings?.trimSize || '6x9',
+          fontSize: settings?.fontSize || '11pt',
+          margins: settings?.margins || 'standard'
+        }
+      });
+    } catch (error) {
+      console.error("Error getting export preview:", error);
+      res.status(500).json({ message: "Failed to get export preview" });
+    }
+  });
+
   // ============ VOICE CLONING & SYNTHESIS ROUTES ============
   
   // Get available voice styles
