@@ -80,6 +80,12 @@ import {
   Maximize2,
   ZoomIn,
   ZoomOut,
+  Search,
+  Replace,
+  SplitSquareHorizontal,
+  X,
+  ArrowDown,
+  ArrowUp,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -272,6 +278,14 @@ export default function BookStudio() {
   const [undoStack, setUndoStack] = useState<string[]>([]);
   const [redoStack, setRedoStack] = useState<string[]>([]);
   
+  // Enhanced editor state
+  const [editorViewMode, setEditorViewMode] = useState<"write" | "split" | "preview">("write");
+  const [showFindReplace, setShowFindReplace] = useState(false);
+  const [findText, setFindText] = useState("");
+  const [replaceText, setReplaceText] = useState("");
+  const [findMatchCount, setFindMatchCount] = useState(0);
+  const [currentFindIndex, setCurrentFindIndex] = useState(0);
+  
   const [isGenerating, setIsGenerating] = useState(false);
   const [editingPass, setEditingPass] = useState<"developmental" | "line" | "copy" | "proofread">("developmental");
 
@@ -350,6 +364,67 @@ export default function BookStudio() {
 
   const handleSave = () => {
     toast({ title: "Saved", description: "Your chapter has been saved" });
+  };
+
+  // Find/Replace helpers
+  const handleFind = () => {
+    if (!findText) {
+      setFindMatchCount(0);
+      return;
+    }
+    const regex = new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    const matches = chapterContent.match(regex);
+    setFindMatchCount(matches ? matches.length : 0);
+    setCurrentFindIndex(matches && matches.length > 0 ? 1 : 0);
+  };
+
+  const handleReplace = () => {
+    if (!findText) return;
+    const regex = new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    const newContent = chapterContent.replace(regex, replaceText);
+    if (newContent !== chapterContent) {
+      setUndoStack(prev => [...prev, chapterContent]);
+      setRedoStack([]);
+      setChapterContent(newContent);
+      updateChapter(selectedChapter, { 
+        content: newContent, 
+        wordCount: newContent.split(/\s+/).filter(Boolean).length 
+      });
+      handleFind();
+    }
+  };
+
+  const handleReplaceAll = () => {
+    if (!findText) return;
+    const regex = new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    const newContent = chapterContent.replace(regex, replaceText);
+    if (newContent !== chapterContent) {
+      setUndoStack(prev => [...prev, chapterContent]);
+      setRedoStack([]);
+      setChapterContent(newContent);
+      updateChapter(selectedChapter, { 
+        content: newContent, 
+        wordCount: newContent.split(/\s+/).filter(Boolean).length 
+      });
+      toast({ title: "Replaced", description: `Replaced ${findMatchCount} occurrences` });
+      setFindMatchCount(0);
+      setCurrentFindIndex(0);
+    }
+  };
+
+  // Simple markdown to HTML for preview
+  const renderMarkdownPreview = (content: string) => {
+    return content
+      .replace(/^### (.+)$/gm, '<h3 class="text-lg font-semibold mt-4 mb-2">$1</h3>')
+      .replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold mt-6 mb-3">$1</h2>')
+      .replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold mt-8 mb-4">$1</h1>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/^> (.+)$/gm, '<blockquote class="border-l-4 border-primary pl-4 italic my-4">$1</blockquote>')
+      .replace(/^- (.+)$/gm, '<li class="ml-4">$1</li>')
+      .replace(/^(\d+)\. (.+)$/gm, '<li class="ml-4">$2</li>')
+      .replace(/\n\n/g, '</p><p class="my-4">')
+      .replace(/\n/g, '<br/>');
   };
   
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
@@ -1981,9 +2056,56 @@ Your journey to healing starts here.`);
                         </div>
 
                         {/* Insert Image */}
-                        <div className="flex items-center gap-0.5 px-2">
+                        <div className="flex items-center gap-0.5 px-2 border-r border-border">
                           <Button size="icon" variant="ghost" className="h-8 w-8" title="Insert Image Placeholder" onClick={() => insertFormatting('\n![Image description](image-url)\n', '')}>
                             <FileImage className="w-4 h-4" />
+                          </Button>
+                        </div>
+
+                        {/* Find/Replace & View Mode */}
+                        <div className="flex items-center gap-0.5 px-2 border-r border-border">
+                          <Button 
+                            size="icon" 
+                            variant={showFindReplace ? "secondary" : "ghost"} 
+                            className="h-8 w-8" 
+                            title="Find & Replace (Ctrl+F)"
+                            onClick={() => setShowFindReplace(!showFindReplace)}
+                            data-testid="button-find-replace"
+                          >
+                            <Search className="w-4 h-4" />
+                          </Button>
+                        </div>
+
+                        <div className="flex items-center gap-0.5 px-2 border-r border-border">
+                          <Button 
+                            size="icon" 
+                            variant={editorViewMode === "write" ? "secondary" : "ghost"} 
+                            className="h-8 w-8" 
+                            title="Write Mode"
+                            onClick={() => setEditorViewMode("write")}
+                            data-testid="button-view-write"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            size="icon" 
+                            variant={editorViewMode === "split" ? "secondary" : "ghost"} 
+                            className="h-8 w-8" 
+                            title="Split View"
+                            onClick={() => setEditorViewMode("split")}
+                            data-testid="button-view-split"
+                          >
+                            <SplitSquareHorizontal className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            size="icon" 
+                            variant={editorViewMode === "preview" ? "secondary" : "ghost"} 
+                            className="h-8 w-8" 
+                            title="Preview Mode"
+                            onClick={() => setEditorViewMode("preview")}
+                            data-testid="button-view-preview"
+                          >
+                            <Eye className="w-4 h-4" />
                           </Button>
                         </div>
 
@@ -2028,6 +2150,56 @@ Your journey to healing starts here.`);
                       </div>
                     </div>
 
+                    {/* Find/Replace Panel */}
+                    {showFindReplace && (
+                      <div className="border-b bg-muted/20 p-3">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <div className="flex items-center gap-2">
+                            <Search className="w-4 h-4 text-muted-foreground" />
+                            <Input
+                              value={findText}
+                              onChange={(e) => {
+                                setFindText(e.target.value);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleFind();
+                              }}
+                              placeholder="Find..."
+                              className="w-40 h-8"
+                              data-testid="input-find"
+                            />
+                            <Button size="sm" variant="ghost" className="h-8" onClick={handleFind} data-testid="button-find-next">
+                              <ArrowDown className="w-3 h-3" />
+                            </Button>
+                            {findMatchCount > 0 && (
+                              <span className="text-xs text-muted-foreground">
+                                {currentFindIndex}/{findMatchCount}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Replace className="w-4 h-4 text-muted-foreground" />
+                            <Input
+                              value={replaceText}
+                              onChange={(e) => setReplaceText(e.target.value)}
+                              placeholder="Replace with..."
+                              className="w-40 h-8"
+                              data-testid="input-replace"
+                            />
+                            <Button size="sm" variant="outline" className="h-8" onClick={handleReplace} disabled={findMatchCount === 0} data-testid="button-replace">
+                              Replace
+                            </Button>
+                            <Button size="sm" variant="outline" className="h-8" onClick={handleReplaceAll} disabled={findMatchCount === 0} data-testid="button-replace-all">
+                              Replace All
+                            </Button>
+                          </div>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 ml-auto" onClick={() => setShowFindReplace(false)}>
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Chapter Title */}
                     <div className="px-6 pt-4 pb-2 border-b">
                       <Input
@@ -2040,8 +2212,11 @@ Your journey to healing starts here.`);
                     </div>
 
                     {/* Editor Content Area - Styled like a document */}
-                    <div className="bg-white dark:bg-zinc-900 min-h-[500px] p-8 mx-4 my-4 rounded shadow-inner border">
-                      <Textarea
+                    <div className={`${editorViewMode === "split" ? "grid grid-cols-2 gap-4" : ""} bg-white dark:bg-zinc-900 min-h-[500px] p-4 md:p-8 mx-4 my-4 rounded shadow-inner border`}>
+                      {/* Write/Edit Panel */}
+                      {(editorViewMode === "write" || editorViewMode === "split") && (
+                        <div className={editorViewMode === "split" ? "border-r pr-4" : ""}>
+                          <Textarea
                         ref={editorRef}
                         value={chapterContent}
                         onChange={(e) => {
@@ -2084,11 +2259,24 @@ Tips:
   - Line Edit: Sentence flow & clarity
   - Copy Edit: Grammar & consistency
   - Proofread: Final polish"
-                        className="min-h-[450px] w-full border-0 resize-none focus-visible:ring-0 bg-transparent 
-                          text-base leading-relaxed font-serif dark:text-zinc-100"
-                        style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
-                        data-testid="textarea-chapter-content"
-                      />
+                            className="min-h-[450px] w-full border-0 resize-none focus-visible:ring-0 bg-transparent 
+                              text-base leading-relaxed font-serif dark:text-zinc-100"
+                            style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+                            data-testid="textarea-chapter-content"
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Preview Panel */}
+                      {(editorViewMode === "preview" || editorViewMode === "split") && (
+                        <div className="prose prose-sm dark:prose-invert max-w-none overflow-auto">
+                          <div 
+                            className="min-h-[450px] font-serif"
+                            style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+                            dangerouslySetInnerHTML={{ __html: renderMarkdownPreview(chapterContent) || '<p class="text-muted-foreground">Preview will appear here...</p>' }}
+                          />
+                        </div>
+                      )}
                     </div>
 
                     {/* Status Bar */}
