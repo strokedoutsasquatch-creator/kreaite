@@ -2,6 +2,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Play } from "lucide-react";
 import { useState } from "react";
+import testimonyVideo from "@assets/Nick Testimony_1763787525256.mp4";
+import videoPoster from "@assets/Nick king_1763787525256.png";
 
 export default function TestimonyVideo() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -45,8 +47,8 @@ export default function TestimonyVideo() {
               <video
                 controls
                 className="w-full h-full object-contain"
-                src="/attached_assets/Nick Testimony_1763787525256.mp4"
-                poster="/attached_assets/Nick king_1763787525256.png"
+                src={testimonyVideo}
+                poster={videoPoster}
                 data-testid="testimony-video"
                 onPlay={() => setIsPlaying(true)}
               >

@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import doctrineBg from "@assets/doctrine_1763787301561.jpg";
 
 export default function Doctrine() {
   const principles = [
@@ -33,7 +34,7 @@ export default function Doctrine() {
       <div 
         className="absolute inset-0 opacity-10"
         style={{
-          backgroundImage: `url(/attached_assets/doctrine_1763787301561.jpg)`,
+          backgroundImage: `url(${doctrineBg})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}

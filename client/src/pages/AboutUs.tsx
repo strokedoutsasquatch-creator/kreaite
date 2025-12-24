@@ -18,6 +18,8 @@ import {
   Star,
   Trophy
 } from "lucide-react";
+import academyLogo from "@assets/academy_logo.png";
+import kremersxLogo from "@assets/Kremersx_1766356681995.png";
 
 export default function AboutUs() {
   const values = [
@@ -119,7 +121,7 @@ export default function AboutUs() {
               <Card className="overflow-hidden">
                 <div className="aspect-square bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
                   <img 
-                    src="/attached_assets/ss logo 2_1763787525258.png"
+                    src={academyLogo}
                     alt="The Stroked Out Sasquatch"
                     className="w-64 h-64 object-contain"
                     data-testid="img-nick-avatar"
@@ -302,7 +304,7 @@ export default function AboutUs() {
           <Card className="max-w-3xl mx-auto">
             <CardContent className="py-8 text-center">
               <img 
-                src="/attached_assets/Kremersx_1766356681995.png"
+                src={kremersxLogo}
                 alt="KremersX"
                 className="h-32 mx-auto mb-6 object-contain rounded-lg"
                 data-testid="img-kremersx-logo"

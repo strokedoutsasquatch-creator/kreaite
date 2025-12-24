@@ -1,8 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2 } from "lucide-react";
-
-const nickPhoto = "/attached_assets/Nick crooked smile_1763787525254.jpg";
+import nickPhoto from "@assets/Nick crooked smile_1763787525254.jpg";
 
 export default function AboutNick() {
   const achievements = [

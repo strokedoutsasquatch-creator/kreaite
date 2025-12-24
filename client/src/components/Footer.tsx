@@ -4,6 +4,8 @@ import { Separator } from "@/components/ui/separator";
 import { Link } from "wouter";
 import { Mail, MessageCircle } from "lucide-react";
 import { SiTiktok, SiInstagram, SiYoutube } from "react-icons/si";
+import academyLogo from "@assets/academy_logo.png";
+import kremersxLogo from "@assets/Kremersx_1766356681995.png";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -36,9 +38,10 @@ export default function Footer() {
           <div className="lg:col-span-2">
             <div className="flex items-center gap-3 mb-4">
               <img 
-                src="/attached_assets/ss logo 2_1763787525258.png"
-                alt="Stroked Out Sasquatch"
+                src={academyLogo}
+                alt="Stroke Recovery Academy"
                 className="h-12 w-12 object-contain"
+                data-testid="img-footer-logo"
               />
               <div>
                 <div className="text-xl font-black">STROKE RECOVERY ACADEMY</div>
@@ -202,9 +205,10 @@ export default function Footer() {
           <div className="flex flex-col items-center gap-2" data-testid="powered-by-kremersx">
             <span className="text-xs uppercase tracking-wider text-muted-foreground">Powered by</span>
             <img 
-              src="/attached_assets/Kremersx_1766356681995.png"
+              src={kremersxLogo}
               alt="KremersX - Stroked Out Sasquatch"
               className="h-28 w-auto object-contain rounded-lg"
+              data-testid="img-kremersx-logo"
             />
           </div>
         </div>

@@ -1,7 +1,6 @@
 import BookCard from "./BookCard";
 import { Badge } from "@/components/ui/badge";
-
-const bookCoverImage = "/attached_assets/Nick Kremers stroke book_1763787525256.jpeg";
+import bookCoverImage from "@assets/Nick Kremers stroke book_1763787525256.jpeg";
 
 export default function RecoveryBooks() {
   const books = [

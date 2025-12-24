@@ -1,10 +1,9 @@
-import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LogOut, TrendingUp, Calendar, MessageCircle, BookOpen } from "lucide-react";
+import academyLogo from "@assets/academy_logo.png";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -16,9 +15,10 @@ export default function Dashboard() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
               <img 
-                src="/attached_assets/ss logo 2_1763787525258.png"
-                alt="Stroked Out Sasquatch"
+                src={academyLogo}
+                alt="Stroke Recovery Academy"
                 className="h-10 w-10 object-contain"
+                data-testid="img-dashboard-logo"
               />
               <div>
                 <div className="text-lg font-black tracking-tight">STROKE RECOVERY ACADEMY</div>
