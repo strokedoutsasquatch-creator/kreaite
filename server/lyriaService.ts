@@ -2,7 +2,7 @@
  * Lyria Music Generation Service
  * Production-grade AI music generation using Google's Lyria model
  * 
- * Uses Gemini API for authentication (API key based)
+ * Uses Google Cloud Service Account for OAuth 2.0 authentication
  * Generates 30-second high-fidelity instrumental tracks at 48kHz stereo
  * Cost: ~$0.06 per 30-second generation
  */
@@ -25,13 +25,21 @@ interface LyriaRequest {
   sampleCount?: number;
 }
 
-interface LyriaGenerationResult {
-  success: boolean;
-  audioBase64?: string;
-  mimeType?: string;
-  prompt?: string;
-  error?: string;
+interface ServiceAccountCredentials {
+  type: string;
+  project_id: string;
+  private_key_id: string;
+  private_key: string;
+  client_email: string;
+  client_id: string;
+  auth_uri: string;
+  token_uri: string;
+  auth_provider_x509_cert_url: string;
+  client_x509_cert_url: string;
 }
+
+// Cache for access token
+let cachedToken: { token: string; expiresAt: number } | null = null;
 
 // Genre-specific prompt templates for production quality
 const genrePrompts: Record<string, { style: string; instruments: string; negative: string }> = {
@@ -78,6 +86,91 @@ const genrePrompts: Record<string, { style: string; instruments: string; negativ
 };
 
 /**
+ * Create a signed JWT for Google OAuth 2.0
+ */
+async function createSignedJWT(credentials: ServiceAccountCredentials): Promise<string> {
+  const crypto = await import('crypto');
+  
+  const header = {
+    alg: 'RS256',
+    typ: 'JWT'
+  };
+  
+  const now = Math.floor(Date.now() / 1000);
+  const payload = {
+    iss: credentials.client_email,
+    sub: credentials.client_email,
+    aud: credentials.token_uri,
+    iat: now,
+    exp: now + 3600,
+    scope: 'https://www.googleapis.com/auth/cloud-platform'
+  };
+  
+  const base64Header = Buffer.from(JSON.stringify(header)).toString('base64url');
+  const base64Payload = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const signatureInput = `${base64Header}.${base64Payload}`;
+  
+  const sign = crypto.createSign('RSA-SHA256');
+  sign.update(signatureInput);
+  const signature = sign.sign(credentials.private_key, 'base64url');
+  
+  return `${signatureInput}.${signature}`;
+}
+
+/**
+ * Get OAuth 2.0 access token from service account
+ */
+async function getAccessToken(): Promise<string> {
+  // Check if we have a valid cached token
+  if (cachedToken && cachedToken.expiresAt > Date.now() + 60000) {
+    return cachedToken.token;
+  }
+  
+  const serviceAccountKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+  if (!serviceAccountKey) {
+    throw new Error("GOOGLE_SERVICE_ACCOUNT_KEY environment variable not set");
+  }
+  
+  let credentials: ServiceAccountCredentials;
+  try {
+    credentials = JSON.parse(serviceAccountKey);
+  } catch (e) {
+    throw new Error("Invalid GOOGLE_SERVICE_ACCOUNT_KEY format - must be valid JSON");
+  }
+  
+  // Create signed JWT
+  const jwt = await createSignedJWT(credentials);
+  
+  // Exchange JWT for access token
+  const response = await fetch(credentials.token_uri, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: jwt
+    })
+  });
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('OAuth token error:', errorText);
+    throw new Error(`Failed to get access token: ${response.status} - ${errorText}`);
+  }
+  
+  const tokenData = await response.json() as { access_token: string; expires_in: number };
+  
+  // Cache the token
+  cachedToken = {
+    token: tokenData.access_token,
+    expiresAt: Date.now() + (tokenData.expires_in * 1000)
+  };
+  
+  return tokenData.access_token;
+}
+
+/**
  * Build a production-quality prompt for Lyria
  */
 export function buildMusicPrompt(
@@ -113,7 +206,7 @@ export function buildMusicPrompt(
 
 /**
  * Generate music using Vertex AI Lyria
- * Requires GOOGLE_CLOUD_PROJECT and proper authentication
+ * Uses service account OAuth 2.0 authentication
  */
 export async function generateMusic(request: LyriaRequest): Promise<{
   success: boolean;
@@ -121,20 +214,36 @@ export async function generateMusic(request: LyriaRequest): Promise<{
   mimeType?: string;
   error?: string;
 }> {
-  const projectId = process.env.GOOGLE_CLOUD_PROJECT;
-  const apiKey = process.env.VERTEX_AI_API_KEY;
+  // Get project ID from service account or env
+  let projectId = process.env.GOOGLE_CLOUD_PROJECT;
+  
+  if (!projectId) {
+    // Try to get from service account key
+    const serviceAccountKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+    if (serviceAccountKey) {
+      try {
+        const credentials = JSON.parse(serviceAccountKey);
+        projectId = credentials.project_id;
+      } catch (e) {
+        // Ignore
+      }
+    }
+  }
   
   if (!projectId) {
     return {
       success: false,
-      error: "GOOGLE_CLOUD_PROJECT environment variable not set"
+      error: "GOOGLE_CLOUD_PROJECT environment variable not set and not found in service account"
     };
   }
   
-  if (!apiKey) {
+  let accessToken: string;
+  try {
+    accessToken = await getAccessToken();
+  } catch (error) {
     return {
       success: false,
-      error: "VERTEX_AI_API_KEY environment variable not set"
+      error: error instanceof Error ? error.message : 'Failed to get access token'
     };
   }
   
@@ -152,10 +261,11 @@ export async function generateMusic(request: LyriaRequest): Promise<{
   };
   
   try {
+    console.log('Calling Lyria API with OAuth token...');
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(payload)
@@ -230,7 +340,7 @@ export async function generateInstrumental(
  * Check if Lyria service is properly configured
  */
 export function isLyriaConfigured(): boolean {
-  return !!(process.env.GOOGLE_CLOUD_PROJECT && process.env.VERTEX_AI_API_KEY);
+  return !!process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
 }
 
 /**
