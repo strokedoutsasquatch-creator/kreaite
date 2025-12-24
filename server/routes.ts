@@ -1024,6 +1024,323 @@ DO NOT include any text - the title will be added separately.`;
     }
   });
 
+  // ============ CONTENT FACTORY - KEYWORD RESEARCH & RAPID GENERATION ============
+  
+  // Keyword research using SERP API (market intelligence)
+  app.post('/api/book/keyword-research', isAuthenticated, async (req: any, res) => {
+    try {
+      const { topic, genre, niche } = req.body;
+      
+      // Check for SERP API key
+      const serpApiKey = process.env.SERP_API_KEY;
+      
+      if (serpApiKey) {
+        // Use SERP API for real keyword data
+        try {
+          const response = await fetch(`https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(topic + ' books')}&api_key=${serpApiKey}`);
+          const data = await response.json();
+          
+          // Extract related searches and organic results
+          const relatedSearches = data.related_searches?.map((s: any) => s.query) || [];
+          const organicTitles = data.organic_results?.slice(0, 10).map((r: any) => r.title) || [];
+          
+          // Also get Google Trends-style suggestions
+          const suggestResponse = await fetch(`https://serpapi.com/search.json?engine=google_autocomplete&q=${encodeURIComponent(topic + ' book')}&api_key=${serpApiKey}`);
+          const suggestData = await suggestResponse.json();
+          const suggestions = suggestData.suggestions?.map((s: any) => s.value) || [];
+          
+          res.json({
+            success: true,
+            topic,
+            keywords: {
+              primary: relatedSearches.slice(0, 7),
+              suggestions: suggestions.slice(0, 10),
+              competitorTitles: organicTitles,
+              trending: relatedSearches.filter((s: string) => s.includes('2024') || s.includes('2025') || s.includes('new'))
+            },
+            source: 'serp_api'
+          });
+        } catch (serpError) {
+          console.error('SERP API error, falling back to AI:', serpError);
+          // Fall through to AI-based generation
+        }
+      }
+      
+      // AI-powered keyword research fallback
+      const prompt = `You are a book marketing expert and Amazon KDP specialist.
+Generate comprehensive keyword research for a ${genre || 'non-fiction'} book about: "${topic}"
+${niche ? `Niche/Industry: ${niche}` : ''}
+
+Provide research in this JSON format:
+{
+  "primary": ["7 main search keywords readers use to find books like this"],
+  "longtail": ["10 specific long-tail keyword phrases with buyer intent"],
+  "amazonCategories": ["5 recommended Amazon categories"],
+  "competitorAnalysis": ["5 successful book titles in this space to study"],
+  "trending": ["5 trending topics/angles in this space"],
+  "painPoints": ["5 reader problems this book could solve"],
+  "hooks": ["3 compelling book title ideas based on keyword research"]
+}`;
+
+      const result = await generateCoachResponse(prompt, []);
+      
+      try {
+        const jsonMatch = result.response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const keywords = JSON.parse(jsonMatch[0]);
+          res.json({ success: true, topic, keywords, source: 'ai_generated' });
+        } else {
+          res.json({ success: true, topic, keywords: { raw: result.response }, source: 'ai_generated' });
+        }
+      } catch {
+        res.json({ success: true, topic, keywords: { raw: result.response }, source: 'ai_generated' });
+      }
+    } catch (error) {
+      console.error("Error in keyword research:", error);
+      res.status(500).json({ message: "Failed to perform keyword research" });
+    }
+  });
+
+  // One-click full book generation
+  app.post('/api/book/generate-full-book', isAuthenticated, async (req: any, res) => {
+    try {
+      const { 
+        topic, 
+        genre, 
+        targetAudience, 
+        authorVoice,
+        chapterCount = 10,
+        wordsPerChapter = 3000,
+        style,
+        includeIllustrations = false,
+        isChildrensBook = false
+      } = req.body;
+      
+      // Step 1: Generate book concept and outline
+      const outlinePrompt = `You are a bestselling author and book architect.
+Create a complete book outline for a ${genre} book about: "${topic}"
+Target audience: ${targetAudience || 'general readers'}
+${authorVoice ? `Author voice/style: ${authorVoice}` : ''}
+${isChildrensBook ? 'This is a children\'s book - keep language age-appropriate and include illustration suggestions.' : ''}
+
+Generate a JSON response with:
+{
+  "title": "Compelling book title",
+  "subtitle": "Descriptive subtitle",
+  "hook": "One-sentence book premise",
+  "chapters": [
+    {
+      "number": 1,
+      "title": "Chapter Title",
+      "description": "2-3 sentence chapter summary",
+      "keyPoints": ["main point 1", "main point 2", "main point 3"],
+      "emotionalArc": "what the reader should feel"
+      ${isChildrensBook ? ', "illustrationPrompt": "describe the illustration for this page"' : ''}
+    }
+  ],
+  "targetWordCount": ${chapterCount * wordsPerChapter},
+  "uniqueAngle": "What makes this book different"
+}
+
+Create exactly ${chapterCount} chapters.`;
+
+      const outlineResult = await generateCoachResponse(outlinePrompt, []);
+      
+      let bookOutline;
+      try {
+        const jsonMatch = outlineResult.response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          bookOutline = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error('Could not parse outline');
+        }
+      } catch (parseError) {
+        return res.status(500).json({ 
+          message: "Failed to generate book outline",
+          raw: outlineResult.response 
+        });
+      }
+
+      res.json({
+        success: true,
+        outline: bookOutline,
+        status: 'outline_complete',
+        message: `Book outline generated with ${bookOutline.chapters?.length || chapterCount} chapters. Ready for chapter generation.`,
+        nextStep: 'generate-chapters',
+        estimatedTime: `${(bookOutline.chapters?.length || chapterCount) * 2} minutes for full book`
+      });
+    } catch (error) {
+      console.error("Error generating full book:", error);
+      res.status(500).json({ message: "Failed to generate book" });
+    }
+  });
+
+  // Generate all chapters for a book (batch processing)
+  app.post('/api/book/generate-all-chapters', isAuthenticated, async (req: any, res) => {
+    try {
+      const { 
+        bookTitle, 
+        chapters, 
+        genre, 
+        targetAudience, 
+        authorVoice,
+        isChildrensBook = false
+      } = req.body;
+      
+      const generatedChapters = [];
+      
+      for (let i = 0; i < chapters.length; i++) {
+        const chapter = chapters[i];
+        const previousSummary = generatedChapters.length > 0 
+          ? generatedChapters.map((c: any) => `${c.title}: ${c.summary}`).join('\n')
+          : '';
+        
+        const chapterPrompt = `You are writing chapter ${chapter.number} of "${bookTitle}", a ${genre} book.
+        
+Chapter Title: ${chapter.title}
+Chapter Summary: ${chapter.description}
+Key Points to Cover: ${chapter.keyPoints?.join(', ') || 'As outlined'}
+Emotional Arc: ${chapter.emotionalArc || 'Engaging'}
+Target Audience: ${targetAudience || 'general readers'}
+${authorVoice ? `Write in this voice/style: ${authorVoice}` : ''}
+${isChildrensBook ? 'This is a children\'s book - use simple, engaging language appropriate for young readers.' : ''}
+
+${previousSummary ? `Previous chapters summary:\n${previousSummary}\n` : ''}
+
+Write a complete, polished chapter of approximately ${isChildrensBook ? '200-500' : '2500-3500'} words.
+Make it engaging, well-structured, and true to the book's tone.
+${isChildrensBook ? 'Include [ILLUSTRATION: description] markers where images should appear.' : ''}
+
+Write the chapter now:`;
+
+        const chapterResult = await generateCoachResponse(chapterPrompt, []);
+        
+        generatedChapters.push({
+          number: chapter.number,
+          title: chapter.title,
+          content: chapterResult.response,
+          wordCount: chapterResult.response.split(/\s+/).length,
+          summary: chapter.description,
+          illustrationPrompt: chapter.illustrationPrompt
+        });
+        
+        // Send progress update (would be better with SSE/WebSocket)
+        console.log(`Generated chapter ${i + 1}/${chapters.length}: ${chapter.title}`);
+      }
+      
+      const totalWords = generatedChapters.reduce((sum, ch) => sum + ch.wordCount, 0);
+      
+      res.json({
+        success: true,
+        chapters: generatedChapters,
+        totalWordCount: totalWords,
+        estimatedPages: Math.ceil(totalWords / 250),
+        message: `Generated ${generatedChapters.length} chapters with ${totalWords.toLocaleString()} words total.`
+      });
+    } catch (error) {
+      console.error("Error generating chapters:", error);
+      res.status(500).json({ message: "Failed to generate chapters" });
+    }
+  });
+
+  // Quality polish pipeline (multi-pass editing)
+  app.post('/api/book/quality-polish', isAuthenticated, async (req: any, res) => {
+    try {
+      const { content, passes = ['developmental', 'line', 'copy', 'proofread'], customInstructions } = req.body;
+      
+      let currentContent = content;
+      const editHistory = [];
+      
+      const passPrompts: Record<string, string> = {
+        developmental: `As a developmental editor, improve the overall structure, narrative arc, pacing, and reader engagement. Ensure themes are consistent and the emotional journey is compelling. Return the improved version.`,
+        line: `As a line editor, refine sentence structure, word choice, rhythm, and flow. Remove redundancy and enhance impact while preserving the author's voice. Return the polished version.`,
+        voice: `As a voice coach, ensure the writing has a consistent, authentic, and engaging voice throughout. Strengthen personality and make the prose more memorable. Return the enhanced version.`,
+        copy: `As a copy editor, fix all grammar, punctuation, spelling, and formatting issues. Ensure consistency in style and accuracy. Return the corrected version.`,
+        proofread: `As a proofreader, do a final pass to catch any remaining typos, formatting issues, or errors. Make it publication-ready. Return the final clean version.`
+      };
+      
+      for (const pass of passes) {
+        if (!passPrompts[pass]) continue;
+        
+        const prompt = `${passPrompts[pass]}
+${customInstructions ? `\nAdditional instructions: ${customInstructions}` : ''}
+
+Content to edit:
+"""
+${currentContent}
+"""`;
+
+        const result = await generateCoachResponse(prompt, []);
+        
+        editHistory.push({
+          pass,
+          wordCountBefore: currentContent.split(/\s+/).length,
+          wordCountAfter: result.response.split(/\s+/).length
+        });
+        
+        currentContent = result.response;
+      }
+      
+      res.json({
+        success: true,
+        polishedContent: currentContent,
+        wordCount: currentContent.split(/\s+/).length,
+        editHistory,
+        passesCompleted: passes,
+        message: `Content polished through ${passes.length} editing passes.`
+      });
+    } catch (error) {
+      console.error("Error in quality polish:", error);
+      res.status(500).json({ message: "Failed to polish content" });
+    }
+  });
+
+  // Children's book illustration prompts generator
+  app.post('/api/book/generate-illustration-prompts', isAuthenticated, async (req: any, res) => {
+    try {
+      const { content, style, ageRange } = req.body;
+      
+      const prompt = `You are a children's book illustrator planning illustrations.
+Based on this story content, generate detailed illustration prompts for each scene/page.
+Target age range: ${ageRange || '4-8 years'}
+Art style: ${style || 'whimsical watercolor'}
+
+Story content:
+"""
+${content}
+"""
+
+Generate a JSON array of illustration prompts:
+[
+  {
+    "pageNumber": 1,
+    "sceneDescription": "What's happening on this page",
+    "illustrationPrompt": "Detailed prompt for AI image generation - describe characters, setting, mood, composition",
+    "textOnPage": "The actual story text for this page"
+  }
+]
+
+Break the story into 10-20 pages with clear illustration prompts for each.`;
+
+      const result = await generateCoachResponse(prompt, []);
+      
+      try {
+        const jsonMatch = result.response.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          const illustrations = JSON.parse(jsonMatch[0]);
+          res.json({ success: true, illustrations, style, ageRange });
+        } else {
+          res.json({ success: true, raw: result.response });
+        }
+      } catch {
+        res.json({ success: true, raw: result.response });
+      }
+    } catch (error) {
+      console.error("Error generating illustration prompts:", error);
+      res.status(500).json({ message: "Failed to generate illustration prompts" });
+    }
+  });
+
   // ============ VOICE CLONING & SYNTHESIS ROUTES ============
   
   // Get available voice styles

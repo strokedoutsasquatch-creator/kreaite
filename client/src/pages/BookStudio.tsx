@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -86,16 +86,121 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import publishingLogo from "@assets/Logo Transparent BG_1764273996198.png";
 
-const genres = [
-  { value: "memoir", label: "Memoir", icon: BookOpen },
-  { value: "self-help", label: "Self-Help", icon: Lightbulb },
-  { value: "health", label: "Health & Wellness", icon: Target },
-  { value: "biography", label: "Biography", icon: FileText },
-  { value: "motivational", label: "Motivational", icon: Rocket },
-  { value: "educational", label: "Educational", icon: Brain },
-  { value: "fiction", label: "Fiction", icon: PenTool },
-  { value: "recovery", label: "Recovery Journey", icon: CheckCircle },
-];
+// Comprehensive genre templates with AI prompts and market positioning
+const genreTemplates = {
+  memoir: {
+    label: "Memoir",
+    icon: BookOpen,
+    description: "Personal life stories and experiences",
+    targetWordCount: 60000,
+    chapterCount: 12,
+    aiPrompt: "Write in first person with emotional depth, vivid sensory details, and reflective insights. Focus on transformation and lessons learned.",
+    structure: ["Opening Hook", "Early Life/Background", "Inciting Incident", "Rising Challenges", "Turning Point", "Growth & Change", "Climax", "Resolution", "Reflection", "Legacy"],
+    keywords: ["personal story", "life lessons", "transformation", "journey", "memoir"]
+  },
+  "self-help": {
+    label: "Self-Help",
+    icon: Lightbulb,
+    description: "Practical guidance for personal improvement",
+    targetWordCount: 45000,
+    chapterCount: 10,
+    aiPrompt: "Write with authority and empathy. Include actionable steps, real examples, and exercises. Use second person 'you' to connect directly with readers.",
+    structure: ["The Problem", "Your Story/Credibility", "Core Framework", "Principle 1", "Principle 2", "Principle 3", "Common Obstacles", "Action Plan", "Success Stories", "Next Steps"],
+    keywords: ["how to", "guide", "tips", "strategies", "improve", "success"]
+  },
+  childrens: {
+    label: "Children's Book",
+    icon: ImagePlus,
+    description: "Illustrated stories for young readers",
+    targetWordCount: 1000,
+    chapterCount: 1,
+    aiPrompt: "Write with simple, rhythmic language appropriate for ages 4-8. Use repetition, rhyme, and vivid imagery. Include clear moral lessons. Each page should have 2-4 sentences max.",
+    structure: ["Title Page", "Once Upon a Time", "Problem Introduced", "Adventure Begins", "Challenge Faced", "Resolution", "Happy Ending", "Moral/Lesson"],
+    keywords: ["children's book", "kids story", "picture book", "bedtime story"],
+    isChildrens: true,
+    ageRange: "4-8",
+    illustrationPrompts: true
+  },
+  "childrens-middle": {
+    label: "Middle Grade",
+    icon: BookMarked,
+    description: "Chapter books for ages 8-12",
+    targetWordCount: 25000,
+    chapterCount: 15,
+    aiPrompt: "Write with adventure and humor, age-appropriate challenges, and relatable characters. Include themes of friendship, bravery, and self-discovery.",
+    structure: ["Hook", "Meet the Hero", "Normal World", "Call to Adventure", "New Friends", "First Challenge", "Rising Stakes", "Setback", "Inner Growth", "Final Battle", "Victory", "New Normal"],
+    keywords: ["chapter book", "adventure", "kids fiction", "middle grade"],
+    isChildrens: true,
+    ageRange: "8-12"
+  },
+  fiction: {
+    label: "Fiction",
+    icon: PenTool,
+    description: "Novels and creative storytelling",
+    targetWordCount: 80000,
+    chapterCount: 25,
+    aiPrompt: "Write with immersive prose, complex characters, and compelling plot. Show don't tell. Use dialogue to reveal character. Build tension and stakes throughout.",
+    structure: ["Hook/Opening", "World Building", "Character Introduction", "Inciting Incident", "Rising Action", "Midpoint Twist", "Escalation", "Dark Moment", "Climax", "Resolution"],
+    keywords: ["novel", "fiction", "story", "thriller", "romance", "mystery"]
+  },
+  business: {
+    label: "Business/How-To",
+    icon: Target,
+    description: "Professional guides and strategies",
+    targetWordCount: 50000,
+    chapterCount: 12,
+    aiPrompt: "Write with clarity and authority. Include case studies, data, and actionable frameworks. Use bullet points and subheadings for scannability.",
+    structure: ["Executive Summary", "The Opportunity", "Core Framework", "Step 1", "Step 2", "Step 3", "Case Studies", "Common Mistakes", "Tools & Resources", "Implementation Plan", "Measuring Success", "Next Level"],
+    keywords: ["business", "entrepreneur", "strategy", "guide", "success", "growth"]
+  },
+  health: {
+    label: "Health & Wellness",
+    icon: Target,
+    description: "Physical and mental health guides",
+    targetWordCount: 55000,
+    chapterCount: 14,
+    aiPrompt: "Write with scientific accuracy but accessible language. Include disclaimers where appropriate. Focus on evidence-based practices and practical protocols.",
+    structure: ["Your Health Journey Starts", "Understanding the Science", "Assessment", "Foundation Principles", "Nutrition", "Movement", "Rest & Recovery", "Mental Wellness", "Building Habits", "Meal Plans/Protocols", "Troubleshooting", "Maintenance", "Resources", "Your New Life"],
+    keywords: ["health", "wellness", "fitness", "nutrition", "healing", "recovery"]
+  },
+  recovery: {
+    label: "Recovery Journey",
+    icon: CheckCircle,
+    description: "Overcoming challenges and healing",
+    targetWordCount: 50000,
+    chapterCount: 12,
+    aiPrompt: "Write with vulnerability and hope. Share struggles honestly while maintaining an empowering tone. Include practical recovery strategies and resources.",
+    structure: ["The Day Everything Changed", "Life Before", "The Crisis", "Rock Bottom", "First Steps", "Building Support", "The Hard Work", "Setbacks & Comebacks", "Breakthrough", "New Identity", "Helping Others", "The Road Ahead"],
+    keywords: ["recovery", "healing", "overcoming", "survivor", "hope", "transformation"]
+  },
+  devotional: {
+    label: "Devotional/Spiritual",
+    icon: BookMarked,
+    description: "Faith-based daily readings",
+    targetWordCount: 30000,
+    chapterCount: 30,
+    aiPrompt: "Write with reverence and warmth. Include scripture/spiritual references, reflection questions, and practical applications. Each entry should be self-contained.",
+    structure: ["Introduction", "Day 1-30 entries with: Opening verse, Reflection, Story/Example, Application, Prayer/Meditation, Action Step"],
+    keywords: ["devotional", "faith", "spiritual", "daily reading", "inspiration", "prayer"]
+  },
+  cookbook: {
+    label: "Cookbook",
+    icon: Layers,
+    description: "Recipe collections with stories",
+    targetWordCount: 40000,
+    chapterCount: 10,
+    aiPrompt: "Write recipes with clear, numbered steps. Include ingredient lists, prep/cook times, serving sizes, and tips. Add personal stories and variations.",
+    structure: ["Introduction & Philosophy", "Kitchen Basics", "Breakfast", "Appetizers", "Main Courses", "Sides", "Desserts", "Special Occasions", "Quick Meals", "Index & Conversions"],
+    keywords: ["cookbook", "recipes", "cooking", "food", "meals", "healthy eating"]
+  }
+};
+
+// For backwards compatibility
+const genres = Object.entries(genreTemplates).map(([value, template]) => ({
+  value,
+  label: template.label,
+  icon: template.icon
+}));
 
 const trimSizes = [
   { value: "5x8", label: "5\" x 8\" (Digest)" },
@@ -265,6 +370,17 @@ export default function BookStudio() {
     foreword: "",
     preface: "",
   });
+  // Content Factory state
+  const [quickGenerateMode, setQuickGenerateMode] = useState(false);
+  const [quickTopic, setQuickTopic] = useState("");
+  const [isQuickGenerating, setIsQuickGenerating] = useState(false);
+  const [generatedOutline, setGeneratedOutline] = useState<any>(null);
+  const [keywordResearch, setKeywordResearch] = useState<any>(null);
+  const [isResearchingKeywords, setIsResearchingKeywords] = useState(false);
+  const [isChildrensBook, setIsChildrensBook] = useState(false);
+  const [authorVoice, setAuthorVoice] = useState("");
+  const [generationProgress, setGenerationProgress] = useState(0);
+  
   const [backMatter, setBackMatter] = useState({
     aboutAuthor: "",
     otherBooks: "",
@@ -477,6 +593,195 @@ export default function BookStudio() {
       clearInterval(interval);
       setAnalysisProgress(100);
       setIsAnalyzing(false);
+    }
+  };
+
+  // ============ CONTENT FACTORY FUNCTIONS ============
+  
+  // Keyword research
+  const performKeywordResearch = async () => {
+    if (!quickTopic.trim()) {
+      toast({ title: "Enter a topic", description: "Please enter a topic to research keywords for", variant: "destructive" });
+      return;
+    }
+    
+    setIsResearchingKeywords(true);
+    try {
+      const response = await apiRequest("POST", "/api/book/keyword-research", {
+        topic: quickTopic,
+        genre: selectedGenre,
+        niche: targetAudience
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        setKeywordResearch(data.keywords);
+        toast({ 
+          title: "Research Complete", 
+          description: `Found keywords from ${data.source === 'serp_api' ? 'live search data' : 'AI analysis'}` 
+        });
+      }
+    } catch (error) {
+      console.error("Keyword research error:", error);
+      toast({ title: "Research Failed", description: "Could not complete keyword research", variant: "destructive" });
+    } finally {
+      setIsResearchingKeywords(false);
+    }
+  };
+
+  // Quick generate full book outline
+  const quickGenerateBook = async () => {
+    if (!quickTopic.trim()) {
+      toast({ title: "Enter a topic", description: "Please describe what your book is about", variant: "destructive" });
+      return;
+    }
+    
+    setIsQuickGenerating(true);
+    setGenerationProgress(10);
+    
+    try {
+      const template = genreTemplates[selectedGenre as keyof typeof genreTemplates] || genreTemplates.memoir;
+      
+      const response = await apiRequest("POST", "/api/book/generate-full-book", {
+        topic: quickTopic,
+        genre: selectedGenre,
+        targetAudience: targetAudience || template.description,
+        authorVoice,
+        chapterCount: template.chapterCount,
+        wordsPerChapter: Math.floor(template.targetWordCount / template.chapterCount),
+        isChildrensBook,
+        includeIllustrations: isChildrensBook
+      });
+      
+      setGenerationProgress(50);
+      const data = await response.json();
+      
+      if (data.success && data.outline) {
+        setGeneratedOutline(data.outline);
+        setBookTitle(data.outline.title || "");
+        setBookSubtitle(data.outline.subtitle || "");
+        setBookDescription(data.outline.hook || "");
+        
+        // Create chapters from outline
+        if (data.outline.chapters) {
+          const newChapters = data.outline.chapters.map((ch: any, idx: number) => ({
+            id: String(idx + 1),
+            title: ch.title,
+            description: ch.description,
+            wordCount: 0,
+            status: "outline" as const,
+            keyPoints: ch.keyPoints,
+            illustrationPrompt: ch.illustrationPrompt
+          }));
+          setChapters(newChapters);
+        }
+        
+        setGenerationProgress(100);
+        toast({ 
+          title: "Book Outline Generated!", 
+          description: `"${data.outline.title}" with ${data.outline.chapters?.length || 0} chapters ready. Click 'Generate All Chapters' to write the full book.` 
+        });
+      }
+    } catch (error) {
+      console.error("Quick generate error:", error);
+      toast({ title: "Generation Failed", description: "Could not generate book outline", variant: "destructive" });
+    } finally {
+      setIsQuickGenerating(false);
+      setGenerationProgress(0);
+    }
+  };
+
+  // Generate all chapters at once
+  const generateAllChapters = async () => {
+    if (!chapters.length || !bookTitle) {
+      toast({ title: "No outline", description: "Generate a book outline first", variant: "destructive" });
+      return;
+    }
+    
+    setIsQuickGenerating(true);
+    const template = genreTemplates[selectedGenre as keyof typeof genreTemplates] || genreTemplates.memoir;
+    
+    try {
+      const response = await apiRequest("POST", "/api/book/generate-all-chapters", {
+        bookTitle,
+        chapters: chapters.map(ch => ({
+          number: parseInt(ch.id),
+          title: ch.title,
+          description: ch.description,
+          keyPoints: (ch as any).keyPoints,
+          illustrationPrompt: (ch as any).illustrationPrompt
+        })),
+        genre: selectedGenre,
+        targetAudience,
+        authorVoice,
+        isChildrensBook
+      });
+      
+      const data = await response.json();
+      
+      if (data.success && data.chapters) {
+        // Update chapters with content
+        setChapters(prev => prev.map((ch, idx) => ({
+          ...ch,
+          content: data.chapters[idx]?.content || ch.content,
+          wordCount: data.chapters[idx]?.wordCount || 0,
+          status: "draft" as const
+        })));
+        
+        toast({ 
+          title: "Book Generated!", 
+          description: `${data.totalWordCount?.toLocaleString()} words (~${data.estimatedPages} pages) written across ${data.chapters.length} chapters!` 
+        });
+      }
+    } catch (error) {
+      console.error("Generate chapters error:", error);
+      toast({ title: "Generation Failed", description: "Could not generate all chapters", variant: "destructive" });
+    } finally {
+      setIsQuickGenerating(false);
+    }
+  };
+
+  // Quality polish all content
+  const polishAllContent = async () => {
+    const chaptersWithContent = chapters.filter(ch => ch.content && ch.content.length > 100);
+    if (!chaptersWithContent.length) {
+      toast({ title: "No content", description: "Generate chapter content first", variant: "destructive" });
+      return;
+    }
+    
+    setIsQuickGenerating(true);
+    
+    try {
+      for (let i = 0; i < chaptersWithContent.length; i++) {
+        const ch = chaptersWithContent[i];
+        setGenerationProgress(Math.floor((i / chaptersWithContent.length) * 100));
+        
+        const response = await apiRequest("POST", "/api/book/quality-polish", {
+          content: ch.content,
+          passes: ['developmental', 'line', 'copy', 'proofread']
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          updateChapter(ch.id, {
+            content: data.polishedContent,
+            wordCount: data.wordCount,
+            status: "edited"
+          });
+        }
+      }
+      
+      toast({ 
+        title: "Polish Complete!", 
+        description: `${chaptersWithContent.length} chapters refined through 4-pass editing` 
+      });
+    } catch (error) {
+      console.error("Polish error:", error);
+      toast({ title: "Polish Failed", description: "Could not complete quality polish", variant: "destructive" });
+    } finally {
+      setIsQuickGenerating(false);
+      setGenerationProgress(0);
     }
   };
 
@@ -810,11 +1115,174 @@ Your journey to healing starts here.`);
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <BookOpen className="w-5 h-5 text-primary" /> Book Details
+                      <BookOpen className="w-5 h-5 text-primary" /> 
+                      {quickGenerateMode ? 'Content Factory' : 'Book Details'}
                     </CardTitle>
-                    <CardDescription>Tell us about your book project</CardDescription>
+                    <CardDescription>
+                      {quickGenerateMode 
+                        ? 'Generate a complete book from a single idea'
+                        : 'Tell us about your book project'
+                      }
+                    </CardDescription>
+                    {/* Mode Toggle */}
+                    <div className="flex items-center gap-2 pt-2">
+                      <Switch 
+                        checked={quickGenerateMode}
+                        onCheckedChange={setQuickGenerateMode}
+                        data-testid="switch-quick-mode"
+                      />
+                      <Label className="text-sm cursor-pointer" onClick={() => setQuickGenerateMode(!quickGenerateMode)}>
+                        <Rocket className="w-3 h-3 inline mr-1" />
+                        Quick Generate Mode
+                      </Label>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    {/* Quick Generate Mode */}
+                    {quickGenerateMode && (
+                      <>
+                        <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-4 border border-primary/20">
+                          <h4 className="font-medium text-sm flex items-center gap-2 mb-2">
+                            <Wand2 className="w-4 h-4 text-primary" /> One-Click Book Generation
+                          </h4>
+                          <p className="text-xs text-muted-foreground mb-3">
+                            Enter a topic and generate a complete book with chapters, content, and polish.
+                          </p>
+                          <div className="space-y-3">
+                            <div>
+                              <Label>What's your book about?</Label>
+                              <Textarea
+                                value={quickTopic}
+                                onChange={(e) => setQuickTopic(e.target.value)}
+                                placeholder="e.g., 'A stroke survivor's journey to 90% recovery through innovative neuroplasticity exercises and mindset shifts'"
+                                className="min-h-[80px]"
+                                data-testid="textarea-quick-topic"
+                              />
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <Label className="text-xs">Genre</Label>
+                                <Select value={selectedGenre} onValueChange={setSelectedGenre}>
+                                  <SelectTrigger data-testid="select-genre">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {genres.map((g) => (
+                                      <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="flex items-end gap-2">
+                                <div className="flex items-center gap-2">
+                                  <Switch 
+                                    checked={isChildrensBook}
+                                    onCheckedChange={setIsChildrensBook}
+                                    data-testid="switch-childrens"
+                                  />
+                                  <Label className="text-xs">Children's Book</Label>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <Label className="text-xs">Author Voice (optional)</Label>
+                              <Input
+                                value={authorVoice}
+                                onChange={(e) => setAuthorVoice(e.target.value)}
+                                placeholder="e.g., 'Warm and encouraging, with humor'"
+                                data-testid="input-author-voice"
+                              />
+                            </div>
+                            
+                            {isQuickGenerating && generationProgress > 0 && (
+                              <div className="space-y-1">
+                                <Progress value={generationProgress} />
+                                <p className="text-xs text-muted-foreground text-center">
+                                  {generationProgress < 50 ? 'Creating outline...' : 'Generating content...'}
+                                </p>
+                              </div>
+                            )}
+                            
+                            <div className="flex gap-2">
+                              <Button 
+                                onClick={performKeywordResearch}
+                                variant="outline"
+                                size="sm"
+                                disabled={isResearchingKeywords || !quickTopic}
+                                className="flex-1"
+                                data-testid="button-keyword-research"
+                              >
+                                {isResearchingKeywords ? <RefreshCw className="w-3 h-3 animate-spin mr-1" /> : <Target className="w-3 h-3 mr-1" />}
+                                Research Keywords
+                              </Button>
+                              <Button 
+                                onClick={quickGenerateBook}
+                                disabled={isQuickGenerating || !quickTopic}
+                                className="flex-1"
+                                data-testid="button-quick-generate"
+                              >
+                                {isQuickGenerating ? <RefreshCw className="w-3 h-3 animate-spin mr-1" /> : <Sparkles className="w-3 h-3 mr-1" />}
+                                Generate Outline
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Keyword Research Results */}
+                        {keywordResearch && (
+                          <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                            <h5 className="font-medium text-xs flex items-center gap-1">
+                              <Target className="w-3 h-3" /> Keyword Research
+                            </h5>
+                            {keywordResearch.primary && (
+                              <div>
+                                <Label className="text-xs text-muted-foreground">Primary Keywords</Label>
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {keywordResearch.primary.slice(0, 7).map((kw: string, i: number) => (
+                                    <Badge key={i} variant="secondary" className="text-xs">{kw}</Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {keywordResearch.hooks && (
+                              <div>
+                                <Label className="text-xs text-muted-foreground">Title Ideas</Label>
+                                <div className="space-y-1 mt-1">
+                                  {keywordResearch.hooks.slice(0, 3).map((hook: string, i: number) => (
+                                    <p key={i} className="text-xs bg-background rounded px-2 py-1 cursor-pointer hover:bg-primary/10"
+                                      onClick={() => setBookTitle(hook)}
+                                    >{hook}</p>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        {/* Generated Outline Preview */}
+                        {generatedOutline && (
+                          <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                            <h5 className="font-medium text-sm">{generatedOutline.title}</h5>
+                            <p className="text-xs text-muted-foreground">{generatedOutline.subtitle}</p>
+                            <p className="text-xs italic">"{generatedOutline.hook}"</p>
+                            <div className="flex gap-2 mt-2">
+                              <Button onClick={generateAllChapters} disabled={isQuickGenerating} size="sm" className="flex-1">
+                                <Wand2 className="w-3 h-3 mr-1" /> Generate All Chapters
+                              </Button>
+                              <Button onClick={() => setCurrentStep(2)} variant="outline" size="sm">
+                                <Edit3 className="w-3 h-3 mr-1" /> Edit Outline
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                        
+                        <Separator />
+                      </>
+                    )}
+                    
+                    {/* Standard Mode - Book Details */}
                     <div>
                       <Label>Book Title *</Label>
                       <Input
