@@ -364,6 +364,19 @@ export default function BookStudio() {
   const [includePageNumbers, setIncludePageNumbers] = useState(true);
   const [includeHeaders, setIncludeHeaders] = useState(true);
   
+  // Enhanced KDP formatting state
+  const [kdpFormat, setKdpFormat] = useState("paperback");
+  const [paperType, setPaperType] = useState("cream");
+  const [hasBleed, setHasBleed] = useState(false);
+  const [marginInside, setMarginInside] = useState(0.75);
+  const [marginOutside, setMarginOutside] = useState(0.5);
+  const [marginTopBottom, setMarginTopBottom] = useState(0.75);
+  const [includeToc, setIncludeToc] = useState(true);
+  const [includeCopyright, setIncludeCopyright] = useState(true);
+  const [chapterBreakStyle, setChapterBreakStyle] = useState("new-page");
+  const [isbn, setIsbn] = useState("");
+  const [copyrightYear, setCopyrightYear] = useState(new Date().getFullYear().toString());
+  
   const [frontMatter, setFrontMatter] = useState({
     dedication: "",
     acknowledgments: "",
@@ -2459,19 +2472,62 @@ Tips:
                     </TabsList>
                     
                     <TabsContent value="layout" className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {/* Format Type & Trim Size */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-muted/30 rounded-lg">
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Format Type</Label>
+                          <Select value={kdpFormat} onValueChange={setKdpFormat}>
+                            <SelectTrigger className="h-8" data-testid="select-kdp-format">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="paperback">Paperback</SelectItem>
+                              <SelectItem value="hardcover">Hardcover</SelectItem>
+                              <SelectItem value="ebook">eBook (Kindle)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Paper Type</Label>
+                          <Select value={paperType} onValueChange={setPaperType}>
+                            <SelectTrigger className="h-8" data-testid="select-paper-type">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="white">White Paper</SelectItem>
+                              <SelectItem value="cream">Cream Paper</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Bleed</Label>
+                          <Select value={hasBleed ? "yes" : "no"} onValueChange={(v) => setHasBleed(v === "yes")}>
+                            <SelectTrigger className="h-8" data-testid="select-bleed">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="no">No Bleed</SelectItem>
+                              <SelectItem value="yes">With Bleed (0.125")</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Trim Size</Label>
+                          <Select value={trimSize} onValueChange={setTrimSize}>
+                            <SelectTrigger className="h-8" data-testid="select-trim-size">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {trimSizes.map((size) => (
+                                <SelectItem key={size.value} value={size.value}>{size.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         <div className="space-y-4">
-                          <div>
-                            <Label>Trim Size</Label>
-                            <Select value={trimSize} onValueChange={setTrimSize}>
-                              <SelectTrigger data-testid="select-trim-size"><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                {trimSizes.map((size) => (
-                                  <SelectItem key={size.value} value={size.value}>{size.label}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
                           <div>
                             <Label>Font Family</Label>
                             <Select value={selectedFont} onValueChange={setSelectedFont}>
@@ -2483,9 +2539,6 @@ Tips:
                               </SelectContent>
                             </Select>
                           </div>
-                        </div>
-                        
-                        <div className="space-y-4">
                           <div>
                             <Label>Font Size: {fontSize}pt</Label>
                             <Slider
@@ -2513,6 +2566,45 @@ Tips:
                         </div>
                         
                         <div className="space-y-4">
+                          <div>
+                            <Label>Inside Margin: {marginInside}"</Label>
+                            <Slider
+                              value={[marginInside]}
+                              onValueChange={([v]) => setMarginInside(v)}
+                              min={0.5}
+                              max={1.5}
+                              step={0.05}
+                              className="mt-2"
+                              data-testid="slider-margin-inside"
+                            />
+                          </div>
+                          <div>
+                            <Label>Outside Margin: {marginOutside}"</Label>
+                            <Slider
+                              value={[marginOutside]}
+                              onValueChange={([v]) => setMarginOutside(v)}
+                              min={0.25}
+                              max={1}
+                              step={0.05}
+                              className="mt-2"
+                              data-testid="slider-margin-outside"
+                            />
+                          </div>
+                          <div>
+                            <Label>Top/Bottom Margin: {marginTopBottom}"</Label>
+                            <Slider
+                              value={[marginTopBottom]}
+                              onValueChange={([v]) => setMarginTopBottom(v)}
+                              min={0.5}
+                              max={1}
+                              step={0.05}
+                              className="mt-2"
+                              data-testid="slider-margin-tb"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-4">
                           <div className="flex items-center justify-between">
                             <Label>Page Numbers</Label>
                             <Switch
@@ -2529,15 +2621,69 @@ Tips:
                               data-testid="switch-headers"
                             />
                           </div>
+                          <div className="flex items-center justify-between">
+                            <Label>Table of Contents</Label>
+                            <Switch
+                              checked={includeToc}
+                              onCheckedChange={setIncludeToc}
+                              data-testid="switch-toc"
+                            />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <Label>Copyright Page</Label>
+                            <Switch
+                              checked={includeCopyright}
+                              onCheckedChange={setIncludeCopyright}
+                              data-testid="switch-copyright"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div>
+                            <Label>Chapter Break Style</Label>
+                            <Select value={chapterBreakStyle} onValueChange={setChapterBreakStyle}>
+                              <SelectTrigger data-testid="select-chapter-break">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="new-page">New Page</SelectItem>
+                                <SelectItem value="odd-page">Odd Page (right)</SelectItem>
+                                <SelectItem value="continuous">Continuous</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label>ISBN (optional)</Label>
+                            <Input 
+                              value={isbn} 
+                              onChange={(e) => setIsbn(e.target.value)}
+                              placeholder="978-0-000000-00-0"
+                              data-testid="input-isbn"
+                            />
+                          </div>
+                          <div>
+                            <Label>Copyright Year</Label>
+                            <Input 
+                              value={copyrightYear} 
+                              onChange={(e) => setCopyrightYear(e.target.value)}
+                              placeholder={new Date().getFullYear().toString()}
+                              data-testid="input-copyright-year"
+                            />
+                          </div>
                         </div>
                       </div>
                       
                       <Card className="bg-muted/50">
                         <CardContent className="p-4">
-                          <h4 className="font-semibold mb-3">Preview Summary</h4>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <h4 className="font-semibold mb-3">KDP Specifications Summary</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm">
                             <div>
                               <span className="text-muted-foreground">Format:</span>
+                              <div className="font-medium capitalize">{kdpFormat}</div>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Trim:</span>
                               <div className="font-medium">{trimSize}</div>
                             </div>
                             <div>
@@ -2545,12 +2691,16 @@ Tips:
                               <div className="font-medium">{fontChoices.find(f => f.value === selectedFont)?.label}</div>
                             </div>
                             <div>
-                              <span className="text-muted-foreground">Est. Pages:</span>
+                              <span className="text-muted-foreground">Pages:</span>
                               <div className="font-medium">{estimatedPages}</div>
                             </div>
                             <div>
-                              <span className="text-muted-foreground">Spine Width:</span>
-                              <div className="font-medium">{(estimatedPages * 0.002252).toFixed(2)}"</div>
+                              <span className="text-muted-foreground">Spine:</span>
+                              <div className="font-medium">{(estimatedPages * (paperType === 'cream' ? 0.0025 : 0.002252)).toFixed(3)}"</div>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Gutter:</span>
+                              <div className="font-medium">{marginInside}"</div>
                             </div>
                           </div>
                         </CardContent>
