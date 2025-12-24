@@ -1341,6 +1341,255 @@ Break the story into 10-20 pages with clear illustration prompts for each.`;
     }
   });
 
+  // ============ CREATIVE WORKFLOW - DISCUSSION TO BOOK ============
+  
+  // Convert chat discussion into a book plan/outline
+  app.post('/api/book/discussion-to-plan', isAuthenticated, async (req: any, res) => {
+    try {
+      const { chatHistory, genre, preferences } = req.body;
+      
+      if (!chatHistory || chatHistory.length === 0) {
+        return res.status(400).json({ message: "No discussion to convert" });
+      }
+      
+      // Format chat history for analysis
+      const formattedChat = chatHistory.map((msg: any) => 
+        `${msg.role === 'user' ? 'Author' : 'Assistant'}: ${msg.content}`
+      ).join('\n\n');
+      
+      const prompt = `You are a professional book development editor. Analyze this brainstorming discussion between an author and their AI assistant, and extract a complete book plan.
+
+Discussion:
+"""
+${formattedChat}
+"""
+
+Based on this discussion, create a comprehensive book plan as JSON:
+{
+  "title": "Compelling book title based on the discussion",
+  "subtitle": "Descriptive subtitle",
+  "genre": "${genre || 'non-fiction'}",
+  "hook": "One compelling sentence that captures the book's essence",
+  "targetAudience": "Who this book is for",
+  "uniqueAngle": "What makes this book different from others",
+  "keyThemes": ["Theme 1", "Theme 2", "Theme 3"],
+  "authorVoice": "Description of the ideal writing voice/tone",
+  "estimatedWordCount": 50000,
+  "chapters": [
+    {
+      "number": 1,
+      "title": "Chapter title",
+      "description": "What this chapter covers",
+      "keyPoints": ["Point 1", "Point 2", "Point 3"],
+      "estimatedWords": 4000
+    }
+  ],
+  "frontMatter": ["Dedication", "Foreword", "Introduction"],
+  "backMatter": ["Appendix ideas", "Resources", "About Author"],
+  "marketingHooks": ["Selling point 1", "Selling point 2"]
+}
+
+Extract as much specific detail as possible from the discussion. If they discussed specific stories, examples, or structure, include those. Generate 8-15 chapters based on the scope of the book.`;
+
+      const result = await generateCoachResponse(prompt, []);
+      
+      try {
+        const jsonMatch = result.response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const bookPlan = JSON.parse(jsonMatch[0]);
+          res.json({ 
+            success: true, 
+            plan: bookPlan,
+            source: 'discussion',
+            messageCount: chatHistory.length
+          });
+        } else {
+          res.json({ success: false, raw: result.response });
+        }
+      } catch {
+        res.json({ success: false, raw: result.response });
+      }
+    } catch (error) {
+      console.error("Error converting discussion to plan:", error);
+      res.status(500).json({ message: "Failed to convert discussion" });
+    }
+  });
+
+  // Analyze uploaded manuscript - extract structure, themes, improvements
+  app.post('/api/book/analyze-manuscript', isAuthenticated, async (req: any, res) => {
+    try {
+      const { content, fileName, analysisType } = req.body;
+      
+      if (!content) {
+        return res.status(400).json({ message: "No content to analyze" });
+      }
+      
+      // Truncate very long content but keep enough for good analysis
+      const truncatedContent = content.length > 50000 
+        ? content.substring(0, 25000) + '\n\n[...MIDDLE SECTION TRUNCATED...]\n\n' + content.substring(content.length - 25000)
+        : content;
+      
+      const analysisPrompts: Record<string, string> = {
+        structure: `Analyze this manuscript and extract its structure as JSON:
+{
+  "detectedGenre": "memoir/self-help/fiction/etc",
+  "estimatedWordCount": number,
+  "chapters": [{"title": "Chapter name", "summary": "Brief summary", "wordCount": approx}],
+  "frontMatter": ["What front matter exists"],
+  "backMatter": ["What back matter exists"],
+  "narrative": "First person/third person/etc",
+  "tone": "Description of the writing tone",
+  "pacing": "Fast/medium/slow pacing assessment"
+}`,
+        themes: `Analyze this manuscript and identify its key themes as JSON:
+{
+  "mainTheme": "The central theme",
+  "subThemes": ["Theme 1", "Theme 2", "Theme 3"],
+  "keyMessages": ["Core message 1", "Core message 2"],
+  "emotionalJourney": "Description of the emotional arc",
+  "targetAudience": "Who would benefit most from this",
+  "uniqueValue": "What makes this manuscript valuable"
+}`,
+        improvements: `Analyze this manuscript and provide improvement suggestions as JSON:
+{
+  "overallScore": 75,
+  "strengths": ["Strength 1", "Strength 2", "Strength 3"],
+  "areasToImprove": ["Area 1", "Area 2", "Area 3"],
+  "structuralSuggestions": ["Suggestion 1", "Suggestion 2"],
+  "pacingSuggestions": "Pacing feedback",
+  "voiceSuggestions": "Voice/tone feedback",
+  "chapterByChapter": [{"chapter": "Chapter name", "feedback": "Specific feedback"}],
+  "marketReadiness": "Assessment of how close to publishable"
+}`,
+        full: `Provide a comprehensive manuscript analysis as JSON:
+{
+  "title": "Detected or suggested title",
+  "detectedGenre": "Genre",
+  "wordCount": number,
+  "structure": {
+    "chapters": [{"title": "Name", "summary": "Brief", "wordCount": approx}],
+    "hasIntro": true/false,
+    "hasConclusion": true/false
+  },
+  "themes": {
+    "main": "Main theme",
+    "sub": ["Sub themes"],
+    "messages": ["Key messages"]
+  },
+  "quality": {
+    "score": 75,
+    "strengths": ["Strengths"],
+    "improvements": ["Improvements"]
+  },
+  "audience": "Target audience",
+  "marketPotential": "High/Medium/Low with explanation",
+  "suggestedKeywords": ["Keyword 1", "Keyword 2"],
+  "nextSteps": ["Recommended action 1", "Action 2"]
+}`
+      };
+      
+      const prompt = `You are a professional book editor and publishing consultant. Analyze this manuscript thoroughly.
+
+Manuscript content:
+"""
+${truncatedContent}
+"""
+
+${analysisPrompts[analysisType || 'full']}`;
+
+      const result = await generateCoachResponse(prompt, []);
+      
+      try {
+        const jsonMatch = result.response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const analysis = JSON.parse(jsonMatch[0]);
+          res.json({ 
+            success: true, 
+            analysis,
+            fileName,
+            analysisType: analysisType || 'full',
+            contentLength: content.length
+          });
+        } else {
+          res.json({ success: true, raw: result.response });
+        }
+      } catch {
+        res.json({ success: true, raw: result.response });
+      }
+    } catch (error) {
+      console.error("Error analyzing manuscript:", error);
+      res.status(500).json({ message: "Failed to analyze manuscript" });
+    }
+  });
+
+  // Generate illustration using Gemini's image model
+  app.post('/api/book/generate-image', isAuthenticated, async (req: any, res) => {
+    try {
+      const { prompt, style, aspectRatio } = req.body;
+      
+      if (!prompt) {
+        return res.status(400).json({ message: "Prompt is required" });
+      }
+      
+      // Use Gemini's image generation model
+      const geminiApiKey = process.env.GEMINI_API_KEY || process.env.AI_INTEGRATIONS_GEMINI_API_KEY;
+      
+      if (!geminiApiKey) {
+        return res.status(500).json({ message: "Image generation not configured" });
+      }
+      
+      // Enhanced prompt for book illustration
+      const enhancedPrompt = `${style || 'Whimsical watercolor children\'s book illustration'}: ${prompt}. 
+High quality, professional book illustration suitable for print publication. 
+Clean composition, artistic, engaging for young readers. No text or words in the image.
+${aspectRatio === 'portrait' ? 'Vertical portrait orientation.' : aspectRatio === 'landscape' ? 'Horizontal landscape orientation.' : 'Square format.'}`;
+
+      // Call Gemini image generation API
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${geminiApiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: enhancedPrompt }]
+          }],
+          generationConfig: {
+            responseModalities: ["TEXT", "IMAGE"]
+          }
+        })
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Gemini image error:", errorText);
+        return res.status(500).json({ message: "Image generation failed", error: errorText });
+      }
+      
+      const data = await response.json();
+      
+      // Extract image from response
+      const parts = data.candidates?.[0]?.content?.parts || [];
+      const imagePart = parts.find((p: any) => p.inlineData?.mimeType?.startsWith('image/'));
+      
+      if (imagePart) {
+        res.json({
+          success: true,
+          imageBase64: imagePart.inlineData.data,
+          mimeType: imagePart.inlineData.mimeType,
+          prompt: enhancedPrompt
+        });
+      } else {
+        res.json({
+          success: false,
+          message: "No image generated",
+          textResponse: parts.find((p: any) => p.text)?.text
+        });
+      }
+    } catch (error) {
+      console.error("Error generating image:", error);
+      res.status(500).json({ message: "Failed to generate image" });
+    }
+  });
+
   // ============ VOICE CLONING & SYNTHESIS ROUTES ============
   
   // Get available voice styles

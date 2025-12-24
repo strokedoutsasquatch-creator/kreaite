@@ -381,6 +381,13 @@ export default function BookStudio() {
   const [authorVoice, setAuthorVoice] = useState("");
   const [generationProgress, setGenerationProgress] = useState(0);
   
+  // Creative Workflow state
+  const [manuscriptAnalysis, setManuscriptAnalysis] = useState<any>(null);
+  const [isAnalyzingManuscript, setIsAnalyzingManuscript] = useState(false);
+  const [isConvertingDiscussion, setIsConvertingDiscussion] = useState(false);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+  const [illustrationStyle, setIllustrationStyle] = useState("whimsical watercolor");
+  
   const [backMatter, setBackMatter] = useState({
     aboutAuthor: "",
     otherBooks: "",
@@ -785,6 +792,143 @@ export default function BookStudio() {
     }
   };
 
+  // ============ CREATIVE WORKFLOW FUNCTIONS ============
+  
+  // Convert chat discussion into a book plan
+  const convertDiscussionToPlan = async () => {
+    if (chatMessages.length < 3) {
+      toast({ title: "Not enough discussion", description: "Have a longer conversation first to build your book plan", variant: "destructive" });
+      return;
+    }
+    
+    setIsConvertingDiscussion(true);
+    try {
+      const response = await apiRequest("POST", "/api/book/discussion-to-plan", {
+        chatHistory: chatMessages.filter(m => m.id !== 'welcome').map(m => ({
+          role: m.role,
+          content: m.content
+        })),
+        genre: selectedGenre,
+        preferences: { authorVoice, targetAudience }
+      });
+      const data = await response.json();
+      
+      if (data.success && data.plan) {
+        // Apply the plan to the book
+        setBookTitle(data.plan.title || "");
+        setBookSubtitle(data.plan.subtitle || "");
+        setBookDescription(data.plan.hook || "");
+        setTargetAudience(data.plan.targetAudience || "");
+        setAuthorVoice(data.plan.authorVoice || "");
+        setGeneratedOutline(data.plan);
+        
+        // Create chapters from plan
+        if (data.plan.chapters && data.plan.chapters.length > 0) {
+          const newChapters = data.plan.chapters.map((ch: any, idx: number) => ({
+            id: String(idx + 1),
+            title: ch.title,
+            description: ch.description,
+            wordCount: 0,
+            status: "outline" as const,
+            keyPoints: ch.keyPoints
+          }));
+          setChapters(newChapters);
+        }
+        
+        toast({ 
+          title: "Discussion Converted!", 
+          description: `Created "${data.plan.title}" with ${data.plan.chapters?.length || 0} chapters from your conversation` 
+        });
+        
+        // Move to structure step
+        setCurrentStep(2);
+      } else {
+        toast({ title: "Conversion Issue", description: "Could not fully convert discussion. Try adding more detail.", variant: "destructive" });
+      }
+    } catch (error) {
+      console.error("Discussion conversion error:", error);
+      toast({ title: "Conversion Failed", description: "Could not convert discussion to plan", variant: "destructive" });
+    } finally {
+      setIsConvertingDiscussion(false);
+    }
+  };
+
+  // Deep analyze uploaded manuscript
+  const analyzeUploadedManuscript = async (analysisType: string = 'full') => {
+    if (!uploadedContent) {
+      toast({ title: "No content", description: "Upload a manuscript first", variant: "destructive" });
+      return;
+    }
+    
+    setIsAnalyzingManuscript(true);
+    try {
+      const response = await apiRequest("POST", "/api/book/analyze-manuscript", {
+        content: uploadedContent,
+        fileName: uploadedFileName,
+        analysisType
+      });
+      const data = await response.json();
+      
+      if (data.success && data.analysis) {
+        setManuscriptAnalysis(data.analysis);
+        
+        // Auto-apply some detected info
+        if (data.analysis.title) setBookTitle(data.analysis.title);
+        if (data.analysis.detectedGenre) {
+          const genreMap: Record<string, string> = {
+            'memoir': 'memoir', 'self-help': 'self-help', 'business': 'business',
+            'fiction': 'fiction', 'health': 'health', 'recovery': 'recovery'
+          };
+          if (genreMap[data.analysis.detectedGenre.toLowerCase()]) {
+            setSelectedGenre(genreMap[data.analysis.detectedGenre.toLowerCase()]);
+          }
+        }
+        
+        toast({ 
+          title: "Analysis Complete!", 
+          description: `Analyzed ${(uploadedContent.length / 1000).toFixed(1)}K characters` 
+        });
+      }
+    } catch (error) {
+      console.error("Manuscript analysis error:", error);
+      toast({ title: "Analysis Failed", description: "Could not analyze manuscript", variant: "destructive" });
+    } finally {
+      setIsAnalyzingManuscript(false);
+    }
+  };
+
+  // Generate illustration image
+  const generateIllustration = async (prompt: string) => {
+    if (!prompt.trim()) {
+      toast({ title: "Enter a prompt", description: "Describe what you want to illustrate", variant: "destructive" });
+      return;
+    }
+    
+    setIsGeneratingImage(true);
+    try {
+      const response = await apiRequest("POST", "/api/book/generate-image", {
+        prompt,
+        style: illustrationStyle,
+        aspectRatio: isChildrensBook ? 'landscape' : 'portrait'
+      });
+      const data = await response.json();
+      
+      if (data.success && data.imageBase64) {
+        const imageUrl = `data:${data.mimeType};base64,${data.imageBase64}`;
+        setGeneratedImageUrl(imageUrl);
+        setGeneratedImages(prev => [...prev, imageUrl]);
+        toast({ title: "Image Generated!", description: "Your illustration is ready" });
+      } else {
+        toast({ title: "Generation Issue", description: data.message || "Could not generate image", variant: "destructive" });
+      }
+    } catch (error) {
+      console.error("Image generation error:", error);
+      toast({ title: "Generation Failed", description: "Could not generate illustration", variant: "destructive" });
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
   const addChapter = () => {
     const newId = String(chapters.length + 1);
     setChapters([...chapters, {
@@ -1087,6 +1231,107 @@ Your journey to healing starts here.`);
                         </div>
                       </div>
                     </div>
+                    
+                    {/* Use This Discussion Button */}
+                    {chatMessages.length >= 3 && (
+                      <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-3 border border-primary/20 mb-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <div>
+                            <p className="text-sm font-medium">Ready to create your book?</p>
+                            <p className="text-xs text-muted-foreground">Convert this discussion into a full book plan</p>
+                          </div>
+                          <Button 
+                            size="sm"
+                            onClick={convertDiscussionToPlan}
+                            disabled={isConvertingDiscussion}
+                            className="shrink-0"
+                            data-testid="button-use-discussion"
+                          >
+                            {isConvertingDiscussion ? (
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            ) : (
+                              <Wand2 className="w-4 h-4 mr-2" />
+                            )}
+                            Use This Discussion
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Manuscript Analysis Results */}
+                    {manuscriptAnalysis && (
+                      <div className="bg-card border rounded-lg p-3 mb-3 space-y-2">
+                        <h4 className="font-medium text-sm flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-primary" />
+                          Manuscript Analysis
+                        </h4>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <span className="text-muted-foreground">Words:</span>{' '}
+                            <span className="font-medium">{manuscriptAnalysis.wordCount?.toLocaleString() || 'N/A'}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Chapters:</span>{' '}
+                            <span className="font-medium">{manuscriptAnalysis.chapterCount || 'N/A'}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Genre:</span>{' '}
+                            <span className="font-medium">{manuscriptAnalysis.detectedGenre || 'N/A'}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Tone:</span>{' '}
+                            <span className="font-medium">{manuscriptAnalysis.tone || 'N/A'}</span>
+                          </div>
+                        </div>
+                        {manuscriptAnalysis.summary && (
+                          <p className="text-xs text-muted-foreground border-t pt-2 mt-2">
+                            {manuscriptAnalysis.summary}
+                          </p>
+                        )}
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="w-full mt-2"
+                          onClick={() => {
+                            if (manuscriptAnalysis.chapters) {
+                              setChapters(manuscriptAnalysis.chapters.map((ch: any, idx: number) => ({
+                                id: String(idx + 1),
+                                title: ch.title || `Chapter ${idx + 1}`,
+                                description: ch.summary || "",
+                                wordCount: ch.wordCount || 0,
+                                status: "draft" as const
+                              })));
+                              setCurrentStep(2);
+                              toast({ title: "Chapters imported!", description: `Imported ${manuscriptAnalysis.chapters.length} chapters` });
+                            }
+                          }}
+                          disabled={!manuscriptAnalysis.chapters?.length}
+                          data-testid="button-import-chapters"
+                        >
+                          <Layers className="w-4 h-4 mr-2" />
+                          Import {manuscriptAnalysis.chapters?.length || 0} Chapters
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* Deep Analysis Button */}
+                    {uploadedContent && !manuscriptAnalysis && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full mb-3"
+                        onClick={() => analyzeUploadedManuscript('full')}
+                        disabled={isAnalyzingManuscript}
+                        data-testid="button-analyze-manuscript"
+                      >
+                        {isAnalyzingManuscript ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Search className="w-4 h-4 mr-2" />
+                        )}
+                        Deep Analyze Manuscript
+                      </Button>
+                    )}
                     
                     {/* Chat Input */}
                     <div className="flex gap-2">
