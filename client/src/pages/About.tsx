@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import Header from "@/components/Header";
+import CreatorHeader from "@/components/CreatorHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +26,7 @@ export default function About() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <CreatorHeader />
       
       <main>
         <section className="relative py-20 overflow-hidden">

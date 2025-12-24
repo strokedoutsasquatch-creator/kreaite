@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import Header from "@/components/Header";
+import CreatorHeader from "@/components/CreatorHeader";
 import type { ForumCategory, ForumThread, User } from "@shared/schema";
 
 function formatRelativeTime(date: Date | string): string {
@@ -135,7 +135,7 @@ export default function Community() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <CreatorHeader />
       
       <main className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">

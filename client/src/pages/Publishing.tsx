@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import Header from "@/components/Header";
+import CreatorHeader from "@/components/CreatorHeader";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -634,7 +634,7 @@ export default function Publishing() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <CreatorHeader />
       <main>
         <HeroSection />
         <MyProjectsSection />
