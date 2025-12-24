@@ -387,6 +387,11 @@ export default function BookStudio() {
   const [isConvertingDiscussion, setIsConvertingDiscussion] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [illustrationStyle, setIllustrationStyle] = useState("whimsical watercolor");
+  const [imagePlacementMode, setImagePlacementMode] = useState<"auto" | "hybrid" | "manual">("auto");
+  const [selectedImageChapter, setSelectedImageChapter] = useState<string | null>(null);
+  const [coverStyle, setCoverStyle] = useState("professional");
+  const [selectedAiProvider, setSelectedAiProvider] = useState<"gemini" | "openai" | "xai">("gemini");
+  const [authorName, setAuthorName] = useState("");
   
   const [backMatter, setBackMatter] = useState({
     aboutAuthor: "",
@@ -1013,41 +1018,64 @@ export default function BookStudio() {
     
     setIsGeneratingImage(true);
     try {
-      const response = await apiRequest("POST", "/api/images/generate", {
+      const response = await apiRequest("POST", "/api/book/generate-image", {
         prompt: imagePrompt,
-        style: "illustration",
+        style: illustrationStyle,
+        aspectRatio: isChildrensBook ? 'landscape' : 'portrait'
       });
       const data = await response.json();
       
-      if (data.imageUrl) {
-        setGeneratedImages([...generatedImages, data.imageUrl]);
+      if (data.success && data.imageBase64) {
+        const imageUrl = `data:${data.mimeType};base64,${data.imageBase64}`;
+        setGeneratedImageUrl(imageUrl);
+        setGeneratedImages(prev => [...prev, imageUrl]);
+        
+        // Auto-assign to chapter in auto mode
+        if (imagePlacementMode === 'auto' && selectedImageChapter) {
+          updateChapter(selectedImageChapter, { 
+            imageUrl,
+            imagePrompt: imagePrompt 
+          });
+        }
+        
         toast({ title: "Image Generated", description: "Your illustration is ready" });
+      } else {
+        toast({ title: "Generation Issue", description: data.message || "Could not generate image", variant: "destructive" });
       }
     } catch (error) {
-      toast({ title: "Image Generated", description: "Illustration created (demo mode)" });
+      console.error("Image generation error:", error);
+      toast({ title: "Image Generation Failed", description: "Check your API key configuration", variant: "destructive" });
     } finally {
       setIsGeneratingImage(false);
-      setImagePrompt("");
     }
   };
 
   const generateCover = async () => {
     setIsGeneratingImage(true);
     try {
-      const response = await apiRequest("POST", "/api/images/generate-cover", {
-        title: bookTitle,
-        subtitle: bookSubtitle,
-        genre: selectedGenre,
-        mood: "inspirational",
+      const coverPrompt = `Professional book cover design for "${bookTitle}"${bookSubtitle ? `: ${bookSubtitle}` : ''}. 
+Genre: ${genres.find(g => g.value === selectedGenre)?.label || selectedGenre}. 
+Style: ${coverStyle}. 
+Author: ${authorName || user?.firstName || 'Author'}.
+High-quality, print-ready book cover suitable for Amazon KDP. No text overlay needed.`;
+
+      const response = await apiRequest("POST", "/api/book/generate-image", {
+        prompt: coverPrompt,
+        style: coverStyle,
+        aspectRatio: 'portrait'
       });
       const data = await response.json();
       
-      if (data.imageUrl) {
-        setCoverImage(data.imageUrl);
+      if (data.success && data.imageBase64) {
+        const imageUrl = `data:${data.mimeType};base64,${data.imageBase64}`;
+        setCoverImage(imageUrl);
         toast({ title: "Cover Generated", description: "Your book cover is ready" });
+      } else {
+        toast({ title: "Cover Issue", description: data.message || "Could not generate cover", variant: "destructive" });
       }
     } catch (error) {
-      toast({ title: "Cover Generated", description: "Book cover created (demo mode)" });
+      console.error("Cover generation error:", error);
+      toast({ title: "Cover Generation Failed", description: "Check your API key configuration", variant: "destructive" });
     } finally {
       setIsGeneratingImage(false);
     }
@@ -2100,6 +2128,67 @@ Tips:
                     </TabsList>
                     
                     <TabsContent value="illustrations" className="space-y-4">
+                      {/* AI Provider & Style Options */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-muted/30 rounded-lg">
+                        <div>
+                          <Label className="text-xs text-muted-foreground">AI Provider</Label>
+                          <Select value={selectedAiProvider} onValueChange={(v: "gemini" | "openai" | "xai") => setSelectedAiProvider(v)}>
+                            <SelectTrigger className="h-8" data-testid="select-ai-provider">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="gemini">Gemini (Free)</SelectItem>
+                              <SelectItem value="openai">OpenAI DALL-E</SelectItem>
+                              <SelectItem value="xai">XAI/Grok</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Style</Label>
+                          <Select value={illustrationStyle} onValueChange={setIllustrationStyle}>
+                            <SelectTrigger className="h-8" data-testid="select-style">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="whimsical watercolor">Whimsical Watercolor</SelectItem>
+                              <SelectItem value="children's book illustration">Children's Book</SelectItem>
+                              <SelectItem value="professional line art">Line Art</SelectItem>
+                              <SelectItem value="realistic digital painting">Realistic Digital</SelectItem>
+                              <SelectItem value="minimalist vector">Minimalist Vector</SelectItem>
+                              <SelectItem value="vintage engraving">Vintage Engraving</SelectItem>
+                              <SelectItem value="cartoon">Cartoon Style</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Placement Mode</Label>
+                          <Select value={imagePlacementMode} onValueChange={(v: "auto" | "hybrid" | "manual") => setImagePlacementMode(v)}>
+                            <SelectTrigger className="h-8" data-testid="select-placement">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="auto">Auto (AI decides)</SelectItem>
+                              <SelectItem value="hybrid">Hybrid (suggest)</SelectItem>
+                              <SelectItem value="manual">Manual (you place)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-xs text-muted-foreground">For Chapter</Label>
+                          <Select value={selectedImageChapter || ""} onValueChange={setSelectedImageChapter}>
+                            <SelectTrigger className="h-8" data-testid="select-chapter">
+                              <SelectValue placeholder="Select..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="">All/General</SelectItem>
+                              {chapters.map(ch => (
+                                <SelectItem key={ch.id} value={ch.id}>Ch {ch.id}: {ch.title.substring(0, 20)}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-4">
                           <div>
@@ -2123,20 +2212,25 @@ Tips:
                             ) : (
                               <Sparkles className="w-4 h-4 mr-2" />
                             )}
-                            Generate Illustration
+                            Generate with {selectedAiProvider === 'gemini' ? 'Gemini' : selectedAiProvider === 'openai' ? 'DALL-E' : 'XAI'}
                           </Button>
                           
                           <div className="space-y-2">
                             <Label className="text-muted-foreground">Quick Prompts</Label>
-                            {[
+                            {(isChildrensBook ? [
+                              "A friendly cartoon forest animal helping a child learn to walk",
+                              "Colorful brain neurons lighting up like fireworks, kid-friendly",
+                              "A happy character doing simple stretching exercises",
+                            ] : [
                               "A peaceful sunrise over a hospital window, symbolizing hope",
                               "Strong hands gripping therapy equipment, determination",
-                              "A winding path through mountains, representing the recovery journey",
-                            ].map((prompt, i) => (
+                              "A winding path through mountains, representing recovery",
+                            ]).map((prompt, i) => (
                               <button
                                 key={i}
                                 onClick={() => setImagePrompt(prompt)}
-                                className="w-full p-2 text-left text-sm bg-muted/50 rounded hover:bg-muted transition-colors"
+                                className="w-full p-2 text-left text-sm bg-muted/50 rounded hover-elevate transition-colors"
+                                data-testid={`button-quick-prompt-${i}`}
                               >
                                 {prompt}
                               </button>
@@ -2145,26 +2239,103 @@ Tips:
                         </div>
                         
                         <div>
-                          <Label className="mb-2 block">Generated Images</Label>
-                          <div className="grid grid-cols-2 gap-4">
-                            {generatedImages.length > 0 ? (
-                              generatedImages.map((img, i) => (
-                                <div key={i} className="aspect-square bg-muted rounded-lg flex items-center justify-center">
-                                  <Image className="w-12 h-12 text-muted-foreground" />
+                          <Label className="mb-2 block">Generated Images ({generatedImages.length})</Label>
+                          <ScrollArea className="h-[400px] rounded-lg border p-2">
+                            <div className="grid grid-cols-2 gap-3">
+                              {generatedImages.length > 0 ? (
+                                generatedImages.map((img, i) => (
+                                  <div key={i} className="relative group">
+                                    <img 
+                                      src={img} 
+                                      alt={`Generated illustration ${i + 1}`}
+                                      className="w-full aspect-square object-cover rounded-lg border"
+                                    />
+                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
+                                      <Button size="sm" variant="secondary" onClick={() => {
+                                        const link = document.createElement('a');
+                                        link.href = img;
+                                        link.download = `illustration-${i + 1}.png`;
+                                        link.click();
+                                      }} data-testid={`button-download-${i}`}>
+                                        <Download className="w-3 h-3 mr-1" /> Save
+                                      </Button>
+                                      {imagePlacementMode === 'manual' && (
+                                        <Button size="sm" variant="outline" onClick={() => {
+                                          if (selectedImageChapter) {
+                                            updateChapter(selectedImageChapter, { imageUrl: img });
+                                            toast({ title: "Image assigned", description: `Added to Chapter ${selectedImageChapter}` });
+                                          }
+                                        }} data-testid={`button-assign-${i}`}>
+                                          <Layers className="w-3 h-3 mr-1" /> Assign
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="col-span-2 aspect-video bg-muted/30 rounded-lg flex flex-col items-center justify-center p-8">
+                                  <Image className="w-16 h-16 text-muted-foreground/50 mb-3" />
+                                  <p className="text-sm text-muted-foreground text-center">No images generated yet</p>
+                                  <p className="text-xs text-muted-foreground/70 text-center mt-1">
+                                    Using {selectedAiProvider === 'gemini' ? 'Gemini (free tier)' : selectedAiProvider}
+                                  </p>
                                 </div>
-                              ))
-                            ) : (
-                              <div className="col-span-2 aspect-video bg-muted/50 rounded-lg flex flex-col items-center justify-center">
-                                <Image className="w-12 h-12 text-muted-foreground mb-2" />
-                                <p className="text-sm text-muted-foreground">No images generated yet</p>
-                              </div>
-                            )}
-                          </div>
+                              )}
+                            </div>
+                          </ScrollArea>
                         </div>
                       </div>
                     </TabsContent>
                     
                     <TabsContent value="cover" className="space-y-4">
+                      {/* Cover Style Options */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-muted/30 rounded-lg">
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Cover Style</Label>
+                          <Select value={coverStyle} onValueChange={setCoverStyle}>
+                            <SelectTrigger className="h-8" data-testid="select-cover-style">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="professional">Professional</SelectItem>
+                              <SelectItem value="bold typography">Bold Typography</SelectItem>
+                              <SelectItem value="minimalist">Minimalist</SelectItem>
+                              <SelectItem value="photographic">Photographic</SelectItem>
+                              <SelectItem value="illustrated">Illustrated</SelectItem>
+                              <SelectItem value="gradient abstract">Gradient Abstract</SelectItem>
+                              <SelectItem value="vintage classic">Vintage Classic</SelectItem>
+                              <SelectItem value="children colorful">Children's Colorful</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-xs text-muted-foreground">AI Provider</Label>
+                          <Select value={selectedAiProvider} onValueChange={(v: "gemini" | "openai" | "xai") => setSelectedAiProvider(v)}>
+                            <SelectTrigger className="h-8" data-testid="select-cover-ai">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="gemini">Gemini</SelectItem>
+                              <SelectItem value="openai">DALL-E 3</SelectItem>
+                              <SelectItem value="xai">XAI/Grok</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="col-span-2">
+                          <Label className="text-xs text-muted-foreground">Genre</Label>
+                          <Select value={selectedGenre} onValueChange={setSelectedGenre}>
+                            <SelectTrigger className="h-8" data-testid="select-cover-genre">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {genres.map(g => (
+                                <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-4">
                           <Card className="bg-muted/50">
@@ -2180,14 +2351,19 @@ Tips:
                               </div>
                               <div>
                                 <Label>Author Name</Label>
-                                <Input defaultValue={user?.firstName ? `${user.firstName} ${user.lastName || ''}` : ''} data-testid="input-author-name" />
+                                <Input 
+                                  value={authorName} 
+                                  onChange={(e) => setAuthorName(e.target.value)} 
+                                  placeholder={user?.firstName ? `${user.firstName} ${user.lastName || ''}` : 'Author Name'}
+                                  data-testid="input-author-name" 
+                                />
                               </div>
                             </CardContent>
                           </Card>
                           
                           <Button 
                             onClick={generateCover}
-                            disabled={isGeneratingImage}
+                            disabled={isGeneratingImage || !bookTitle.trim()}
                             className="w-full"
                             size="lg"
                             data-testid="button-generate-cover"
@@ -2197,24 +2373,53 @@ Tips:
                             ) : (
                               <Palette className="w-5 h-5 mr-2" />
                             )}
-                            Generate AI Cover
+                            Generate {coverStyle} Cover
                           </Button>
+
+                          {coverImage && (
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="outline" 
+                                className="flex-1"
+                                onClick={() => {
+                                  const link = document.createElement('a');
+                                  link.href = coverImage;
+                                  link.download = `${bookTitle.replace(/\s+/g, '-')}-cover.png`;
+                                  link.click();
+                                }}
+                                data-testid="button-download-cover"
+                              >
+                                <Download className="w-4 h-4 mr-2" /> Download Cover
+                              </Button>
+                              <Button 
+                                variant="outline"
+                                onClick={generateCover}
+                                disabled={isGeneratingImage}
+                                data-testid="button-regenerate-cover"
+                              >
+                                <RefreshCw className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          )}
                         </div>
                         
                         <div>
                           <Label className="mb-2 block">Cover Preview</Label>
-                          <div className="aspect-[2/3] bg-gradient-to-br from-primary/20 to-primary/5 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center p-8 text-center">
+                          <div className="aspect-[2/3] bg-gradient-to-br from-primary/20 to-primary/5 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center p-4 text-center overflow-hidden">
                             {coverImage ? (
-                              <div className="w-full h-full bg-muted rounded flex items-center justify-center">
-                                <BookMarked className="w-16 h-16 text-muted-foreground" />
-                              </div>
+                              <img 
+                                src={coverImage} 
+                                alt="Book cover preview"
+                                className="w-full h-full object-cover rounded-lg"
+                              />
                             ) : (
-                              <>
-                                <BookMarked className="w-16 h-16 text-muted-foreground mb-4" />
-                                <h3 className="text-xl font-bold">{bookTitle || "Your Title"}</h3>
-                                {bookSubtitle && <p className="text-sm text-muted-foreground mt-1">{bookSubtitle}</p>}
-                                <p className="text-sm mt-4">by {user?.firstName || "Author Name"}</p>
-                              </>
+                              <div className="flex flex-col items-center justify-center h-full">
+                                <BookMarked className="w-16 h-16 text-muted-foreground/50 mb-4" />
+                                <h3 className="text-lg font-bold px-4">{bookTitle || "Your Title"}</h3>
+                                {bookSubtitle && <p className="text-xs text-muted-foreground mt-1 px-4">{bookSubtitle}</p>}
+                                <p className="text-xs mt-4 text-muted-foreground">by {authorName || user?.firstName || "Author Name"}</p>
+                                <p className="text-xs text-primary mt-4">Click "Generate" to create your cover</p>
+                              </div>
                             )}
                           </div>
                         </div>
