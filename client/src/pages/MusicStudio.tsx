@@ -964,7 +964,11 @@ Repeat the hook...`}
                                     mood: songMood,
                                   });
                                   const data = await response.json();
-                                  if (data.audioUrl) {
+                                  if (data.audioBase64) {
+                                    const audioUrl = `data:${data.mimeType || 'audio/wav'};base64,${data.audioBase64}`;
+                                    setGeneratedBeat(audioUrl);
+                                    toast({ title: "Beat Generated!", description: "Your AI instrumental is ready!" });
+                                  } else if (data.audioUrl) {
                                     setGeneratedBeat(data.audioUrl);
                                     toast({ title: "Beat Generated!", description: "Your AI instrumental is ready!" });
                                   }
@@ -1022,7 +1026,14 @@ Repeat the hook...`}
                           <div>
                             <Label className="mb-3 block">Voice Style</Label>
                             <div className="space-y-2">
-                              {voiceStyles?.styles?.slice(0, 6).map((style: any) => (
+                              {(voiceStyles?.styles || [
+                                { id: "deep", name: "Deep & Powerful", description: "Low, commanding presence" },
+                                { id: "gritty", name: "Gritty & Raw", description: "Rough, authentic texture" },
+                                { id: "smooth", name: "Smooth & Clear", description: "Clean, polished delivery" },
+                                { id: "intense", name: "Intense & Driven", description: "High energy, passionate" },
+                                { id: "warm", name: "Warm & Soulful", description: "Rich, emotional warmth" },
+                                { id: "sharp", name: "Sharp & Precise", description: "Crisp, articulate diction" },
+                              ]).slice(0, 6).map((style: any) => (
                                 <button
                                   key={style.id}
                                   onClick={() => setSelectedVoiceStyle(style.id)}
