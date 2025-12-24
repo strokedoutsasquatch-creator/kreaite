@@ -143,31 +143,11 @@ function Router() {
       <Route path="/about-us" component={AboutUs} />
       <Route path="/pricing" component={Pricing} />
       <Route path="/university" component={RecoveryUniversity} />
-      <Route path="/music-studio">
-        <ProtectedRoute>
-          <MusicStudio />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/book-studio">
-        <ProtectedRoute>
-          <BookStudio />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/video-studio">
-        <ProtectedRoute>
-          <VideoStudio />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/course-studio">
-        <ProtectedRoute>
-          <CourseStudio />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/image-studio">
-        <ProtectedRoute>
-          <ImageStudio />
-        </ProtectedRoute>
-      </Route>
+      <Route path="/music-studio" component={MusicStudio} />
+      <Route path="/book-studio" component={BookStudio} />
+      <Route path="/video-studio" component={VideoStudio} />
+      <Route path="/course-studio" component={CourseStudio} />
+      <Route path="/image-studio" component={ImageStudio} />
       <Route path="/stories" component={Stories} />
       <Route path="/stories/new">
         <ProtectedRoute>
