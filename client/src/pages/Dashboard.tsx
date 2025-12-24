@@ -2,7 +2,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, TrendingUp, Calendar, MessageCircle, BookOpen } from "lucide-react";
+import { LogOut, TrendingUp, Calendar, MessageCircle, BookOpen, Music, Film, Mic, Users, ShoppingBag } from "lucide-react";
+import { Link } from "wouter";
 import academyLogo from "@assets/academy_logo.png";
 
 export default function Dashboard() {
@@ -51,69 +52,133 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          <Card className="p-6 hover-elevate cursor-pointer" data-testid="card-ai-coach">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <MessageCircle className="h-6 w-6 text-primary" />
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          <Link href="/music-studio">
+            <Card className="p-6 hover-elevate cursor-pointer h-full" data-testid="card-music-studio">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Music className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <div className="font-bold text-lg">Music Studio</div>
+                  <div className="text-sm text-muted-foreground">Create AI music & voice</div>
+                </div>
               </div>
-              <div>
-                <div className="font-bold text-lg">AI Coach</div>
-                <div className="text-sm text-muted-foreground">Chat with Sasquatch</div>
+              <div className="mt-4 flex gap-2 flex-wrap">
+                <Badge variant="secondary" className="text-xs">Lyria AI</Badge>
+                <Badge variant="secondary" className="text-xs">Voice Clone</Badge>
+                <Badge variant="secondary" className="text-xs">Movie Studio</Badge>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </Link>
 
-          <Card className="p-6 hover-elevate cursor-pointer" data-testid="card-courses">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <BookOpen className="h-6 w-6 text-primary" />
+          <Link href="/recovery-dashboard">
+            <Card className="p-6 hover-elevate cursor-pointer h-full" data-testid="card-progress">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <TrendingUp className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <div className="font-bold text-lg">Recovery Dashboard</div>
+                  <div className="text-sm text-muted-foreground">Track your progress</div>
+                </div>
               </div>
-              <div>
-                <div className="font-bold text-lg">Courses</div>
-                <div className="text-sm text-muted-foreground">Interactive learning</div>
+              <div className="mt-4 flex gap-2 flex-wrap">
+                <Badge variant="secondary" className="text-xs">66-Day Tracker</Badge>
+                <Badge variant="secondary" className="text-xs">Milestones</Badge>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </Link>
 
-          <Card className="p-6 hover-elevate cursor-pointer" data-testid="card-progress">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-primary" />
+          <Link href="/publishing">
+            <Card className="p-6 hover-elevate cursor-pointer h-full" data-testid="card-publishing">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <BookOpen className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <div className="font-bold text-lg">Stroke Lyfe Publishing</div>
+                  <div className="text-sm text-muted-foreground">Write your story</div>
+                </div>
               </div>
-              <div>
-                <div className="font-bold text-lg">Progress</div>
-                <div className="text-sm text-muted-foreground">Track recovery</div>
+              <div className="mt-4 flex gap-2 flex-wrap">
+                <Badge variant="secondary" className="text-xs">AI Ghostwriter</Badge>
+                <Badge variant="secondary" className="text-xs">Course Builder</Badge>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </Link>
 
-          <Card className="p-6 hover-elevate cursor-pointer" data-testid="card-daily-log">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Calendar className="h-6 w-6 text-primary" />
+          <Link href="/community">
+            <Card className="p-6 hover-elevate cursor-pointer h-full" data-testid="card-community">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Users className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <div className="font-bold text-lg">Community</div>
+                  <div className="text-sm text-muted-foreground">Connect with warriors</div>
+                </div>
               </div>
-              <div>
-                <div className="font-bold text-lg">Daily Log</div>
-                <div className="text-sm text-muted-foreground">Record today</div>
+              <div className="mt-4 flex gap-2 flex-wrap">
+                <Badge variant="secondary" className="text-xs">Forum</Badge>
+                <Badge variant="secondary" className="text-xs">Pods</Badge>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </Link>
+
+          <Link href="/marketplace">
+            <Card className="p-6 hover-elevate cursor-pointer h-full" data-testid="card-marketplace">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <ShoppingBag className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <div className="font-bold text-lg">Marketplace</div>
+                  <div className="text-sm text-muted-foreground">Books, courses & gear</div>
+                </div>
+              </div>
+              <div className="mt-4 flex gap-2 flex-wrap">
+                <Badge variant="secondary" className="text-xs">Recovery Guides</Badge>
+                <Badge variant="secondary" className="text-xs">Coaching</Badge>
+              </div>
+            </Card>
+          </Link>
+
+          <Link href="/university">
+            <Card className="p-6 hover-elevate cursor-pointer h-full" data-testid="card-university">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Calendar className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <div className="font-bold text-lg">Recovery University</div>
+                  <div className="text-sm text-muted-foreground">Structured curriculum</div>
+                </div>
+              </div>
+              <div className="mt-4 flex gap-2 flex-wrap">
+                <Badge variant="secondary" className="text-xs">18 Modules</Badge>
+                <Badge variant="secondary" className="text-xs">15+ Lessons</Badge>
+              </div>
+            </Card>
+          </Link>
         </div>
 
-        <Card className="p-8">
+        <Card className="p-8 bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
           <div className="text-center">
-            <Badge variant="outline" className="mb-4">COMING SOON</Badge>
+            <Badge className="mb-4">AI CREATIVE STUDIO</Badge>
             <h2 className="text-2xl font-bold mb-4">
-              Your Personalized Recovery Journey Awaits
+              Create Music, Clone Voices, Make Movies
             </h2>
             <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-              We're building world-class AI coaching, interactive courses, community forums, 
-              and progress tracking tools specifically designed for stroke recovery warriors like you.
+              The most advanced AI creative suite for stroke recovery. Generate beats in any genre, 
+              clone your voice, write songs, and create AI movies where you play hero and villain.
             </p>
-            <p className="text-sm text-muted-foreground">
-              Stay tuned - these features are launching soon!
-            </p>
+            <Link href="/music-studio">
+              <Button size="lg" data-testid="button-go-to-studio">
+                <Music className="h-5 w-5 mr-2" />
+                Open Creative Studio
+              </Button>
+            </Link>
           </div>
         </Card>
       </main>
