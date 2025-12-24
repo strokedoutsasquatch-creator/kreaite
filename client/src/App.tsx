@@ -37,6 +37,9 @@ import Pricing from "@/pages/Pricing";
 import RecoveryUniversity from "@/pages/RecoveryUniversity";
 import MusicStudio from "@/pages/MusicStudio";
 import BookStudio from "@/pages/BookStudio";
+import VideoStudio from "@/pages/VideoStudio";
+import CourseStudio from "@/pages/CourseStudio";
+import ImageStudio from "@/pages/ImageStudio";
 import BookMarketplace from "@/pages/BookMarketplace";
 import AuthorDashboard from "@/pages/AuthorDashboard";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -148,6 +151,21 @@ function Router() {
       <Route path="/book-studio">
         <ProtectedRoute>
           <BookStudio />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/video-studio">
+        <ProtectedRoute>
+          <VideoStudio />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/course-studio">
+        <ProtectedRoute>
+          <CourseStudio />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/image-studio">
+        <ProtectedRoute>
+          <ImageStudio />
         </ProtectedRoute>
       </Route>
       <Route path="/stories" component={Stories} />
