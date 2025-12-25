@@ -25,8 +25,13 @@ KreAIte.xyz is an ultra-premium AI-powered creator platform with 6 professional 
 - **Cover Designer** - 8 templates, AI generation, Canva-style editing, KDP-ready exports
 - **Professional Editor** - TipTap WYSIWYG with tables, images, formatting, find/replace, zoom
 - **AI Integration** - Google Gemini and OpenAI for text, Lyria for music, specialized models for images/video
-- **Marketplace** - Sell books, courses, music, videos with 85% creator revenue share
+- **Marketplace (KreAItorverse)** - Sell books, courses, music, videos with 85% creator revenue share
 - **Stripe Integration** - Payments, subscriptions, customer portal
+- **Quick Create** - 1-click magic tools: instant covers, hum-to-song, instant course, AI ghostwriter, blog-to-book
+- **AI Consultant** - Train AI on your content, monetize with chat subscriptions, embed on external sites
+- **Conversation System** - Cross-studio AI chat with session history and action support
+- **Manuscript-to-Soundtrack** - Analyze book emotional arc and generate companion soundtrack
+- **Viral Features** - Affiliate system, success stories, creator leaderboard, watermarks
 
 ### Platform Model:
 - **Centralized at KreAIte.xyz** - Single platform with creator tools
@@ -176,10 +181,14 @@ Icons: lucide-react only (no emoji)
 - `client/src/components/ProfessionalEditor.tsx` - TipTap book editor
 - `client/src/components/CoverDesigner.tsx` - Book cover designer
 - `client/src/components/MediaStudio.tsx` - Unified image/video editor
+- `client/src/components/ConversationPanel.tsx` - Cross-studio AI chat
+- `client/src/components/CreatorHeader.tsx` - Header with user dropdown and credits
 - `client/src/pages/BookStudio.tsx` - Book Studio page
 - `client/src/pages/MediaStudioPage.tsx` - MediaStudio page
+- `client/src/pages/QuickCreate.tsx` - 1-click magic tools
+- `client/src/pages/AIConsultant.tsx` - AI Consultant training/monetization
 - `server/routes.ts` - API routes
-- `shared/schema.ts` - Database schema
+- `shared/schema.ts` - Database schema (includes conversationSessions, assetRegistry, studioPipelines)
 - `client/index.html` - SEO/AEO meta tags and structured data
 
 ## Technical Notes
