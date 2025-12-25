@@ -126,6 +126,101 @@ export class StripeService {
   }
 
   // ============================================================================
+  // PRODUCT & PRICE CREATION - KreAIte Subscription Tiers
+  // ============================================================================
+
+  async createKreAIteProducts() {
+    const stripe = await getUncachableStripeClient();
+    
+    const tiers = [
+      {
+        name: 'KreAIte Creator',
+        description: 'For serious content creators - 50 AI generations/day, full Book & Music Studio access, Google Docs integration',
+        monthlyPrice: 2900, // $29
+        annualPrice: 24900, // $249/year (save ~28%)
+        metadata: { platform: 'kreaite', tier: 'creator', credits: '2500' }
+      },
+      {
+        name: 'KreAIte Pro',
+        description: 'Unlimited creation power - All studios, unlimited AI generations, priority support, commercial license',
+        monthlyPrice: 7900, // $79
+        annualPrice: 69900, // $699/year (save ~26%)
+        metadata: { platform: 'kreaite', tier: 'pro', credits: '10000' }
+      },
+      {
+        name: 'KreAIte Enterprise',
+        description: 'For teams and agencies - 10 seats, white-label option, API access, dedicated account manager',
+        monthlyPrice: 29900, // $299
+        annualPrice: 249900, // $2499/year (save ~30%)
+        metadata: { platform: 'kreaite', tier: 'enterprise', credits: '50000' }
+      }
+    ];
+
+    const createdProducts = [];
+
+    for (const tier of tiers) {
+      // Create product
+      const product = await stripe.products.create({
+        name: tier.name,
+        description: tier.description,
+        metadata: tier.metadata,
+      });
+
+      // Create monthly price
+      const monthlyPrice = await stripe.prices.create({
+        product: product.id,
+        unit_amount: tier.monthlyPrice,
+        currency: 'usd',
+        recurring: { interval: 'month' },
+        metadata: { ...tier.metadata, billing: 'monthly' },
+      });
+
+      // Create annual price
+      const annualPrice = await stripe.prices.create({
+        product: product.id,
+        unit_amount: tier.annualPrice,
+        currency: 'usd',
+        recurring: { interval: 'year' },
+        metadata: { ...tier.metadata, billing: 'annual' },
+      });
+
+      createdProducts.push({
+        product: product.id,
+        name: tier.name,
+        monthlyPriceId: monthlyPrice.id,
+        annualPriceId: annualPrice.id,
+        monthlyAmount: tier.monthlyPrice,
+        annualAmount: tier.annualPrice,
+      });
+    }
+
+    return createdProducts;
+  }
+
+  async getKreAIteProducts() {
+    const result = await db.execute(
+      sql`
+        SELECT 
+          p.id as product_id,
+          p.name as product_name,
+          p.description as product_description,
+          p.metadata as product_metadata,
+          pr.id as price_id,
+          pr.unit_amount,
+          pr.currency,
+          pr.recurring,
+          pr.metadata as price_metadata
+        FROM stripe.products p
+        LEFT JOIN stripe.prices pr ON pr.product = p.id AND pr.active = true
+        WHERE p.active = true 
+          AND p.metadata->>'platform' = 'kreaite'
+        ORDER BY pr.unit_amount
+      `
+    );
+    return result.rows;
+  }
+
+  // ============================================================================
   // STRIPE CONNECT - Creator Onboarding & Payouts
   // ============================================================================
 

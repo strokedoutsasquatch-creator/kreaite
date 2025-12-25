@@ -4240,6 +4240,38 @@ Respond in JSON format:
   });
 
   // ============================================================================
+  // STRIPE KREAITE PRODUCTS
+  // ============================================================================
+
+  app.post('/api/admin/stripe/create-kreaite-products', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      console.log('Creating KreAIte products in Stripe...');
+      const products = await stripeService.createKreAIteProducts();
+      console.log('Created products:', products);
+      res.json({ success: true, products });
+    } catch (error) {
+      console.error("Error creating KreAIte products:", error);
+      res.status(500).json({ message: "Failed to create products", error: String(error) });
+    }
+  });
+
+  app.get('/api/stripe/kreaite-products', async (req, res) => {
+    try {
+      const products = await stripeService.getKreAIteProducts();
+      res.json(products);
+    } catch (error) {
+      console.error("Error fetching KreAIte products:", error);
+      res.status(500).json({ message: "Failed to fetch products" });
+    }
+  });
+
+  // ============================================================================
   // SEO PAGES
   // ============================================================================
 

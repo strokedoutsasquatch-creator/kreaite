@@ -63,7 +63,8 @@ const creatorTiers = [
     ],
     cta: "Get Started Free",
     ctaVariant: "outline" as const,
-    stripePriceId: null,
+    stripePriceIdMonthly: null,
+    stripePriceIdAnnual: null,
     credits: 100,
   },
   {
@@ -90,7 +91,8 @@ const creatorTiers = [
     ],
     cta: "Start Creating",
     ctaVariant: "default" as const,
-    stripePriceId: "creator_monthly",
+    stripePriceIdMonthly: "price_1SiIdw51DeNrqHX5O9dDMqEj",
+    stripePriceIdAnnual: "price_1SiIdw51DeNrqHX5Xv7VpaxJ",
     credits: 2500,
   },
   {
@@ -117,7 +119,8 @@ const creatorTiers = [
     ],
     cta: "Go Pro",
     ctaVariant: "default" as const,
-    stripePriceId: "pro_monthly",
+    stripePriceIdMonthly: "price_1SiIdx51DeNrqHX5WmiJLsLR",
+    stripePriceIdAnnual: "price_1SiIdx51DeNrqHX5xxkqYYXX",
     credits: 10000,
   },
   {
@@ -144,7 +147,8 @@ const creatorTiers = [
     ],
     cta: "Contact Sales",
     ctaVariant: "outline" as const,
-    stripePriceId: "enterprise_monthly",
+    stripePriceIdMonthly: "price_1SiIdx51DeNrqHX5vc05QWXf",
+    stripePriceIdAnnual: "price_1SiIdy51DeNrqHX5iP3aGHDP",
     credits: 50000,
   },
 ];
@@ -214,9 +218,9 @@ export default function Pricing() {
 
   const checkoutMutation = useMutation({
     mutationFn: async (priceId: string) => {
-      const response = await apiRequest('POST', '/api/stripe/create-checkout', { 
+      const response = await apiRequest('POST', '/api/checkout', { 
         priceId,
-        billing: isAnnual ? 'annual' : 'monthly'
+        mode: 'subscription'
       });
       return response.json();
     },
@@ -247,7 +251,8 @@ export default function Pricing() {
   };
 
   const handleSelectPlan = (tier: typeof creatorTiers[0]) => {
-    if (!tier.stripePriceId) {
+    const priceId = isAnnual ? tier.stripePriceIdAnnual : tier.stripePriceIdMonthly;
+    if (!priceId) {
       window.location.href = '/api/login';
       return;
     }
@@ -255,7 +260,7 @@ export default function Pricing() {
       window.location.href = '/api/login';
       return;
     }
-    checkoutMutation.mutate(tier.stripePriceId);
+    checkoutMutation.mutate(priceId);
   };
 
   return (
