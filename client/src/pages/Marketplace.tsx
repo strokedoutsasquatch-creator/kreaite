@@ -142,12 +142,12 @@ const sampleVideoContent: CreatorContent[] = [
     creator: "Design Master",
     type: "video",
     price: 9.99,
-    duration: "12:45",
+    duration: "0:12",
     genre: "Tutorial",
     rating: 4.7,
     streamCount: 5400,
     isFeatured: true,
-    streamUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    streamUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
   },
   {
     id: "video-2",
@@ -155,11 +155,11 @@ const sampleVideoContent: CreatorContent[] = [
     creator: "Tech Visionary",
     type: "video",
     price: 14.99,
-    duration: "25:00",
+    duration: "0:12",
     genre: "Education",
     rating: 4.8,
     streamCount: 3200,
-    streamUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+    streamUrl: "https://www.w3schools.com/html/movie.mp4",
   },
   {
     id: "video-3",
@@ -167,11 +167,11 @@ const sampleVideoContent: CreatorContent[] = [
     creator: "Audio Pro",
     type: "video",
     price: 19.99,
-    duration: "45:30",
+    duration: "0:12",
     genre: "Tutorial",
     rating: 4.6,
     streamCount: 8900,
-    streamUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+    streamUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
   },
 ];
 
@@ -182,12 +182,12 @@ const sampleMovieContent: CreatorContent[] = [
     creator: "Blender Foundation",
     type: "movie",
     price: 4.99,
-    duration: "12:14",
+    duration: "0:12",
     genre: "Sci-Fi",
     rating: 4.5,
     streamCount: 45000,
     isFeatured: true,
-    streamUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+    streamUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
   },
   {
     id: "movie-2",
@@ -195,12 +195,12 @@ const sampleMovieContent: CreatorContent[] = [
     creator: "Blender Institute",
     type: "movie",
     price: 0,
-    duration: "9:56",
+    duration: "0:12",
     genre: "Animation",
     rating: 4.8,
     streamCount: 120000,
     isFeatured: true,
-    streamUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    streamUrl: "https://www.w3schools.com/html/movie.mp4",
   },
   {
     id: "movie-3",
@@ -208,11 +208,11 @@ const sampleMovieContent: CreatorContent[] = [
     creator: "Blender Foundation",
     type: "movie",
     price: 2.99,
-    duration: "14:48",
+    duration: "0:12",
     genre: "Fantasy",
     rating: 4.7,
     streamCount: 89000,
-    streamUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+    streamUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
   },
 ];
 
@@ -390,11 +390,18 @@ function VideoPlayer({ video, onClose }: { video: CreatorContent | null; onClose
   }, [volume, isMuted]);
 
   useEffect(() => {
-    if (videoRef.current && video?.streamUrl) {
-      videoRef.current.src = video.streamUrl;
-      videoRef.current.load();
+    const videoEl = videoRef.current;
+    if (videoEl && video?.streamUrl) {
+      videoEl.src = video.streamUrl;
+      videoEl.load();
     }
-  }, [video?.streamUrl]);
+    return () => {
+      if (videoEl) {
+        videoEl.pause();
+        videoEl.src = '';
+      }
+    };
+  }, [video?.id, video?.streamUrl]);
 
   const handlePlayPause = () => {
     if (!videoRef.current || !hasStreamUrl) return;
@@ -469,20 +476,21 @@ function VideoPlayer({ video, onClose }: { video: CreatorContent | null; onClose
       
       <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-gray-900 to-black">
         <div className="relative w-full max-w-4xl aspect-video bg-black rounded-lg overflow-hidden shadow-2xl">
-          {hasStreamUrl && (
-            <video
-              ref={videoRef}
-              src={video.streamUrl}
-              className="w-full h-full object-contain"
-              onTimeUpdate={handleTimeUpdate}
-              onLoadedMetadata={handleLoadedMetadata}
-              onEnded={() => setIsPlaying(false)}
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-              onClick={handlePlayPause}
-              onError={(e) => console.error("Video error:", e)}
-            />
-          )}
+          <video
+            ref={videoRef}
+            src={video?.streamUrl || ''}
+            className="w-full h-full object-contain"
+            onTimeUpdate={handleTimeUpdate}
+            onLoadedMetadata={handleLoadedMetadata}
+            onEnded={() => setIsPlaying(false)}
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+            onClick={handlePlayPause}
+            onError={(e) => console.error("Video error:", e)}
+            preload="auto"
+            playsInline
+            style={{ display: hasStreamUrl ? 'block' : 'none' }}
+          />
           
           {!hasStreamUrl && (
             <div className="absolute inset-0 flex items-center justify-center">
