@@ -3,6 +3,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import CreatorHeader from "@/components/CreatorHeader";
 import Footer from "@/components/Footer";
 import ChildrensBookMode from "@/components/ChildrensBookMode";
+import ProfessionalEditor from "@/components/ProfessionalEditor";
+import CoverDesigner from "@/components/CoverDesigner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -2114,139 +2116,22 @@ Your journey to healing starts here.`);
                 {/* Word Processor Editor */}
                 <div className="lg:col-span-3">
                   <Card className="border-0 shadow-lg">
-                    {/* Formatting Toolbar */}
-                    <div className="border-b bg-muted/30 p-2">
-                      <div className="flex items-center gap-1 flex-wrap">
-                        {/* File Actions */}
-                        <div className="flex items-center gap-0.5 pr-2 border-r border-border">
-                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Save" onClick={handleSave}>
-                            <Save className="w-4 h-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Undo" onClick={handleUndo} disabled={undoStack.length === 0}>
-                            <Undo className="w-4 h-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Redo" onClick={handleRedo} disabled={redoStack.length === 0}>
-                            <Redo className="w-4 h-4" />
-                          </Button>
-                        </div>
-
-                        {/* Text Formatting */}
-                        <div className="flex items-center gap-0.5 px-2 border-r border-border">
-                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Bold (Ctrl+B)" onClick={() => insertFormatting('**')}>
-                            <Bold className="w-4 h-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Italic (Ctrl+I)" onClick={() => insertFormatting('*')}>
-                            <Italic className="w-4 h-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Underline" onClick={() => insertFormatting('<u>', '</u>')}>
-                            <Underline className="w-4 h-4" />
-                          </Button>
-                        </div>
-
-                        {/* Headings */}
-                        <div className="flex items-center gap-0.5 px-2 border-r border-border">
-                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Heading 1" onClick={() => insertLineFormatting('# ')}>
-                            <Heading1 className="w-4 h-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Heading 2" onClick={() => insertLineFormatting('## ')}>
-                            <Heading2 className="w-4 h-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Heading 3" onClick={() => insertLineFormatting('### ')}>
-                            <Heading3 className="w-4 h-4" />
-                          </Button>
-                        </div>
-
-                        {/* Lists & Quote */}
-                        <div className="flex items-center gap-0.5 px-2 border-r border-border">
-                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Bullet List" onClick={() => insertLineFormatting('- ')}>
-                            <List className="w-4 h-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Numbered List" onClick={() => insertLineFormatting('1. ')}>
-                            <ListOrdered className="w-4 h-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Quote" onClick={() => insertLineFormatting('> ')}>
-                            <Quote className="w-4 h-4" />
-                          </Button>
-                        </div>
-
-                        {/* Alignment - Display only, text is left-aligned by default */}
-                        <div className="flex items-center gap-0.5 px-2 border-r border-border">
-                          <Button size="icon" variant="ghost" className="h-8 w-8 bg-muted/50" title="Align Left (Default)" disabled>
-                            <AlignLeft className="w-4 h-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Center (Use HTML)" onClick={() => insertFormatting('<center>', '</center>')}>
-                            <AlignCenter className="w-4 h-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Separator" onClick={() => insertLineFormatting('\n---\n')}>
-                            <AlignJustify className="w-4 h-4" />
-                          </Button>
-                        </div>
-
-                        {/* Insert Image */}
-                        <div className="flex items-center gap-0.5 px-2 border-r border-border">
-                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Insert Image Placeholder" onClick={() => insertFormatting('\n![Image description](image-url)\n', '')}>
-                            <FileImage className="w-4 h-4" />
-                          </Button>
-                        </div>
-
-                        {/* Find/Replace & View Mode */}
-                        <div className="flex items-center gap-0.5 px-2 border-r border-border">
-                          <Button 
-                            size="icon" 
-                            variant={showFindReplace ? "secondary" : "ghost"} 
-                            className="h-8 w-8" 
-                            title="Find & Replace (Ctrl+F)"
-                            onClick={() => setShowFindReplace(!showFindReplace)}
-                            data-testid="button-find-replace"
-                          >
-                            <Search className="w-4 h-4" />
-                          </Button>
-                        </div>
-
-                        <div className="flex items-center gap-0.5 px-2 border-r border-border">
-                          <Button 
-                            size="icon" 
-                            variant={editorViewMode === "write" ? "secondary" : "ghost"} 
-                            className="h-8 w-8" 
-                            title="Write Mode"
-                            onClick={() => setEditorViewMode("write")}
-                            data-testid="button-view-write"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            size="icon" 
-                            variant={editorViewMode === "split" ? "secondary" : "ghost"} 
-                            className="h-8 w-8" 
-                            title="Split View"
-                            onClick={() => setEditorViewMode("split")}
-                            data-testid="button-view-split"
-                          >
-                            <SplitSquareHorizontal className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            size="icon" 
-                            variant={editorViewMode === "preview" ? "secondary" : "ghost"} 
-                            className="h-8 w-8" 
-                            title="Preview Mode"
-                            onClick={() => setEditorViewMode("preview")}
-                            data-testid="button-view-preview"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        </div>
-
-                        {/* Spacer */}
-                        <div className="flex-1" />
-
-                        {/* AI Actions */}
+                    {/* Chapter Title */}
+                    <div className="px-6 pt-4 pb-2 border-b">
+                      <div className="flex items-center justify-between gap-4">
+                        <Input
+                          value={chapters.find(c => c.id === selectedChapter)?.title || ""}
+                          onChange={(e) => updateChapter(selectedChapter, { title: e.target.value })}
+                          className="text-xl font-bold border-0 px-0 focus-visible:ring-0 bg-transparent flex-1"
+                          placeholder="Chapter Title"
+                          data-testid="input-chapter-title-editor"
+                        />
                         <div className="flex items-center gap-2">
                           <Button 
                             onClick={generateChapterContent}
                             disabled={isGenerating}
                             size="sm"
                             variant="outline"
-                            className="h-8"
                             data-testid="button-generate-chapter"
                           >
                             {isGenerating ? <RefreshCw className="w-3 h-3 mr-1 animate-spin" /> : <Wand2 className="w-3 h-3 mr-1" />}
@@ -2267,7 +2152,6 @@ Your journey to healing starts here.`);
                             onClick={runEditingPass}
                             disabled={isGenerating || !chapterContent}
                             size="sm"
-                            className="h-8"
                             data-testid="button-run-edit"
                           >
                             <Edit3 className="w-3 h-3 mr-1" />
@@ -2277,152 +2161,22 @@ Your journey to healing starts here.`);
                       </div>
                     </div>
 
-                    {/* Find/Replace Panel */}
-                    {showFindReplace && (
-                      <div className="border-b bg-muted/20 p-3">
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <div className="flex items-center gap-2">
-                            <Search className="w-4 h-4 text-muted-foreground" />
-                            <Input
-                              value={findText}
-                              onChange={(e) => {
-                                setFindText(e.target.value);
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleFind();
-                              }}
-                              placeholder="Find..."
-                              className="w-40 h-8"
-                              data-testid="input-find"
-                            />
-                            <Button size="sm" variant="ghost" className="h-8" onClick={handleFind} data-testid="button-find-next">
-                              <ArrowDown className="w-3 h-3" />
-                            </Button>
-                            {findMatchCount > 0 && (
-                              <span className="text-xs text-muted-foreground">
-                                {currentFindIndex}/{findMatchCount}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Replace className="w-4 h-4 text-muted-foreground" />
-                            <Input
-                              value={replaceText}
-                              onChange={(e) => setReplaceText(e.target.value)}
-                              placeholder="Replace with..."
-                              className="w-40 h-8"
-                              data-testid="input-replace"
-                            />
-                            <Button size="sm" variant="outline" className="h-8" onClick={handleReplace} disabled={findMatchCount === 0} data-testid="button-replace">
-                              Replace
-                            </Button>
-                            <Button size="sm" variant="outline" className="h-8" onClick={handleReplaceAll} disabled={findMatchCount === 0} data-testid="button-replace-all">
-                              Replace All
-                            </Button>
-                          </div>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 ml-auto" onClick={() => setShowFindReplace(false)}>
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Chapter Title */}
-                    <div className="px-6 pt-4 pb-2 border-b">
-                      <Input
-                        value={chapters.find(c => c.id === selectedChapter)?.title || ""}
-                        onChange={(e) => updateChapter(selectedChapter, { title: e.target.value })}
-                        className="text-xl font-bold border-0 px-0 focus-visible:ring-0 bg-transparent"
-                        placeholder="Chapter Title"
-                        data-testid="input-chapter-title-editor"
-                      />
-                    </div>
-
-                    {/* Editor Content Area - Styled like a document */}
-                    <div className={`${editorViewMode === "split" ? "grid grid-cols-2 gap-4" : ""} bg-white dark:bg-zinc-900 min-h-[500px] p-4 md:p-8 mx-4 my-4 rounded shadow-inner border`}>
-                      {/* Write/Edit Panel */}
-                      {(editorViewMode === "write" || editorViewMode === "split") && (
-                        <div className={editorViewMode === "split" ? "border-r pr-4" : ""}>
-                          <Textarea
-                        ref={editorRef}
-                        value={chapterContent}
-                        onChange={(e) => {
-                          setChapterContent(e.target.value);
-                          updateChapter(selectedChapter, { 
-                            content: e.target.value,
-                            wordCount: e.target.value.split(/\s+/).filter(Boolean).length 
-                          });
-                        }}
-                        onKeyDown={(e) => {
-                          // Keyboard shortcuts
-                          if (e.ctrlKey || e.metaKey) {
-                            if (e.key === 'b') {
-                              e.preventDefault();
-                              insertFormatting('**');
-                            } else if (e.key === 'i') {
-                              e.preventDefault();
-                              insertFormatting('*');
-                            } else if (e.key === 'z') {
-                              e.preventDefault();
-                              if (e.shiftKey) {
-                                handleRedo();
-                              } else {
-                                handleUndo();
-                              }
-                            } else if (e.key === 's') {
-                              e.preventDefault();
-                              handleSave();
-                            }
-                          }
-                        }}
-                        placeholder="Start writing your chapter here, or click 'AI Write' to generate content based on your chapter outline...
-
-Tips:
-• Use the formatting toolbar above to style your text
-• Click 'AI Write' to have AI generate this chapter
-• Keyboard shortcuts: Ctrl+B (bold), Ctrl+I (italic), Ctrl+Z (undo), Ctrl+S (save)
-• Use editing passes to polish your writing:
-  - Developmental: Structure & narrative
-  - Line Edit: Sentence flow & clarity
-  - Copy Edit: Grammar & consistency
-  - Proofread: Final polish"
-                            className="min-h-[450px] w-full border-0 resize-none focus-visible:ring-0 bg-transparent 
-                              text-base leading-relaxed font-serif dark:text-zinc-100"
-                            style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
-                            data-testid="textarea-chapter-content"
-                          />
-                        </div>
-                      )}
-                      
-                      {/* Preview Panel */}
-                      {(editorViewMode === "preview" || editorViewMode === "split") && (
-                        <div className="prose prose-sm dark:prose-invert max-w-none overflow-auto">
-                          <div 
-                            className="min-h-[450px] font-serif"
-                            style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
-                            dangerouslySetInnerHTML={{ __html: renderMarkdownPreview(chapterContent) || '<p class="text-muted-foreground">Preview will appear here...</p>' }}
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Status Bar */}
-                    <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-4">
-                        <span>{chapterContent.split(/\s+/).filter(Boolean).length.toLocaleString()} words</span>
-                        <span>{chapterContent.length.toLocaleString()} characters</span>
-                        <span>~{Math.ceil(chapterContent.split(/\s+/).filter(Boolean).length / 250)} pages</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {isGenerating && (
-                          <span className="flex items-center gap-1 text-primary">
-                            <RefreshCw className="w-3 h-3 animate-spin" />
-                            Processing...
-                          </span>
-                        )}
-                        <span className="text-green-500">Auto-saved</span>
-                      </div>
-                    </div>
+                    {/* Professional Editor */}
+                    <ProfessionalEditor
+                      content={chapterContent}
+                      onChange={(html: string) => {
+                        setChapterContent(html);
+                        const textContent = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+                        const wordCount = textContent ? textContent.split(/\s+/).filter(Boolean).length : 0;
+                        updateChapter(selectedChapter, { 
+                          content: html,
+                          wordCount 
+                        });
+                      }}
+                      onSave={handleSave}
+                      placeholder="Start writing your chapter here..."
+                      showWordCount={true}
+                    />
                   </Card>
                 </div>
               </div>
@@ -2616,142 +2370,21 @@ Tips:
                     </TabsContent>
                     
                     <TabsContent value="cover" className="space-y-4">
-                      {/* Cover Style Options */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-muted/30 rounded-lg">
-                        <div>
-                          <Label className="text-xs text-muted-foreground">Cover Style</Label>
-                          <Select value={coverStyle} onValueChange={setCoverStyle}>
-                            <SelectTrigger className="h-8" data-testid="select-cover-style">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="professional">Professional</SelectItem>
-                              <SelectItem value="bold typography">Bold Typography</SelectItem>
-                              <SelectItem value="minimalist">Minimalist</SelectItem>
-                              <SelectItem value="photographic">Photographic</SelectItem>
-                              <SelectItem value="illustrated">Illustrated</SelectItem>
-                              <SelectItem value="gradient abstract">Gradient Abstract</SelectItem>
-                              <SelectItem value="vintage classic">Vintage Classic</SelectItem>
-                              <SelectItem value="children colorful">Children's Colorful</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label className="text-xs text-muted-foreground">AI Provider</Label>
-                          <Select value={selectedAiProvider} onValueChange={(v: "gemini" | "openai" | "xai") => setSelectedAiProvider(v)}>
-                            <SelectTrigger className="h-8" data-testid="select-cover-ai">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="gemini">Gemini</SelectItem>
-                              <SelectItem value="openai">DALL-E 3</SelectItem>
-                              <SelectItem value="xai">XAI/Grok</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="col-span-2">
-                          <Label className="text-xs text-muted-foreground">Genre</Label>
-                          <Select value={selectedGenre} onValueChange={setSelectedGenre}>
-                            <SelectTrigger className="h-8" data-testid="select-cover-genre">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {genres.map(g => (
-                                <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                          <Card className="bg-muted/50">
-                            <CardContent className="p-4 space-y-4">
-                              <h4 className="font-semibold">Cover Details</h4>
-                              <div>
-                                <Label>Title on Cover</Label>
-                                <Input value={bookTitle} onChange={(e) => setBookTitle(e.target.value)} data-testid="input-cover-title" />
-                              </div>
-                              <div>
-                                <Label>Subtitle on Cover</Label>
-                                <Input value={bookSubtitle} onChange={(e) => setBookSubtitle(e.target.value)} data-testid="input-cover-subtitle" />
-                              </div>
-                              <div>
-                                <Label>Author Name</Label>
-                                <Input 
-                                  value={authorName} 
-                                  onChange={(e) => setAuthorName(e.target.value)} 
-                                  placeholder={user?.firstName ? `${user.firstName} ${user.lastName || ''}` : 'Author Name'}
-                                  data-testid="input-author-name" 
-                                />
-                              </div>
-                            </CardContent>
-                          </Card>
-                          
-                          <Button 
-                            onClick={generateCover}
-                            disabled={isGeneratingImage || !bookTitle.trim()}
-                            className="w-full"
-                            size="lg"
-                            data-testid="button-generate-cover"
-                          >
-                            {isGeneratingImage ? (
-                              <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
-                            ) : (
-                              <Palette className="w-5 h-5 mr-2" />
-                            )}
-                            Generate {coverStyle} Cover
-                          </Button>
-
-                          {coverImage && (
-                            <div className="flex gap-2">
-                              <Button 
-                                variant="outline" 
-                                className="flex-1"
-                                onClick={() => {
-                                  const link = document.createElement('a');
-                                  link.href = coverImage;
-                                  link.download = `${bookTitle.replace(/\s+/g, '-')}-cover.png`;
-                                  link.click();
-                                }}
-                                data-testid="button-download-cover"
-                              >
-                                <Download className="w-4 h-4 mr-2" /> Download Cover
-                              </Button>
-                              <Button 
-                                variant="outline"
-                                onClick={generateCover}
-                                disabled={isGeneratingImage}
-                                data-testid="button-regenerate-cover"
-                              >
-                                <RefreshCw className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div>
-                          <Label className="mb-2 block">Cover Preview</Label>
-                          <div className="aspect-[2/3] bg-gradient-to-br from-primary/20 to-primary/5 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center p-4 text-center overflow-hidden">
-                            {coverImage ? (
-                              <img 
-                                src={coverImage} 
-                                alt="Book cover preview"
-                                className="w-full h-full object-cover rounded-lg"
-                              />
-                            ) : (
-                              <div className="flex flex-col items-center justify-center h-full">
-                                <BookMarked className="w-16 h-16 text-muted-foreground/50 mb-4" />
-                                <h3 className="text-lg font-bold px-4">{bookTitle || "Your Title"}</h3>
-                                {bookSubtitle && <p className="text-xs text-muted-foreground mt-1 px-4">{bookSubtitle}</p>}
-                                <p className="text-xs mt-4 text-muted-foreground">by {authorName || user?.firstName || "Author Name"}</p>
-                                <p className="text-xs text-primary mt-4">Click "Generate" to create your cover</p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+                      <CoverDesigner
+                        bookTitle={bookTitle}
+                        bookSubtitle={bookSubtitle}
+                        authorName={authorName || user?.firstName || "Author Name"}
+                        genre={selectedGenre}
+                        onSave={(coverData) => {
+                          if (coverData.backgroundUrl) {
+                            setCoverImage(coverData.backgroundUrl);
+                          }
+                          toast({ title: "Cover Saved", description: "Your cover design has been saved" });
+                        }}
+                        onGenerate={(coverUrl) => {
+                          setCoverImage(coverUrl);
+                        }}
+                      />
                     </TabsContent>
                   </Tabs>
                   
