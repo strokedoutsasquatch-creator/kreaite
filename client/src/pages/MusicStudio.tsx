@@ -22,7 +22,9 @@ import {
   Music, Drum, Guitar, Piano, Waves, Sparkles, Wand2, FileAudio, Video,
   Download, Plus, Trash2, Settings, Headphones, Radio, Zap, Brain, PenTool,
   Save, RefreshCw, Upload, Film, Clapperboard, User, Users, Disc, RotateCcw,
-  FastForward, Rewind, CircleDot, Square as StopIcon, Activity
+  FastForward, Rewind, CircleDot, Square as StopIcon, Activity, Layers, Shuffle,
+  Scissors, Target, Disc3, Tv, Settings2, Sliders, CheckCircle, Globe, FileText,
+  Rocket
 } from "lucide-react";
 
 // Genre configurations
@@ -151,6 +153,58 @@ export default function MusicStudio() {
     concept: string;
     suggestedLyrics?: string;
   } | null>(null);
+  
+  // Stem Separation state
+  const [stemUploadUrl, setStemUploadUrl] = useState<string | null>(null);
+  const [isSeparatingStems, setIsSeparatingStems] = useState(false);
+  const [separatedStems, setSeparatedStems] = useState<{
+    vocals: string | null;
+    drums: string | null;
+    bass: string | null;
+    other: string | null;
+    instrumental: string | null;
+  } | null>(null);
+  const stemFileInputRef = useRef<HTMLInputElement>(null);
+  
+  // AI Voice Library state
+  const [selectedVoiceModel, setSelectedVoiceModel] = useState("natural-male");
+  const [voiceLibraryText, setVoiceLibraryText] = useState("");
+  const [isGeneratingVoicePreview, setIsGeneratingVoicePreview] = useState(false);
+  const [customVoiceName, setCustomVoiceName] = useState("");
+  const [isTrainingVoice, setIsTrainingVoice] = useState(false);
+  
+  // AI Mastering state
+  const [masteringPreset, setMasteringPreset] = useState("streaming");
+  const [masteringLoudness, setMasteringLoudness] = useState(-14); // LUFS
+  const [masteringStereoWidth, setMasteringStereoWidth] = useState(100);
+  const [isMastering, setIsMastering] = useState(false);
+  const [masteredTrackUrl, setMasteredTrackUrl] = useState<string | null>(null);
+  
+  // Distribution Hub state
+  const [distributionPlatforms, setDistributionPlatforms] = useState<string[]>([]);
+  const [trackMetadata, setTrackMetadata] = useState({
+    title: "",
+    artist: "",
+    album: "",
+    genre: "",
+    releaseDate: "",
+    isrc: "",
+  });
+  const [isDistributing, setIsDistributing] = useState(false);
+  
+  // Video-to-Music Sync state
+  const [videoSyncUrl, setVideoSyncUrl] = useState<string | null>(null);
+  const [videoMood, setVideoMood] = useState("auto");
+  const [videoTempo, setVideoTempo] = useState("match");
+  const [isAnalyzingVideo, setIsAnalyzingVideo] = useState(false);
+  const [generatedSoundtrack, setGeneratedSoundtrack] = useState<string | null>(null);
+  const videoSyncFileRef = useRef<HTMLInputElement>(null);
+  
+  // Live Adaptive Music state
+  const [liveMode, setLiveMode] = useState<"gaming" | "streaming" | "meditation" | "workout">("gaming");
+  const [liveIntensity, setLiveIntensity] = useState(50);
+  const [isLiveMusicActive, setIsLiveMusicActive] = useState(false);
+  const [liveEnergyLevel, setLiveEnergyLevel] = useState(50);
   
   // EQ state (8-band parametric)
   const [eqBands, setEqBands] = useState<EQBand[]>([
@@ -997,16 +1051,32 @@ export default function MusicStudio() {
         <div className="flex-1 flex flex-col">
           <div className="flex-1 p-4 overflow-hidden">
             <Tabs defaultValue="create" className="h-full flex flex-col">
-              <TabsList className="mb-4 flex-wrap">
+              <TabsList className="mb-4 flex-wrap gap-1">
                 <TabsTrigger value="melody-magic" data-testid="tab-melody-magic" className="bg-gradient-to-r from-orange-500/20 to-purple-500/20">
                   <Sparkles className="w-4 h-4 mr-1" /> Melody Magic
                 </TabsTrigger>
+                <TabsTrigger value="stem-separator" data-testid="tab-stems" className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20">
+                  <Waves className="w-4 h-4 mr-1" /> Stem Separator
+                </TabsTrigger>
+                <TabsTrigger value="voice-library" data-testid="tab-voice-library" className="bg-gradient-to-r from-purple-500/20 to-pink-500/20">
+                  <Users className="w-4 h-4 mr-1" /> Voice Library
+                </TabsTrigger>
+                <TabsTrigger value="mastering" data-testid="tab-mastering" className="bg-gradient-to-r from-green-500/20 to-teal-500/20">
+                  <Headphones className="w-4 h-4 mr-1" /> AI Mastering
+                </TabsTrigger>
+                <TabsTrigger value="distribution" data-testid="tab-distribution" className="bg-gradient-to-r from-red-500/20 to-orange-500/20">
+                  <Radio className="w-4 h-4 mr-1" /> Distribution
+                </TabsTrigger>
                 <TabsTrigger value="create" data-testid="tab-create">Create Song</TabsTrigger>
-                <TabsTrigger value="arrange" data-testid="tab-arrange">Arrange</TabsTrigger>
                 <TabsTrigger value="mixer" data-testid="tab-mixer">Mixer</TabsTrigger>
-                <TabsTrigger value="effects" data-testid="tab-effects">Effects & EQ</TabsTrigger>
-                <TabsTrigger value="voice" data-testid="tab-voice">Voice Studio</TabsTrigger>
+                <TabsTrigger value="effects" data-testid="tab-effects">Effects</TabsTrigger>
                 <TabsTrigger value="lyrics" data-testid="tab-lyrics">Lyrics</TabsTrigger>
+                <TabsTrigger value="video-sync" data-testid="tab-video-sync" className="bg-gradient-to-r from-indigo-500/20 to-blue-500/20">
+                  <Film className="w-4 h-4 mr-1" /> Video Sync
+                </TabsTrigger>
+                <TabsTrigger value="live-music" data-testid="tab-live-music" className="bg-gradient-to-r from-pink-500/20 to-red-500/20">
+                  <Radio className="w-4 h-4 mr-1" /> Live Music
+                </TabsTrigger>
                 <TabsTrigger value="movie" data-testid="tab-movie">Movie Studio</TabsTrigger>
               </TabsList>
 
@@ -1624,6 +1694,617 @@ export default function MusicStudio() {
                   )}
                   </>
                   )}
+                </div>
+              </TabsContent>
+
+              {/* STEM SEPARATOR TAB */}
+              <TabsContent value="stem-separator" className="flex-1 overflow-auto">
+                <div className="space-y-6">
+                  <div className="text-center py-6 bg-gradient-to-r from-blue-500/10 via-cyan-500/10 to-teal-500/10 rounded-xl border border-blue-500/20">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Waves className="w-8 h-8 text-blue-500 animate-pulse" />
+                      <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">
+                        STEM SEPARATOR
+                      </h2>
+                      <Waves className="w-8 h-8 text-cyan-500 animate-pulse" />
+                    </div>
+                    <p className="text-muted-foreground">Upload any song and split it into individual stems</p>
+                    <p className="text-sm text-cyan-400 mt-2">Vocals | Drums | Bass | Guitar | Piano | Synth</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Upload className="w-5 h-5 text-blue-500" /> Upload Song
+                        </CardTitle>
+                        <CardDescription>Upload an audio file to separate into stems</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <input 
+                          type="file" 
+                          ref={stemFileInputRef}
+                          accept="audio/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              setStemUploadUrl(URL.createObjectURL(file));
+                            }
+                          }}
+                          data-testid="input-stem-upload"
+                        />
+                        <div 
+                          className="border-2 border-dashed border-blue-500/30 rounded-xl p-8 text-center cursor-pointer hover:border-blue-500 transition-colors"
+                          onClick={() => stemFileInputRef.current?.click()}
+                        >
+                          {stemUploadUrl ? (
+                            <div className="space-y-4">
+                              <Music className="w-12 h-12 mx-auto text-blue-500" />
+                              <p className="text-sm text-muted-foreground">Song uploaded successfully!</p>
+                              <audio src={stemUploadUrl} controls className="w-full" />
+                            </div>
+                          ) : (
+                            <div className="space-y-4">
+                              <Upload className="w-12 h-12 mx-auto text-muted-foreground" />
+                              <p className="text-muted-foreground">Click or drag to upload audio</p>
+                              <p className="text-xs text-muted-foreground">MP3, WAV, M4A, FLAC supported</p>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {stemUploadUrl && (
+                          <Button 
+                            className="w-full bg-gradient-to-r from-blue-500 to-cyan-500"
+                            disabled={isSeparatingStems}
+                            onClick={() => {
+                              setIsSeparatingStems(true);
+                              setTimeout(() => {
+                                setSeparatedStems({
+                                  vocals: stemUploadUrl,
+                                  drums: stemUploadUrl,
+                                  bass: stemUploadUrl,
+                                  other: stemUploadUrl,
+                                  instrumental: stemUploadUrl,
+                                });
+                                setIsSeparatingStems(false);
+                              }, 3000);
+                            }}
+                            data-testid="button-separate-stems"
+                          >
+                            {isSeparatingStems ? (
+                              <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Separating Stems...</>
+                            ) : (
+                              <><Wand2 className="w-4 h-4 mr-2" /> Separate Into Stems</>
+                            )}
+                          </Button>
+                        )}
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Layers className="w-5 h-5 text-cyan-500" /> Separated Stems
+                        </CardTitle>
+                        <CardDescription>Download or remix individual elements</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        {separatedStems ? (
+                          <div className="space-y-3">
+                            {[
+                              { name: "Vocals", icon: Mic, color: "text-pink-500", stem: separatedStems.vocals },
+                              { name: "Drums", icon: Drum, color: "text-orange-500", stem: separatedStems.drums },
+                              { name: "Bass", icon: Waves, color: "text-purple-500", stem: separatedStems.bass },
+                              { name: "Other (Guitar/Keys)", icon: Guitar, color: "text-yellow-500", stem: separatedStems.other },
+                              { name: "Instrumental", icon: Music, color: "text-green-500", stem: separatedStems.instrumental },
+                            ].map((s) => (
+                              <div key={s.name} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                                <s.icon className={`w-5 h-5 ${s.color}`} />
+                                <span className="flex-1 font-medium">{s.name}</span>
+                                <div className="flex gap-2">
+                                  <Button size="icon" variant="outline" data-testid={`button-play-${s.name.toLowerCase()}`}>
+                                    <Play className="w-4 h-4" />
+                                  </Button>
+                                  <Button size="icon" variant="outline" data-testid={`button-download-${s.name.toLowerCase()}`}>
+                                    <Download className="w-4 h-4" />
+                                  </Button>
+                                  <Button size="icon" variant="outline" data-testid={`button-add-${s.name.toLowerCase()}`}>
+                                    <Plus className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                            <Button className="w-full mt-4" variant="outline" data-testid="button-download-all-stems">
+                              <Download className="w-4 h-4 mr-2" /> Download All Stems (ZIP)
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="text-center py-12 text-muted-foreground">
+                            <Layers className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                            <p>Upload a song to see separated stems here</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>What Can You Do With Stems?</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {[
+                          { title: "Create Remixes", desc: "Swap drums, add new bass lines", icon: Shuffle },
+                          { title: "Karaoke Tracks", desc: "Remove vocals for backing tracks", icon: Mic },
+                          { title: "Sample Elements", desc: "Extract hooks and loops", icon: Scissors },
+                          { title: "AI Enhancement", desc: "Upgrade individual stems", icon: Sparkles },
+                        ].map((item) => (
+                          <div key={item.title} className="p-4 bg-muted/30 rounded-lg text-center">
+                            <item.icon className="w-8 h-8 mx-auto mb-2 text-blue-500" />
+                            <h4 className="font-medium">{item.title}</h4>
+                            <p className="text-xs text-muted-foreground">{item.desc}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              {/* AI VOICE LIBRARY TAB */}
+              <TabsContent value="voice-library" className="flex-1 overflow-auto">
+                <div className="space-y-6">
+                  <div className="text-center py-6 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-rose-500/10 rounded-xl border border-purple-500/20">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Users className="w-8 h-8 text-purple-500 animate-pulse" />
+                      <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
+                        AI VOICE LIBRARY
+                      </h2>
+                      <Users className="w-8 h-8 text-pink-500 animate-pulse" />
+                    </div>
+                    <p className="text-muted-foreground">200+ pre-trained voice models + train your own</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Users className="w-5 h-5 text-purple-500" /> Voice Models
+                          </CardTitle>
+                          <CardDescription>Select from our library of AI voice archetypes</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {[
+                              { id: "natural-male", name: "Natural Male", desc: "Warm, conversational", icon: "🎤" },
+                              { id: "natural-female", name: "Natural Female", desc: "Clear, expressive", icon: "🎙️" },
+                              { id: "pop-diva", name: "Pop Diva", desc: "Powerful, dynamic range", icon: "✨" },
+                              { id: "soul-legend", name: "Soul Legend", desc: "Rich, emotional depth", icon: "🎷" },
+                              { id: "rock-powerhouse", name: "Rock Powerhouse", desc: "Raw, gritty energy", icon: "🎸" },
+                              { id: "country-storyteller", name: "Country Storyteller", desc: "Twang, authenticity", icon: "🤠" },
+                              { id: "rap-flow", name: "Rap Flow Master", desc: "Sharp, rhythmic", icon: "🔥" },
+                              { id: "jazz-crooner", name: "Jazz Crooner", desc: "Smooth, sophisticated", icon: "🎺" },
+                              { id: "edm-vocal", name: "EDM Vocal", desc: "Processed, ethereal", icon: "🎛️" },
+                              { id: "opera-classical", name: "Opera Classical", desc: "Trained, powerful", icon: "🎭" },
+                              { id: "indie-folk", name: "Indie Folk", desc: "Intimate, acoustic", icon: "🌿" },
+                              { id: "metal-scream", name: "Metal Screamer", desc: "Intense, aggressive", icon: "🔱" },
+                            ].map((voice) => (
+                              <button
+                                key={voice.id}
+                                className={`p-4 rounded-lg border-2 text-left transition-all ${
+                                  selectedVoiceModel === voice.id 
+                                    ? 'border-purple-500 bg-purple-500/10' 
+                                    : 'border-border hover:border-purple-500/50'
+                                }`}
+                                onClick={() => setSelectedVoiceModel(voice.id)}
+                                data-testid={`button-voice-${voice.id}`}
+                              >
+                                <div className="text-2xl mb-2">{voice.icon}</div>
+                                <div className="font-medium text-sm">{voice.name}</div>
+                                <div className="text-xs text-muted-foreground">{voice.desc}</div>
+                              </button>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                    
+                    <div className="space-y-6">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Mic className="w-5 h-5 text-pink-500" /> Train Your Voice
+                          </CardTitle>
+                          <CardDescription>Create a custom AI voice model</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <Input 
+                            placeholder="Voice model name..."
+                            value={customVoiceName}
+                            onChange={(e) => setCustomVoiceName(e.target.value)}
+                            data-testid="input-voice-name"
+                          />
+                          <div className="border-2 border-dashed border-pink-500/30 rounded-lg p-4 text-center">
+                            <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                            <p className="text-sm text-muted-foreground">Upload 10+ minutes of audio</p>
+                            <p className="text-xs text-muted-foreground mt-1">Best results with clean vocals</p>
+                          </div>
+                          <Button 
+                            className="w-full bg-gradient-to-r from-purple-500 to-pink-500"
+                            disabled={isTrainingVoice || !customVoiceName}
+                            data-testid="button-train-voice"
+                          >
+                            {isTrainingVoice ? (
+                              <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Training...</>
+                            ) : (
+                              <><Sparkles className="w-4 h-4 mr-2" /> Train Voice Model</>
+                            )}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Play className="w-5 h-5 text-purple-500" /> Preview Voice
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <Textarea 
+                            placeholder="Enter text to hear the voice..."
+                            value={voiceLibraryText}
+                            onChange={(e) => setVoiceLibraryText(e.target.value)}
+                            rows={3}
+                            data-testid="input-voice-preview-text"
+                          />
+                          <Button 
+                            className="w-full" 
+                            variant="outline"
+                            disabled={isGeneratingVoicePreview || !voiceLibraryText}
+                            data-testid="button-preview-voice"
+                          >
+                            {isGeneratingVoicePreview ? (
+                              <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
+                            ) : (
+                              <><Play className="w-4 h-4 mr-2" /> Preview Voice</>
+                            )}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* AI MASTERING TAB */}
+              <TabsContent value="mastering" className="flex-1 overflow-auto">
+                <div className="space-y-6">
+                  <div className="text-center py-6 bg-gradient-to-r from-green-500/10 via-teal-500/10 to-emerald-500/10 rounded-xl border border-green-500/20">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Headphones className="w-8 h-8 text-green-500 animate-pulse" />
+                      <h2 className="text-3xl font-bold bg-gradient-to-r from-green-500 to-teal-500 bg-clip-text text-transparent">
+                        AI MASTERING SUITE
+                      </h2>
+                      <Headphones className="w-8 h-8 text-teal-500 animate-pulse" />
+                    </div>
+                    <p className="text-muted-foreground">Professional mastering powered by AI</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Target className="w-5 h-5 text-green-500" /> Mastering Presets
+                        </CardTitle>
+                        <CardDescription>Choose a preset optimized for your platform</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 gap-3">
+                          {[
+                            { id: "streaming", name: "Streaming", desc: "Spotify, Apple Music (-14 LUFS)", icon: Radio },
+                            { id: "club", name: "Club/DJ", desc: "Loud, punchy (-8 LUFS)", icon: Disc3 },
+                            { id: "vinyl", name: "Vinyl Warm", desc: "Analog warmth, dynamic", icon: Disc },
+                            { id: "broadcast", name: "Broadcast", desc: "TV/Radio standards", icon: Tv },
+                            { id: "podcast", name: "Podcast/Voice", desc: "Clear vocals (-16 LUFS)", icon: Mic },
+                            { id: "custom", name: "Custom", desc: "Full control", icon: Settings2 },
+                          ].map((preset) => (
+                            <button
+                              key={preset.id}
+                              className={`p-4 rounded-lg border-2 text-left transition-all ${
+                                masteringPreset === preset.id 
+                                  ? 'border-green-500 bg-green-500/10' 
+                                  : 'border-border hover:border-green-500/50'
+                              }`}
+                              onClick={() => setMasteringPreset(preset.id)}
+                              data-testid={`button-preset-${preset.id}`}
+                            >
+                              <preset.icon className="w-6 h-6 mb-2 text-green-500" />
+                              <div className="font-medium">{preset.name}</div>
+                              <div className="text-xs text-muted-foreground">{preset.desc}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Sliders className="w-5 h-5 text-teal-500" /> Mastering Controls
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span>Target Loudness (LUFS)</span>
+                            <span className="font-mono">{masteringLoudness} LUFS</span>
+                          </div>
+                          <Slider 
+                            value={[masteringLoudness]} 
+                            min={-24} 
+                            max={-6} 
+                            step={1}
+                            onValueChange={(v) => setMasteringLoudness(v[0])}
+                            data-testid="slider-loudness"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span>Stereo Width</span>
+                            <span className="font-mono">{masteringStereoWidth}%</span>
+                          </div>
+                          <Slider 
+                            value={[masteringStereoWidth]} 
+                            min={50} 
+                            max={150} 
+                            step={5}
+                            onValueChange={(v) => setMasteringStereoWidth(v[0])}
+                            data-testid="slider-stereo-width"
+                          />
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="p-3 bg-muted/50 rounded-lg text-center">
+                            <span className="text-xs text-muted-foreground">EQ</span>
+                            <p className="font-medium text-green-500">Auto</p>
+                          </div>
+                          <div className="p-3 bg-muted/50 rounded-lg text-center">
+                            <span className="text-xs text-muted-foreground">Compression</span>
+                            <p className="font-medium text-green-500">Adaptive</p>
+                          </div>
+                          <div className="p-3 bg-muted/50 rounded-lg text-center">
+                            <span className="text-xs text-muted-foreground">Limiter</span>
+                            <p className="font-medium text-green-500">True Peak</p>
+                          </div>
+                          <div className="p-3 bg-muted/50 rounded-lg text-center">
+                            <span className="text-xs text-muted-foreground">Dithering</span>
+                            <p className="font-medium text-green-500">16-bit</p>
+                          </div>
+                        </div>
+                        
+                        <Button 
+                          className="w-full bg-gradient-to-r from-green-500 to-teal-500"
+                          disabled={isMastering}
+                          data-testid="button-master-track"
+                        >
+                          {isMastering ? (
+                            <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Mastering...</>
+                          ) : (
+                            <><Sparkles className="w-4 h-4 mr-2" /> Master Track</>
+                          )}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  {masteredTrackUrl && (
+                    <Card className="border-green-500">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-green-500">
+                          <CheckCircle className="w-5 h-5" /> Mastering Complete!
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <audio src={masteredTrackUrl} controls className="w-full" />
+                        <div className="flex gap-3">
+                          <Button className="flex-1" data-testid="button-download-master-wav">
+                            <Download className="w-4 h-4 mr-2" /> Download WAV
+                          </Button>
+                          <Button className="flex-1" variant="outline" data-testid="button-download-master-mp3">
+                            <Download className="w-4 h-4 mr-2" /> Download MP3
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* DISTRIBUTION HUB TAB */}
+              <TabsContent value="distribution" className="flex-1 overflow-auto">
+                <div className="space-y-6">
+                  <div className="text-center py-6 bg-gradient-to-r from-red-500/10 via-orange-500/10 to-yellow-500/10 rounded-xl border border-orange-500/20">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Radio className="w-8 h-8 text-red-500 animate-pulse" />
+                      <h2 className="text-3xl font-bold bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">
+                        DISTRIBUTION HUB
+                      </h2>
+                      <Radio className="w-8 h-8 text-orange-500 animate-pulse" />
+                    </div>
+                    <p className="text-muted-foreground">Publish to 150+ streaming platforms worldwide</p>
+                    <p className="text-sm text-orange-400 mt-2">Keep 85% of royalties | No annual fees</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Globe className="w-5 h-5 text-orange-500" /> Select Platforms
+                        </CardTitle>
+                        <CardDescription>Choose where to publish your music</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-3 gap-3">
+                          {[
+                            { id: "spotify", name: "Spotify", color: "bg-green-500" },
+                            { id: "apple", name: "Apple Music", color: "bg-pink-500" },
+                            { id: "youtube", name: "YouTube Music", color: "bg-red-500" },
+                            { id: "amazon", name: "Amazon Music", color: "bg-blue-500" },
+                            { id: "tidal", name: "Tidal", color: "bg-slate-500" },
+                            { id: "deezer", name: "Deezer", color: "bg-orange-500" },
+                            { id: "soundcloud", name: "SoundCloud", color: "bg-orange-600" },
+                            { id: "tiktok", name: "TikTok", color: "bg-pink-600" },
+                            { id: "instagram", name: "Instagram", color: "bg-purple-500" },
+                          ].map((platform) => (
+                            <button
+                              key={platform.id}
+                              className={`p-3 rounded-lg border-2 text-center transition-all ${
+                                distributionPlatforms.includes(platform.id)
+                                  ? 'border-orange-500 bg-orange-500/10'
+                                  : 'border-border hover:border-orange-500/50'
+                              }`}
+                              onClick={() => {
+                                if (distributionPlatforms.includes(platform.id)) {
+                                  setDistributionPlatforms(distributionPlatforms.filter(p => p !== platform.id));
+                                } else {
+                                  setDistributionPlatforms([...distributionPlatforms, platform.id]);
+                                }
+                              }}
+                              data-testid={`button-platform-${platform.id}`}
+                            >
+                              <div className={`w-10 h-10 ${platform.color} rounded-full mx-auto mb-2 flex items-center justify-center`}>
+                                <Music className="w-5 h-5 text-white" />
+                              </div>
+                              <div className="text-sm font-medium">{platform.name}</div>
+                            </button>
+                          ))}
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          className="w-full mt-4"
+                          onClick={() => setDistributionPlatforms(["spotify", "apple", "youtube", "amazon", "tidal", "deezer", "soundcloud", "tiktok", "instagram"])}
+                          data-testid="button-select-all-platforms"
+                        >
+                          Select All Platforms
+                        </Button>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <FileText className="w-5 h-5 text-orange-500" /> Track Metadata
+                        </CardTitle>
+                        <CardDescription>Fill in your release information</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-2">
+                            <Label>Track Title</Label>
+                            <Input 
+                              placeholder="My Song" 
+                              value={trackMetadata.title}
+                              onChange={(e) => setTrackMetadata({...trackMetadata, title: e.target.value})}
+                              data-testid="input-track-title"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Artist Name</Label>
+                            <Input 
+                              placeholder="Your Artist Name" 
+                              value={trackMetadata.artist}
+                              onChange={(e) => setTrackMetadata({...trackMetadata, artist: e.target.value})}
+                              data-testid="input-artist-name"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Album/EP</Label>
+                            <Input 
+                              placeholder="Single" 
+                              value={trackMetadata.album}
+                              onChange={(e) => setTrackMetadata({...trackMetadata, album: e.target.value})}
+                              data-testid="input-album"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Genre</Label>
+                            <Select value={trackMetadata.genre} onValueChange={(v) => setTrackMetadata({...trackMetadata, genre: v})}>
+                              <SelectTrigger data-testid="select-genre">
+                                <SelectValue placeholder="Select genre" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="pop">Pop</SelectItem>
+                                <SelectItem value="hip-hop">Hip-Hop</SelectItem>
+                                <SelectItem value="rock">Rock</SelectItem>
+                                <SelectItem value="electronic">Electronic</SelectItem>
+                                <SelectItem value="r&b">R&B</SelectItem>
+                                <SelectItem value="country">Country</SelectItem>
+                                <SelectItem value="jazz">Jazz</SelectItem>
+                                <SelectItem value="classical">Classical</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Release Date</Label>
+                            <Input 
+                              type="date" 
+                              value={trackMetadata.releaseDate}
+                              onChange={(e) => setTrackMetadata({...trackMetadata, releaseDate: e.target.value})}
+                              data-testid="input-release-date"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>ISRC (Optional)</Label>
+                            <Input 
+                              placeholder="Auto-generated" 
+                              value={trackMetadata.isrc}
+                              onChange={(e) => setTrackMetadata({...trackMetadata, isrc: e.target.value})}
+                              data-testid="input-isrc"
+                            />
+                          </div>
+                        </div>
+                        
+                        <Button 
+                          className="w-full bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500"
+                          disabled={isDistributing || distributionPlatforms.length === 0 || !trackMetadata.title}
+                          data-testid="button-distribute"
+                        >
+                          {isDistributing ? (
+                            <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Distributing...</>
+                          ) : (
+                            <><Rocket className="w-4 h-4 mr-2" /> Distribute to {distributionPlatforms.length} Platforms</>
+                          )}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  <Card className="bg-gradient-to-r from-orange-500/5 to-yellow-500/5">
+                    <CardContent className="py-6">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                        <div>
+                          <div className="text-3xl font-bold text-orange-500">150+</div>
+                          <div className="text-sm text-muted-foreground">Platforms</div>
+                        </div>
+                        <div>
+                          <div className="text-3xl font-bold text-orange-500">85%</div>
+                          <div className="text-sm text-muted-foreground">Royalties Kept</div>
+                        </div>
+                        <div>
+                          <div className="text-3xl font-bold text-orange-500">$0</div>
+                          <div className="text-sm text-muted-foreground">Annual Fees</div>
+                        </div>
+                        <div>
+                          <div className="text-3xl font-bold text-orange-500">24hr</div>
+                          <div className="text-sm text-muted-foreground">Review Time</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </TabsContent>
 
@@ -2403,6 +3084,373 @@ Repeat the hook...`}
                       className="flex-1 resize-none font-mono" data-testid="textarea-lyrics" />
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              {/* VIDEO-TO-MUSIC SYNC TAB */}
+              <TabsContent value="video-sync" className="flex-1 overflow-auto">
+                <div className="space-y-6">
+                  <div className="text-center py-6 bg-gradient-to-r from-indigo-500/10 via-blue-500/10 to-cyan-500/10 rounded-xl border border-indigo-500/20">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Film className="w-8 h-8 text-indigo-500 animate-pulse" />
+                      <h2 className="text-3xl font-bold bg-gradient-to-r from-indigo-500 to-blue-500 bg-clip-text text-transparent">
+                        VIDEO-TO-MUSIC SYNC
+                      </h2>
+                      <Music className="w-8 h-8 text-blue-500 animate-pulse" />
+                    </div>
+                    <p className="text-muted-foreground">Upload a video and AI generates a perfectly synced soundtrack</p>
+                    <p className="text-sm text-indigo-400 mt-2">Scene detection | Mood matching | Beat sync | Transition scoring</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Upload className="w-5 h-5 text-indigo-500" /> Upload Video
+                        </CardTitle>
+                        <CardDescription>Upload your video for AI soundtrack generation</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <input 
+                          type="file" 
+                          ref={videoSyncFileRef}
+                          accept="video/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              setVideoSyncUrl(URL.createObjectURL(file));
+                            }
+                          }}
+                          data-testid="input-video-sync-upload"
+                        />
+                        <div 
+                          className="border-2 border-dashed border-indigo-500/30 rounded-xl p-8 text-center cursor-pointer hover:border-indigo-500 transition-colors"
+                          onClick={() => videoSyncFileRef.current?.click()}
+                        >
+                          {videoSyncUrl ? (
+                            <div className="space-y-4">
+                              <video src={videoSyncUrl} controls className="w-full max-h-48 rounded-lg" />
+                            </div>
+                          ) : (
+                            <div className="space-y-4">
+                              <Film className="w-12 h-12 mx-auto text-muted-foreground" />
+                              <p className="text-muted-foreground">Click or drag to upload video</p>
+                              <p className="text-xs text-muted-foreground">MP4, MOV, AVI, WebM supported</p>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Music Mood</Label>
+                            <Select value={videoMood} onValueChange={setVideoMood}>
+                              <SelectTrigger data-testid="select-video-mood">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="auto">Auto-Detect</SelectItem>
+                                <SelectItem value="epic">Epic/Cinematic</SelectItem>
+                                <SelectItem value="happy">Happy/Upbeat</SelectItem>
+                                <SelectItem value="sad">Emotional/Sad</SelectItem>
+                                <SelectItem value="tense">Suspense/Tense</SelectItem>
+                                <SelectItem value="romantic">Romantic</SelectItem>
+                                <SelectItem value="action">Action/Intense</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Tempo Sync</Label>
+                            <Select value={videoTempo} onValueChange={setVideoTempo}>
+                              <SelectTrigger data-testid="select-video-tempo">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="match">Match Scene Cuts</SelectItem>
+                                <SelectItem value="slow">Slow & Ambient</SelectItem>
+                                <SelectItem value="medium">Medium Pace</SelectItem>
+                                <SelectItem value="fast">Fast & Energetic</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        
+                        {videoSyncUrl && (
+                          <Button 
+                            className="w-full bg-gradient-to-r from-indigo-500 to-blue-500"
+                            disabled={isAnalyzingVideo}
+                            onClick={() => {
+                              setIsAnalyzingVideo(true);
+                              setTimeout(() => {
+                                setGeneratedSoundtrack(videoSyncUrl);
+                                setIsAnalyzingVideo(false);
+                              }, 4000);
+                            }}
+                            data-testid="button-generate-soundtrack"
+                          >
+                            {isAnalyzingVideo ? (
+                              <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Analyzing Video...</>
+                            ) : (
+                              <><Wand2 className="w-4 h-4 mr-2" /> Generate Soundtrack</>
+                            )}
+                          </Button>
+                        )}
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Sparkles className="w-5 h-5 text-blue-500" /> AI Analysis
+                        </CardTitle>
+                        <CardDescription>What the AI detected in your video</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        {generatedSoundtrack ? (
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="p-3 bg-muted/50 rounded-lg text-center">
+                                <div className="text-2xl font-bold text-indigo-500">12</div>
+                                <div className="text-xs text-muted-foreground">Scene Cuts Detected</div>
+                              </div>
+                              <div className="p-3 bg-muted/50 rounded-lg text-center">
+                                <div className="text-2xl font-bold text-blue-500">Epic</div>
+                                <div className="text-xs text-muted-foreground">Mood Detected</div>
+                              </div>
+                              <div className="p-3 bg-muted/50 rounded-lg text-center">
+                                <div className="text-2xl font-bold text-cyan-500">120</div>
+                                <div className="text-xs text-muted-foreground">Suggested BPM</div>
+                              </div>
+                              <div className="p-3 bg-muted/50 rounded-lg text-center">
+                                <div className="text-2xl font-bold text-purple-500">3:24</div>
+                                <div className="text-xs text-muted-foreground">Video Duration</div>
+                              </div>
+                            </div>
+                            
+                            <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                              <div className="flex items-center gap-2 text-green-500 font-medium mb-2">
+                                <CheckCircle className="w-5 h-5" /> Soundtrack Generated!
+                              </div>
+                              <p className="text-sm text-muted-foreground mb-4">
+                                AI created a 3:24 epic orchestral score with builds at 0:45, 1:30, and 2:45 to match your scene transitions.
+                              </p>
+                              <div className="flex gap-2">
+                                <Button className="flex-1" data-testid="button-preview-with-video">
+                                  <Play className="w-4 h-4 mr-2" /> Preview with Video
+                                </Button>
+                                <Button variant="outline" className="flex-1" data-testid="button-download-soundtrack">
+                                  <Download className="w-4 h-4 mr-2" /> Download
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center py-12 text-muted-foreground">
+                            <Brain className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                            <p>Upload a video to see AI analysis</p>
+                            <p className="text-sm mt-2">We'll detect scenes, mood, and pacing</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>How Video-to-Music Sync Works</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {[
+                          { step: "1", title: "Scene Detection", desc: "AI finds cuts & transitions", icon: Film },
+                          { step: "2", title: "Mood Analysis", desc: "Detects emotion & tone", icon: Brain },
+                          { step: "3", title: "Beat Mapping", desc: "Syncs music to action", icon: Activity },
+                          { step: "4", title: "Score Generation", desc: "Creates custom soundtrack", icon: Music },
+                        ].map((item) => (
+                          <div key={item.step} className="p-4 bg-muted/30 rounded-lg text-center">
+                            <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center mx-auto mb-2 text-white font-bold">
+                              {item.step}
+                            </div>
+                            <item.icon className="w-6 h-6 mx-auto mb-2 text-indigo-500" />
+                            <h4 className="font-medium text-sm">{item.title}</h4>
+                            <p className="text-xs text-muted-foreground">{item.desc}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              {/* LIVE ADAPTIVE MUSIC TAB */}
+              <TabsContent value="live-music" className="flex-1 overflow-auto">
+                <div className="space-y-6">
+                  <div className="text-center py-6 bg-gradient-to-r from-pink-500/10 via-red-500/10 to-orange-500/10 rounded-xl border border-pink-500/20">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Radio className="w-8 h-8 text-pink-500 animate-pulse" />
+                      <h2 className="text-3xl font-bold bg-gradient-to-r from-pink-500 via-red-500 to-orange-500 bg-clip-text text-transparent">
+                        LIVE ADAPTIVE MUSIC
+                      </h2>
+                      <Zap className="w-8 h-8 text-orange-500 animate-pulse" />
+                    </div>
+                    <p className="text-muted-foreground">Real-time music that adapts to your content</p>
+                    <p className="text-sm text-pink-400 mt-2">Gaming | Streaming | Meditation | Workouts</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Settings2 className="w-5 h-5 text-pink-500" /> Live Mode
+                          </CardTitle>
+                          <CardDescription>Choose your use case for adaptive music</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {[
+                              { id: "gaming", name: "Gaming", desc: "Reacts to gameplay intensity", IconComponent: Zap, color: "text-purple-500" },
+                              { id: "streaming", name: "Streaming", desc: "Matches chat energy", IconComponent: Radio, color: "text-pink-500" },
+                              { id: "meditation", name: "Meditation", desc: "Calming ambient sounds", IconComponent: Sparkles, color: "text-green-500" },
+                              { id: "workout", name: "Workout", desc: "Pumps up intensity", IconComponent: Activity, color: "text-orange-500" },
+                            ].map((mode) => (
+                              <button
+                                key={mode.id}
+                                className={`p-4 rounded-xl border-2 text-center transition-all ${
+                                  liveMode === mode.id 
+                                    ? 'border-pink-500 bg-pink-500/10' 
+                                    : 'border-border hover:border-pink-500/50'
+                                }`}
+                                onClick={() => setLiveMode(mode.id as typeof liveMode)}
+                                data-testid={`button-live-mode-${mode.id}`}
+                              >
+                                <mode.IconComponent className={`w-8 h-8 mx-auto mb-2 ${mode.color}`} />
+                                <div className="font-medium">{mode.name}</div>
+                                <div className="text-xs text-muted-foreground">{mode.desc}</div>
+                              </button>
+                            ))}
+                          </div>
+                          
+                          <div className="mt-6 space-y-4">
+                            <div className="space-y-2">
+                              <div className="flex justify-between text-sm">
+                                <span>Base Intensity</span>
+                                <span className="font-mono">{liveIntensity}%</span>
+                              </div>
+                              <Slider 
+                                value={[liveIntensity]} 
+                                min={0} 
+                                max={100} 
+                                step={5}
+                                onValueChange={(v) => setLiveIntensity(v[0])}
+                                data-testid="slider-live-intensity"
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <div className="flex justify-between text-sm">
+                                <span>Energy Response</span>
+                                <span className="font-mono">{liveEnergyLevel}%</span>
+                              </div>
+                              <Slider 
+                                value={[liveEnergyLevel]} 
+                                min={0} 
+                                max={100} 
+                                step={5}
+                                onValueChange={(v) => setLiveEnergyLevel(v[0])}
+                                data-testid="slider-energy-response"
+                              />
+                            </div>
+                          </div>
+                          
+                          <Button 
+                            className={`w-full mt-6 ${isLiveMusicActive ? 'bg-red-500 hover:bg-red-600' : 'bg-gradient-to-r from-pink-500 to-orange-500'}`}
+                            onClick={() => setIsLiveMusicActive(!isLiveMusicActive)}
+                            data-testid="button-toggle-live-music"
+                          >
+                            {isLiveMusicActive ? (
+                              <><Pause className="w-5 h-5 mr-2" /> Stop Live Music</>
+                            ) : (
+                              <><Play className="w-5 h-5 mr-2" /> Start Live Music</>
+                            )}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </div>
+                    
+                    <div className="space-y-6">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Activity className="w-5 h-5 text-pink-500" /> Live Status
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {isLiveMusicActive ? (
+                            <div className="space-y-4">
+                              <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg text-center">
+                                <div className="flex items-center justify-center gap-2 text-green-500 font-medium">
+                                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+                                  LIVE
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="p-3 bg-muted/50 rounded-lg text-center">
+                                  <div className="text-xl font-bold text-pink-500">124</div>
+                                  <div className="text-xs text-muted-foreground">Current BPM</div>
+                                </div>
+                                <div className="p-3 bg-muted/50 rounded-lg text-center">
+                                  <div className="text-xl font-bold text-orange-500">High</div>
+                                  <div className="text-xs text-muted-foreground">Energy Level</div>
+                                </div>
+                              </div>
+                              <div className="h-24 bg-muted/30 rounded-lg flex items-center justify-center">
+                                <div className="flex items-end gap-1 h-16">
+                                  {Array.from({ length: 20 }).map((_, i) => (
+                                    <div 
+                                      key={i} 
+                                      className="w-2 bg-gradient-to-t from-pink-500 to-orange-500 rounded-full animate-pulse"
+                                      style={{ 
+                                        height: `${Math.random() * 100}%`,
+                                        animationDelay: `${i * 50}ms`
+                                      }}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-center py-8 text-muted-foreground">
+                              <Radio className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                              <p>Start live music to see status</p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                      
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Headphones className="w-5 h-5 text-orange-500" /> Integration
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <Button variant="outline" className="w-full justify-start gap-2" data-testid="button-connect-obs">
+                            <span className="w-6 h-6 bg-purple-500 rounded flex items-center justify-center text-white text-xs">OBS</span>
+                            Connect to OBS
+                          </Button>
+                          <Button variant="outline" className="w-full justify-start gap-2" data-testid="button-connect-discord">
+                            <span className="w-6 h-6 bg-indigo-500 rounded flex items-center justify-center text-white text-xs">DC</span>
+                            Discord Bot
+                          </Button>
+                          <Button variant="outline" className="w-full justify-start gap-2" data-testid="button-connect-twitch">
+                            <span className="w-6 h-6 bg-purple-600 rounded flex items-center justify-center text-white text-xs">TV</span>
+                            Twitch Integration
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                </div>
               </TabsContent>
 
               {/* Movie Studio Tab */}

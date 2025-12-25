@@ -1,499 +1,548 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import CreatorHeader from "@/components/CreatorHeader";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Slider } from "@/components/ui/slider";
 import { 
   Search, 
   ExternalLink, 
   Star, 
   ShoppingCart,
-  Accessibility,
   Heart,
-  Brain,
-  Dumbbell,
-  Utensils,
-  Hand,
-  Footprints,
-  Activity,
-  Pill,
-  Armchair,
   BookOpen,
-  ImageOff
+  ImageOff,
+  Music,
+  Video,
+  Film,
+  GraduationCap,
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  Volume2,
+  VolumeX,
+  Repeat,
+  Shuffle,
+  Download,
+  Share2,
+  User,
+  Clock,
+  Eye,
+  DollarSign,
+  TrendingUp,
+  Crown,
+  Sparkles,
+  Headphones,
+  Mic,
+  Palette,
+  ListMusic,
+  PlayCircle,
+  Plus,
+  MoreHorizontal,
+  Radio,
+  Zap
 } from "lucide-react";
-import type { MarketplaceCategory, MarketplaceProduct } from "@shared/schema";
 
-const categoryIcons: Record<string, React.ReactNode> = {
-  mobility: <Footprints className="h-5 w-5" />,
-  therapy: <Hand className="h-5 w-5" />,
-  exercise: <Dumbbell className="h-5 w-5" />,
-  daily: <Utensils className="h-5 w-5" />,
-  cognitive: <Brain className="h-5 w-5" />,
-  comfort: <Armchair className="h-5 w-5" />,
-  health: <Heart className="h-5 w-5" />,
-  medical: <Pill className="h-5 w-5" />,
-  accessibility: <Accessibility className="h-5 w-5" />,
-  monitoring: <Activity className="h-5 w-5" />,
-  books: <BookOpen className="h-5 w-5" />,
-};
+interface CreatorContent {
+  id: string;
+  title: string;
+  creator: string;
+  creatorAvatar?: string;
+  type: "music" | "video" | "movie" | "course" | "book" | "image";
+  coverArt?: string;
+  price: number;
+  streamCount?: number;
+  duration?: string;
+  genre?: string;
+  rating?: number;
+  isFeatured?: boolean;
+  isNew?: boolean;
+  description?: string;
+  releaseDate?: string;
+}
 
-function ProductCard({ product }: { product: MarketplaceProduct }) {
-  const [imageError, setImageError] = useState(false);
-  
-  const handleBuyClick = () => {
-    window.open(product.amazonUrl, '_blank', 'noopener,noreferrer');
-  };
+const mockMusicContent: CreatorContent[] = [
+  { id: "m1", title: "Stroke of Midnight", creator: "The Stroked Out Sasquatch", type: "music", price: 1.99, streamCount: 125000, duration: "3:45", genre: "Hip-Hop", rating: 4.8, isFeatured: true, isNew: true },
+  { id: "m2", title: "Rise Again", creator: "Recovery Beats", type: "music", price: 0.99, streamCount: 89000, duration: "4:12", genre: "Inspirational", rating: 4.6 },
+  { id: "m3", title: "Warrior's Anthem", creator: "Nick Kremers", type: "music", price: 1.49, streamCount: 67000, duration: "3:28", genre: "Rock", rating: 4.9, isFeatured: true },
+  { id: "m4", title: "Healing Frequencies", creator: "Ambient Recovery", type: "music", price: 0, streamCount: 234000, duration: "8:00", genre: "Ambient", rating: 4.7 },
+  { id: "m5", title: "Never Give Up", creator: "Motivation Music", type: "music", price: 1.99, streamCount: 156000, duration: "3:55", genre: "Pop", rating: 4.5 },
+  { id: "m6", title: "Brain Rewire", creator: "Neuro Beats", type: "music", price: 2.99, streamCount: 78000, duration: "5:30", genre: "Electronic", rating: 4.8, isNew: true },
+];
 
-  const getProxiedImageUrl = (url: string) => {
-    // Local stock images don't need proxying
-    if (url.startsWith('/stock_images/')) {
-      return url;
-    }
-    return `/api/image-proxy?url=${encodeURIComponent(url)}`;
-  };
+const mockVideoContent: CreatorContent[] = [
+  { id: "v1", title: "My Stroke Story: 90% Recovery", creator: "Nick Kremers", type: "video", price: 0, streamCount: 450000, duration: "28:45", genre: "Documentary", rating: 4.9, isFeatured: true },
+  { id: "v2", title: "Daily PT Exercises", creator: "Recovery Academy", type: "video", price: 4.99, streamCount: 89000, duration: "45:00", genre: "Fitness", rating: 4.7 },
+  { id: "v3", title: "Mindset for Recovery", creator: "Warrior Mindset", type: "video", price: 2.99, streamCount: 67000, duration: "18:30", genre: "Motivation", rating: 4.6 },
+];
 
-  const handleImageError = () => {
-    setImageError(true);
-  };
+const mockMovieContent: CreatorContent[] = [
+  { id: "mv1", title: "The Comeback: A Stroke Survivor's Journey", creator: "KreAIte Films", type: "movie", price: 14.99, streamCount: 25000, duration: "1:42:00", genre: "Documentary", rating: 4.9, isFeatured: true },
+  { id: "mv2", title: "Second Chance", creator: "Indie Recovery Films", type: "movie", price: 9.99, streamCount: 18000, duration: "1:28:00", genre: "Drama", rating: 4.5 },
+];
+
+const mockCourseContent: CreatorContent[] = [
+  { id: "c1", title: "Ultimate Stroke Recovery Bible", creator: "Nick Kremers", type: "course", price: 97, streamCount: 12000, duration: "8+ hours", genre: "Recovery", rating: 4.9, isFeatured: true, description: "Complete recovery curriculum" },
+  { id: "c2", title: "Cognitive Recovery Mastery", creator: "Brain Training Pro", type: "course", price: 49, streamCount: 8500, duration: "6 hours", genre: "Cognitive", rating: 4.7 },
+  { id: "c3", title: "Caregiver's Complete Guide", creator: "Family Recovery", type: "course", price: 29, streamCount: 6200, duration: "4 hours", genre: "Caregiving", rating: 4.8, isNew: true },
+];
+
+const mockBookContent: CreatorContent[] = [
+  { id: "b1", title: "The Stroked Out Sasquatch", creator: "Nick Kremers", type: "book", price: 24.99, streamCount: 35000, genre: "Memoir", rating: 4.9, isFeatured: true, description: "My journey from stroke to 90% recovery" },
+  { id: "b2", title: "Wheeled Out", creator: "Nick Kremers", type: "book", price: 19.99, streamCount: 28000, genre: "Recovery", rating: 4.8 },
+  { id: "b3", title: "The Ultimate Stroke Recovery Bible", creator: "Nick Kremers", type: "book", price: 34.99, streamCount: 42000, genre: "Guide", rating: 4.9, isFeatured: true },
+];
+
+function MusicPlayer({ track, onClose }: { track: CreatorContent | null; onClose: () => void }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [volume, setVolume] = useState(80);
+  const [isMuted, setIsMuted] = useState(false);
+
+  if (!track) return null;
 
   return (
-    <article 
-      className="flex flex-col h-full" 
-      data-testid={`card-product-${product.id}`}
-      aria-label={`Stroke recovery product: ${product.title}`}
-    >
-      <Card className="flex flex-col h-full hover-elevate">
-        <CardHeader className="pb-2">
-          <div className="relative aspect-square bg-muted rounded-lg overflow-hidden mb-3">
-            {product.imageUrl && !imageError ? (
-              <img 
-                src={getProxiedImageUrl(product.imageUrl)} 
-                alt={`${product.title} - Stroke recovery ${product.brand ? `by ${product.brand}` : 'equipment'}`}
-                className="w-full h-full object-contain p-4"
-                data-testid={`img-product-${product.id}`}
-                onError={handleImageError}
-                loading="lazy"
-              />
-            ) : (
-              <div 
-                className="w-full h-full flex items-center justify-center"
-                role="img"
-                aria-label={`Placeholder for ${product.title}`}
-              >
-                {imageError ? (
-                  <ImageOff className="h-12 w-12 text-muted-foreground" aria-hidden="true" />
-                ) : (
-                  <ShoppingCart className="h-12 w-12 text-muted-foreground" aria-hidden="true" />
-                )}
-              </div>
-            )}
-            {product.isFeatured && (
-              <Badge className="absolute top-2 left-2 bg-primary">Featured</Badge>
-            )}
+    <div className="fixed bottom-0 left-0 right-0 bg-black/95 border-t border-orange-500/30 p-4 z-50 backdrop-blur-lg">
+      <div className="container mx-auto flex items-center gap-4">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-purple-500 rounded-lg flex items-center justify-center shrink-0">
+            <Music className="w-6 h-6 text-white" />
           </div>
-          {product.brand && (
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">{product.brand}</p>
-          )}
-          <CardTitle className="text-base line-clamp-2" data-testid={`text-product-title-${product.id}`}>
-            {product.title}
-          </CardTitle>
-        </CardHeader>
-        
-        <CardContent className="flex-1 pb-2">
-          {product.description && (
-            <p className="text-sm text-muted-foreground line-clamp-3 mb-3">
-              {product.description}
-            </p>
-          )}
-          
-          <div className="flex items-center gap-2 flex-wrap">
-            {product.rating && (
-              <div className="flex items-center gap-1" aria-label={`Rating: ${product.rating} out of 5 stars`}>
-                <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" aria-hidden="true" />
-                <span className="text-sm font-medium">{product.rating}</span>
-                {product.reviewCount && (
-                  <span className="text-xs text-muted-foreground">
-                    ({product.reviewCount.toLocaleString()} reviews)
-                  </span>
-                )}
-              </div>
-            )}
+          <div className="min-w-0">
+            <p className="font-medium text-white truncate">{track.title}</p>
+            <p className="text-sm text-muted-foreground truncate">{track.creator}</p>
           </div>
-
-          {product.features && product.features.length > 0 && (
-            <ul className="mt-3 space-y-1" aria-label="Product features">
-              {product.features.slice(0, 2).map((feature, idx) => (
-                <li key={idx} className="text-xs text-muted-foreground flex items-start gap-1">
-                  <span className="text-primary mt-0.5" aria-hidden="true">•</span>
-                  <span className="line-clamp-1">{feature}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-        
-        <CardFooter className="flex items-center justify-between gap-2 pt-2 border-t border-border">
-          {product.priceDisplay ? (
-            <span className="text-lg font-bold text-foreground" data-testid={`text-price-${product.id}`}>
-              {product.priceDisplay}
-            </span>
-          ) : (
-            <span className="text-sm text-muted-foreground">See price on Amazon</span>
-          )}
-          <Button 
-            size="sm" 
-            className="gap-1"
-            onClick={handleBuyClick}
-            data-testid={`button-buy-${product.id}`}
-            aria-label={`View ${product.title} on Amazon`}
-          >
-            View on Amazon
-            <ExternalLink className="h-3 w-3" aria-hidden="true" />
+          <Button size="icon" variant="ghost" className="shrink-0" data-testid="button-favorite-track">
+            <Heart className="w-4 h-4" />
           </Button>
-        </CardFooter>
-      </Card>
-    </article>
+        </div>
+        
+        <div className="flex flex-col items-center gap-2 flex-1">
+          <div className="flex items-center gap-4">
+            <Button size="icon" variant="ghost" data-testid="button-shuffle">
+              <Shuffle className="w-4 h-4" />
+            </Button>
+            <Button size="icon" variant="ghost" data-testid="button-prev">
+              <SkipBack className="w-5 h-5" />
+            </Button>
+            <Button 
+              size="lg" 
+              className="rounded-full bg-orange-500"
+              onClick={() => setIsPlaying(!isPlaying)}
+              data-testid="button-play-pause"
+            >
+              {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+            </Button>
+            <Button size="icon" variant="ghost" data-testid="button-next">
+              <SkipForward className="w-5 h-5" />
+            </Button>
+            <Button size="icon" variant="ghost" data-testid="button-repeat">
+              <Repeat className="w-4 h-4" />
+            </Button>
+          </div>
+          <div className="flex items-center gap-2 w-full max-w-md">
+            <span className="text-xs text-muted-foreground w-10 text-right">1:23</span>
+            <Slider 
+              value={[progress]} 
+              max={100} 
+              step={1}
+              onValueChange={(v) => setProgress(v[0])}
+              className="flex-1"
+              data-testid="slider-progress"
+            />
+            <span className="text-xs text-muted-foreground w-10">{track.duration}</span>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-3 flex-1 justify-end">
+          <Button size="icon" variant="ghost" onClick={() => setIsMuted(!isMuted)} data-testid="button-mute-toggle">
+            {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+          </Button>
+          <Slider 
+            value={[isMuted ? 0 : volume]} 
+            max={100} 
+            step={1}
+            onValueChange={(v) => { setVolume(v[0]); setIsMuted(false); }}
+            className="w-24"
+            data-testid="slider-volume"
+          />
+          <Button size="icon" variant="ghost" data-testid="button-queue">
+            <ListMusic className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
 
-function ProductSkeleton() {
+function ContentCard({ content, onPlay }: { content: CreatorContent; onPlay: (content: CreatorContent) => void }) {
+  const getIcon = () => {
+    switch (content.type) {
+      case "music": return <Music className="w-6 h-6" />;
+      case "video": return <Video className="w-6 h-6" />;
+      case "movie": return <Film className="w-6 h-6" />;
+      case "course": return <GraduationCap className="w-6 h-6" />;
+      case "book": return <BookOpen className="w-6 h-6" />;
+      case "image": return <Palette className="w-6 h-6" />;
+      default: return <Sparkles className="w-6 h-6" />;
+    }
+  };
+
+  const getGradient = () => {
+    switch (content.type) {
+      case "music": return "from-orange-500 to-pink-500";
+      case "video": return "from-blue-500 to-purple-500";
+      case "movie": return "from-red-500 to-orange-500";
+      case "course": return "from-green-500 to-teal-500";
+      case "book": return "from-purple-500 to-indigo-500";
+      case "image": return "from-yellow-500 to-orange-500";
+      default: return "from-orange-500 to-purple-500";
+    }
+  };
+
   return (
-    <Card className="flex flex-col h-full" aria-hidden="true">
-      <CardHeader className="pb-2">
-        <Skeleton className="aspect-square rounded-lg mb-3" />
-        <Skeleton className="h-3 w-20 mb-2" />
-        <Skeleton className="h-5 w-full" />
-      </CardHeader>
-      <CardContent className="flex-1 pb-2">
-        <Skeleton className="h-12 w-full mb-3" />
-        <Skeleton className="h-4 w-24" />
+    <Card className="group hover-elevate overflow-hidden" data-testid={`card-content-${content.id}`}>
+      <div className={`relative aspect-square bg-gradient-to-br ${getGradient()} flex items-center justify-center`}>
+        <div className="text-white opacity-50">
+          {getIcon()}
+        </div>
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+          <Button 
+            size="lg"
+            className="rounded-full bg-orange-500 shadow-xl"
+            onClick={() => onPlay(content)}
+            data-testid={`button-play-${content.id}`}
+          >
+            <Play className="w-6 h-6 ml-1" />
+          </Button>
+        </div>
+        {content.isFeatured && (
+          <Badge className="absolute top-2 left-2 bg-orange-500">
+            <Crown className="w-3 h-3 mr-1" /> Featured
+          </Badge>
+        )}
+        {content.isNew && (
+          <Badge className="absolute top-2 right-2 bg-green-500">New</Badge>
+        )}
+      </div>
+      <CardContent className="p-4">
+        <h3 className="font-semibold line-clamp-1" data-testid={`text-title-${content.id}`}>{content.title}</h3>
+        <p className="text-sm text-muted-foreground">{content.creator}</p>
+        <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+          {content.duration && (
+            <span className="flex items-center gap-1">
+              <Clock className="w-3 h-3" /> {content.duration}
+            </span>
+          )}
+          {content.streamCount && (
+            <span className="flex items-center gap-1">
+              <Eye className="w-3 h-3" /> {(content.streamCount / 1000).toFixed(0)}K
+            </span>
+          )}
+          {content.rating && (
+            <span className="flex items-center gap-1">
+              <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" /> {content.rating}
+            </span>
+          )}
+        </div>
       </CardContent>
-      <CardFooter className="flex items-center justify-between gap-2 pt-2 border-t border-border">
-        <Skeleton className="h-6 w-16" />
-        <Skeleton className="h-8 w-28" />
+      <CardFooter className="p-4 pt-0 flex items-center justify-between">
+        <span className="font-bold text-orange-500" data-testid={`text-price-${content.id}`}>
+          {content.price === 0 ? "FREE" : `$${content.price.toFixed(2)}`}
+        </span>
+        <div className="flex gap-2">
+          {(content.type === "music" || content.type === "video") && (
+            <Button size="sm" variant="outline" onClick={() => onPlay(content)} data-testid={`button-stream-${content.id}`}>
+              <Headphones className="w-4 h-4 mr-1" /> Stream
+            </Button>
+          )}
+          <Button size="sm" data-testid={`button-buy-${content.id}`}>
+            {content.price === 0 ? "Get Free" : "Buy"}
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );
 }
 
-function SEOHead({ products }: { products?: MarketplaceProduct[] }) {
-  useEffect(() => {
-    document.title = "Stroke Recovery Products & Equipment | StrokeRecoveryAcademy.com";
-    
-    const updateOrCreateMeta = (name: string, content: string, isProperty = false) => {
-      const attr = isProperty ? 'property' : 'name';
-      let meta = document.querySelector(`meta[${attr}="${name}"]`);
-      if (!meta) {
-        meta = document.createElement('meta');
-        meta.setAttribute(attr, name);
-        document.head.appendChild(meta);
-      }
-      meta.setAttribute('content', content);
-    };
+function FeaturedCarousel({ items, onPlay }: { items: CreatorContent[]; onPlay: (content: CreatorContent) => void }) {
+  const featured = items.filter(i => i.isFeatured);
+  
+  if (featured.length === 0) return null;
+  
+  return (
+    <div className="mb-8">
+      <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+        <Crown className="w-6 h-6 text-orange-500" /> Featured Creators
+      </h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {featured.slice(0, 3).map(item => (
+          <Card key={item.id} className="overflow-hidden group cursor-pointer hover-elevate" onClick={() => onPlay(item)}>
+            <div className={`relative h-48 bg-gradient-to-br from-orange-500 via-purple-500 to-pink-500 flex items-center justify-center`}>
+              <div className="text-white">
+                <Music className="w-16 h-16 opacity-30" />
+              </div>
+              <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button size="lg" className="rounded-full bg-orange-500" data-testid={`button-featured-play-${item.id}`}>
+                  <Play className="w-8 h-8 ml-1" />
+                </Button>
+              </div>
+              <Badge className="absolute top-4 left-4 bg-black/50 backdrop-blur">
+                <Crown className="w-3 h-3 mr-1" /> Featured
+              </Badge>
+            </div>
+            <CardContent className="p-4">
+              <h3 className="text-xl font-bold">{item.title}</h3>
+              <p className="text-muted-foreground">{item.creator}</p>
+              <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Eye className="w-4 h-4" /> {(item.streamCount! / 1000).toFixed(0)}K streams
+                </span>
+                <span className="flex items-center gap-1">
+                  <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" /> {item.rating}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
 
-    const updateOrCreateLink = (rel: string, href: string) => {
-      let link = document.querySelector(`link[rel="${rel}"]`);
-      if (!link) {
-        link = document.createElement('link');
-        link.setAttribute('rel', rel);
-        document.head.appendChild(link);
-      }
-      link.setAttribute('href', href);
-    };
+function CreatorStats() {
+  return (
+    <Card className="mb-8 bg-gradient-to-r from-orange-500/10 via-purple-500/10 to-pink-500/10 border-orange-500/20">
+      <CardContent className="py-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          <div>
+            <div className="text-3xl font-bold text-orange-500">15K+</div>
+            <div className="text-sm text-muted-foreground">Creators</div>
+          </div>
+          <div>
+            <div className="text-3xl font-bold text-orange-500">250K+</div>
+            <div className="text-sm text-muted-foreground">Content Items</div>
+          </div>
+          <div>
+            <div className="text-3xl font-bold text-orange-500">$2.5M+</div>
+            <div className="text-sm text-muted-foreground">Creator Earnings</div>
+          </div>
+          <div>
+            <div className="text-3xl font-bold text-orange-500">85%</div>
+            <div className="text-sm text-muted-foreground">To Creators</div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
-    updateOrCreateMeta('description', 'Shop essential stroke recovery products, mobility aids, therapy equipment, and daily living tools. Curated by a stroke survivor who achieved 90% recovery. Find the best rehabilitation equipment to support your stroke recovery journey.');
-    
-    updateOrCreateLink('canonical', 'https://strokerecoveryacademy.com/marketplace');
-
-    updateOrCreateMeta('og:title', 'Stroke Recovery Products & Equipment | StrokeRecoveryAcademy.com', true);
-    updateOrCreateMeta('og:description', 'Shop curated stroke recovery products including mobility aids, therapy equipment, and rehabilitation tools. Recommended by a survivor who achieved 90% recovery.', true);
-    updateOrCreateMeta('og:type', 'website', true);
-    updateOrCreateMeta('og:url', 'https://strokerecoveryacademy.com/marketplace', true);
-    updateOrCreateMeta('og:site_name', 'StrokeRecoveryAcademy.com', true);
-
-    updateOrCreateMeta('twitter:card', 'summary_large_image');
-    updateOrCreateMeta('twitter:title', 'Stroke Recovery Products & Equipment | StrokeRecoveryAcademy.com');
-    updateOrCreateMeta('twitter:description', 'Shop curated stroke recovery products including mobility aids, therapy equipment, and rehabilitation tools.');
-
-    updateOrCreateMeta('keywords', 'stroke recovery products, stroke rehabilitation equipment, mobility aids, therapy equipment, stroke survivor, recovery tools, physical therapy, occupational therapy, stroke recovery marketplace');
-
-    return () => {
-    };
-  }, []);
-
-  useEffect(() => {
-    const existingScript = document.querySelector('script[data-schema="marketplace"]');
-    if (existingScript) {
-      existingScript.remove();
-    }
-
-    const jsonLdData: any = {
-      "@context": "https://schema.org",
-      "@graph": [
-        {
-          "@type": "Organization",
-          "@id": "https://strokerecoveryacademy.com/#organization",
-          "name": "StrokeRecoveryAcademy",
-          "url": "https://strokerecoveryacademy.com",
-          "description": "Comprehensive stroke recovery platform founded by Nick 'The Stroked Out Sasquatch' Kremers, providing proven recovery methods, products, and community support.",
-          "sameAs": []
-        },
-        {
-          "@type": "WebPage",
-          "@id": "https://strokerecoveryacademy.com/marketplace",
-          "url": "https://strokerecoveryacademy.com/marketplace",
-          "name": "Stroke Recovery Products & Equipment | StrokeRecoveryAcademy.com",
-          "description": "Shop essential stroke recovery products, mobility aids, therapy equipment, and daily living tools curated by a stroke survivor.",
-          "isPartOf": {
-            "@id": "https://strokerecoveryacademy.com/#website"
-          }
-        }
-      ]
-    };
-
-    if (products && products.length > 0) {
-      const itemList = {
-        "@type": "ItemList",
-        "name": "Stroke Recovery Products",
-        "description": "Curated stroke recovery products and equipment",
-        "numberOfItems": products.length,
-        "itemListElement": products.slice(0, 20).map((product, index) => ({
-          "@type": "ListItem",
-          "position": index + 1,
-          "item": {
-            "@type": "Product",
-            "name": product.title,
-            "description": product.description || `Stroke recovery product: ${product.title}`,
-            "image": product.imageUrl || undefined,
-            "brand": product.brand ? {
-              "@type": "Brand",
-              "name": product.brand
-            } : undefined,
-            "url": product.amazonUrl,
-            ...(product.priceDisplay && {
-              "offers": {
-                "@type": "Offer",
-                "price": product.priceDisplay.replace(/[^0-9.]/g, ''),
-                "priceCurrency": "USD",
-                "availability": "https://schema.org/InStock",
-                "url": product.amazonUrl
-              }
-            }),
-            ...(product.rating && {
-              "aggregateRating": {
-                "@type": "AggregateRating",
-                "ratingValue": product.rating,
-                "bestRating": 5,
-                "reviewCount": product.reviewCount || 1
-              }
-            })
-          }
-        }))
-      };
-      jsonLdData["@graph"].push(itemList);
-    }
-
-    const script = document.createElement('script');
-    script.type = 'application/ld+json';
-    script.setAttribute('data-schema', 'marketplace');
-    script.textContent = JSON.stringify(jsonLdData);
-    document.head.appendChild(script);
-
-    return () => {
-      const scriptToRemove = document.querySelector('script[data-schema="marketplace"]');
-      if (scriptToRemove) {
-        scriptToRemove.remove();
-      }
-    };
-  }, [products]);
-
-  return null;
+function BecomeCreatorCTA() {
+  return (
+    <Card className="bg-gradient-to-r from-orange-500 to-purple-600 border-0 text-white overflow-hidden relative">
+      <div className="absolute inset-0 bg-black/20" />
+      <CardContent className="py-12 relative z-10">
+        <div className="text-center max-w-2xl mx-auto">
+          <h2 className="text-3xl font-bold mb-4">Become a KreAIte Creator</h2>
+          <p className="text-lg opacity-90 mb-6">
+            You don't need Silicon Valley to become a star. Create music, videos, courses, and books with AI - 
+            then sell or stream them to the world. Keep 85% of every sale.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Button size="lg" className="bg-white text-orange-500 hover:bg-white/90" data-testid="button-start-creating">
+              <Sparkles className="w-5 h-5 mr-2" /> Start Creating
+            </Button>
+            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10" data-testid="button-learn-more">
+              Learn More
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function Marketplace() {
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState("music");
   const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [currentTrack, setCurrentTrack] = useState<CreatorContent | null>(null);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchQuery);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  const { data: categories, isLoading: categoriesLoading } = useQuery<MarketplaceCategory[]>({
-    queryKey: ["/api/marketplace/categories"],
-  });
-
-  const buildProductsUrl = () => {
-    const params = new URLSearchParams();
-    if (selectedCategory) params.set('categoryId', selectedCategory.toString());
-    if (debouncedSearch) params.set('search', debouncedSearch);
-    const queryString = params.toString();
-    return queryString ? `/api/marketplace/products?${queryString}` : '/api/marketplace/products';
+  const handlePlay = (content: CreatorContent) => {
+    if (content.type === "music") {
+      setCurrentTrack(content);
+    }
   };
 
-  const { data: products, isLoading: productsLoading } = useQuery<MarketplaceProduct[]>({
-    queryKey: ["/api/marketplace/products", selectedCategory, debouncedSearch],
-    queryFn: async () => {
-      const res = await fetch(buildProductsUrl(), { credentials: 'include' });
-      if (!res.ok) throw new Error('Failed to fetch products');
-      return res.json();
-    },
-  });
-
-  const filteredProducts = products?.filter(product => {
-    if (selectedCategory && product.categoryId !== selectedCategory) return false;
-    if (debouncedSearch) {
-      const searchLower = debouncedSearch.toLowerCase();
-      return (
-        product.title.toLowerCase().includes(searchLower) ||
-        product.brand?.toLowerCase().includes(searchLower) ||
-        product.description?.toLowerCase().includes(searchLower)
-      );
+  const getContentForTab = () => {
+    switch (activeTab) {
+      case "music": return mockMusicContent;
+      case "videos": return mockVideoContent;
+      case "movies": return mockMovieContent;
+      case "courses": return mockCourseContent;
+      case "books": return mockBookContent;
+      default: return [];
     }
-    return true;
-  });
+  };
+
+  const filteredContent = getContentForTab().filter(item => 
+    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.creator.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <div className="min-h-screen bg-background">
-      <SEOHead products={filteredProducts} />
+    <div className={`min-h-screen bg-background ${currentTrack ? 'pb-24' : ''}`}>
       <CreatorHeader />
       
-      <main className="container mx-auto px-4 py-8" role="main">
-        <section className="mb-8" aria-labelledby="marketplace-heading">
-          <header className="mb-8">
-            <h1 
-              id="marketplace-heading"
-              className="text-3xl md:text-4xl font-bold text-foreground mb-4" 
-              data-testid="text-marketplace-title"
-            >
-              Stroke Recovery Products & Equipment
+      <main className="container mx-auto px-4 py-8">
+        <section className="mb-8">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              <span className="bg-gradient-to-r from-orange-500 to-purple-500 bg-clip-text text-transparent">
+                KreAIte Marketplace
+              </span>
             </h1>
-            <p className="text-lg text-muted-foreground max-w-3xl">
-              Discover essential stroke recovery products curated by survivors who understand your journey. 
-              From mobility aids and therapy equipment to daily living tools, find the rehabilitation 
-              products that can support your path to recovery. Every item is personally vetted based on 
-              real recovery experience.
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Discover music, videos, courses, and books from creators around the world. 
+              Stream, buy, and support independent creators.
             </p>
-          </header>
-
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-            <div>
-              <h2 className="text-xl font-semibold text-foreground">
-                Recovery Marketplace
-              </h2>
-              <p className="text-muted-foreground mt-1">
-                Curated products to support your stroke recovery journey
-              </p>
-            </div>
-            
-            <div className="relative max-w-sm w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
-              <Input
-                type="search"
-                placeholder="Search stroke recovery products..."
-                className="pl-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                data-testid="input-search-products"
-                aria-label="Search stroke recovery products"
-              />
-            </div>
           </div>
 
-          <nav className="flex flex-wrap gap-2 mb-6" aria-label="Product categories">
-            <Button
-              variant={selectedCategory === null ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedCategory(null)}
-              data-testid="button-category-all"
-              aria-pressed={selectedCategory === null}
-            >
-              All Products
-            </Button>
-            {categoriesLoading ? (
-              Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-8 w-24" aria-hidden="true" />
-              ))
-            ) : (
-              categories?.map((category) => (
-                <Button
-                  key={category.id}
-                  variant={selectedCategory === category.id ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedCategory(category.id)}
-                  className="gap-1"
-                  data-testid={`button-category-${category.slug}`}
-                  aria-pressed={selectedCategory === category.id}
-                >
-                  {categoryIcons[category.slug] || categoryIcons[category.icon || ""] || <ShoppingCart className="h-4 w-4" aria-hidden="true" />}
-                  {category.name}
-                </Button>
-              ))
-            )}
-          </nav>
+          <CreatorStats />
+
+          <div className="relative max-w-xl mx-auto mb-8">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search music, videos, courses, books..."
+              className="pl-12 h-12 text-lg"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              data-testid="input-search-marketplace"
+            />
+          </div>
         </section>
 
-        <section aria-label="Product listings">
-          {productsLoading ? (
-            <div 
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-              aria-busy="true"
-              aria-label="Loading products"
-            >
-              {Array.from({ length: 8 }).map((_, i) => (
-                <ProductSkeleton key={i} />
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
+          <TabsList className="grid grid-cols-5 w-full max-w-2xl mx-auto gap-1">
+            <TabsTrigger value="music" className="gap-2" data-testid="tab-music">
+              <Music className="w-4 h-4" /> Music
+            </TabsTrigger>
+            <TabsTrigger value="videos" className="gap-2" data-testid="tab-videos">
+              <Video className="w-4 h-4" /> Videos
+            </TabsTrigger>
+            <TabsTrigger value="movies" className="gap-2" data-testid="tab-movies">
+              <Film className="w-4 h-4" /> Movies
+            </TabsTrigger>
+            <TabsTrigger value="courses" className="gap-2" data-testid="tab-courses">
+              <GraduationCap className="w-4 h-4" /> Courses
+            </TabsTrigger>
+            <TabsTrigger value="books" className="gap-2" data-testid="tab-books">
+              <BookOpen className="w-4 h-4" /> Books
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="music" className="mt-8">
+            <FeaturedCarousel items={mockMusicContent} onPlay={handlePlay} />
+            
+            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+              <TrendingUp className="w-6 h-6 text-orange-500" /> Trending Music
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+              {filteredContent.map(content => (
+                <ContentCard key={content.id} content={content} onPlay={handlePlay} />
               ))}
             </div>
-          ) : filteredProducts && filteredProducts.length > 0 ? (
-            <div 
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-              role="list"
-              aria-label={`${filteredProducts.length} stroke recovery products`}
-            >
-              {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+          </TabsContent>
+
+          <TabsContent value="videos" className="mt-8">
+            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+              <Video className="w-6 h-6 text-blue-500" /> Popular Videos
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredContent.map(content => (
+                <ContentCard key={content.id} content={content} onPlay={handlePlay} />
               ))}
             </div>
-          ) : (
-            <Card className="p-12 text-center">
-              <ShoppingCart className="h-16 w-16 mx-auto text-muted-foreground mb-4" aria-hidden="true" />
-              <h3 className="text-xl font-semibold mb-2">No products found</h3>
-              <p className="text-muted-foreground mb-4">
-                {debouncedSearch 
-                  ? `No stroke recovery products match "${debouncedSearch}"` 
-                  : "No products in this category yet"}
-              </p>
-              {(selectedCategory || debouncedSearch) && (
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setSelectedCategory(null);
-                    setSearchQuery("");
-                  }}
-                  data-testid="button-clear-filters"
-                >
-                  Clear Filters
-                </Button>
-              )}
-            </Card>
-          )}
+          </TabsContent>
+
+          <TabsContent value="movies" className="mt-8">
+            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+              <Film className="w-6 h-6 text-red-500" /> Featured Films
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {filteredContent.map(content => (
+                <ContentCard key={content.id} content={content} onPlay={handlePlay} />
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="courses" className="mt-8">
+            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+              <GraduationCap className="w-6 h-6 text-green-500" /> Popular Courses
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredContent.map(content => (
+                <ContentCard key={content.id} content={content} onPlay={handlePlay} />
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="books" className="mt-8">
+            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+              <BookOpen className="w-6 h-6 text-purple-500" /> Bestselling Books
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {filteredContent.map(content => (
+                <ContentCard key={content.id} content={content} onPlay={handlePlay} />
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        <section className="mt-12">
+          <BecomeCreatorCTA />
         </section>
 
-        <section className="mt-12 py-8 border-t border-border" aria-label="Affiliate disclosure">
-          <div className="max-w-2xl mx-auto text-center">
-            <p className="text-sm text-muted-foreground">
-              As an Amazon Associate, we earn from qualifying purchases. 
-              All stroke recovery products are personally vetted and recommended based on real recovery experience.
-            </p>
+        <section className="mt-12 py-8 border-t border-border">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div>
+              <div className="w-12 h-12 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Sparkles className="w-6 h-6 text-orange-500" />
+              </div>
+              <h3 className="font-semibold mb-1">AI-Powered Creation</h3>
+              <p className="text-sm text-muted-foreground">Create with cutting-edge AI tools</p>
+            </div>
+            <div>
+              <div className="w-12 h-12 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                <DollarSign className="w-6 h-6 text-orange-500" />
+              </div>
+              <h3 className="font-semibold mb-1">85% Creator Earnings</h3>
+              <p className="text-sm text-muted-foreground">Industry-leading revenue share</p>
+            </div>
+            <div>
+              <div className="w-12 h-12 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Radio className="w-6 h-6 text-orange-500" />
+              </div>
+              <h3 className="font-semibold mb-1">Global Distribution</h3>
+              <p className="text-sm text-muted-foreground">Reach audiences worldwide</p>
+            </div>
+            <div>
+              <div className="w-12 h-12 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Zap className="w-6 h-6 text-orange-500" />
+              </div>
+              <h3 className="font-semibold mb-1">Instant Publishing</h3>
+              <p className="text-sm text-muted-foreground">Go live in minutes</p>
+            </div>
           </div>
         </section>
       </main>
+
+      <MusicPlayer track={currentTrack} onClose={() => setCurrentTrack(null)} />
     </div>
   );
 }
