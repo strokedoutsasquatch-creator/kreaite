@@ -25,6 +25,13 @@ Stroke Recovery Academy (strokerecoveryacademy.com) is a comprehensive web platf
 - **Recovery Builder** - 4-step assessment wizard mapping to personalized curriculum and auto-enrollment
 - **Marketplace** - Premium books, coaching, and courses with Amazon affiliate integration
 
+### Ultra-Premium Creator Graph (NEW):
+- **Movie Studio** - Full AI film production pipeline: script → storyboards → multi-character dialogue → video
+- **Voice Cloning Library** - Reusable AI voice clones for audiobooks, movies, and courses
+- **Audiobook Factory** - Book → TTS narration → mastering pipeline
+- **DJ/Mixing Studio** - Presets for EQ, compression, effects, and turntable scratching
+- **Cross-Studio Orchestration** - Workflow automation: book_to_audiobook, book_to_course, movie_production, music_to_video
+
 ### Platform Model:
 - **Centralized at StrokeRecoveryAcademy.com** - Single community with curated creator program
 - **Curated Creators** - Vetted experts can publish through Stroke Lyfe Publishing

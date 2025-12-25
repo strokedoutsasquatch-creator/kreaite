@@ -22,8 +22,31 @@ import {
   generateCharacterPromptRequestSchema,
   generatePageIllustrationRequestSchema,
   rhymeConvertRequestSchema,
-  readAloudAnalyzeRequestSchema
+  readAloudAnalyzeRequestSchema,
+  voiceClones,
+  djPresets,
+  audiobookProjects,
+  audiobookChapters
 } from "../shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
+import { 
+  generateCompleteScript, 
+  generateSceneStoryboard, 
+  synthesizeSceneDialogue,
+  createMovieProductionPipeline,
+  getCharacterVoiceOptions,
+  getMovieGenreOptions
+} from './movieStudioService';
+import {
+  createWorkflow,
+  startWorkflow,
+  getWorkflowStatus,
+  estimateWorkflowCost,
+  getAvailableWorkflows,
+  cancelWorkflow,
+  resumeWorkflow
+} from './orchestrationService';
 
 async function initStripe() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -5410,6 +5433,404 @@ Return the rhyming version only, no explanation.`;
     } catch (error: any) {
       console.error("Error analyzing text:", error);
       res.status(500).json({ message: error.message || "Failed to analyze text" });
+    }
+  });
+
+  // ============================================================================
+  // ULTRA-PREMIUM CREATOR GRAPH API
+  // Cross-Studio Orchestration, Movie Studio, Voice Cloning
+  // ============================================================================
+
+  // ============ MOVIE STUDIO API ============
+
+  // Get movie production options
+  app.get('/api/movie/options', (req: any, res) => {
+    res.json({
+      genres: getMovieGenreOptions(),
+      voiceOptions: getCharacterVoiceOptions()
+    });
+  });
+
+  // Generate complete movie script
+  app.post('/api/movie/generate-script', isAuthenticated, async (req: any, res) => {
+    try {
+      const { premise, genre, characters, targetScenes } = req.body;
+      
+      if (!premise || !genre) {
+        return res.status(400).json({ message: "Premise and genre are required" });
+      }
+
+      const result = await generateCompleteScript(premise, genre, characters || [], targetScenes || 5);
+      
+      if (result.success) {
+        res.json(result);
+      } else {
+        res.status(500).json({ message: result.error });
+      }
+    } catch (error: any) {
+      console.error("Error generating script:", error);
+      res.status(500).json({ message: error.message || "Failed to generate script" });
+    }
+  });
+
+  // Generate scene storyboard
+  app.post('/api/movie/scene/storyboard', isAuthenticated, async (req: any, res) => {
+    try {
+      const { scene, characters, style } = req.body;
+      
+      if (!scene || !style) {
+        return res.status(400).json({ message: "Scene and style are required" });
+      }
+
+      const result = await generateSceneStoryboard(scene, characters || [], style);
+      
+      if (result.success) {
+        res.json(result);
+      } else {
+        res.status(500).json({ message: result.error });
+      }
+    } catch (error: any) {
+      console.error("Error generating storyboard:", error);
+      res.status(500).json({ message: error.message || "Failed to generate storyboard" });
+    }
+  });
+
+  // Synthesize scene dialogue
+  app.post('/api/movie/scene/dialogue', isAuthenticated, async (req: any, res) => {
+    try {
+      const { scene, characters } = req.body;
+      
+      if (!scene || !characters) {
+        return res.status(400).json({ message: "Scene and characters are required" });
+      }
+
+      const result = await synthesizeSceneDialogue(scene, characters);
+      
+      if (result.success) {
+        // Convert Map to object for JSON response
+        const audioUrls: Record<string, string> = {};
+        result.audioUrls?.forEach((url: string, key: string) => {
+          audioUrls[key] = url;
+        });
+        
+        res.json({
+          success: true,
+          audioUrls,
+          totalDuration: result.totalDuration
+        });
+      } else {
+        res.status(500).json({ message: result.error });
+      }
+    } catch (error: any) {
+      console.error("Error synthesizing dialogue:", error);
+      res.status(500).json({ message: error.message || "Failed to synthesize dialogue" });
+    }
+  });
+
+  // Create full movie production pipeline
+  app.post('/api/movie/pipeline', isAuthenticated, async (req: any, res) => {
+    try {
+      const { premise, genre, mainCharacter, antagonist } = req.body;
+      
+      if (!premise || !genre || !mainCharacter) {
+        return res.status(400).json({ message: "Premise, genre, and mainCharacter are required" });
+      }
+
+      const result = await createMovieProductionPipeline(premise, genre, mainCharacter, antagonist);
+      
+      if (result.success) {
+        // Convert Maps to objects for JSON response
+        const assets: Record<string, any> = {};
+        if (result.assets?.storyboards) {
+          assets.storyboards = {};
+          result.assets.storyboards.forEach((urls: string[], key: string) => {
+            assets.storyboards[key] = urls;
+          });
+        }
+        if (result.assets?.dialogueAudio) {
+          assets.dialogueAudio = {};
+          result.assets.dialogueAudio.forEach((url: string, key: string) => {
+            assets.dialogueAudio[key] = url;
+          });
+        }
+        
+        res.json({
+          success: true,
+          project: result.project,
+          assets,
+          estimatedCost: result.estimatedCost
+        });
+      } else {
+        res.status(500).json({ message: result.error });
+      }
+    } catch (error: any) {
+      console.error("Error creating movie pipeline:", error);
+      res.status(500).json({ message: error.message || "Failed to create movie pipeline" });
+    }
+  });
+
+  // ============ CROSS-STUDIO ORCHESTRATION API ============
+
+  // Get available workflow templates
+  app.get('/api/workflows/templates', (req: any, res) => {
+    res.json({
+      templates: getAvailableWorkflows()
+    });
+  });
+
+  // Estimate workflow cost
+  app.get('/api/workflows/estimate/:type', (req: any, res) => {
+    const { type } = req.params;
+    const estimate = estimateWorkflowCost(type);
+    res.json(estimate);
+  });
+
+  // Create a new workflow
+  app.post('/api/workflows', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { workflowType, sourceType, sourceId, customName } = req.body;
+      
+      if (!workflowType || !sourceType || !sourceId) {
+        return res.status(400).json({ message: "workflowType, sourceType, and sourceId are required" });
+      }
+
+      const result = await createWorkflow(userId, workflowType, sourceType, sourceId, customName);
+      
+      if (result.success) {
+        res.json(result);
+      } else {
+        res.status(500).json({ message: result.error });
+      }
+    } catch (error: any) {
+      console.error("Error creating workflow:", error);
+      res.status(500).json({ message: error.message || "Failed to create workflow" });
+    }
+  });
+
+  // Start a workflow
+  app.post('/api/workflows/:id/start', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const result = await startWorkflow(parseInt(id));
+      
+      if (result.success) {
+        res.json(result);
+      } else {
+        res.status(500).json({ message: result.error });
+      }
+    } catch (error: any) {
+      console.error("Error starting workflow:", error);
+      res.status(500).json({ message: error.message || "Failed to start workflow" });
+    }
+  });
+
+  // Get workflow status
+  app.get('/api/workflows/:id/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const result = await getWorkflowStatus(parseInt(id));
+      
+      if (result.success) {
+        res.json(result);
+      } else {
+        res.status(404).json({ message: result.error });
+      }
+    } catch (error: any) {
+      console.error("Error getting workflow status:", error);
+      res.status(500).json({ message: error.message || "Failed to get workflow status" });
+    }
+  });
+
+  // Cancel a workflow
+  app.post('/api/workflows/:id/cancel', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const result = await cancelWorkflow(parseInt(id));
+      
+      if (result.success) {
+        res.json(result);
+      } else {
+        res.status(500).json({ message: result.error });
+      }
+    } catch (error: any) {
+      console.error("Error cancelling workflow:", error);
+      res.status(500).json({ message: error.message || "Failed to cancel workflow" });
+    }
+  });
+
+  // Resume a paused workflow
+  app.post('/api/workflows/:id/resume', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const result = await resumeWorkflow(parseInt(id));
+      
+      if (result.success) {
+        res.json(result);
+      } else {
+        res.status(500).json({ message: result.error });
+      }
+    } catch (error: any) {
+      console.error("Error resuming workflow:", error);
+      res.status(500).json({ message: error.message || "Failed to resume workflow" });
+    }
+  });
+
+  // ============ VOICE CLONING LIBRARY API ============
+
+  // Get user's voice clones
+  app.get('/api/voices', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const userVoices = await db.select().from(voiceClones).where(eq(voiceClones.ownerId, userId));
+      res.json({ voices: userVoices });
+    } catch (error: any) {
+      console.error("Error getting voices:", error);
+      res.status(500).json({ message: error.message || "Failed to get voices" });
+    }
+  });
+
+  // Create a new voice clone
+  app.post('/api/voices', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { name, description, voiceType, gender, ageRange, accent, sourceAudioUrl, styleSettings } = req.body;
+      
+      if (!name || !voiceType) {
+        return res.status(400).json({ message: "Name and voiceType are required" });
+      }
+
+      const [voice] = await db.insert(voiceClones).values({
+        ownerId: userId,
+        name,
+        description,
+        voiceType,
+        gender,
+        ageRange,
+        accent,
+        sourceAudioUrl,
+        styleSettings,
+        status: 'processing'
+      }).returning();
+
+      res.json({ success: true, voice });
+    } catch (error: any) {
+      console.error("Error creating voice clone:", error);
+      res.status(500).json({ message: error.message || "Failed to create voice clone" });
+    }
+  });
+
+  // Get public voice clones
+  app.get('/api/voices/public', async (req: any, res) => {
+    try {
+      const publicVoices = await db.select().from(voiceClones).where(eq(voiceClones.isPublic, true));
+      res.json({ voices: publicVoices });
+    } catch (error: any) {
+      console.error("Error getting public voices:", error);
+      res.status(500).json({ message: error.message || "Failed to get public voices" });
+    }
+  });
+
+  // ============ DJ PRESETS API ============
+
+  // Get user's DJ presets
+  app.get('/api/dj/presets', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const userPresets = await db.select().from(djPresets).where(eq(djPresets.creatorId, userId));
+      res.json({ presets: userPresets });
+    } catch (error: any) {
+      console.error("Error getting DJ presets:", error);
+      res.status(500).json({ message: error.message || "Failed to get DJ presets" });
+    }
+  });
+
+  // Save a DJ preset
+  app.post('/api/dj/presets', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { name, category, settings, isPublic } = req.body;
+      
+      if (!name || !category || !settings) {
+        return res.status(400).json({ message: "Name, category, and settings are required" });
+      }
+
+      const [preset] = await db.insert(djPresets).values({
+        creatorId: userId,
+        name,
+        category,
+        settings,
+        isPublic: isPublic || false
+      }).returning();
+
+      res.json({ success: true, preset });
+    } catch (error: any) {
+      console.error("Error saving DJ preset:", error);
+      res.status(500).json({ message: error.message || "Failed to save DJ preset" });
+    }
+  });
+
+  // Get public DJ presets
+  app.get('/api/dj/presets/public', async (req: any, res) => {
+    try {
+      const publicPresets = await db.select().from(djPresets).where(eq(djPresets.isPublic, true));
+      res.json({ presets: publicPresets });
+    } catch (error: any) {
+      console.error("Error getting public presets:", error);
+      res.status(500).json({ message: error.message || "Failed to get public presets" });
+    }
+  });
+
+  // ============ AUDIOBOOK FACTORY API ============
+
+  // Get user's audiobook projects
+  app.get('/api/audiobooks', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const userAudiobooks = await db.select().from(audiobookProjects).where(eq(audiobookProjects.creatorId, userId));
+      res.json({ audiobooks: userAudiobooks });
+    } catch (error: any) {
+      console.error("Error getting audiobooks:", error);
+      res.status(500).json({ message: error.message || "Failed to get audiobooks" });
+    }
+  });
+
+  // Create audiobook from manuscript
+  app.post('/api/audiobooks', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { title, author, sourceProjectId, narratorVoiceId, masteringPreset } = req.body;
+      
+      if (!title) {
+        return res.status(400).json({ message: "Title is required" });
+      }
+
+      const [audiobook] = await db.insert(audiobookProjects).values({
+        creatorId: userId,
+        title,
+        author,
+        sourceProjectId,
+        narratorVoiceId,
+        masteringPreset: masteringPreset || 'audiobook',
+        status: 'setup'
+      }).returning();
+
+      res.json({ success: true, audiobook });
+    } catch (error: any) {
+      console.error("Error creating audiobook:", error);
+      res.status(500).json({ message: error.message || "Failed to create audiobook" });
+    }
+  });
+
+  // Get audiobook chapters
+  app.get('/api/audiobooks/:id/chapters', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const chapters = await db.select().from(audiobookChapters).where(eq(audiobookChapters.audiobookId, parseInt(id)));
+      res.json({ chapters });
+    } catch (error: any) {
+      console.error("Error getting audiobook chapters:", error);
+      res.status(500).json({ message: error.message || "Failed to get chapters" });
     }
   });
 

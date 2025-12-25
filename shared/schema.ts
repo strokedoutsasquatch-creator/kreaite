@@ -2239,3 +2239,312 @@ export const readAloudAnalyzeRequestSchema = z.object({
 });
 
 export type ReadAloudAnalyzeRequest = z.infer<typeof readAloudAnalyzeRequestSchema>;
+
+// ============================================================================
+// ULTRA-PREMIUM CREATOR GRAPH - Cross-Studio Orchestration
+// ============================================================================
+
+// Voice Cloning Library - Reusable cloned voices across all projects
+export const voiceClones = pgTable("voice_clones", {
+  id: serial("id").primaryKey(),
+  ownerId: varchar("owner_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  voiceType: text("voice_type").notNull(), // custom, celebrity_style, character
+  gender: text("gender"), // male, female, neutral
+  ageRange: text("age_range"), // child, teen, adult, senior
+  accent: text("accent"), // american, british, australian, etc.
+  sourceAudioUrl: text("source_audio_url"), // 10+ seconds of source audio
+  voiceModelId: text("voice_model_id"), // Google TTS or cloned model ID
+  previewAudioUrl: text("preview_audio_url"),
+  styleSettings: jsonb("style_settings"), // pitch, rate, emotion presets
+  isPublic: boolean("is_public").notNull().default(false),
+  usageCount: integer("usage_count").notNull().default(0),
+  status: text("status").notNull().default("processing"), // processing, ready, failed
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Movie Production Pipeline
+export const movieProjects = pgTable("movie_projects", {
+  id: serial("id").primaryKey(),
+  creatorId: varchar("creator_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  logline: text("logline"), // One-sentence summary
+  synopsis: text("synopsis"),
+  genre: text("genre").notNull(), // action, comedy, horror, romance, scifi, thriller
+  targetDuration: integer("target_duration"), // minutes
+  aspectRatio: text("aspect_ratio").notNull().default("16:9"),
+  style: text("style"), // cinematic, anime, realistic, noir, etc.
+  coverImageUrl: text("cover_image_url"),
+  trailerUrl: text("trailer_url"),
+  status: text("status").notNull().default("development"), // development, pre_production, production, post_production, completed
+  totalScenes: integer("total_scenes").notNull().default(0),
+  completedScenes: integer("completed_scenes").notNull().default(0),
+  estimatedCost: integer("estimated_cost"), // in cents
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Movie Characters with voice assignments
+export const movieCharacters = pgTable("movie_characters", {
+  id: serial("id").primaryKey(),
+  movieId: integer("movie_id").notNull().references(() => movieProjects.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  role: text("role").notNull(), // protagonist, antagonist, supporting, extra
+  description: text("description"),
+  appearance: text("appearance"), // Visual description for AI image generation
+  personality: text("personality"),
+  voiceCloneId: integer("voice_clone_id").references(() => voiceClones.id, { onDelete: "set null" }),
+  voiceStyle: text("voice_style"), // hero, villain, sidekick, etc.
+  referenceImageUrl: text("reference_image_url"),
+  aiGeneratedImageUrl: text("ai_generated_image_url"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Movie Scenes with dialogue
+export const movieScenes = pgTable("movie_scenes", {
+  id: serial("id").primaryKey(),
+  movieId: integer("movie_id").notNull().references(() => movieProjects.id, { onDelete: "cascade" }),
+  sceneNumber: integer("scene_number").notNull(),
+  title: text("title").notNull(),
+  setting: text("setting").notNull(), // Location description
+  timeOfDay: text("time_of_day"), // day, night, dawn, dusk
+  mood: text("mood"), // tense, romantic, comedic, scary
+  description: text("description"),
+  cameraAngles: text("camera_angles").array(),
+  duration: integer("duration"), // seconds
+  status: text("status").notNull().default("scripted"), // scripted, storyboarded, rendering, completed
+  // Generated assets
+  storyboardUrls: text("storyboard_urls").array(),
+  videoUrl: text("video_url"),
+  audioUrl: text("audio_url"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Scene Dialogue with multi-character support
+export const sceneDialogue = pgTable("scene_dialogue", {
+  id: serial("id").primaryKey(),
+  sceneId: integer("scene_id").notNull().references(() => movieScenes.id, { onDelete: "cascade" }),
+  characterId: integer("character_id").notNull().references(() => movieCharacters.id, { onDelete: "cascade" }),
+  lineNumber: integer("line_number").notNull(),
+  dialogueText: text("dialogue_text").notNull(),
+  emotion: text("emotion"), // angry, sad, happy, sarcastic, etc.
+  direction: text("direction"), // Acting/delivery direction
+  synthesizedAudioUrl: text("synthesized_audio_url"),
+  duration: integer("duration"), // milliseconds
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Audiobook Production System
+export const audiobookProjects = pgTable("audiobook_projects", {
+  id: serial("id").primaryKey(),
+  sourceProjectId: integer("source_project_id").references(() => publishingProjects.id, { onDelete: "set null" }),
+  creatorId: varchar("creator_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  author: text("author"),
+  narratorVoiceId: integer("narrator_voice_id").references(() => voiceClones.id, { onDelete: "set null" }),
+  narratorName: text("narrator_name"),
+  totalChapters: integer("total_chapters").notNull().default(0),
+  completedChapters: integer("completed_chapters").notNull().default(0),
+  totalDuration: integer("total_duration"), // seconds
+  estimatedCost: integer("estimated_cost"), // in cents
+  coverImageUrl: text("cover_image_url"),
+  status: text("status").notNull().default("setup"), // setup, narrating, mastering, completed
+  // Mastering settings
+  masteringPreset: text("mastering_preset"), // podcast, audiobook, broadcast
+  noiseReduction: boolean("noise_reduction").notNull().default(true),
+  loudnessNormalization: boolean("loudness_normalization").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const audiobookChapters = pgTable("audiobook_chapters", {
+  id: serial("id").primaryKey(),
+  audiobookId: integer("audiobook_id").notNull().references(() => audiobookProjects.id, { onDelete: "cascade" }),
+  sourceChapterId: integer("source_chapter_id").references(() => manuscriptChapters.id, { onDelete: "set null" }),
+  chapterNumber: integer("chapter_number").notNull(),
+  title: text("title").notNull(),
+  textContent: text("text_content"),
+  wordCount: integer("word_count"),
+  estimatedDuration: integer("estimated_duration"), // seconds
+  actualDuration: integer("actual_duration"), // seconds
+  rawAudioUrl: text("raw_audio_url"),
+  masteredAudioUrl: text("mastered_audio_url"),
+  status: text("status").notNull().default("pending"), // pending, synthesizing, mastering, completed
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// DJ/Mixing Studio Presets
+export const djPresets = pgTable("dj_presets", {
+  id: serial("id").primaryKey(),
+  creatorId: varchar("creator_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  category: text("category").notNull(), // eq, compressor, effects, mastering, scratch
+  settings: jsonb("settings").notNull(), // Full preset configuration
+  isPublic: boolean("is_public").notNull().default(false),
+  usageCount: integer("usage_count").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Cross-Studio Workflow Orchestration
+export const creatorWorkflows = pgTable("creator_workflows", {
+  id: serial("id").primaryKey(),
+  creatorId: varchar("creator_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  workflowType: text("workflow_type").notNull(), // book_to_audiobook, book_to_course, movie_production, music_to_video
+  status: text("status").notNull().default("active"), // active, paused, completed
+  // Source references
+  sourceType: text("source_type"), // publishing_project, music_project, movie_project
+  sourceId: integer("source_id"),
+  // Pipeline configuration
+  steps: jsonb("steps").notNull(), // Array of workflow step definitions
+  currentStepIndex: integer("current_step_index").notNull().default(0),
+  completedSteps: integer("completed_steps").array(),
+  // Output references
+  outputs: jsonb("outputs"), // Map of output type to IDs
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const workflowJobs = pgTable("workflow_jobs", {
+  id: serial("id").primaryKey(),
+  workflowId: integer("workflow_id").notNull().references(() => creatorWorkflows.id, { onDelete: "cascade" }),
+  stepIndex: integer("step_index").notNull(),
+  jobType: text("job_type").notNull(), // ai_generation, tts_synthesis, video_render, export
+  inputData: jsonb("input_data"),
+  outputData: jsonb("output_data"),
+  status: text("status").notNull().default("pending"), // pending, running, completed, failed
+  progress: integer("progress").notNull().default(0), // 0-100
+  errorMessage: text("error_message"),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Google Classroom Integration
+export const classroomCourses = pgTable("classroom_courses", {
+  id: serial("id").primaryKey(),
+  creatorCourseId: integer("creator_course_id").notNull().references(() => creatorCourses.id, { onDelete: "cascade" }),
+  googleCourseId: text("google_course_id").notNull(),
+  googleCourseLink: text("google_course_link"),
+  enrollmentCode: text("enrollment_code"),
+  syncStatus: text("sync_status").notNull().default("pending"), // pending, synced, error
+  lastSyncAt: timestamp("last_sync_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const classroomAssignments = pgTable("classroom_assignments", {
+  id: serial("id").primaryKey(),
+  classroomCourseId: integer("classroom_course_id").notNull().references(() => classroomCourses.id, { onDelete: "cascade" }),
+  lessonId: integer("lesson_id").references(() => creatorCourseLessons.id, { onDelete: "set null" }),
+  googleAssignmentId: text("google_assignment_id"),
+  googleFormId: text("google_form_id"), // For quizzes
+  title: text("title").notNull(),
+  description: text("description"),
+  dueDate: timestamp("due_date"),
+  maxPoints: integer("max_points"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Insert schemas for ultra-premium features
+export const insertVoiceCloneSchema = createInsertSchema(voiceClones).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  usageCount: true,
+});
+
+export const insertMovieProjectSchema = createInsertSchema(movieProjects).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  totalScenes: true,
+  completedScenes: true,
+});
+
+export const insertMovieCharacterSchema = createInsertSchema(movieCharacters).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertMovieSceneSchema = createInsertSchema(movieScenes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSceneDialogueSchema = createInsertSchema(sceneDialogue).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAudiobookProjectSchema = createInsertSchema(audiobookProjects).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  totalChapters: true,
+  completedChapters: true,
+});
+
+export const insertAudiobookChapterSchema = createInsertSchema(audiobookChapters).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertDjPresetSchema = createInsertSchema(djPresets).omit({
+  id: true,
+  createdAt: true,
+  usageCount: true,
+});
+
+export const insertCreatorWorkflowSchema = createInsertSchema(creatorWorkflows).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  currentStepIndex: true,
+});
+
+export const insertWorkflowJobSchema = createInsertSchema(workflowJobs).omit({
+  id: true,
+  createdAt: true,
+  progress: true,
+});
+
+export const insertClassroomCourseSchema = createInsertSchema(classroomCourses).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertClassroomAssignmentSchema = createInsertSchema(classroomAssignments).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Ultra-Premium Types
+export type VoiceClone = typeof voiceClones.$inferSelect;
+export type InsertVoiceClone = z.infer<typeof insertVoiceCloneSchema>;
+export type MovieProject = typeof movieProjects.$inferSelect;
+export type InsertMovieProject = z.infer<typeof insertMovieProjectSchema>;
+export type MovieCharacter = typeof movieCharacters.$inferSelect;
+export type InsertMovieCharacter = z.infer<typeof insertMovieCharacterSchema>;
+export type MovieScene = typeof movieScenes.$inferSelect;
+export type InsertMovieScene = z.infer<typeof insertMovieSceneSchema>;
+export type SceneDialogue = typeof sceneDialogue.$inferSelect;
+export type InsertSceneDialogue = z.infer<typeof insertSceneDialogueSchema>;
+export type AudiobookProject = typeof audiobookProjects.$inferSelect;
+export type InsertAudiobookProject = z.infer<typeof insertAudiobookProjectSchema>;
+export type AudiobookChapter = typeof audiobookChapters.$inferSelect;
+export type InsertAudiobookChapter = z.infer<typeof insertAudiobookChapterSchema>;
+export type DjPreset = typeof djPresets.$inferSelect;
+export type InsertDjPreset = z.infer<typeof insertDjPresetSchema>;
+export type CreatorWorkflow = typeof creatorWorkflows.$inferSelect;
+export type InsertCreatorWorkflow = z.infer<typeof insertCreatorWorkflowSchema>;
+export type WorkflowJob = typeof workflowJobs.$inferSelect;
+export type InsertWorkflowJob = z.infer<typeof insertWorkflowJobSchema>;
+export type ClassroomCourse = typeof classroomCourses.$inferSelect;
+export type InsertClassroomCourse = z.infer<typeof insertClassroomCourseSchema>;
+export type ClassroomAssignment = typeof classroomAssignments.$inferSelect;
+export type InsertClassroomAssignment = z.infer<typeof insertClassroomAssignmentSchema>;
