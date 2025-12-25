@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import CreatorHeader from "@/components/CreatorHeader";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import Footer from "@/components/Footer";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -12,10 +13,8 @@ import {
   Search, 
   ExternalLink, 
   Star, 
-  ShoppingCart,
   Heart,
   BookOpen,
-  ImageOff,
   Music,
   Video,
   Film,
@@ -28,24 +27,18 @@ import {
   VolumeX,
   Repeat,
   Shuffle,
-  Download,
-  Share2,
-  User,
   Clock,
   Eye,
-  DollarSign,
-  TrendingUp,
   Crown,
   Sparkles,
   Headphones,
-  Mic,
   Palette,
   ListMusic,
-  PlayCircle,
-  Plus,
-  MoreHorizontal,
+  Loader2,
+  DollarSign,
   Radio,
-  Zap
+  TrendingUp,
+  Zap,
 } from "lucide-react";
 
 interface CreatorContent {
@@ -64,39 +57,40 @@ interface CreatorContent {
   isNew?: boolean;
   description?: string;
   releaseDate?: string;
+  amazonUrl?: string;
 }
 
-const mockMusicContent: CreatorContent[] = [
-  { id: "m1", title: "Stroke of Midnight", creator: "The Stroked Out Sasquatch", type: "music", price: 1.99, streamCount: 125000, duration: "3:45", genre: "Hip-Hop", rating: 4.8, isFeatured: true, isNew: true },
-  { id: "m2", title: "Rise Again", creator: "Recovery Beats", type: "music", price: 0.99, streamCount: 89000, duration: "4:12", genre: "Inspirational", rating: 4.6 },
-  { id: "m3", title: "Warrior's Anthem", creator: "Nick Kremers", type: "music", price: 1.49, streamCount: 67000, duration: "3:28", genre: "Rock", rating: 4.9, isFeatured: true },
-  { id: "m4", title: "Healing Frequencies", creator: "Ambient Recovery", type: "music", price: 0, streamCount: 234000, duration: "8:00", genre: "Ambient", rating: 4.7 },
-  { id: "m5", title: "Never Give Up", creator: "Motivation Music", type: "music", price: 1.99, streamCount: 156000, duration: "3:55", genre: "Pop", rating: 4.5 },
-  { id: "m6", title: "Brain Rewire", creator: "Neuro Beats", type: "music", price: 2.99, streamCount: 78000, duration: "5:30", genre: "Electronic", rating: 4.8, isNew: true },
-];
+interface MarketplaceBook {
+  id: number;
+  title: string;
+  authorName: string;
+  price: string;
+  genre?: string;
+  rating?: string;
+  amazonUrl?: string;
+  coverImageUrl?: string;
+  description?: string;
+  isFeatured?: boolean;
+}
 
-const mockVideoContent: CreatorContent[] = [
-  { id: "v1", title: "My Stroke Story: 90% Recovery", creator: "Nick Kremers", type: "video", price: 0, streamCount: 450000, duration: "28:45", genre: "Documentary", rating: 4.9, isFeatured: true },
-  { id: "v2", title: "Daily PT Exercises", creator: "Recovery Academy", type: "video", price: 4.99, streamCount: 89000, duration: "45:00", genre: "Fitness", rating: 4.7 },
-  { id: "v3", title: "Mindset for Recovery", creator: "Warrior Mindset", type: "video", price: 2.99, streamCount: 67000, duration: "18:30", genre: "Motivation", rating: 4.6 },
-];
+interface MarketplaceProduct {
+  id: number;
+  title: string;
+  description?: string;
+  price: string;
+  imageUrl?: string;
+  amazonUrl?: string;
+  isFeatured?: boolean;
+}
 
-const mockMovieContent: CreatorContent[] = [
-  { id: "mv1", title: "The Comeback: A Stroke Survivor's Journey", creator: "KreAIte Films", type: "movie", price: 14.99, streamCount: 25000, duration: "1:42:00", genre: "Documentary", rating: 4.9, isFeatured: true },
-  { id: "mv2", title: "Second Chance", creator: "Indie Recovery Films", type: "movie", price: 9.99, streamCount: 18000, duration: "1:28:00", genre: "Drama", rating: 4.5 },
-];
-
-const mockCourseContent: CreatorContent[] = [
-  { id: "c1", title: "Ultimate Stroke Recovery Bible", creator: "Nick Kremers", type: "course", price: 97, streamCount: 12000, duration: "8+ hours", genre: "Recovery", rating: 4.9, isFeatured: true, description: "Complete recovery curriculum" },
-  { id: "c2", title: "Cognitive Recovery Mastery", creator: "Brain Training Pro", type: "course", price: 49, streamCount: 8500, duration: "6 hours", genre: "Cognitive", rating: 4.7 },
-  { id: "c3", title: "Caregiver's Complete Guide", creator: "Family Recovery", type: "course", price: 29, streamCount: 6200, duration: "4 hours", genre: "Caregiving", rating: 4.8, isNew: true },
-];
-
-const mockBookContent: CreatorContent[] = [
-  { id: "b1", title: "The Stroked Out Sasquatch", creator: "Nick Kremers", type: "book", price: 24.99, streamCount: 35000, genre: "Memoir", rating: 4.9, isFeatured: true, description: "My journey from stroke to 90% recovery" },
-  { id: "b2", title: "Wheeled Out", creator: "Nick Kremers", type: "book", price: 19.99, streamCount: 28000, genre: "Recovery", rating: 4.8 },
-  { id: "b3", title: "The Ultimate Stroke Recovery Bible", creator: "Nick Kremers", type: "book", price: 34.99, streamCount: 42000, genre: "Guide", rating: 4.9, isFeatured: true },
-];
+interface StripeProduct {
+  product_id: string;
+  product_name: string;
+  product_description?: string;
+  unit_amount?: number;
+  currency?: string;
+  price_id?: string;
+}
 
 function MusicPlayer({ track, onClose }: { track: CreatorContent | null; onClose: () => void }) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -368,9 +362,21 @@ function BecomeCreatorCTA() {
 }
 
 export default function Marketplace() {
-  const [activeTab, setActiveTab] = useState("music");
+  const [activeTab, setActiveTab] = useState("books");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentTrack, setCurrentTrack] = useState<CreatorContent | null>(null);
+
+  const { data: booksData, isLoading: booksLoading } = useQuery<MarketplaceBook[]>({
+    queryKey: ['/api/marketplace/books'],
+  });
+
+  const { data: productsData, isLoading: productsLoading } = useQuery<MarketplaceProduct[]>({
+    queryKey: ['/api/marketplace/products'],
+  });
+
+  const { data: stripeProducts, isLoading: stripeLoading } = useQuery<StripeProduct[]>({
+    queryKey: ['/api/stripe/products'],
+  });
 
   const handlePlay = (content: CreatorContent) => {
     if (content.type === "music") {
@@ -378,16 +384,62 @@ export default function Marketplace() {
     }
   };
 
-  const getContentForTab = () => {
+  const transformBooksToContent = (books: MarketplaceBook[]): CreatorContent[] => {
+    return books.map(book => ({
+      id: `book-${book.id}`,
+      title: book.title,
+      creator: book.authorName,
+      type: "book" as const,
+      price: parseFloat(book.price) || 0,
+      genre: book.genre,
+      rating: book.rating ? parseFloat(book.rating) : undefined,
+      description: book.description,
+      isFeatured: book.isFeatured,
+      amazonUrl: book.amazonUrl,
+      coverArt: book.coverImageUrl,
+    }));
+  };
+
+  const transformProductsToContent = (products: MarketplaceProduct[]): CreatorContent[] => {
+    return products.map(product => ({
+      id: `product-${product.id}`,
+      title: product.title,
+      creator: "KreAIte Store",
+      type: "course" as const,
+      price: parseFloat(product.price) || 0,
+      description: product.description,
+      isFeatured: product.isFeatured,
+      amazonUrl: product.amazonUrl,
+      coverArt: product.imageUrl,
+    }));
+  };
+
+  const transformStripeToContent = (products: StripeProduct[]): CreatorContent[] => {
+    return products.map(product => ({
+      id: product.product_id,
+      title: product.product_name,
+      creator: "KreAIte",
+      type: "course" as const,
+      price: product.unit_amount ? product.unit_amount / 100 : 0,
+      description: product.product_description,
+      isFeatured: true,
+    }));
+  };
+
+  const getContentForTab = (): CreatorContent[] => {
     switch (activeTab) {
-      case "music": return mockMusicContent;
-      case "videos": return mockVideoContent;
-      case "movies": return mockMovieContent;
-      case "courses": return mockCourseContent;
-      case "books": return mockBookContent;
-      default: return [];
+      case "books":
+        return booksData ? transformBooksToContent(booksData) : [];
+      case "courses":
+        if (stripeProducts) return transformStripeToContent(stripeProducts);
+        if (productsData) return transformProductsToContent(productsData);
+        return [];
+      default:
+        return [];
     }
   };
+
+  const isLoading = booksLoading || productsLoading || stripeLoading;
 
   const filteredContent = getContentForTab().filter(item => 
     item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -447,60 +499,89 @@ export default function Marketplace() {
           </TabsList>
 
           <TabsContent value="music" className="mt-8">
-            <FeaturedCarousel items={mockMusicContent} onPlay={handlePlay} />
-            
             <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-              <TrendingUp className="w-6 h-6 text-orange-500" /> Trending Music
+              <Music className="w-6 h-6 text-orange-500" /> Music
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-              {filteredContent.map(content => (
-                <ContentCard key={content.id} content={content} onPlay={handlePlay} />
-              ))}
+            <div className="text-center py-12 text-muted-foreground">
+              <Music className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>Music streaming coming soon!</p>
+              <p className="text-sm">Create your own music in the Music Studio.</p>
             </div>
           </TabsContent>
 
           <TabsContent value="videos" className="mt-8">
             <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-              <Video className="w-6 h-6 text-blue-500" /> Popular Videos
+              <Video className="w-6 h-6 text-blue-500" /> Videos
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredContent.map(content => (
-                <ContentCard key={content.id} content={content} onPlay={handlePlay} />
-              ))}
+            <div className="text-center py-12 text-muted-foreground">
+              <Video className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>Video content coming soon!</p>
+              <p className="text-sm">Create videos in the Video Studio.</p>
             </div>
           </TabsContent>
 
           <TabsContent value="movies" className="mt-8">
             <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-              <Film className="w-6 h-6 text-red-500" /> Featured Films
+              <Film className="w-6 h-6 text-red-500" /> Movies
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {filteredContent.map(content => (
-                <ContentCard key={content.id} content={content} onPlay={handlePlay} />
-              ))}
+            <div className="text-center py-12 text-muted-foreground">
+              <Film className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>Feature films coming soon!</p>
             </div>
           </TabsContent>
 
           <TabsContent value="courses" className="mt-8">
             <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-              <GraduationCap className="w-6 h-6 text-green-500" /> Popular Courses
+              <GraduationCap className="w-6 h-6 text-green-500" /> Courses & Products
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredContent.map(content => (
-                <ContentCard key={content.id} content={content} onPlay={handlePlay} />
-              ))}
-            </div>
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1,2,3].map(i => (
+                  <Skeleton key={i} className="h-64 w-full" />
+                ))}
+              </div>
+            ) : filteredContent.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredContent.map(content => (
+                  <ContentCard key={content.id} content={content} onPlay={handlePlay} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                <GraduationCap className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>No courses available yet.</p>
+                <p className="text-sm">Create your own course in the Course Studio.</p>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="books" className="mt-8">
+            {booksData && booksData.length > 0 && (
+              <FeaturedCarousel items={transformBooksToContent(booksData.filter(b => b.isFeatured))} onPlay={handlePlay} />
+            )}
+            
             <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-              <BookOpen className="w-6 h-6 text-purple-500" /> Bestselling Books
+              <BookOpen className="w-6 h-6 text-purple-500" /> Published Books
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {filteredContent.map(content => (
-                <ContentCard key={content.id} content={content} onPlay={handlePlay} />
-              ))}
-            </div>
+            {booksLoading ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {[1,2,3,4].map(i => (
+                  <Skeleton key={i} className="h-64 w-full" />
+                ))}
+              </div>
+            ) : filteredContent.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {filteredContent.map(content => (
+                  <ContentCard key={content.id} content={content} onPlay={handlePlay} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>No books published yet.</p>
+                <p className="text-sm">Be the first to publish! Start in the Book Studio.</p>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
 
