@@ -1,45 +1,43 @@
-# Stroke Recovery Academy
+# KreAIte.xyz
 
-**"REBUILD. REWIRE. RISE."**
+**"CREATE. PUBLISH. EARN."**
 
 **Powered by KremersX**
 
 ## Overview
 
-Stroke Recovery Academy (strokerecoveryacademy.com) is a comprehensive web platform designed to support stroke survivors, caregivers, and professionals in their recovery journey. Built by Nick "The Stroked Out Sasquatch" Kremers, a stroke survivor who achieved 90% recovery, the platform combines personal recovery expertise with modern neuroscience.
+KreAIte.xyz is an ultra-premium AI-powered creator platform with 6 professional studios for content creation. Features marketplace with streaming, integrated publishing, and creator earnings (85/15 split).
 
-**Contact:** info@strokerecoveryacademy.com
+**Website:** https://kreaite.xyz
+**Contact:** hello@kreaite.xyz
 **Parent Company:** KremersX
 
-### Key Features:
-- **Recovery University** - Comprehensive tiered curriculum (Explorer/Warrior/Champion) with 18 modules and 15+ lessons
-- **Recovery Dashboard** - Personalized command center with check-ins, habit tracker, streaks, milestones, and AI insights
-- **66-Day Habit Tracker** - Visual grid tracking for building lasting recovery habits
-- **Accountability Pods** - Small group support system with activity feeds and pod-based community
-- **Achievements System** - Badges, milestones, shareable cards, and recovery report cards
-- **Academy** - Digital courses from 3 recovery books (The Stroked Out Sasquatch, Ultimate Stroke Recovery Bible, Wheeled Out)
-- **Stroke Lyfe Publishing** - AI-powered book writing studio with Gemini ghostwriting and course builder
-- **AI Sasquatch Coach** - Interactive chat for motivation and guidance
-- **Community Forum** - Support network for survivors to share stories
-- **Survival Grid** - 16 battle-tested exercise protocols (Upper Body, Lower Body, Cognitive, Daily Living)
-- **Recovery Builder** - 4-step assessment wizard mapping to personalized curriculum and auto-enrollment
-- **Marketplace** - Premium books, coaching, and courses with Amazon affiliate integration
+### The 6 Studios:
+- **Book Studio** - Professional TipTap editor with tables, images, AI ghostwriting, KDP/Lulu publishing
+- **Video Studio** - CapCut-style timeline editor with AI video generation, multi-track editing
+- **Music Studio** - AI music composition with Tone.js, loop libraries, mixing/mastering
+- **Course Builder** - Create courses from books/content, video lessons, quizzes, certificates
+- **Image Studio** - Photoshop-like editor with layers, filters, AI generation, Remove.bg integration
+- **Doctrine Engine** - Knowledge base builder for structured content systems
 
-### Ultra-Premium Creator Graph (NEW):
-- **Movie Studio** - Full AI film production pipeline: script → storyboards → multi-character dialogue → video
-- **Voice Cloning Library** - Reusable AI voice clones for audiobooks, movies, and courses
-- **Audiobook Factory** - Book → TTS narration → mastering pipeline
-- **DJ/Mixing Studio** - Presets for EQ, compression, effects, and turntable scratching
-- **Cross-Studio Orchestration** - Workflow automation: book_to_audiobook, book_to_course, movie_production, music_to_video
+### Key Features:
+- **MediaStudio** - Unified image/video editor with dual modes (Photoshop-like layers for images, CapCut-style timeline for video)
+- **Cover Designer** - 8 templates, AI generation, Canva-style editing, KDP-ready exports
+- **Professional Editor** - TipTap WYSIWYG with tables, images, formatting, find/replace, zoom
+- **AI Integration** - Google Gemini and OpenAI for text, Lyria for music, specialized models for images/video
+- **Marketplace** - Sell books, courses, music, videos with 85% creator revenue share
+- **Stripe Integration** - Payments, subscriptions, customer portal
 
 ### Platform Model:
-- **Centralized at StrokeRecoveryAcademy.com** - Single community with curated creator program
-- **Curated Creators** - Vetted experts can publish through Stroke Lyfe Publishing
-- **Quality Control** - All content reviewed before publishing to ensure safety
+- **Centralized at KreAIte.xyz** - Single platform with creator tools
+- **Creator Earnings** - 85/15 revenue split (creators keep 85%)
+- **Multi-Format Publishing** - PDF, EPUB, print-on-demand via Lulu, streaming
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Design mandate: Pure black (#000000) background, orange (#FF6B35) accent
+Icons: lucide-react only (no emoji)
 
 ## System Architecture
 
@@ -53,7 +51,7 @@ Preferred communication style: Simple, everyday language.
 
 **UI Component System:**
 - Shadcn/ui component library built on Radix UI primitives for accessible, composable components
-- Custom design system following "Dark Premium Aesthetic" with pure black background (#000000) and vibrant orange accent (#FF6B35)
+- Custom design system: Pure black background (#000000) and vibrant orange accent (#FF6B35)
 - Inter font family as primary typeface with Space Grotesk for impact numbers
 - Component aliases configured for clean imports (@/components, @/lib, @/hooks)
 
@@ -63,7 +61,7 @@ Preferred communication style: Simple, everyday language.
 - No global state management library - leveraging React Query's built-in state
 
 **Key Design Decisions:**
-- Dark theme by default to reduce eye strain and create a "command center" aesthetic
+- Dark theme by default (pure black #000000)
 - Mobile-first responsive design with breakpoint at 768px
 - Accessibility-first approach using Radix UI primitives for keyboard navigation and screen readers
 
@@ -102,10 +100,7 @@ Preferred communication style: Simple, everyday language.
 **Schema Design:**
 - Users table with Replit Auth integration (email, name, profile image)
 - User roles system (member, admin) for access control
-- Forum system with categories, threads, posts, and reactions for community features
-- User profiles for stroke-specific data (stroke date, type, affected side, goals)
-- AI chat sessions and messages for persistent coaching conversations
-- Achievements and gamification system for recovery milestones
+- Media projects and assets for creator content storage
 - Sessions table for authentication persistence
 
 **Migration Strategy:**
@@ -135,12 +130,20 @@ Preferred communication style: Simple, everyday language.
    - Managed webhooks with UUID-based routing for reliability
 
 3. **Google Gemini AI (via Replit AI Integrations)**
-   - Purpose: AI-powered recovery coaching chatbot
+   - Purpose: AI-powered content generation
    - Integration: @google/genai SDK with custom API endpoints via Replit connectors
-   - Features: Contextual responses, motivational quotes, recovery guidance
-   - System prompts define "Sasquatch" personality (tough love + compassion)
+   - Features: Book writing, content generation, analysis
 
-4. **Neon Database**
+4. **OpenAI (via Replit AI Integrations)**
+   - Purpose: Advanced AI writing and analysis
+   - Integration: openai SDK
+
+5. **Remove.bg API**
+   - Purpose: Background removal for images
+   - Integration: POST /api/image/remove-background endpoint
+   - Secret: REMOVE_BG_API_KEY
+
+6. **Neon Database**
    - Purpose: Serverless PostgreSQL database
    - Integration: @neondatabase/serverless driver with WebSocket support
    - Configuration: Environment variable DATABASE_URL required
@@ -150,6 +153,8 @@ Preferred communication style: Simple, everyday language.
 - Lucide React for consistent iconography
 - React Icons for social media icons
 - date-fns for date formatting and manipulation
+- TipTap for rich text editing (Book Studio)
+- Tone.js for audio/music (Music Studio)
 
 **Development Tools:**
 - Replit-specific plugins for development banner and error overlay
@@ -159,12 +164,27 @@ Preferred communication style: Simple, everyday language.
 
 **Asset Management:**
 - attached_assets directory for images, videos, documents
-- Recovery book PDFs and markdown content
-- Branding JSON files for theme configuration
 - Generated images for exercises and UI elements
 
 **Key Integration Patterns:**
 - Webhook signature verification using raw Buffer payloads before JSON parsing
 - Environment-based configuration for development vs production Stripe keys
 - Managed webhook system with UUID routing for reliable event processing
-- AI chat history maintained in database for context-aware responses
+
+## Important Files
+
+- `client/src/components/ProfessionalEditor.tsx` - TipTap book editor
+- `client/src/components/CoverDesigner.tsx` - Book cover designer
+- `client/src/components/MediaStudio.tsx` - Unified image/video editor
+- `client/src/pages/BookStudio.tsx` - Book Studio page
+- `client/src/pages/MediaStudioPage.tsx` - MediaStudio page
+- `server/routes.ts` - API routes
+- `shared/schema.ts` - Database schema
+- `client/index.html` - SEO/AEO meta tags and structured data
+
+## Technical Notes
+
+- **TipTap imports**: Use named imports: `import { Table } from '@tiptap/extension-table'`
+- **SelectItem**: Use value="all" with mapping instead of empty string value=""
+- **MediaStudio**: One engine, two UIs (Image/Video modes), shared asset manager
+- KDP specs: Trim sizes (6x9, 8.5x11), proper margins, 300 DPI, bleed requirements
