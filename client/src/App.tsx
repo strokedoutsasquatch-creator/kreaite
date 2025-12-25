@@ -49,6 +49,7 @@ import AudiobookFactory from "@/pages/AudiobookFactory";
 import DJStudio from "@/pages/DJStudio";
 import WorkflowDashboard from "@/pages/WorkflowDashboard";
 import CreatorEarnings from "@/pages/CreatorEarnings";
+import MediaStudioPage from "@/pages/MediaStudioPage";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 import SasquatchChatWidget from "@/components/SasquatchChatWidget";
@@ -188,6 +189,11 @@ function Router() {
       <Route path="/creator/earnings">
         <ProtectedRoute>
           <CreatorEarnings />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/media-studio">
+        <ProtectedRoute>
+          <MediaStudioPage />
         </ProtectedRoute>
       </Route>
       <Route path="/stories" component={Stories} />

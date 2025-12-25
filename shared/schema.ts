@@ -2488,6 +2488,51 @@ export const classroomAssignments = pgTable("classroom_assignments", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// ============================================================================
+// MEDIA STUDIO - PROJECTS & ASSETS
+// ============================================================================
+
+export const mediaProjects = pgTable("media_projects", {
+  id: serial("id").primaryKey(),
+  ownerId: varchar("owner_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  mode: text("mode").notNull().default("image"), // 'image' or 'video'
+  projectData: jsonb("project_data"), // Full project state (layers, clips, etc.)
+  thumbnailUrl: text("thumbnail_url"),
+  duration: integer("duration"), // For video projects, in seconds
+  width: integer("width"),
+  height: integer("height"),
+  status: text("status").notNull().default("draft"), // draft, rendering, completed
+  isPublic: boolean("is_public").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const mediaAssets = pgTable("media_assets", {
+  id: serial("id").primaryKey(),
+  ownerId: varchar("owner_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  projectId: integer("project_id").references(() => mediaProjects.id, { onDelete: "set null" }),
+  name: text("name").notNull(),
+  type: text("type").notNull(), // 'image', 'video', 'audio'
+  url: text("url").notNull(),
+  thumbnailUrl: text("thumbnail_url"),
+  duration: integer("duration"), // For video/audio
+  width: integer("width"),
+  height: integer("height"),
+  fileSize: integer("file_size"),
+  mimeType: text("mime_type"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertMediaProjectSchema = createInsertSchema(mediaProjects).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertMediaProject = z.infer<typeof insertMediaProjectSchema>;
+export type MediaProject = typeof mediaProjects.$inferSelect;
+
+export const insertMediaAssetSchema = createInsertSchema(mediaAssets).omit({ id: true, createdAt: true });
+export type InsertMediaAsset = z.infer<typeof insertMediaAssetSchema>;
+export type MediaAsset = typeof mediaAssets.$inferSelect;
+
 // Insert schemas for ultra-premium features
 export const insertVoiceCloneSchema = createInsertSchema(voiceClones).omit({
   id: true,

@@ -26,7 +26,9 @@ import {
   voiceClones,
   djPresets,
   audiobookProjects,
-  audiobookChapters
+  audiobookChapters,
+  mediaProjects,
+  mediaAssets
 } from "../shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -5920,6 +5922,184 @@ Return the rhyming version only, no explanation.`;
     } catch (error: any) {
       console.error("Error getting audiobook chapters:", error);
       res.status(500).json({ message: error.message || "Failed to get chapters" });
+    }
+  });
+
+  // ============ MEDIA STUDIO API ============
+
+  // Remove background using Remove.bg API
+  app.post('/api/image/remove-background', isAuthenticated, async (req: any, res) => {
+    try {
+      const { imageUrl, imageBase64 } = req.body;
+      
+      if (!imageUrl && !imageBase64) {
+        return res.status(400).json({ message: "Either imageUrl or imageBase64 is required" });
+      }
+
+      const apiKey = process.env.REMOVE_BG_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ message: "Remove.bg API key not configured" });
+      }
+
+      const formData = new FormData();
+      if (imageUrl) {
+        formData.append('image_url', imageUrl);
+      } else if (imageBase64) {
+        // Convert base64 to blob
+        const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+        const buffer = Buffer.from(base64Data, 'base64');
+        formData.append('image_file', new Blob([buffer]), 'image.png');
+      }
+      formData.append('size', 'auto');
+
+      const response = await fetch('https://api.remove.bg/v1.0/removebg', {
+        method: 'POST',
+        headers: {
+          'X-Api-Key': apiKey,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        console.error('Remove.bg error:', error);
+        return res.status(response.status).json({ message: "Background removal failed", error });
+      }
+
+      const resultBuffer = await response.arrayBuffer();
+      const base64Result = Buffer.from(resultBuffer).toString('base64');
+      
+      res.json({ 
+        success: true, 
+        imageData: `data:image/png;base64,${base64Result}` 
+      });
+    } catch (error: any) {
+      console.error("Remove background error:", error);
+      res.status(500).json({ message: error.message || "Failed to remove background" });
+    }
+  });
+
+  // Get user's media projects
+  app.get('/api/media/projects', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const projects = await db.select().from(mediaProjects).where(eq(mediaProjects.ownerId, userId));
+      res.json({ projects });
+    } catch (error: any) {
+      console.error("Error getting media projects:", error);
+      res.status(500).json({ message: error.message || "Failed to get projects" });
+    }
+  });
+
+  // Create media project
+  app.post('/api/media/projects', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { name, mode, projectData, width, height, duration } = req.body;
+      
+      if (!name) {
+        return res.status(400).json({ message: "Project name is required" });
+      }
+
+      const [project] = await db.insert(mediaProjects).values({
+        ownerId: userId,
+        name,
+        mode: mode || 'image',
+        projectData,
+        width,
+        height,
+        duration,
+        status: 'draft'
+      }).returning();
+
+      res.json({ success: true, project });
+    } catch (error: any) {
+      console.error("Error creating media project:", error);
+      res.status(500).json({ message: error.message || "Failed to create project" });
+    }
+  });
+
+  // Update media project
+  app.patch('/api/media/projects/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+      const { name, projectData, thumbnailUrl, status, width, height, duration } = req.body;
+
+      const [project] = await db.update(mediaProjects)
+        .set({ 
+          name, 
+          projectData, 
+          thumbnailUrl, 
+          status,
+          width,
+          height,
+          duration,
+          updatedAt: new Date() 
+        })
+        .where(eq(mediaProjects.id, parseInt(id)))
+        .returning();
+
+      res.json({ success: true, project });
+    } catch (error: any) {
+      console.error("Error updating media project:", error);
+      res.status(500).json({ message: error.message || "Failed to update project" });
+    }
+  });
+
+  // Delete media project
+  app.delete('/api/media/projects/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await db.delete(mediaProjects).where(eq(mediaProjects.id, parseInt(id)));
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting media project:", error);
+      res.status(500).json({ message: error.message || "Failed to delete project" });
+    }
+  });
+
+  // Upload media asset
+  app.post('/api/media/assets', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { name, type, url, thumbnailUrl, duration, width, height, fileSize, mimeType, metadata, projectId } = req.body;
+      
+      if (!name || !type || !url) {
+        return res.status(400).json({ message: "Name, type, and url are required" });
+      }
+
+      const [asset] = await db.insert(mediaAssets).values({
+        ownerId: userId,
+        projectId,
+        name,
+        type,
+        url,
+        thumbnailUrl,
+        duration,
+        width,
+        height,
+        fileSize,
+        mimeType,
+        metadata
+      }).returning();
+
+      res.json({ success: true, asset });
+    } catch (error: any) {
+      console.error("Error creating media asset:", error);
+      res.status(500).json({ message: error.message || "Failed to create asset" });
+    }
+  });
+
+  // Get user's media assets
+  app.get('/api/media/assets', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const assets = await db.select().from(mediaAssets).where(eq(mediaAssets.ownerId, userId));
+      res.json({ assets });
+    } catch (error: any) {
+      console.error("Error getting media assets:", error);
+      res.status(500).json({ message: error.message || "Failed to get assets" });
     }
   });
 
