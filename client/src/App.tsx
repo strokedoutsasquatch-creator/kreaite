@@ -52,7 +52,7 @@ import CreatorEarnings from "@/pages/CreatorEarnings";
 import MediaStudioPage from "@/pages/MediaStudioPage";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
-import SasquatchChatWidget from "@/components/SasquatchChatWidget";
+import CreatorScribeWidget from "@/components/CreatorScribeWidget";
 
 function Router() {
   return (
@@ -224,7 +224,7 @@ function App() {
       <TooltipProvider>
         <Toaster />
         <Router />
-        <SasquatchChatWidget />
+        <CreatorScribeWidget />
       </TooltipProvider>
     </QueryClientProvider>
   );

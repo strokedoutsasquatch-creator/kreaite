@@ -649,6 +649,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI Creator Scribe routes
+  app.post('/api/creator/chat', async (req, res) => {
+    try {
+      const { message, history = [], context = "creative assistant" } = req.body;
+      if (!message) {
+        return res.status(400).json({ message: "Message is required" });
+      }
+
+      const result = await generateCoachResponse(message, history, context);
+      res.json(result);
+    } catch (error) {
+      console.error("Error in creator chat:", error);
+      res.status(500).json({ 
+        response: "Writer's block! I'm having trouble connecting right now, but don't let that stop your flow. Keep creating!",
+        quote: getRandomQuote()
+      });
+    }
+  });
+
   // AI Coach routes (Stroked Out Sasquatch)
   app.post('/api/coach/chat', async (req, res) => {
     try {
