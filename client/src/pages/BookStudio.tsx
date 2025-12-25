@@ -2257,12 +2257,12 @@ Your journey to healing starts here.`);
                         </div>
                         <div>
                           <Label className="text-xs text-muted-foreground">For Chapter</Label>
-                          <Select value={selectedImageChapter || ""} onValueChange={setSelectedImageChapter}>
+                          <Select value={selectedImageChapter || "all"} onValueChange={(v) => setSelectedImageChapter(v === "all" ? "" : v)}>
                             <SelectTrigger className="h-8" data-testid="select-chapter">
                               <SelectValue placeholder="Select..." />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">All/General</SelectItem>
+                              <SelectItem value="all">All/General</SelectItem>
                               {chapters.map(ch => (
                                 <SelectItem key={ch.id} value={ch.id}>Ch {ch.id}: {ch.title.substring(0, 20)}</SelectItem>
                               ))}
