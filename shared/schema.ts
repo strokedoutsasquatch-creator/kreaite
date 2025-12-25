@@ -1467,32 +1467,6 @@ export type InsertBlogPostReaction = z.infer<typeof insertBlogPostReactionSchema
 export type BlogPostComment = typeof blogPostComments.$inferSelect;
 export type InsertBlogPostComment = z.infer<typeof insertBlogPostCommentSchema>;
 
-// ============================================================================
-// SUBSCRIPTION TIERS
-// ============================================================================
-
-export const subscriptionTiers = pgTable("subscription_tiers", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(), // explorer, warrior, champion, platinum
-  displayName: text("display_name").notNull(),
-  description: text("description").notNull(),
-  monthlyPrice: integer("monthly_price").notNull(), // in cents
-  annualPrice: integer("annual_price").notNull(), // in cents
-  stripePriceIdMonthly: text("stripe_price_id_monthly"),
-  stripePriceIdAnnual: text("stripe_price_id_annual"),
-  stripeProductId: text("stripe_product_id"),
-  features: jsonb("features").notNull(), // array of feature strings
-  limits: jsonb("limits").notNull(), // { aiMessages: number, courses: number, etc }
-  isActive: boolean("is_active").notNull().default(true),
-  order: integer("order").notNull().default(0),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
-
-export const insertSubscriptionTierSchema = createInsertSchema(subscriptionTiers).omit({
-  id: true,
-  createdAt: true,
-});
-
 // Recovery University Curriculum (from The Ultimate Stroke Recovery Bible)
 export const curriculumParts = pgTable("curriculum_parts", {
   id: serial("id").primaryKey(),
@@ -1573,10 +1547,6 @@ export const insertAiGeneratedVideoSchema = createInsertSchema(aiGeneratedVideos
   id: true,
   createdAt: true,
 });
-
-// Subscription Types
-export type SubscriptionTier = typeof subscriptionTiers.$inferSelect;
-export type InsertSubscriptionTier = z.infer<typeof insertSubscriptionTierSchema>;
 
 // Curriculum Types
 export type CurriculumPart = typeof curriculumParts.$inferSelect;
@@ -2607,6 +2577,278 @@ export const insertClassroomAssignmentSchema = createInsertSchema(classroomAssig
   createdAt: true,
 });
 
+// ============================================================================
+// CREDIT & BILLING SYSTEM - Enterprise Monetization
+// ============================================================================
+
+// Subscription tiers with feature limits
+export const subscriptionTiers = pgTable("subscription_tiers", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  displayName: text("display_name").notNull(),
+  stripePriceIdMonthly: text("stripe_price_id_monthly"),
+  stripePriceIdAnnual: text("stripe_price_id_annual"),
+  monthlyCredits: integer("monthly_credits").notNull().default(0),
+  maxProjects: integer("max_projects"),
+  maxStorageGb: integer("max_storage_gb"),
+  maxTeamMembers: integer("max_team_members").default(1),
+  features: jsonb("features").notNull().default({}),
+  isActive: boolean("is_active").notNull().default(true),
+  order: integer("order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Feature gates - defines what each tier can access
+export const featureGates = pgTable("feature_gates", {
+  id: serial("id").primaryKey(),
+  featureKey: text("feature_key").notNull(),
+  featureName: text("feature_name").notNull(),
+  description: text("description"),
+  category: text("category").notNull(),
+  creditCost: integer("credit_cost").notNull().default(1),
+  minTier: text("min_tier").notNull().default("free"),
+  limitType: text("limit_type").notNull().default("per_use"),
+  dailyLimit: integer("daily_limit"),
+  monthlyLimit: integer("monthly_limit"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// User credit wallets
+export const creditWallets = pgTable("credit_wallets", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
+  balance: integer("balance").notNull().default(0),
+  bonusCredits: integer("bonus_credits").notNull().default(0),
+  lifetimeEarned: integer("lifetime_earned").notNull().default(0),
+  lifetimeSpent: integer("lifetime_spent").notNull().default(0),
+  lastRefillAt: timestamp("last_refill_at"),
+  nextRefillAt: timestamp("next_refill_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Credit transactions ledger
+export const creditLedger = pgTable("credit_ledger", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  transactionType: text("transaction_type").notNull(),
+  amount: integer("amount").notNull(),
+  balanceAfter: integer("balance_after").notNull(),
+  description: text("description"),
+  featureKey: text("feature_key"),
+  referenceType: text("reference_type"),
+  referenceId: text("reference_id"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_credit_ledger_user").on(table.userId),
+  index("idx_credit_ledger_created").on(table.createdAt),
+]);
+
+// Usage events for analytics
+export const usageEvents = pgTable("usage_events", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  featureKey: text("feature_key").notNull(),
+  studioType: text("studio_type"),
+  creditsCost: integer("credits_cost").notNull().default(0),
+  inputTokens: integer("input_tokens"),
+  outputTokens: integer("output_tokens"),
+  durationMs: integer("duration_ms"),
+  success: boolean("success").notNull().default(true),
+  errorMessage: text("error_message"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_usage_events_user").on(table.userId),
+  index("idx_usage_events_feature").on(table.featureKey),
+  index("idx_usage_events_created").on(table.createdAt),
+]);
+
+// Credit packages for purchase
+export const creditPackages = pgTable("credit_packages", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  credits: integer("credits").notNull(),
+  priceUsd: integer("price_usd").notNull(),
+  stripePriceId: text("stripe_price_id"),
+  bonusPercent: integer("bonus_percent").default(0),
+  isPopular: boolean("is_popular").default(false),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ============================================================================
+// TEMPLATE LIBRARY SYSTEM
+// ============================================================================
+
+export const studioTemplates = pgTable("studio_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  studioType: text("studio_type").notNull(),
+  category: text("category").notNull(),
+  thumbnailUrl: text("thumbnail_url"),
+  templateData: jsonb("template_data").notNull(),
+  isPremium: boolean("is_premium").notNull().default(false),
+  isOfficial: boolean("is_official").notNull().default(false),
+  creatorId: varchar("creator_id").references(() => users.id),
+  usageCount: integer("usage_count").notNull().default(0),
+  rating: integer("rating").default(0),
+  tags: text("tags").array(),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// ============================================================================
+// VERSION HISTORY SYSTEM
+// ============================================================================
+
+export const projectVersions = pgTable("project_versions", {
+  id: serial("id").primaryKey(),
+  projectType: text("project_type").notNull(),
+  projectId: integer("project_id").notNull(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  versionNumber: integer("version_number").notNull(),
+  snapshotData: jsonb("snapshot_data").notNull(),
+  changeDescription: text("change_description"),
+  isAutoSave: boolean("is_auto_save").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_project_versions_project").on(table.projectType, table.projectId),
+]);
+
+// ============================================================================
+// WORKSPACES & COLLABORATION
+// ============================================================================
+
+export const workspaces = pgTable("workspaces", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  ownerId: varchar("owner_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  logoUrl: text("logo_url"),
+  description: text("description"),
+  settings: jsonb("settings").default({}),
+  tierId: integer("tier_id").references(() => subscriptionTiers.id),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const workspaceMembers = pgTable("workspace_members", {
+  id: serial("id").primaryKey(),
+  workspaceId: integer("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  role: text("role").notNull().default("member"),
+  permissions: jsonb("permissions").default({}),
+  invitedBy: varchar("invited_by").references(() => users.id),
+  joinedAt: timestamp("joined_at").notNull().defaultNow(),
+});
+
+export const brandKits = pgTable("brand_kits", {
+  id: serial("id").primaryKey(),
+  workspaceId: integer("workspace_id").references(() => workspaces.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  primaryColor: text("primary_color"),
+  secondaryColor: text("secondary_color"),
+  accentColor: text("accent_color"),
+  fonts: jsonb("fonts").default({}),
+  logos: jsonb("logos").default([]),
+  guidelines: text("guidelines"),
+  isDefault: boolean("is_default").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// ============================================================================
+// MARKETPLACE ENHANCEMENTS
+// ============================================================================
+
+export const creatorStorefronts = pgTable("creator_storefronts", {
+  id: serial("id").primaryKey(),
+  creatorId: varchar("creator_id").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
+  slug: text("slug").notNull().unique(),
+  displayName: text("display_name").notNull(),
+  tagline: text("tagline"),
+  bio: text("bio"),
+  bannerUrl: text("banner_url"),
+  logoUrl: text("logo_url"),
+  theme: jsonb("theme").default({}),
+  socialLinks: jsonb("social_links").default({}),
+  customDomain: text("custom_domain"),
+  isVerified: boolean("is_verified").notNull().default(false),
+  isActive: boolean("is_active").notNull().default(true),
+  viewCount: integer("view_count").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const productBundles = pgTable("product_bundles", {
+  id: serial("id").primaryKey(),
+  creatorId: varchar("creator_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  thumbnailUrl: text("thumbnail_url"),
+  productIds: integer("product_ids").array().notNull(),
+  originalPrice: integer("original_price").notNull(),
+  bundlePrice: integer("bundle_price").notNull(),
+  stripePriceId: text("stripe_price_id"),
+  isActive: boolean("is_active").notNull().default(true),
+  salesCount: integer("sales_count").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const affiliateLinks = pgTable("affiliate_links", {
+  id: serial("id").primaryKey(),
+  creatorId: varchar("creator_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  productId: integer("product_id"),
+  code: text("code").notNull().unique(),
+  commissionPercent: integer("commission_percent").notNull().default(20),
+  clickCount: integer("click_count").notNull().default(0),
+  conversionCount: integer("conversion_count").notNull().default(0),
+  totalEarnings: integer("total_earnings").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const creatorAnalytics = pgTable("creator_analytics", {
+  id: serial("id").primaryKey(),
+  creatorId: varchar("creator_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  date: timestamp("date").notNull(),
+  views: integer("views").notNull().default(0),
+  sales: integer("sales").notNull().default(0),
+  revenue: integer("revenue").notNull().default(0),
+  newFollowers: integer("new_followers").notNull().default(0),
+  productViews: jsonb("product_views").default({}),
+  trafficSources: jsonb("traffic_sources").default({}),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_creator_analytics_date").on(table.creatorId, table.date),
+]);
+
+// Insert schemas for billing system
+export const insertSubscriptionTierSchema = createInsertSchema(subscriptionTiers).omit({ id: true, createdAt: true });
+export const insertFeatureGateSchema = createInsertSchema(featureGates).omit({ id: true, createdAt: true });
+export const insertCreditWalletSchema = createInsertSchema(creditWallets).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertCreditLedgerSchema = createInsertSchema(creditLedger).omit({ id: true, createdAt: true });
+export const insertUsageEventSchema = createInsertSchema(usageEvents).omit({ id: true, createdAt: true });
+export const insertCreditPackageSchema = createInsertSchema(creditPackages).omit({ id: true, createdAt: true });
+export const insertStudioTemplateSchema = createInsertSchema(studioTemplates).omit({ id: true, createdAt: true, updatedAt: true, usageCount: true });
+export const insertProjectVersionSchema = createInsertSchema(projectVersions).omit({ id: true, createdAt: true });
+export const insertWorkspaceSchema = createInsertSchema(workspaces).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertWorkspaceMemberSchema = createInsertSchema(workspaceMembers).omit({ id: true, joinedAt: true });
+export const insertBrandKitSchema = createInsertSchema(brandKits).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertCreatorStorefrontSchema = createInsertSchema(creatorStorefronts).omit({ id: true, createdAt: true, updatedAt: true, viewCount: true });
+export const insertProductBundleSchema = createInsertSchema(productBundles).omit({ id: true, createdAt: true, salesCount: true });
+export const insertAffiliateLinkSchema = createInsertSchema(affiliateLinks).omit({ id: true, createdAt: true, clickCount: true, conversionCount: true, totalEarnings: true });
+export const insertCreatorAnalyticsSchema = createInsertSchema(creatorAnalytics).omit({ id: true, createdAt: true });
+
 // Ultra-Premium Types
 export type VoiceClone = typeof voiceClones.$inferSelect;
 export type InsertVoiceClone = z.infer<typeof insertVoiceCloneSchema>;
@@ -2632,3 +2874,43 @@ export type ClassroomCourse = typeof classroomCourses.$inferSelect;
 export type InsertClassroomCourse = z.infer<typeof insertClassroomCourseSchema>;
 export type ClassroomAssignment = typeof classroomAssignments.$inferSelect;
 export type InsertClassroomAssignment = z.infer<typeof insertClassroomAssignmentSchema>;
+
+// Billing & Credits Types
+export type SubscriptionTier = typeof subscriptionTiers.$inferSelect;
+export type InsertSubscriptionTier = z.infer<typeof insertSubscriptionTierSchema>;
+export type FeatureGate = typeof featureGates.$inferSelect;
+export type InsertFeatureGate = z.infer<typeof insertFeatureGateSchema>;
+export type CreditWallet = typeof creditWallets.$inferSelect;
+export type InsertCreditWallet = z.infer<typeof insertCreditWalletSchema>;
+export type CreditLedgerEntry = typeof creditLedger.$inferSelect;
+export type InsertCreditLedgerEntry = z.infer<typeof insertCreditLedgerSchema>;
+export type UsageEvent = typeof usageEvents.$inferSelect;
+export type InsertUsageEvent = z.infer<typeof insertUsageEventSchema>;
+export type CreditPackage = typeof creditPackages.$inferSelect;
+export type InsertCreditPackage = z.infer<typeof insertCreditPackageSchema>;
+
+// Template Library Types
+export type StudioTemplate = typeof studioTemplates.$inferSelect;
+export type InsertStudioTemplate = z.infer<typeof insertStudioTemplateSchema>;
+
+// Version History Types
+export type ProjectVersion = typeof projectVersions.$inferSelect;
+export type InsertProjectVersion = z.infer<typeof insertProjectVersionSchema>;
+
+// Workspace & Collaboration Types
+export type Workspace = typeof workspaces.$inferSelect;
+export type InsertWorkspace = z.infer<typeof insertWorkspaceSchema>;
+export type WorkspaceMember = typeof workspaceMembers.$inferSelect;
+export type InsertWorkspaceMember = z.infer<typeof insertWorkspaceMemberSchema>;
+export type BrandKit = typeof brandKits.$inferSelect;
+export type InsertBrandKit = z.infer<typeof insertBrandKitSchema>;
+
+// Marketplace Types
+export type CreatorStorefront = typeof creatorStorefronts.$inferSelect;
+export type InsertCreatorStorefront = z.infer<typeof insertCreatorStorefrontSchema>;
+export type ProductBundle = typeof productBundles.$inferSelect;
+export type InsertProductBundle = z.infer<typeof insertProductBundleSchema>;
+export type AffiliateLink = typeof affiliateLinks.$inferSelect;
+export type InsertAffiliateLink = z.infer<typeof insertAffiliateLinkSchema>;
+export type CreatorAnalytics = typeof creatorAnalytics.$inferSelect;
+export type InsertCreatorAnalytics = z.infer<typeof insertCreatorAnalyticsSchema>;
