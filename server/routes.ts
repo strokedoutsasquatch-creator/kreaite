@@ -5976,6 +5976,160 @@ Return the rhyming version only, no explanation.`;
     }
   });
 
+  // Generate audio for a single audiobook chapter
+  app.post('/api/audiobooks/:id/chapters/:chapterId/generate', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id, chapterId } = req.params;
+      const { text, voiceId, speakingRate } = req.body;
+      
+      // Verify audiobook ownership
+      const [audiobook] = await db.select().from(audiobookProjects)
+        .where(eq(audiobookProjects.id, parseInt(id)));
+      if (!audiobook || audiobook.creatorId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Verify chapter exists and belongs to this audiobook
+      const [chapter] = await db.select().from(audiobookChapters)
+        .where(eq(audiobookChapters.id, parseInt(chapterId)));
+      if (!chapter || chapter.audiobookId !== parseInt(id)) {
+        return res.status(404).json({ message: "Chapter not found" });
+      }
+
+      const chapterText = text || chapter.textContent;
+      if (!chapterText) {
+        return res.status(400).json({ message: "Chapter text is required" });
+      }
+
+      // Generate TTS audio
+      const result = await synthesizeChapter(chapterText, voiceId || 'male_narrator', speakingRate || 1.0);
+      
+      if (!result.success) {
+        return res.status(500).json({ message: result.error || "TTS generation failed" });
+      }
+
+      // Update chapter with audio URL (store base64 as data URL)
+      const audioDataUrl = `data:${result.mimeType};base64,${result.audioBase64}`;
+      await db.update(audiobookChapters)
+        .set({
+          rawAudioUrl: audioDataUrl,
+          status: 'completed'
+        })
+        .where(eq(audiobookChapters.id, parseInt(chapterId)));
+
+      res.json({
+        success: true,
+        audioBase64: result.audioBase64,
+        mimeType: result.mimeType,
+        duration: estimateAudioDuration(chapterText, speakingRate || 1.0)
+      });
+    } catch (error: any) {
+      console.error("Error generating chapter audio:", error);
+      res.status(500).json({ message: error.message || "Failed to generate audio" });
+    }
+  });
+
+  // Batch generate all chapters for an audiobook
+  app.post('/api/audiobooks/:id/generate-all', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+      const { chapters, voiceId, speakingRate } = req.body;
+      
+      // Verify audiobook ownership
+      const [audiobook] = await db.select().from(audiobookProjects)
+        .where(eq(audiobookProjects.id, parseInt(id)));
+      if (!audiobook || audiobook.creatorId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      if (!chapters || !Array.isArray(chapters) || chapters.length === 0) {
+        return res.status(400).json({ message: "Chapters array is required" });
+      }
+
+      // Validate all chapters have text
+      for (const ch of chapters) {
+        if (!ch.text || typeof ch.text !== 'string' || ch.text.trim().length === 0) {
+          return res.status(400).json({ message: "All chapters must have text content" });
+        }
+      }
+
+      // Update audiobook status to processing
+      await db.update(audiobookProjects)
+        .set({ status: 'processing', totalChapters: chapters.length })
+        .where(eq(audiobookProjects.id, parseInt(id)));
+
+      const results = [];
+      let totalDuration = 0;
+      let completedCount = 0;
+
+      for (let i = 0; i < chapters.length; i++) {
+        const chapter = chapters[i];
+        
+        // Generate TTS for this chapter
+        const result = await synthesizeChapter(
+          chapter.text, 
+          voiceId || 'male_narrator', 
+          speakingRate || 1.0
+        );
+
+        if (result.success) {
+          // Insert chapter record with audio as data URL
+          const audioDataUrl = `data:${result.mimeType};base64,${result.audioBase64}`;
+          const [chapterRecord] = await db.insert(audiobookChapters).values({
+            audiobookId: parseInt(id),
+            chapterNumber: i + 1,
+            title: chapter.title || `Chapter ${i + 1}`,
+            textContent: chapter.text,
+            wordCount: chapter.text.split(/\s+/).length,
+            rawAudioUrl: audioDataUrl,
+            status: 'completed'
+          }).returning();
+
+          const duration = estimateAudioDuration(chapter.text, speakingRate || 1.0);
+          totalDuration += duration;
+          completedCount++;
+
+          results.push({
+            chapterId: chapterRecord.id,
+            chapterNumber: i + 1,
+            title: chapter.title,
+            duration,
+            status: 'completed'
+          });
+        } else {
+          results.push({
+            chapterNumber: i + 1,
+            title: chapter.title,
+            status: 'failed',
+            error: result.error
+          });
+        }
+      }
+
+      // Update audiobook with completion status and counts
+      await db.update(audiobookProjects)
+        .set({ 
+          status: completedCount === chapters.length ? 'completed' : 'partial',
+          totalDuration,
+          completedChapters: completedCount
+        })
+        .where(eq(audiobookProjects.id, parseInt(id)));
+
+      res.json({
+        success: true,
+        totalChapters: chapters.length,
+        completedChapters: completedCount,
+        totalDuration,
+        chapters: results
+      });
+    } catch (error: any) {
+      console.error("Error generating audiobook:", error);
+      res.status(500).json({ message: error.message || "Failed to generate audiobook" });
+    }
+  });
+
   // ============ MEDIA STUDIO API ============
 
   // Remove background using Remove.bg API
@@ -6151,6 +6305,103 @@ Return the rhyming version only, no explanation.`;
     } catch (error: any) {
       console.error("Error getting media assets:", error);
       res.status(500).json({ message: error.message || "Failed to get assets" });
+    }
+  });
+
+  // ============ CROSS-STUDIO INTEGRATION API ============
+
+  // Get all user content across studios for import picker
+  app.get('/api/studio/library', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { type } = req.query; // audio, image, video, text
+      
+      // Get media assets
+      const assets = await db.select().from(mediaAssets).where(eq(mediaAssets.ownerId, userId));
+      
+      // Get audiobook chapters (audio content)
+      const audiobooks = await db.select().from(audiobookProjects).where(eq(audiobookProjects.creatorId, userId));
+      
+      // Get media projects
+      const projects = await db.select().from(mediaProjects).where(eq(mediaProjects.ownerId, userId));
+      
+      // Organize by content type
+      const library = {
+        audio: assets.filter(a => a.type === 'audio' || a.mimeType?.startsWith('audio/')),
+        images: assets.filter(a => a.type === 'image' || a.mimeType?.startsWith('image/')),
+        video: assets.filter(a => a.type === 'video' || a.mimeType?.startsWith('video/')),
+        audiobooks: audiobooks.filter(a => a.status === 'completed'),
+        projects: projects
+      };
+
+      // Filter by type if specified
+      if (type && library[type as keyof typeof library]) {
+        res.json({ [type]: library[type as keyof typeof library] });
+      } else {
+        res.json(library);
+      }
+    } catch (error: any) {
+      console.error("Error getting studio library:", error);
+      res.status(500).json({ message: error.message || "Failed to get library" });
+    }
+  });
+
+  // Import asset from one studio to another (creates a link/reference)
+  app.post('/api/studio/import', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { sourceType, sourceId, targetProject, targetType, name } = req.body;
+      
+      if (!sourceType || !sourceId) {
+        return res.status(400).json({ message: "Source type and ID are required" });
+      }
+
+      // Verify source asset ownership based on type
+      let sourceUrl = '';
+      let sourceName = name || `Imported ${sourceType}`;
+      
+      if (sourceType === 'media_asset') {
+        const [sourceAsset] = await db.select().from(mediaAssets)
+          .where(eq(mediaAssets.id, parseInt(sourceId)));
+        if (!sourceAsset || sourceAsset.ownerId !== userId) {
+          return res.status(403).json({ message: "Access denied to source asset" });
+        }
+        sourceUrl = sourceAsset.url || '';
+        sourceName = name || sourceAsset.name;
+      } else if (sourceType === 'audiobook') {
+        const [audiobook] = await db.select().from(audiobookProjects)
+          .where(eq(audiobookProjects.id, parseInt(sourceId)));
+        if (!audiobook || audiobook.creatorId !== userId) {
+          return res.status(403).json({ message: "Access denied to source audiobook" });
+        }
+        sourceUrl = `ref://audiobook/${sourceId}`;
+        sourceName = name || audiobook.title;
+      } else if (sourceType === 'project') {
+        const [project] = await db.select().from(mediaProjects)
+          .where(eq(mediaProjects.id, parseInt(sourceId)));
+        if (!project || project.ownerId !== userId) {
+          return res.status(403).json({ message: "Access denied to source project" });
+        }
+        sourceUrl = `ref://project/${sourceId}`;
+        sourceName = name || project.name;
+      } else {
+        sourceUrl = `ref://${sourceType}/${sourceId}`;
+      }
+
+      // Create asset reference in target project
+      const [asset] = await db.insert(mediaAssets).values({
+        ownerId: userId,
+        projectId: targetProject,
+        name: sourceName,
+        type: targetType || sourceType,
+        url: sourceUrl,
+        metadata: { importedFrom: sourceType, originalId: sourceId }
+      }).returning();
+
+      res.json({ success: true, asset });
+    } catch (error: any) {
+      console.error("Error importing asset:", error);
+      res.status(500).json({ message: error.message || "Failed to import asset" });
     }
   });
 
