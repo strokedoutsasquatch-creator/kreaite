@@ -2933,6 +2933,114 @@ export const inspirationLibrary = pgTable("inspiration_library", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// ============================================================================
+// UNIFIED CONVERSATION SYSTEM (Cross-Studio AI Collaboration)
+// ============================================================================
+
+// Conversation sessions - persistent AI chats for all studios
+export const conversationSessions = pgTable("conversation_sessions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  studio: text("studio").notNull(), // book, music, movie, course, video, doctrine
+  title: text("title").notNull(),
+  status: text("status").notNull().default("active"), // active, paused, completed, archived
+  projectId: integer("project_id"), // Optional link to a project in that studio
+  metadata: jsonb("metadata").default({}), // Studio-specific context (genre, style, etc.)
+  systemPrompt: text("system_prompt"), // Custom system prompt for this session
+  isShared: boolean("is_shared").notNull().default(false),
+  sharedWith: text("shared_with").array(), // User IDs who can access
+  sharePermission: text("share_permission").default("view"), // view, comment, edit
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_conversation_user_studio").on(table.userId, table.studio),
+]);
+
+// Conversation messages - individual chat messages
+export const conversationMessages = pgTable("conversation_messages", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").notNull().references(() => conversationSessions.id, { onDelete: "cascade" }),
+  role: text("role").notNull(), // user, assistant, system
+  content: text("content").notNull(),
+  contentType: text("content_type").notNull().default("text"), // text, audio, image, action
+  attachments: jsonb("attachments").default([]), // Files, images, audio attached
+  actionType: text("action_type"), // generate_song, create_scene, analyze, etc.
+  actionPayload: jsonb("action_payload"), // Parameters for the action
+  actionResult: jsonb("action_result"), // Result of the action (asset IDs, etc.)
+  isStreaming: boolean("is_streaming").notNull().default(false),
+  tokensUsed: integer("tokens_used"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_message_session").on(table.sessionId),
+]);
+
+// Conversation actions - queued generation jobs from conversations
+export const conversationActions = pgTable("conversation_actions", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").notNull().references(() => conversationSessions.id, { onDelete: "cascade" }),
+  messageId: integer("message_id").references(() => conversationMessages.id),
+  actionType: text("action_type").notNull(), // generate_song, create_scene, generate_cover, etc.
+  status: text("status").notNull().default("pending"), // pending, processing, completed, failed
+  payload: jsonb("payload").notNull(), // Action parameters
+  result: jsonb("result"), // Action result (asset IDs, URLs, etc.)
+  error: text("error"),
+  progress: integer("progress").default(0), // 0-100 progress percentage
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ============================================================================
+// ASSET REGISTRY (Cross-Studio Asset Sharing)
+// ============================================================================
+
+// Unified asset registry - all generated/uploaded assets across studios
+export const assetRegistry = pgTable("asset_registry", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  sourceStudio: text("source_studio").notNull(), // book, music, movie, video, image
+  assetType: text("asset_type").notNull(), // audio, video, image, document, voice_clone
+  name: text("name").notNull(),
+  description: text("description"),
+  url: text("url"), // Storage URL
+  thumbnailUrl: text("thumbnail_url"),
+  mimeType: text("mime_type"),
+  fileSize: integer("file_size"),
+  duration: integer("duration"), // For audio/video in seconds
+  metadata: jsonb("metadata").default({}), // Type-specific metadata
+  tags: text("tags").array(),
+  isPublic: boolean("is_public").notNull().default(false),
+  usageCount: integer("usage_count").notNull().default(0), // How many times used in projects
+  sourceProjectId: integer("source_project_id"), // Original project that created this
+  sourceConversationId: integer("source_conversation_id"), // Conversation that generated this
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_asset_user_type").on(table.userId, table.assetType),
+  index("idx_asset_studio").on(table.sourceStudio),
+]);
+
+// ============================================================================
+// STUDIO PIPELINES (Workflow Orchestration)
+// ============================================================================
+
+// Studio pipelines - sequences like Book→Course→Consultant
+export const studioPipelines = pgTable("studio_pipelines", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  pipelineType: text("pipeline_type").notNull(), // book_to_course, music_to_video, doctrine_to_consultant
+  status: text("status").notNull().default("active"), // active, paused, completed
+  currentStage: text("current_stage").notNull(), // Current stage in the pipeline
+  stages: jsonb("stages").notNull(), // Array of stage definitions with status
+  sourceAssetId: integer("source_asset_id"), // Original asset that started the pipeline
+  outputAssetIds: integer("output_asset_ids").array(), // Assets generated by the pipeline
+  metadata: jsonb("metadata").default({}),
+  progress: integer("progress").notNull().default(0), // Overall progress 0-100
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 // Insert schemas for billing system
 export const insertSubscriptionTierSchema = createInsertSchema(subscriptionTiers).omit({ id: true, createdAt: true });
 export const insertFeatureGateSchema = createInsertSchema(featureGates).omit({ id: true, createdAt: true });
@@ -2954,6 +3062,17 @@ export const insertPublishingPresetSchema = createInsertSchema(publishingPresets
 export const insertCoursePresetSchema = createInsertSchema(coursePresets).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertSavedCoverDesignSchema = createInsertSchema(savedCoverDesigns).omit({ id: true, createdAt: true, updatedAt: true, usageCount: true });
 export const insertInspirationLibrarySchema = createInsertSchema(inspirationLibrary).omit({ id: true, createdAt: true });
+
+// Conversation System Insert Schemas
+export const insertConversationSessionSchema = createInsertSchema(conversationSessions).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertConversationMessageSchema = createInsertSchema(conversationMessages).omit({ id: true, createdAt: true });
+export const insertConversationActionSchema = createInsertSchema(conversationActions).omit({ id: true, createdAt: true, startedAt: true, completedAt: true });
+
+// Asset Registry Insert Schema
+export const insertAssetRegistrySchema = createInsertSchema(assetRegistry).omit({ id: true, createdAt: true, updatedAt: true, usageCount: true });
+
+// Studio Pipeline Insert Schema
+export const insertStudioPipelineSchema = createInsertSchema(studioPipelines).omit({ id: true, createdAt: true, updatedAt: true });
 
 // Ultra-Premium Types
 export type VoiceClone = typeof voiceClones.$inferSelect;
@@ -3032,3 +3151,19 @@ export type SavedCoverDesign = typeof savedCoverDesigns.$inferSelect;
 export type InsertSavedCoverDesign = z.infer<typeof insertSavedCoverDesignSchema>;
 export type InspirationItem = typeof inspirationLibrary.$inferSelect;
 export type InsertInspirationItem = z.infer<typeof insertInspirationLibrarySchema>;
+
+// Conversation System Types
+export type ConversationSession = typeof conversationSessions.$inferSelect;
+export type InsertConversationSession = z.infer<typeof insertConversationSessionSchema>;
+export type ConversationMessage = typeof conversationMessages.$inferSelect;
+export type InsertConversationMessage = z.infer<typeof insertConversationMessageSchema>;
+export type ConversationAction = typeof conversationActions.$inferSelect;
+export type InsertConversationAction = z.infer<typeof insertConversationActionSchema>;
+
+// Asset Registry Types
+export type Asset = typeof assetRegistry.$inferSelect;
+export type InsertAsset = z.infer<typeof insertAssetRegistrySchema>;
+
+// Studio Pipeline Types
+export type StudioPipeline = typeof studioPipelines.$inferSelect;
+export type InsertStudioPipeline = z.infer<typeof insertStudioPipelineSchema>;
