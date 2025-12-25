@@ -12,6 +12,8 @@ import { searchAmazonProducts, getAmazonProduct, isConfigured as isAmazonConfigu
 import { generateInstrumental, buildMusicPrompt, isLyriaConfigured, estimateCost } from "./lyriaService";
 import { synthesizeSpeech, createVoiceClone, synthesizeWithClone, listVoices, isVoiceServiceConfigured, getVoiceStyles, getCharacterPresets, getGoogleVoices } from "./voiceService";
 import { generateImage, generateMovieScript, generateStoryboard, isVideoServiceConfigured, getMovieStyles, movieStyles } from "./videoService";
+import { createGoogleDoc, getGoogleDoc, updateGoogleDoc, createGoogleSlides, createGoogleSheet, createGoogleForm, exportDocument, isGoogleWorkspaceConfigured, getWorkspaceStatus } from "./googleWorkspaceService";
+import { synthesizeSpeechTTS, synthesizeChapter, audiobookStyles, narratorVoices, estimateAudioDuration, estimateTTSCost, isTTSConfigured } from "./textToSpeechService";
 import { getAllPresets, getMusicalScales, getMusicalKeys, calculateSyncedDelay } from "./audioProcessingService";
 import { seedRecoveryData } from "./seedRecoveryData";
 import { generate, generateStream, bookGenerator, marketingGenerator, screenplayGenerator, courseGenerator, researchGenerator, getUsageStats } from "./aiOrchestrator";
@@ -656,6 +658,173 @@ Include recovery metaphors and triumphant imagery.`;
       videoConfigured: isVideoServiceConfigured(),
       estimatedCostPer30Seconds: 0.06
     });
+  });
+
+  // ============================================================================
+  // GOOGLE WORKSPACE INTEGRATION API
+  // ============================================================================
+
+  // Check Google Workspace configuration status
+  app.get('/api/workspace/status', async (req, res) => {
+    res.json({
+      configured: isGoogleWorkspaceConfigured(),
+      services: getWorkspaceStatus(),
+      ttsConfigured: isTTSConfigured()
+    });
+  });
+
+  // Create a new Google Doc for book writing
+  app.post('/api/workspace/docs/create', isAuthenticated, async (req: any, res) => {
+    try {
+      const { title, content, templateId } = req.body;
+      if (!title) {
+        return res.status(400).json({ message: "Title is required" });
+      }
+      const doc = await createGoogleDoc({ title, content, templateId });
+      res.json(doc);
+    } catch (error) {
+      console.error("Error creating Google Doc:", error);
+      res.status(500).json({ message: "Failed to create document" });
+    }
+  });
+
+  // Get Google Doc content
+  app.get('/api/workspace/docs/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const doc = await getGoogleDoc(req.params.id);
+      res.json(doc);
+    } catch (error) {
+      console.error("Error getting Google Doc:", error);
+      res.status(500).json({ message: "Failed to get document" });
+    }
+  });
+
+  // Update Google Doc content
+  app.patch('/api/workspace/docs/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const { content } = req.body;
+      const success = await updateGoogleDoc(req.params.id, content);
+      res.json({ success });
+    } catch (error) {
+      console.error("Error updating Google Doc:", error);
+      res.status(500).json({ message: "Failed to update document" });
+    }
+  });
+
+  // Create Google Slides presentation
+  app.post('/api/workspace/slides/create', isAuthenticated, async (req: any, res) => {
+    try {
+      const { title, slides } = req.body;
+      if (!title) {
+        return res.status(400).json({ message: "Title is required" });
+      }
+      const presentation = await createGoogleSlides({ title, slides });
+      res.json(presentation);
+    } catch (error) {
+      console.error("Error creating presentation:", error);
+      res.status(500).json({ message: "Failed to create presentation" });
+    }
+  });
+
+  // Create Google Sheet
+  app.post('/api/workspace/sheets/create', isAuthenticated, async (req: any, res) => {
+    try {
+      const { title, sheets } = req.body;
+      if (!title) {
+        return res.status(400).json({ message: "Title is required" });
+      }
+      const spreadsheet = await createGoogleSheet({ title, sheets });
+      res.json(spreadsheet);
+    } catch (error) {
+      console.error("Error creating spreadsheet:", error);
+      res.status(500).json({ message: "Failed to create spreadsheet" });
+    }
+  });
+
+  // Create Google Form for quizzes
+  app.post('/api/workspace/forms/create', isAuthenticated, async (req: any, res) => {
+    try {
+      const { title, description, questions } = req.body;
+      if (!title || !questions) {
+        return res.status(400).json({ message: "Title and questions are required" });
+      }
+      const form = await createGoogleForm({ title, description, questions });
+      res.json(form);
+    } catch (error) {
+      console.error("Error creating form:", error);
+      res.status(500).json({ message: "Failed to create form" });
+    }
+  });
+
+  // Export document to various formats
+  app.get('/api/workspace/export/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const { format = 'pdf', type = 'document' } = req.query;
+      const result = await exportDocument(req.params.id, format as any, type as any);
+      res.setHeader('Content-Type', result.mimeType);
+      res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
+      res.send(result.data);
+    } catch (error) {
+      console.error("Error exporting document:", error);
+      res.status(500).json({ message: "Failed to export document" });
+    }
+  });
+
+  // ============================================================================
+  // TEXT-TO-SPEECH / AUDIOBOOK NARRATION API
+  // ============================================================================
+
+  // Get available narrator voices
+  app.get('/api/tts/voices', async (req, res) => {
+    res.json({
+      voices: audiobookStyles,
+      configured: isTTSConfigured()
+    });
+  });
+
+  // Synthesize text to speech
+  app.post('/api/tts/synthesize', isAuthenticated, async (req: any, res) => {
+    try {
+      const { text, voiceId, speakingRate } = req.body;
+      if (!text) {
+        return res.status(400).json({ message: "Text is required" });
+      }
+      
+      const result = await synthesizeChapter(text, voiceId, speakingRate);
+      
+      if (result.success) {
+        res.json({
+          success: true,
+          audioBase64: result.audioBase64,
+          mimeType: result.mimeType,
+          estimatedDuration: estimateAudioDuration(text, speakingRate || 1.0),
+          estimatedCost: estimateTTSCost(text.length)
+        });
+      } else {
+        res.status(500).json({ success: false, message: result.error });
+      }
+    } catch (error) {
+      console.error("Error synthesizing speech:", error);
+      res.status(500).json({ message: "Failed to synthesize speech" });
+    }
+  });
+
+  // Estimate audiobook costs
+  app.post('/api/tts/estimate', async (req, res) => {
+    try {
+      const { text, speakingRate } = req.body;
+      if (!text) {
+        return res.status(400).json({ message: "Text is required" });
+      }
+      
+      res.json({
+        characterCount: text.length,
+        estimatedDurationSeconds: estimateAudioDuration(text, speakingRate || 1.0),
+        estimatedCost: estimateTTSCost(text.length)
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to estimate" });
+    }
   });
 
   // ============ BOOK STUDIO CHAT ANALYSIS ROUTES ============
