@@ -31,7 +31,7 @@ const studios = [
   { href: "/video-studio", label: "Video Studio", icon: Video, description: "Edit videos like CapCut" },
   { href: "/course-studio", label: "Course Studio", icon: GraduationCap, description: "Build online courses" },
   { href: "/publishing", label: "Doctrine Generator", icon: FileText, description: "Share your expertise" },
-  { href: "/image-studio", label: "Image Studio", icon: Image, description: "Background removal & more" },
+  { href: "/image-studio", label: "Image Studio", icon: Image, description: "Background removal & more" }, 
 ];
 
 const navLinks = [
