@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, integer, boolean, jsonb, serial, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, integer, boolean, jsonb, serial, index, real } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -2581,18 +2581,24 @@ export const insertClassroomAssignmentSchema = createInsertSchema(classroomAssig
 // CREDIT & BILLING SYSTEM - Enterprise Monetization
 // ============================================================================
 
-// Subscription tiers with feature limits
+// Subscription tiers with feature limits (preserves existing columns + new billing columns)
 export const subscriptionTiers = pgTable("subscription_tiers", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
   displayName: text("display_name").notNull(),
+  description: text("description").notNull().default(""),
+  monthlyPrice: integer("monthly_price").notNull().default(0),
+  annualPrice: integer("annual_price").notNull().default(0),
   stripePriceIdMonthly: text("stripe_price_id_monthly"),
   stripePriceIdAnnual: text("stripe_price_id_annual"),
+  stripeProductId: text("stripe_product_id"),
+  features: jsonb("features").notNull().default({}),
+  limits: jsonb("limits").notNull().default({}),
+  // New billing columns
   monthlyCredits: integer("monthly_credits").notNull().default(0),
   maxProjects: integer("max_projects"),
   maxStorageGb: integer("max_storage_gb"),
   maxTeamMembers: integer("max_team_members").default(1),
-  features: jsonb("features").notNull().default({}),
   isActive: boolean("is_active").notNull().default(true),
   order: integer("order").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -2832,6 +2838,101 @@ export const creatorAnalytics = pgTable("creator_analytics", {
   index("idx_creator_analytics_date").on(table.creatorId, table.date),
 ]);
 
+// ============================================================================
+// CREATOR PROFILES & PUBLISHING PRESETS (Stickiness Features)
+// ============================================================================
+
+// Author profiles - reusable across books
+export const authorProfiles = pgTable("author_profiles", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  penName: text("pen_name").notNull(),
+  isDefault: boolean("is_default").notNull().default(false),
+  bio: text("bio"),
+  shortBio: text("short_bio"),
+  photoUrl: text("photo_url"),
+  websiteUrl: text("website_url"),
+  socialLinks: jsonb("social_links").default({}),
+  genres: text("genres").array(),
+  otherBooks: jsonb("other_books").default([]),
+  publisherInfo: jsonb("publisher_info").default({}),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Publishing presets - saved formatting settings
+export const publishingPresets = pgTable("publishing_presets", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  presetType: text("preset_type").notNull().default("book"),
+  isDefault: boolean("is_default").notNull().default(false),
+  trimSize: text("trim_size"),
+  paperType: text("paper_type"),
+  fontFamily: text("font_family"),
+  fontSize: integer("font_size"),
+  lineSpacing: real("line_spacing"),
+  marginInside: real("margin_inside"),
+  marginOutside: real("margin_outside"),
+  marginTopBottom: real("margin_top_bottom"),
+  hasBleed: boolean("has_bleed").default(false),
+  includePageNumbers: boolean("include_page_numbers").default(true),
+  includeHeaders: boolean("include_headers").default(true),
+  chapterBreakStyle: text("chapter_break_style"),
+  frontMatterDefaults: jsonb("front_matter_defaults").default({}),
+  backMatterDefaults: jsonb("back_matter_defaults").default({}),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Course presets - saved course creation settings
+export const coursePresets = pgTable("course_presets", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  isDefault: boolean("is_default").notNull().default(false),
+  lessonDuration: integer("lesson_duration"),
+  quizSettings: jsonb("quiz_settings").default({}),
+  certificateTemplate: text("certificate_template"),
+  brandingColors: jsonb("branding_colors").default({}),
+  introVideoTemplate: text("intro_video_template"),
+  outroVideoTemplate: text("outro_video_template"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Saved cover designs - reusable covers and templates
+export const savedCoverDesigns = pgTable("saved_cover_designs", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  thumbnailUrl: text("thumbnail_url"),
+  designData: jsonb("design_data").notNull(),
+  designType: text("design_type").notNull().default("book_cover"),
+  isTemplate: boolean("is_template").notNull().default(false),
+  category: text("category"),
+  tags: text("tags").array(),
+  usageCount: integer("usage_count").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Inspiration library - uploaded reference images
+export const inspirationLibrary = pgTable("inspiration_library", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  imageUrl: text("image_url").notNull(),
+  thumbnailUrl: text("thumbnail_url"),
+  title: text("title"),
+  notes: text("notes"),
+  category: text("category"),
+  tags: text("tags").array(),
+  colorPalette: jsonb("color_palette").default([]),
+  styleAttributes: jsonb("style_attributes").default({}),
+  sourceUrl: text("source_url"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Insert schemas for billing system
 export const insertSubscriptionTierSchema = createInsertSchema(subscriptionTiers).omit({ id: true, createdAt: true });
 export const insertFeatureGateSchema = createInsertSchema(featureGates).omit({ id: true, createdAt: true });
@@ -2848,6 +2949,11 @@ export const insertCreatorStorefrontSchema = createInsertSchema(creatorStorefron
 export const insertProductBundleSchema = createInsertSchema(productBundles).omit({ id: true, createdAt: true, salesCount: true });
 export const insertAffiliateLinkSchema = createInsertSchema(affiliateLinks).omit({ id: true, createdAt: true, clickCount: true, conversionCount: true, totalEarnings: true });
 export const insertCreatorAnalyticsSchema = createInsertSchema(creatorAnalytics).omit({ id: true, createdAt: true });
+export const insertAuthorProfileSchema = createInsertSchema(authorProfiles).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertPublishingPresetSchema = createInsertSchema(publishingPresets).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertCoursePresetSchema = createInsertSchema(coursePresets).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertSavedCoverDesignSchema = createInsertSchema(savedCoverDesigns).omit({ id: true, createdAt: true, updatedAt: true, usageCount: true });
+export const insertInspirationLibrarySchema = createInsertSchema(inspirationLibrary).omit({ id: true, createdAt: true });
 
 // Ultra-Premium Types
 export type VoiceClone = typeof voiceClones.$inferSelect;
@@ -2914,3 +3020,15 @@ export type AffiliateLink = typeof affiliateLinks.$inferSelect;
 export type InsertAffiliateLink = z.infer<typeof insertAffiliateLinkSchema>;
 export type CreatorAnalytics = typeof creatorAnalytics.$inferSelect;
 export type InsertCreatorAnalytics = z.infer<typeof insertCreatorAnalyticsSchema>;
+
+// Creator Profiles & Presets Types (Stickiness)
+export type AuthorProfile = typeof authorProfiles.$inferSelect;
+export type InsertAuthorProfile = z.infer<typeof insertAuthorProfileSchema>;
+export type PublishingPreset = typeof publishingPresets.$inferSelect;
+export type InsertPublishingPreset = z.infer<typeof insertPublishingPresetSchema>;
+export type CoursePreset = typeof coursePresets.$inferSelect;
+export type InsertCoursePreset = z.infer<typeof insertCoursePresetSchema>;
+export type SavedCoverDesign = typeof savedCoverDesigns.$inferSelect;
+export type InsertSavedCoverDesign = z.infer<typeof insertSavedCoverDesignSchema>;
+export type InspirationItem = typeof inspirationLibrary.$inferSelect;
+export type InsertInspirationItem = z.infer<typeof insertInspirationLibrarySchema>;
