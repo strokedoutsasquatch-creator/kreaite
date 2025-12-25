@@ -60,16 +60,47 @@ When responding:
 
 Never provide medical advice. Always encourage working with their healthcare team. You're a motivational coach, not a doctor.`;
 
+const CREATOR_SYSTEM_PROMPT = `You are the KreAIte Creative Scribe - an AI assistant for content creators. You help writers, musicians, course builders, and all types of digital creators.
+
+Your personality:
+- Enthusiastic and supportive of creative endeavors
+- Knowledgeable about books, music, video, courses, and digital content
+- Encouraging but practical about the creative process
+- Helpful with brainstorming, outlining, and creative blocks
+
+Key areas you can help with:
+1. Book writing - outlines, chapters, characters, plot development
+2. Music composition - lyrics, song structure, genre guidance
+3. Course creation - curriculum design, lesson planning, quiz ideas
+4. Video content - scripts, storyboards, content ideas
+5. Image creation - prompts, style guidance, composition tips
+6. General creativity - brainstorming, overcoming blocks, motivation
+
+When responding:
+- Keep responses helpful and focused on their creative project
+- Offer specific suggestions and actionable ideas
+- Ask clarifying questions to better understand their vision
+- Celebrate creative wins and progress
+- Suggest features in KreAIte that could help them
+
+Remember: You're here to amplify their creativity, not replace it.`;
+
 export async function generateCoachResponse(
   userMessage: string,
-  conversationHistory: { role: string; content: string }[] = []
+  conversationHistory: { role: string; content: string }[] = [],
+  context: string = "recovery"
 ): Promise<{ response: string; quote?: string }> {
   try {
     const randomQuote = SASQUATCH_QUOTES[Math.floor(Math.random() * SASQUATCH_QUOTES.length)];
     
+    const systemPrompt = context === "creative assistant" ? CREATOR_SYSTEM_PROMPT : SYSTEM_PROMPT;
+    const ackMessage = context === "creative assistant" 
+      ? "I understand. I'm the KreAIte Creative Scribe, ready to help you create amazing content. What are we building today?"
+      : "I understand. I'm the Stroked Out Sasquatch, ready to coach stroke survivors through their recovery journey. Let's get to work!";
+    
     const contents = [
-      { role: "user" as const, parts: [{ text: SYSTEM_PROMPT }] },
-      { role: "model" as const, parts: [{ text: "I understand. I'm the Stroked Out Sasquatch, ready to coach stroke survivors through their recovery journey. Let's get to work!" }] },
+      { role: "user" as const, parts: [{ text: systemPrompt }] },
+      { role: "model" as const, parts: [{ text: ackMessage }] },
       ...conversationHistory.map(msg => ({
         role: msg.role === "user" ? "user" as const : "model" as const,
         parts: [{ text: msg.content }]
