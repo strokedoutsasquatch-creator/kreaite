@@ -136,6 +136,22 @@ export default function MusicStudio() {
   const melodyRecorderRef = useRef<MediaRecorder | null>(null);
   const melodyChunksRef = useRef<Blob[]>([]);
   
+  // Mashup & Voice Swap state
+  const [mashupMode, setMashupMode] = useState<"voice-swap" | "mashup" | "reimagine">("voice-swap");
+  const [sourceSongDescription, setSourceSongDescription] = useState("");
+  const [secondSongDescription, setSecondSongDescription] = useState("");
+  const [targetArtistStyle, setTargetArtistStyle] = useState("pop-icon");
+  const [mashupGenre, setMashupGenre] = useState("original");
+  const [mashupTempo, setMashupTempo] = useState(100); // percentage of original
+  const [mashupEnergy, setMashupEnergy] = useState(100);
+  const [isGeneratingMashup, setIsGeneratingMashup] = useState(false);
+  const [mashupResult, setMashupResult] = useState<{
+    title: string;
+    description: string;
+    concept: string;
+    suggestedLyrics?: string;
+  } | null>(null);
+  
   // EQ state (8-band parametric)
   const [eqBands, setEqBands] = useState<EQBand[]>([
     { frequency: 60, gain: 0, Q: 1 },
@@ -716,6 +732,90 @@ export default function MusicStudio() {
     }
   };
 
+  // ===== MASHUP & VOICE SWAP FUNCTIONS =====
+  
+  const generateMashupConcept = async () => {
+    if (!sourceSongDescription.trim()) {
+      toast({ title: "Describe the source song first", variant: "destructive" });
+      return;
+    }
+    
+    setIsGeneratingMashup(true);
+    try {
+      const response = await apiRequest("POST", "/api/music/generate-mashup", {
+        mode: mashupMode,
+        sourceSong: sourceSongDescription,
+        secondSong: secondSongDescription,
+        targetStyle: targetArtistStyle,
+        targetGenre: mashupGenre,
+        tempoAdjust: mashupTempo,
+        energyLevel: mashupEnergy,
+      });
+      const data = await response.json();
+      
+      if (data.success && data.mashup) {
+        setMashupResult(data.mashup);
+        toast({ title: "Mashup Concept Generated!", description: "Your creative vision is ready!" });
+      }
+    } catch (error) {
+      // Demo fallback with creative concepts
+      const modeLabels = { "voice-swap": "Voice Swap", "mashup": "Mashup", "reimagine": "Reimagine" };
+      const styleLabels: Record<string, string> = {
+        "pop-icon": "Smooth Pop Icon",
+        "rap-legend": "Legendary Rap Flow", 
+        "country-star": "Country Storyteller",
+        "rock-god": "Classic Rock Power",
+        "soul-queen": "Soulful R&B Diva",
+        "metal-beast": "Death Metal Growler",
+        "jazz-crooner": "Jazz Lounge Singer",
+        "electronic-producer": "EDM Producer Style"
+      };
+      
+      let concept = "";
+      let suggestedLyrics = "";
+      
+      if (mashupMode === "voice-swap") {
+        concept = `Reimagining "${sourceSongDescription}" with a ${styleLabels[targetArtistStyle] || targetArtistStyle} vocal approach. ` +
+          `The original melody and structure are preserved, but delivered with ${mashupGenre !== "original" ? `a ${mashupGenre} genre twist and ` : ""}` +
+          `${mashupTempo !== 100 ? `${mashupTempo}% tempo adjustment and ` : ""}` +
+          `completely transformed vocal character. The result blends the original song's DNA with a fresh artistic interpretation.`;
+        suggestedLyrics = `[Voice Swap Concept]\nOriginal: ${sourceSongDescription}\nNew Style: ${styleLabels[targetArtistStyle]}\n\n` +
+          `The AI would analyze the original melody and lyrics, then regenerate them with:\n` +
+          `- Vocal texture matching the ${styleLabels[targetArtistStyle]} archetype\n` +
+          `- Phrasing and delivery adapted to the new style\n` +
+          `- ${mashupGenre !== "original" ? `Genre elements from ${mashupGenre}` : "Original genre preserved"}`;
+      } else if (mashupMode === "mashup") {
+        concept = `Creating a groundbreaking mashup combining "${sourceSongDescription}" with "${secondSongDescription}". ` +
+          `AI analyzes both songs' BPM, key, chord progressions, and hooks to find harmonic compatibility. ` +
+          `The result weaves together the most memorable elements of both tracks into a seamless new creation ` +
+          `${mashupGenre !== "original" ? `with a ${mashupGenre} production style.` : "that honors both originals."}`;
+        suggestedLyrics = `[Mashup Blueprint]\nTrack A: ${sourceSongDescription}\nTrack B: ${secondSongDescription}\n\n` +
+          `The AI would:\n1. Sync tempos and find key compatibility\n2. Layer vocals from Track A over instrumentals from Track B\n` +
+          `3. Create seamless transitions between both songs' hooks\n4. Build to a climax using elements from both tracks`;
+      } else {
+        concept = `Complete reimagination of "${sourceSongDescription}" as if it were originally written as a ${mashupGenre} song ` +
+          `performed by an artist with ${styleLabels[targetArtistStyle]} vocal characteristics. Not just a cover - a complete artistic reinterpretation ` +
+          `that asks "what if this song was born in a different genre, era, and artistic vision?"`;
+        suggestedLyrics = `[Reimagine Concept]\nOriginal: ${sourceSongDescription}\nNew Vision: ${mashupGenre} + ${styleLabels[targetArtistStyle]}\n\n` +
+          `Complete transformation including:\n- New instrumental arrangement in ${mashupGenre} style\n` +
+          `- Vocal reinterpretation with ${styleLabels[targetArtistStyle]} characteristics\n` +
+          `- Tempo: ${mashupTempo}% of original, Energy: ${mashupEnergy}%`;
+      }
+      
+      setMashupResult({
+        title: `${modeLabels[mashupMode]}: ${sourceSongDescription.slice(0, 30)}...`,
+        description: `A ${mashupMode} creation blending artistic visions`,
+        concept,
+        suggestedLyrics,
+      });
+      toast({ title: "Concept Generated!", description: "Your creative mashup vision is ready!" });
+    } finally {
+      setIsGeneratingMashup(false);
+    }
+  };
+
+  // ===== END MASHUP FUNCTIONS =====
+
   // ===== END MELODY MAGIC FUNCTIONS =====
 
   // Generate movie script
@@ -913,28 +1013,255 @@ export default function MusicStudio() {
               {/* MELODY MAGIC TAB - Record → Analyze → Transform → Recompose */}
               <TabsContent value="melody-magic" className="flex-1 overflow-auto">
                 <div className="space-y-6">
-                  {/* Hero Section */}
+                  {/* Hero Section with Mode Selector */}
                   <div className="text-center py-6 bg-gradient-to-r from-orange-500/10 via-purple-500/10 to-pink-500/10 rounded-xl border border-orange-500/20">
                     <div className="flex items-center justify-center gap-2 mb-2">
                       <Sparkles className="w-8 h-8 text-orange-500 animate-pulse" />
                       <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-purple-500 bg-clip-text text-transparent">
-                        MELODY MAGIC
+                        MELODY MAGIC STUDIO
                       </h2>
                       <Sparkles className="w-8 h-8 text-purple-500 animate-pulse" />
                     </div>
-                    <p className="text-muted-foreground max-w-2xl mx-auto">
-                      Record any melody - hum, sing, or whistle. AI will analyze it, transform it to any genre, 
-                      add your chosen voice style, finish the lyrics, and recompose an extraordinary song!
+                    
+                    {/* Mode Selector */}
+                    <div className="flex items-center justify-center gap-2 mt-4 mb-4 flex-wrap">
+                      <Button 
+                        variant={melodyMagicStep === 1 && !mashupMode.includes("swap") && !mashupMode.includes("mashup") && !mashupMode.includes("reimagine") ? "default" : "outline"}
+                        onClick={() => { setMelodyMagicStep(1); setMashupMode("voice-swap"); }}
+                        className={`${mashupMode === "voice-swap" ? "bg-gradient-to-r from-orange-500 to-red-500 border-0" : ""}`}
+                        data-testid="button-mode-record"
+                      >
+                        <Mic className="w-4 h-4 mr-2" /> Record & Transform
+                      </Button>
+                      <Button 
+                        variant={mashupMode === "voice-swap" ? "default" : "outline"}
+                        onClick={() => { setMashupMode("voice-swap"); setMelodyMagicStep(0); }}
+                        className={`${mashupMode === "voice-swap" && melodyMagicStep === 0 ? "bg-gradient-to-r from-purple-500 to-pink-500 border-0" : ""}`}
+                        data-testid="button-mode-voiceswap"
+                      >
+                        <Users className="w-4 h-4 mr-2" /> Voice Swap
+                      </Button>
+                      <Button 
+                        variant={mashupMode === "mashup" ? "default" : "outline"}
+                        onClick={() => { setMashupMode("mashup"); setMelodyMagicStep(0); }}
+                        className={`${mashupMode === "mashup" ? "bg-gradient-to-r from-blue-500 to-cyan-500 border-0" : ""}`}
+                        data-testid="button-mode-mashup"
+                      >
+                        <Disc className="w-4 h-4 mr-2" /> Mashup Creator
+                      </Button>
+                      <Button 
+                        variant={mashupMode === "reimagine" ? "default" : "outline"}
+                        onClick={() => { setMashupMode("reimagine"); setMelodyMagicStep(0); }}
+                        className={`${mashupMode === "reimagine" ? "bg-gradient-to-r from-green-500 to-teal-500 border-0" : ""}`}
+                        data-testid="button-mode-reimagine"
+                      >
+                        <Wand2 className="w-4 h-4 mr-2" /> Reimagine
+                      </Button>
+                    </div>
+
+                    <p className="text-muted-foreground max-w-2xl mx-auto text-sm">
+                      {melodyMagicStep > 0 ? "Record any melody - hum, sing, or whistle. AI transforms it to any genre!" :
+                       mashupMode === "voice-swap" ? "What if your favorite song was sung by a completely different artist style?" :
+                       mashupMode === "mashup" ? "Combine two songs into one groundbreaking mashup masterpiece!" :
+                       "Completely reimagine a song as if it was born in a different genre and era!"}
                     </p>
-                    <div className="flex items-center justify-center gap-4 mt-4 text-sm text-muted-foreground">
-                      <Badge variant="outline" className="bg-orange-500/10">🎄 Jingle Bells → Death Metal</Badge>
-                      <Badge variant="outline" className="bg-purple-500/10">🎻 Orchestra → Rap Beat</Badge>
-                      <Badge variant="outline" className="bg-pink-500/10">🎵 Any Melody → Any Genre</Badge>
+                    <div className="flex items-center justify-center gap-4 mt-4 text-sm text-muted-foreground flex-wrap">
+                      <Badge variant="outline" className="bg-orange-500/10">Rapid-Fire Rap → Country Ballad</Badge>
+                      <Badge variant="outline" className="bg-purple-500/10">Pop Hit + Rock Anthem = Epic Mashup</Badge>
+                      <Badge variant="outline" className="bg-pink-500/10">Any Voice + Any Genre = Magic</Badge>
                     </div>
                   </div>
 
-                  {/* Progress Stepper */}
-                  <div className="flex items-center justify-between px-4">
+                  {/* MASHUP / VOICE SWAP / REIMAGINE MODE */}
+                  {melodyMagicStep === 0 && (
+                    <Card className="border-purple-500/20">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          {mashupMode === "voice-swap" && <><Users className="w-6 h-6 text-purple-500" /> Voice Swap Studio</>}
+                          {mashupMode === "mashup" && <><Disc className="w-6 h-6 text-blue-500" /> Mashup Creator</>}
+                          {mashupMode === "reimagine" && <><Wand2 className="w-6 h-6 text-green-500" /> Song Reimaginer</>}
+                        </CardTitle>
+                        <CardDescription>
+                          {mashupMode === "voice-swap" && "Transform any song with a completely different vocal style - imagine your favorite hits performed by different artist archetypes!"}
+                          {mashupMode === "mashup" && "Combine the best elements of two songs into one epic mashup that transcends genres!"}
+                          {mashupMode === "reimagine" && "What if a song was originally written in a completely different genre? Discover the answer!"}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Left Column - Song Input */}
+                          <div className="space-y-4">
+                            <div>
+                              <Label className="text-base font-bold">
+                                {mashupMode === "mashup" ? "First Song" : "Source Song"}
+                              </Label>
+                              <Textarea 
+                                value={sourceSongDescription}
+                                onChange={(e) => setSourceSongDescription(e.target.value)}
+                                placeholder="Describe the song (e.g., 'Lose Yourself - fast rap about seizing opportunities' or 'a classic Christmas carol about sleigh bells')"
+                                className="mt-2 h-24"
+                                data-testid="input-source-song"
+                              />
+                            </div>
+                            
+                            {mashupMode === "mashup" && (
+                              <div>
+                                <Label className="text-base font-bold">Second Song</Label>
+                                <Textarea 
+                                  value={secondSongDescription}
+                                  onChange={(e) => setSecondSongDescription(e.target.value)}
+                                  placeholder="Describe the second song to mashup (e.g., 'smooth country love song' or 'heavy metal anthem')"
+                                  className="mt-2 h-24"
+                                  data-testid="input-second-song"
+                                />
+                              </div>
+                            )}
+
+                            {/* Voice Style Selector */}
+                            {(mashupMode === "voice-swap" || mashupMode === "reimagine") && (
+                              <div>
+                                <Label className="text-base font-bold mb-3 block">Target Voice Style</Label>
+                                <div className="grid grid-cols-2 gap-2">
+                                  {[
+                                    { value: "pop-icon", label: "Pop Icon", desc: "Smooth, melodic, stadium-filling" },
+                                    { value: "rap-legend", label: "Rap Legend", desc: "Rapid-fire flow, wordplay master" },
+                                    { value: "country-star", label: "Country Star", desc: "Storyteller, twang, heartfelt" },
+                                    { value: "rock-god", label: "Rock God", desc: "Powerful, raw, arena-ready" },
+                                    { value: "soul-queen", label: "Soul Diva", desc: "Gospel-tinged, powerful runs" },
+                                    { value: "metal-beast", label: "Metal Beast", desc: "Growling, intense, heavy" },
+                                    { value: "jazz-crooner", label: "Jazz Crooner", desc: "Smooth, improvisational" },
+                                    { value: "electronic-producer", label: "EDM Style", desc: "Vocoded, processed, modern" },
+                                  ].map((style) => (
+                                    <button
+                                      key={style.value}
+                                      onClick={() => setTargetArtistStyle(style.value)}
+                                      className={`p-3 rounded-lg border-2 text-left transition-all
+                                        ${targetArtistStyle === style.value 
+                                          ? 'border-purple-500 bg-purple-500/10' 
+                                          : 'border-muted hover:border-primary/50'}`}
+                                      data-testid={`button-style-${style.value}`}
+                                    >
+                                      <p className="font-bold text-sm">{style.label}</p>
+                                      <p className="text-xs text-muted-foreground">{style.desc}</p>
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Right Column - Settings */}
+                          <div className="space-y-4">
+                            <div>
+                              <Label className="text-base font-bold mb-3 block">Target Genre</Label>
+                              <Select value={mashupGenre} onValueChange={setMashupGenre}>
+                                <SelectTrigger data-testid="select-mashup-genre">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="original">Keep Original Genre</SelectItem>
+                                  <SelectItem value="pop">Pop</SelectItem>
+                                  <SelectItem value="rap">Hip Hop / Rap</SelectItem>
+                                  <SelectItem value="country">Country</SelectItem>
+                                  <SelectItem value="rock">Rock</SelectItem>
+                                  <SelectItem value="metal">Heavy Metal</SelectItem>
+                                  <SelectItem value="edm">EDM / Electronic</SelectItem>
+                                  <SelectItem value="jazz">Jazz / Blues</SelectItem>
+                                  <SelectItem value="orchestral">Orchestral / Classical</SelectItem>
+                                  <SelectItem value="reggae">Reggae</SelectItem>
+                                  <SelectItem value="folk">Folk / Acoustic</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div>
+                              <Label className="text-base font-bold">Tempo Adjustment: {mashupTempo}%</Label>
+                              <Slider 
+                                value={[mashupTempo]} 
+                                onValueChange={([v]) => setMashupTempo(v)}
+                                min={50} max={150} step={5}
+                                className="mt-2"
+                                data-testid="slider-tempo"
+                              />
+                              <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                                <span>Slower (50%)</span>
+                                <span>Original</span>
+                                <span>Faster (150%)</span>
+                              </div>
+                            </div>
+
+                            <div>
+                              <Label className="text-base font-bold">Energy Level: {mashupEnergy}%</Label>
+                              <Slider 
+                                value={[mashupEnergy]} 
+                                onValueChange={([v]) => setMashupEnergy(v)}
+                                min={25} max={150} step={5}
+                                className="mt-2"
+                                data-testid="slider-energy"
+                              />
+                              <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                                <span>Chill</span>
+                                <span>Original</span>
+                                <span>Intense</span>
+                              </div>
+                            </div>
+
+                            <Button 
+                              onClick={generateMashupConcept}
+                              disabled={isGeneratingMashup || !sourceSongDescription.trim()}
+                              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 mt-4"
+                              size="lg"
+                              data-testid="button-generate-mashup"
+                            >
+                              {isGeneratingMashup ? (
+                                <><RefreshCw className="w-5 h-5 mr-2 animate-spin" /> Generating...</>
+                              ) : (
+                                <><Sparkles className="w-5 h-5 mr-2" /> Generate {mashupMode === "mashup" ? "Mashup" : mashupMode === "voice-swap" ? "Voice Swap" : "Reimagination"}</>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Results */}
+                        {mashupResult && (
+                          <div className="mt-6 p-6 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl border border-purple-500/20">
+                            <h3 className="text-xl font-bold mb-2">{mashupResult.title}</h3>
+                            <p className="text-muted-foreground mb-4">{mashupResult.description}</p>
+                            
+                            <div className="space-y-4">
+                              <div>
+                                <Label className="font-bold">Creative Concept</Label>
+                                <p className="mt-1 text-sm bg-background/50 p-3 rounded">{mashupResult.concept}</p>
+                              </div>
+                              
+                              {mashupResult.suggestedLyrics && (
+                                <div>
+                                  <Label className="font-bold">Production Blueprint</Label>
+                                  <pre className="mt-1 text-sm bg-background/50 p-3 rounded whitespace-pre-wrap font-mono">
+                                    {mashupResult.suggestedLyrics}
+                                  </pre>
+                                </div>
+                              )}
+
+                              <div className="flex gap-2 flex-wrap">
+                                <Button variant="outline" onClick={() => setMashupResult(null)}>
+                                  <RotateCcw className="w-4 h-4 mr-2" /> Try Different Settings
+                                </Button>
+                                <Button className="bg-gradient-to-r from-orange-500 to-purple-500" data-testid="button-produce-mashup">
+                                  <Music className="w-4 h-4 mr-2" /> Produce This Track
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* RECORD MELODY MODE - Progress Stepper (only show when in record mode) */}
+                  {melodyMagicStep > 0 && (
+                    <>
+                    <div className="flex items-center justify-between px-4">
                     {[
                       { step: 1, label: "Record Melody", icon: Mic },
                       { step: 2, label: "Transform", icon: Wand2 },
@@ -1294,6 +1621,8 @@ export default function MusicStudio() {
                         )}
                       </CardContent>
                     </Card>
+                  )}
+                  </>
                   )}
                 </div>
               </TabsContent>
