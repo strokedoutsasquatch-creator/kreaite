@@ -31,6 +31,9 @@ export const users = pgTable("users", {
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   subscriptionStatus: text("subscription_status"),
+  stripeConnectAccountId: text("stripe_connect_account_id"),
+  stripeConnectOnboarded: boolean("stripe_connect_onboarded").default(false),
+  creatorPayoutEnabled: boolean("creator_payout_enabled").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -473,11 +476,16 @@ export const creatorPayouts = pgTable("creator_payouts", {
   id: serial("id").primaryKey(),
   creatorId: varchar("creator_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   amount: integer("amount").notNull(), // in cents
-  status: text("status").notNull().default("pending"), // pending, processing, completed
+  currency: text("currency").notNull().default("USD"),
+  status: text("status").notNull().default("pending"), // pending, processing, completed, failed
   stripePayoutId: text("stripe_payout_id"),
-  periodStart: timestamp("period_start").notNull(),
-  periodEnd: timestamp("period_end").notNull(),
+  stripeTransferId: text("stripe_transfer_id"),
+  failureReason: text("failure_reason"),
+  earningsIncluded: integer("earnings_included").array(), // array of earning IDs
+  periodStart: timestamp("period_start"),
+  periodEnd: timestamp("period_end"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  processedAt: timestamp("processed_at"),
   paidAt: timestamp("paid_at"),
 });
 
@@ -1765,6 +1773,37 @@ export type MusicVideo = typeof musicVideos.$inferSelect;
 export type InsertMusicVideo = z.infer<typeof insertMusicVideoSchema>;
 export type AiMusicJob = typeof aiMusicJobs.$inferSelect;
 export type InsertAiMusicJob = z.infer<typeof insertAiMusicJobSchema>;
+
+// ============================================================================
+// CREATOR EARNINGS & STRIPE CONNECT
+// ============================================================================
+
+export const creatorEarnings = pgTable("creator_earnings", {
+  id: serial("id").primaryKey(),
+  creatorId: varchar("creator_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  orderId: integer("order_id"),
+  productType: text("product_type").notNull(), // book, audiobook, course, music, video
+  productId: integer("product_id").notNull(),
+  productTitle: text("product_title").notNull(),
+  saleAmount: integer("sale_amount").notNull(), // in cents (total sale price)
+  platformFee: integer("platform_fee").notNull(), // in cents (15% platform cut)
+  creatorShare: integer("creator_share").notNull(), // in cents (85% creator cut)
+  currency: text("currency").notNull().default("USD"),
+  status: text("status").notNull().default("pending"), // pending, available, paid, failed
+  stripeTransferId: text("stripe_transfer_id"),
+  payoutId: integer("payout_id"),
+  customerEmail: text("customer_email"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  paidAt: timestamp("paid_at"),
+});
+
+export const insertCreatorEarningSchema = createInsertSchema(creatorEarnings).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type CreatorEarning = typeof creatorEarnings.$inferSelect;
+export type InsertCreatorEarning = z.infer<typeof insertCreatorEarningSchema>;
 
 // ============================================================================
 // BOOK MARKETPLACE - Lulu Print-on-Demand Integration

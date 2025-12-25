@@ -42,6 +42,13 @@ import CourseStudio from "@/pages/CourseStudio";
 import ImageStudio from "@/pages/ImageStudio";
 import BookMarketplace from "@/pages/BookMarketplace";
 import AuthorDashboard from "@/pages/AuthorDashboard";
+import CreatorHub from "@/pages/CreatorHub";
+import MovieStudio from "@/pages/MovieStudio";
+import VoiceLibrary from "@/pages/VoiceLibrary";
+import AudiobookFactory from "@/pages/AudiobookFactory";
+import DJStudio from "@/pages/DJStudio";
+import WorkflowDashboard from "@/pages/WorkflowDashboard";
+import CreatorEarnings from "@/pages/CreatorEarnings";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 import SasquatchChatWidget from "@/components/SasquatchChatWidget";
@@ -148,6 +155,41 @@ function Router() {
       <Route path="/video-studio" component={VideoStudio} />
       <Route path="/course-studio" component={CourseStudio} />
       <Route path="/image-studio" component={ImageStudio} />
+      <Route path="/creator-hub">
+        <ProtectedRoute>
+          <CreatorHub />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/movie-studio">
+        <ProtectedRoute>
+          <MovieStudio />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/voice-library">
+        <ProtectedRoute>
+          <VoiceLibrary />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/audiobook-factory">
+        <ProtectedRoute>
+          <AudiobookFactory />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/dj-studio">
+        <ProtectedRoute>
+          <DJStudio />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/workflows">
+        <ProtectedRoute>
+          <WorkflowDashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/creator/earnings">
+        <ProtectedRoute>
+          <CreatorEarnings />
+        </ProtectedRoute>
+      </Route>
       <Route path="/stories" component={Stories} />
       <Route path="/stories/new">
         <ProtectedRoute>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import CreatorHeader from "@/components/CreatorHeader";
 import Footer from "@/components/Footer";
@@ -39,6 +39,7 @@ import {
   Radio,
   TrendingUp,
   Zap,
+  Maximize,
 } from "lucide-react";
 
 interface CreatorContent {
@@ -58,6 +59,7 @@ interface CreatorContent {
   description?: string;
   releaseDate?: string;
   amazonUrl?: string;
+  streamUrl?: string;
 }
 
 interface MarketplaceBook {
@@ -92,16 +94,206 @@ interface StripeProduct {
   price_id?: string;
 }
 
+const sampleMusicContent: CreatorContent[] = [
+  {
+    id: "music-1",
+    title: "Ambient Dreams",
+    creator: "AI Composer",
+    type: "music",
+    price: 2.99,
+    duration: "3:24",
+    genre: "Ambient",
+    rating: 4.8,
+    streamCount: 12500,
+    isFeatured: true,
+    streamUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+  },
+  {
+    id: "music-2",
+    title: "Electric Sunrise",
+    creator: "Beat Machine",
+    type: "music",
+    price: 1.99,
+    duration: "4:12",
+    genre: "Electronic",
+    rating: 4.5,
+    streamCount: 8700,
+    streamUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+  },
+  {
+    id: "music-3",
+    title: "Peaceful Journey",
+    creator: "Zen Studios",
+    type: "music",
+    price: 3.49,
+    duration: "5:30",
+    genre: "Relaxation",
+    rating: 4.9,
+    streamCount: 25000,
+    isFeatured: true,
+    streamUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+  },
+];
+
+const sampleVideoContent: CreatorContent[] = [
+  {
+    id: "video-1",
+    title: "Creative Process Tutorial",
+    creator: "Design Master",
+    type: "video",
+    price: 9.99,
+    duration: "12:45",
+    genre: "Tutorial",
+    rating: 4.7,
+    streamCount: 5400,
+    isFeatured: true,
+    streamUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+  },
+  {
+    id: "video-2",
+    title: "AI Art Techniques",
+    creator: "Tech Visionary",
+    type: "video",
+    price: 14.99,
+    duration: "25:00",
+    genre: "Education",
+    rating: 4.8,
+    streamCount: 3200,
+    streamUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+  },
+  {
+    id: "video-3",
+    title: "Music Production Basics",
+    creator: "Audio Pro",
+    type: "video",
+    price: 19.99,
+    duration: "45:30",
+    genre: "Tutorial",
+    rating: 4.6,
+    streamCount: 8900,
+    streamUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+  },
+];
+
+const sampleMovieContent: CreatorContent[] = [
+  {
+    id: "movie-1",
+    title: "Tears of Steel",
+    creator: "Blender Foundation",
+    type: "movie",
+    price: 4.99,
+    duration: "12:14",
+    genre: "Sci-Fi",
+    rating: 4.5,
+    streamCount: 45000,
+    isFeatured: true,
+    streamUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+  },
+  {
+    id: "movie-2",
+    title: "Big Buck Bunny",
+    creator: "Blender Institute",
+    type: "movie",
+    price: 0,
+    duration: "9:56",
+    genre: "Animation",
+    rating: 4.8,
+    streamCount: 120000,
+    isFeatured: true,
+    streamUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+  },
+  {
+    id: "movie-3",
+    title: "Sintel",
+    creator: "Blender Foundation",
+    type: "movie",
+    price: 2.99,
+    duration: "14:48",
+    genre: "Fantasy",
+    rating: 4.7,
+    streamCount: 89000,
+    streamUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+  },
+];
+
 function MusicPlayer({ track, onClose }: { track: CreatorContent | null; onClose: () => void }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
   const [volume, setVolume] = useState(80);
   const [isMuted, setIsMuted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  const hasStreamUrl = !!track?.streamUrl;
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume / 100;
+      audioRef.current.muted = isMuted;
+    }
+  }, [volume, isMuted]);
+
+  useEffect(() => {
+    if (audioRef.current && track?.streamUrl) {
+      audioRef.current.src = track.streamUrl;
+      audioRef.current.load();
+    }
+  }, [track?.streamUrl]);
+
+  const handlePlayPause = () => {
+    if (!audioRef.current || !hasStreamUrl) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play().catch((err) => {
+        console.error("Audio playback failed:", err);
+      });
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (!audioRef.current) return;
+    setCurrentTime(audioRef.current.currentTime);
+    const progressPercent = (audioRef.current.currentTime / audioRef.current.duration) * 100;
+    setProgress(isNaN(progressPercent) ? 0 : progressPercent);
+  };
+
+  const handleLoadedMetadata = () => {
+    if (!audioRef.current) return;
+    setDuration(audioRef.current.duration);
+  };
+
+  const handleSeek = (value: number[]) => {
+    if (!audioRef.current || !hasStreamUrl || !duration) return;
+    const newTime = (value[0] / 100) * duration;
+    audioRef.current.currentTime = newTime;
+    setProgress(value[0]);
+  };
+
+  const formatTime = (seconds: number) => {
+    if (isNaN(seconds) || !isFinite(seconds)) return "0:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   if (!track) return null;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-black/95 border-t border-orange-500/30 p-4 z-50 backdrop-blur-lg">
+      {hasStreamUrl && (
+        <audio
+          ref={audioRef}
+          src={track.streamUrl}
+          onTimeUpdate={handleTimeUpdate}
+          onLoadedMetadata={handleLoadedMetadata}
+          onEnded={() => setIsPlaying(false)}
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+          onError={(e) => console.error("Audio error:", e)}
+        />
+      )}
       <div className="container mx-auto flex items-center gap-4">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-purple-500 rounded-lg flex items-center justify-center shrink-0">
@@ -110,6 +302,7 @@ function MusicPlayer({ track, onClose }: { track: CreatorContent | null; onClose
           <div className="min-w-0">
             <p className="font-medium text-white truncate">{track.title}</p>
             <p className="text-sm text-muted-foreground truncate">{track.creator}</p>
+            {!hasStreamUrl && <p className="text-xs text-yellow-500">Preview only - streaming unavailable</p>}
           </div>
           <Button size="icon" variant="ghost" className="shrink-0" data-testid="button-favorite-track">
             <Heart className="w-4 h-4" />
@@ -118,43 +311,45 @@ function MusicPlayer({ track, onClose }: { track: CreatorContent | null; onClose
         
         <div className="flex flex-col items-center gap-2 flex-1">
           <div className="flex items-center gap-4">
-            <Button size="icon" variant="ghost" data-testid="button-shuffle">
+            <Button size="icon" variant="ghost" disabled={!hasStreamUrl} data-testid="button-shuffle">
               <Shuffle className="w-4 h-4" />
             </Button>
-            <Button size="icon" variant="ghost" data-testid="button-prev">
+            <Button size="icon" variant="ghost" disabled={!hasStreamUrl} data-testid="button-prev">
               <SkipBack className="w-5 h-5" />
             </Button>
             <Button 
               size="lg" 
-              className="rounded-full bg-orange-500"
-              onClick={() => setIsPlaying(!isPlaying)}
+              className={`rounded-full ${hasStreamUrl ? 'bg-orange-500 hover:bg-orange-600' : 'bg-gray-600 cursor-not-allowed'}`}
+              onClick={handlePlayPause}
+              disabled={!hasStreamUrl}
               data-testid="button-play-pause"
             >
               {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
             </Button>
-            <Button size="icon" variant="ghost" data-testid="button-next">
+            <Button size="icon" variant="ghost" disabled={!hasStreamUrl} data-testid="button-next">
               <SkipForward className="w-5 h-5" />
             </Button>
-            <Button size="icon" variant="ghost" data-testid="button-repeat">
+            <Button size="icon" variant="ghost" disabled={!hasStreamUrl} data-testid="button-repeat">
               <Repeat className="w-4 h-4" />
             </Button>
           </div>
           <div className="flex items-center gap-2 w-full max-w-md">
-            <span className="text-xs text-muted-foreground w-10 text-right">1:23</span>
+            <span className="text-xs text-muted-foreground w-10 text-right">{formatTime(currentTime)}</span>
             <Slider 
               value={[progress]} 
               max={100} 
-              step={1}
-              onValueChange={(v) => setProgress(v[0])}
+              step={0.1}
+              onValueChange={handleSeek}
+              disabled={!hasStreamUrl}
               className="flex-1"
               data-testid="slider-progress"
             />
-            <span className="text-xs text-muted-foreground w-10">{track.duration}</span>
+            <span className="text-xs text-muted-foreground w-10">{duration ? formatTime(duration) : track.duration || "0:00"}</span>
           </div>
         </div>
         
         <div className="flex items-center gap-3 flex-1 justify-end">
-          <Button size="icon" variant="ghost" onClick={() => setIsMuted(!isMuted)} data-testid="button-mute-toggle">
+          <Button size="icon" variant="ghost" onClick={() => setIsMuted(!isMuted)} disabled={!hasStreamUrl} data-testid="button-mute-toggle">
             {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
           </Button>
           <Slider 
@@ -162,12 +357,220 @@ function MusicPlayer({ track, onClose }: { track: CreatorContent | null; onClose
             max={100} 
             step={1}
             onValueChange={(v) => { setVolume(v[0]); setIsMuted(false); }}
+            disabled={!hasStreamUrl}
             className="w-24"
             data-testid="slider-volume"
           />
-          <Button size="icon" variant="ghost" data-testid="button-queue">
+          <Button size="icon" variant="ghost" onClick={onClose} data-testid="button-close-player">
             <ListMusic className="w-4 h-4" />
           </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function VideoPlayer({ video, onClose }: { video: CreatorContent | null; onClose: () => void }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [volume, setVolume] = useState(80);
+  const [isMuted, setIsMuted] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const hasStreamUrl = !!video?.streamUrl;
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.volume = volume / 100;
+      videoRef.current.muted = isMuted;
+    }
+  }, [volume, isMuted]);
+
+  useEffect(() => {
+    if (videoRef.current && video?.streamUrl) {
+      videoRef.current.src = video.streamUrl;
+      videoRef.current.load();
+    }
+  }, [video?.streamUrl]);
+
+  const handlePlayPause = () => {
+    if (!videoRef.current || !hasStreamUrl) return;
+    if (isPlaying) {
+      videoRef.current.pause();
+    } else {
+      videoRef.current.play().catch((err) => {
+        console.error("Video playback failed:", err);
+      });
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (!videoRef.current) return;
+    setCurrentTime(videoRef.current.currentTime);
+    const progressPercent = (videoRef.current.currentTime / videoRef.current.duration) * 100;
+    setProgress(isNaN(progressPercent) ? 0 : progressPercent);
+  };
+
+  const handleLoadedMetadata = () => {
+    if (!videoRef.current) return;
+    setDuration(videoRef.current.duration);
+  };
+
+  const handleSeek = (value: number[]) => {
+    if (!videoRef.current || !hasStreamUrl || !duration) return;
+    const newTime = (value[0] / 100) * duration;
+    videoRef.current.currentTime = newTime;
+    setProgress(value[0]);
+  };
+
+  const handleSkip = (seconds: number) => {
+    if (!videoRef.current || !hasStreamUrl) return;
+    videoRef.current.currentTime = Math.max(0, Math.min(duration, videoRef.current.currentTime + seconds));
+  };
+
+  const formatTime = (seconds: number) => {
+    if (isNaN(seconds) || !isFinite(seconds)) return "0:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const toggleFullscreen = () => {
+    if (!containerRef.current) return;
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      containerRef.current.requestFullscreen();
+    }
+  };
+
+  if (!video) return null;
+
+  return (
+    <div ref={containerRef} className="fixed inset-0 bg-black z-50 flex flex-col">
+      <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
+        <div>
+          <h2 className="text-xl font-bold text-white">{video.title}</h2>
+          <p className="text-sm text-white/70">{video.creator}</p>
+          {!hasStreamUrl && <p className="text-xs text-yellow-500">Preview only - streaming unavailable</p>}
+        </div>
+        <Button 
+          variant="ghost" 
+          className="text-white hover:bg-white/20" 
+          onClick={onClose}
+          data-testid="button-close-video"
+        >
+          Close
+        </Button>
+      </div>
+      
+      <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-gray-900 to-black">
+        <div className="relative w-full max-w-4xl aspect-video bg-black rounded-lg overflow-hidden shadow-2xl">
+          {hasStreamUrl && (
+            <video
+              ref={videoRef}
+              src={video.streamUrl}
+              className="w-full h-full object-contain"
+              onTimeUpdate={handleTimeUpdate}
+              onLoadedMetadata={handleLoadedMetadata}
+              onEnded={() => setIsPlaying(false)}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+              onClick={handlePlayPause}
+              onError={(e) => console.error("Video error:", e)}
+            />
+          )}
+          
+          {!hasStreamUrl && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center">
+                {video.type === 'movie' ? (
+                  <Film className="w-24 h-24 text-orange-500/50 mx-auto mb-4" />
+                ) : (
+                  <Video className="w-24 h-24 text-blue-500/50 mx-auto mb-4" />
+                )}
+                <p className="text-white/50 text-sm">Preview only - streaming unavailable</p>
+                <p className="text-white/30 text-xs mt-2">Purchase to unlock full streaming</p>
+              </div>
+            </div>
+          )}
+          
+          {!isPlaying && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+              <Button 
+                size="lg" 
+                className={`rounded-full w-20 h-20 shadow-xl ${hasStreamUrl ? 'bg-orange-500 hover:bg-orange-600' : 'bg-gray-600 cursor-not-allowed'}`}
+                onClick={handlePlayPause}
+                disabled={!hasStreamUrl}
+                data-testid="button-play-video"
+              >
+                <Play className="w-10 h-10 ml-1" />
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      <div className="p-4 bg-black/90 backdrop-blur border-t border-white/10">
+        <div className="container mx-auto max-w-4xl">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs text-white/60 w-12 text-right">
+              {formatTime(currentTime)}
+            </span>
+            <Slider 
+              value={[progress]} 
+              max={100} 
+              step={0.1}
+              onValueChange={handleSeek}
+              disabled={!hasStreamUrl}
+              className="flex-1"
+              data-testid="slider-video-progress"
+            />
+            <span className="text-xs text-white/60 w-12">{duration ? formatTime(duration) : video.duration || "0:00"}</span>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Button size="icon" variant="ghost" className="text-white" onClick={() => handleSkip(-10)} disabled={!hasStreamUrl} data-testid="button-rewind">
+                <SkipBack className="w-5 h-5" />
+              </Button>
+              <Button 
+                size="lg" 
+                className={`rounded-full w-12 h-12 ${hasStreamUrl ? 'bg-orange-500 hover:bg-orange-600' : 'bg-gray-600 cursor-not-allowed'}`}
+                onClick={handlePlayPause}
+                disabled={!hasStreamUrl}
+                data-testid="button-video-play-pause"
+              >
+                {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-0.5" />}
+              </Button>
+              <Button size="icon" variant="ghost" className="text-white" onClick={() => handleSkip(10)} disabled={!hasStreamUrl} data-testid="button-forward">
+                <SkipForward className="w-5 h-5" />
+              </Button>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <Button size="icon" variant="ghost" className="text-white" onClick={() => setIsMuted(!isMuted)} disabled={!hasStreamUrl} data-testid="button-video-mute">
+                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                </Button>
+                <Slider 
+                  value={[isMuted ? 0 : volume]} 
+                  max={100} 
+                  step={1}
+                  onValueChange={(v) => { setVolume(v[0]); setIsMuted(false); }}
+                  disabled={!hasStreamUrl}
+                  className="w-24"
+                  data-testid="slider-video-volume"
+                />
+              </div>
+              <Button size="icon" variant="ghost" className="text-white" onClick={toggleFullscreen} disabled={!hasStreamUrl} data-testid="button-fullscreen">
+                <Maximize className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -250,9 +653,10 @@ function ContentCard({ content, onPlay }: { content: CreatorContent; onPlay: (co
           {content.price === 0 ? "FREE" : `$${content.price.toFixed(2)}`}
         </span>
         <div className="flex gap-2">
-          {(content.type === "music" || content.type === "video") && (
+          {(content.type === "music" || content.type === "video" || content.type === "movie") && content.streamUrl && (
             <Button size="sm" variant="outline" onClick={() => onPlay(content)} data-testid={`button-stream-${content.id}`}>
-              <Headphones className="w-4 h-4 mr-1" /> Stream
+              {content.type === "music" ? <Headphones className="w-4 h-4 mr-1" /> : <Play className="w-4 h-4 mr-1" />}
+              {content.type === "music" ? "Stream" : "Watch"}
             </Button>
           )}
           <Button size="sm" data-testid={`button-buy-${content.id}`}>
@@ -365,6 +769,7 @@ export default function Marketplace() {
   const [activeTab, setActiveTab] = useState("books");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentTrack, setCurrentTrack] = useState<CreatorContent | null>(null);
+  const [currentVideo, setCurrentVideo] = useState<CreatorContent | null>(null);
 
   const { data: booksData, isLoading: booksLoading } = useQuery<MarketplaceBook[]>({
     queryKey: ['/api/marketplace/books'],
@@ -381,6 +786,10 @@ export default function Marketplace() {
   const handlePlay = (content: CreatorContent) => {
     if (content.type === "music") {
       setCurrentTrack(content);
+      setCurrentVideo(null);
+    } else if (content.type === "video" || content.type === "movie") {
+      setCurrentVideo(content);
+      setCurrentTrack(null);
     }
   };
 
@@ -502,10 +911,14 @@ export default function Marketplace() {
             <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
               <Music className="w-6 h-6 text-orange-500" /> Music
             </h2>
-            <div className="text-center py-12 text-muted-foreground">
-              <Music className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Music streaming coming soon!</p>
-              <p className="text-sm">Create your own music in the Music Studio.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {sampleMusicContent.map(content => (
+                <ContentCard 
+                  key={content.id} 
+                  content={content} 
+                  onPlay={(c) => setCurrentTrack(c)} 
+                />
+              ))}
             </div>
           </TabsContent>
 
@@ -513,10 +926,14 @@ export default function Marketplace() {
             <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
               <Video className="w-6 h-6 text-blue-500" /> Videos
             </h2>
-            <div className="text-center py-12 text-muted-foreground">
-              <Video className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Video content coming soon!</p>
-              <p className="text-sm">Create videos in the Video Studio.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {sampleVideoContent.map(content => (
+                <ContentCard 
+                  key={content.id} 
+                  content={content} 
+                  onPlay={(c) => setCurrentVideo(c)} 
+                />
+              ))}
             </div>
           </TabsContent>
 
@@ -524,9 +941,14 @@ export default function Marketplace() {
             <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
               <Film className="w-6 h-6 text-red-500" /> Movies
             </h2>
-            <div className="text-center py-12 text-muted-foreground">
-              <Film className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Feature films coming soon!</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {sampleMovieContent.map(content => (
+                <ContentCard 
+                  key={content.id} 
+                  content={content} 
+                  onPlay={(c) => setCurrentVideo(c)} 
+                />
+              ))}
             </div>
           </TabsContent>
 
@@ -624,6 +1046,7 @@ export default function Marketplace() {
       </main>
 
       <MusicPlayer track={currentTrack} onClose={() => setCurrentTrack(null)} />
+      <VideoPlayer video={currentVideo} onClose={() => setCurrentVideo(null)} />
     </div>
   );
 }

@@ -233,6 +233,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================================================
+  // STRIPE CONNECT - Creator Onboarding & Payouts
+  // ============================================================================
+
+  // Create Connect account and get onboarding link
+  app.post('/api/stripe/connect/onboard', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const returnUrl = `${req.protocol}://${req.get('host')}/creator/earnings`;
+      const result = await stripeService.createConnectAccount(userId, user.email || '', returnUrl);
+      
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error creating Connect account:", error);
+      res.status(500).json({ message: error.message || "Failed to create Connect account" });
+    }
+  });
+
+  // Get Connect account status
+  app.get('/api/stripe/connect/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const status = await stripeService.getConnectAccountStatus(userId);
+      res.json(status);
+    } catch (error: any) {
+      console.error("Error getting Connect status:", error);
+      res.status(500).json({ message: error.message || "Failed to get Connect status" });
+    }
+  });
+
+  // Get Connect dashboard login link
+  app.get('/api/stripe/connect/login', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const url = await stripeService.createConnectLoginLink(userId);
+      res.json({ url });
+    } catch (error: any) {
+      console.error("Error creating Connect login link:", error);
+      res.status(500).json({ message: error.message || "Failed to create login link" });
+    }
+  });
+
+  // Get creator earnings
+  app.get('/api/creator/earnings', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const data = await stripeService.getCreatorEarnings(userId);
+      res.json(data);
+    } catch (error: any) {
+      console.error("Error getting creator earnings:", error);
+      res.status(500).json({ message: error.message || "Failed to get earnings" });
+    }
+  });
+
+  // Get creator payouts
+  app.get('/api/creator/payouts', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const payouts = await stripeService.getCreatorPayouts(userId);
+      res.json(payouts);
+    } catch (error: any) {
+      console.error("Error getting creator payouts:", error);
+      res.status(500).json({ message: error.message || "Failed to get payouts" });
+    }
+  });
+
+  // Request payout transfer
+  app.post('/api/creator/payouts/transfer', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { earningIds } = req.body;
+      
+      if (!earningIds?.length) {
+        return res.status(400).json({ message: "Earning IDs required" });
+      }
+
+      const payout = await stripeService.transferToCreator(userId, earningIds);
+      res.json(payout);
+    } catch (error: any) {
+      console.error("Error transferring to creator:", error);
+      res.status(500).json({ message: error.message || "Failed to transfer funds" });
+    }
+  });
+
   // Forum routes
   app.get('/api/forum/categories', async (req, res) => {
     try {

@@ -93,6 +93,7 @@ import {
   Globe,
   Zap,
   Loader2,
+  ExternalLink,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -473,6 +474,8 @@ export default function BookStudio() {
   const [quickTopic, setQuickTopic] = useState("");
   const [isQuickGenerating, setIsQuickGenerating] = useState(false);
   const [generatedOutline, setGeneratedOutline] = useState<any>(null);
+  const [googleDocUrl, setGoogleDocUrl] = useState<string | null>(null);
+  const [isCreatingGoogleDoc, setIsCreatingGoogleDoc] = useState(false);
   const [keywordResearch, setKeywordResearch] = useState<any>(null);
   const [isResearchingKeywords, setIsResearchingKeywords] = useState(false);
   const [isChildrensBook, setIsChildrensBook] = useState(false);
@@ -799,6 +802,69 @@ export default function BookStudio() {
     } finally {
       setIsQuickGenerating(false);
       setGenerationProgress(0);
+    }
+  };
+
+  // Open/Create Google Doc for editing outline
+  const openInGoogleDocs = async () => {
+    if (!generatedOutline && !chapters.length) {
+      toast({ title: "No outline", description: "Generate a book outline first", variant: "destructive" });
+      return;
+    }
+    
+    setIsCreatingGoogleDoc(true);
+    try {
+      // Format outline content for Google Docs
+      let content = `${bookTitle || generatedOutline?.title || "Book Outline"}\n`;
+      content += `${bookSubtitle || generatedOutline?.subtitle || ""}\n\n`;
+      content += `TABLE OF CONTENTS\n${"=".repeat(30)}\n\n`;
+      
+      chapters.forEach((ch, idx) => {
+        content += `Chapter ${idx + 1}: ${ch.title}\n`;
+        content += `${ch.description || ""}\n`;
+        if ((ch as any).keyPoints) {
+          (ch as any).keyPoints.forEach((point: string) => {
+            content += `  • ${point}\n`;
+          });
+        }
+        content += "\n";
+      });
+      
+      if (generatedOutline?.hook) {
+        content += `\nBOOK HOOK\n${"=".repeat(30)}\n${generatedOutline.hook}\n`;
+      }
+      
+      const data = await apiRequest("POST", "/api/workspace/docs/create", {
+        title: `${bookTitle || "Book"} - Outline & Table of Contents`,
+        content
+      }) as { url?: string; documentId?: string; error?: string };
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
+      if (data.url) {
+        setGoogleDocUrl(data.url);
+        window.open(data.url, "_blank");
+        toast({ 
+          title: "Google Doc Created!", 
+          description: "Your outline is now open in Google Docs for editing" 
+        });
+      } else {
+        toast({ 
+          title: "Document Created", 
+          description: "Google Doc was created but URL was not returned. Check your Google Workspace." 
+        });
+      }
+    } catch (error: any) {
+      console.error("Google Docs error:", error);
+      toast({ 
+        title: "Google Docs Error", 
+        description: error.message || "Could not create Google Doc. Make sure Google Workspace is configured.", 
+        variant: "destructive" 
+      });
+    } finally {
+      setIsCreatingGoogleDoc(false);
     }
   };
 
@@ -1662,14 +1728,41 @@ Your journey to healing starts here.`);
                             <h5 className="font-medium text-sm">{generatedOutline.title}</h5>
                             <p className="text-xs text-muted-foreground">{generatedOutline.subtitle}</p>
                             <p className="text-xs italic">"{generatedOutline.hook}"</p>
-                            <div className="flex gap-2 mt-2">
+                            <div className="flex flex-wrap gap-2 mt-2">
                               <Button onClick={generateAllChapters} disabled={isQuickGenerating} size="sm" className="flex-1">
                                 <Wand2 className="w-3 h-3 mr-1" /> Generate All Chapters
                               </Button>
                               <Button onClick={() => setCurrentStep(2)} variant="outline" size="sm">
                                 <Edit3 className="w-3 h-3 mr-1" /> Edit Outline
                               </Button>
+                              <Button 
+                                onClick={openInGoogleDocs} 
+                                disabled={isCreatingGoogleDoc} 
+                                variant="outline" 
+                                size="sm"
+                                data-testid="button-open-google-docs"
+                              >
+                                {isCreatingGoogleDoc ? (
+                                  <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                ) : (
+                                  <ExternalLink className="w-3 h-3 mr-1" />
+                                )}
+                                Edit in Google Docs
+                              </Button>
                             </div>
+                            {googleDocUrl && (
+                              <div className="mt-2 text-xs">
+                                <a 
+                                  href={googleDocUrl} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer" 
+                                  className="text-primary hover:underline flex items-center gap-1"
+                                  data-testid="link-google-doc"
+                                >
+                                  <ExternalLink className="w-3 h-3" /> Open saved Google Doc
+                                </a>
+                              </div>
+                            )}
                           </div>
                         )}
                         
