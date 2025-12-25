@@ -50,6 +50,7 @@ import DJStudio from "@/pages/DJStudio";
 import WorkflowDashboard from "@/pages/WorkflowDashboard";
 import CreatorEarnings from "@/pages/CreatorEarnings";
 import MediaStudioPage from "@/pages/MediaStudioPage";
+import CreatorSettings from "@/pages/CreatorSettings";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 import CreatorScribeWidget from "@/components/CreatorScribeWidget";
@@ -189,6 +190,11 @@ function Router() {
       <Route path="/creator/earnings">
         <ProtectedRoute>
           <CreatorEarnings />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/creator/settings">
+        <ProtectedRoute>
+          <CreatorSettings />
         </ProtectedRoute>
       </Route>
       <Route path="/media-studio">
