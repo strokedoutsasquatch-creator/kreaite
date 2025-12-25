@@ -51,6 +51,8 @@ import WorkflowDashboard from "@/pages/WorkflowDashboard";
 import CreatorEarnings from "@/pages/CreatorEarnings";
 import MediaStudioPage from "@/pages/MediaStudioPage";
 import CreatorSettings from "@/pages/CreatorSettings";
+import QuickCreate from "@/pages/QuickCreate";
+import AIConsultant from "@/pages/AIConsultant";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 import CreatorScribeWidget from "@/components/CreatorScribeWidget";
@@ -195,6 +197,17 @@ function Router() {
       <Route path="/creator/settings">
         <ProtectedRoute>
           <CreatorSettings />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/creator-settings">
+        <ProtectedRoute>
+          <CreatorSettings />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/quick-create" component={QuickCreate} />
+      <Route path="/ai-consultant">
+        <ProtectedRoute>
+          <AIConsultant />
         </ProtectedRoute>
       </Route>
       <Route path="/media-studio">

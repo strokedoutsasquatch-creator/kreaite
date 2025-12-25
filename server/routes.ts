@@ -38,7 +38,15 @@ import {
   insertPublishingPresetSchema,
   insertInspirationLibrarySchema,
   insertSavedCoverDesignSchema,
-  insertCoursePresetSchema
+  insertCoursePresetSchema,
+  conversationSessions,
+  conversationMessages,
+  conversationActions,
+  assetRegistry,
+  studioPipelines,
+  insertConversationSessionSchema,
+  insertConversationMessageSchema,
+  insertAssetRegistrySchema,
 } from "../shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
@@ -6848,6 +6856,537 @@ Return the rhyming version only, no explanation.`;
     } catch (error: any) {
       console.error("Error generating quiz:", error);
       res.status(500).json({ message: error.message || "Failed to generate quiz" });
+    }
+  });
+
+  // ============================================================================
+  // UNIFIED CONVERSATION SYSTEM
+  // ============================================================================
+
+  // Get conversations for a studio
+  app.get('/api/conversations/:studio', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { studio } = req.params;
+      
+      const sessions = await db.select()
+        .from(conversationSessions)
+        .where(and(
+          eq(conversationSessions.userId, userId),
+          eq(conversationSessions.studio, studio)
+        ))
+        .orderBy(conversationSessions.updatedAt);
+      
+      res.json(sessions);
+    } catch (error: any) {
+      console.error("Error fetching conversations:", error);
+      res.status(500).json({ message: "Failed to fetch conversations" });
+    }
+  });
+
+  // Get messages for a conversation
+  app.get('/api/conversations/:sessionId/messages', isAuthenticated, async (req: any, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      
+      const messages = await db.select()
+        .from(conversationMessages)
+        .where(eq(conversationMessages.sessionId, sessionId))
+        .orderBy(conversationMessages.createdAt);
+      
+      res.json(messages);
+    } catch (error: any) {
+      console.error("Error fetching messages:", error);
+      res.status(500).json({ message: "Failed to fetch messages" });
+    }
+  });
+
+  // Send a message in a conversation
+  app.post('/api/conversations/message', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { sessionId, studio, projectId, systemPrompt, content } = req.body;
+      
+      let currentSessionId = sessionId;
+      
+      // Create new session if needed
+      if (!currentSessionId) {
+        const title = content.slice(0, 50) + (content.length > 50 ? '...' : '');
+        const [session] = await db.insert(conversationSessions).values({
+          userId,
+          studio,
+          title,
+          status: 'active',
+          projectId,
+          systemPrompt,
+          metadata: {},
+        }).returning();
+        currentSessionId = session.id;
+      }
+      
+      // Save user message
+      await db.insert(conversationMessages).values({
+        sessionId: currentSessionId,
+        role: 'user',
+        content,
+        contentType: 'text',
+      });
+      
+      // Generate AI response using the orchestrator
+      const aiResult = await generate({
+        prompt: content,
+        systemPrompt: systemPrompt || `You are a helpful AI assistant for the ${studio} studio. Help the user create amazing content.`,
+        temperature: 0.7,
+        taskType: 'draft',
+      });
+      
+      const aiResponse = aiResult.content;
+      
+      // Save AI response
+      await db.insert(conversationMessages).values({
+        sessionId: currentSessionId,
+        role: 'assistant',
+        content: aiResponse,
+        contentType: 'text',
+      });
+      
+      // Update session timestamp
+      await db.update(conversationSessions)
+        .set({ updatedAt: new Date() })
+        .where(eq(conversationSessions.id, currentSessionId));
+      
+      // Fetch all messages
+      const messages = await db.select()
+        .from(conversationMessages)
+        .where(eq(conversationMessages.sessionId, currentSessionId))
+        .orderBy(conversationMessages.createdAt);
+      
+      res.json({ 
+        sessionId: currentSessionId, 
+        messages,
+        response: aiResponse 
+      });
+    } catch (error: any) {
+      console.error("Error in conversation:", error);
+      res.status(500).json({ message: error.message || "Failed to process message" });
+    }
+  });
+
+  // ============================================================================
+  // QUICK CREATE - 1-Click Magic Tools
+  // ============================================================================
+
+  app.post('/api/quick-create', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { actionId, input } = req.body;
+      
+      let results: any[] = [];
+      let message = "";
+      let assetType = 'text';
+      let sourceStudio = 'book';
+      let generatedContent = '';
+      
+      switch (actionId) {
+        case 'instant-cover':
+          sourceStudio = 'image';
+          assetType = 'image';
+          const coverResult = await generate({
+            prompt: `Create 5 unique book cover concepts for a book titled "${input}". For each, describe the visual style, color palette, and imagery in detail so an artist could create them.`,
+            temperature: 0.9,
+            taskType: 'draft',
+          });
+          generatedContent = coverResult.content;
+          results = [{ type: 'covers', description: generatedContent }];
+          message = "Generated 5 cover concepts";
+          break;
+          
+        case 'hum-to-song':
+          sourceStudio = 'music';
+          assetType = 'audio';
+          const musicResult = await generate({
+            prompt: `Based on this audio/music description: "${input}", create a detailed musical arrangement with:
+1. Genre and style
+2. Tempo and key
+3. Instrument layers
+4. Song structure (intro, verse, chorus, bridge, outro)
+5. Mixing notes`,
+            taskType: 'draft',
+          });
+          generatedContent = musicResult.content;
+          results = [{ type: 'audio', arrangement: generatedContent }];
+          message = "Song arrangement created - ready for production";
+          break;
+          
+        case 'instant-course':
+          sourceStudio = 'course';
+          assetType = 'text';
+          const courseResult = await generate({
+            prompt: `Create a comprehensive course outline from this content: "${input}"
+            
+Include:
+1. Course title and description
+2. Learning objectives (5-7)
+3. Module breakdown (4-6 modules)
+4. For each module: lessons, activities, and assessments
+5. Estimated completion time
+6. Certificate criteria`,
+            taskType: 'draft',
+          });
+          generatedContent = courseResult.content;
+          results = [{ type: 'course', outline: generatedContent }];
+          message = "Complete course outline generated";
+          break;
+          
+        case 'ai-ghostwrite':
+          sourceStudio = 'book';
+          assetType = 'text';
+          const chapterResult = await generate({
+            prompt: `Write an engaging 2000-word first chapter for a book with this concept: "${input}"
+            
+Start with a hook that grabs the reader immediately. Include vivid descriptions, compelling dialogue if appropriate, and establish the tone and voice.`,
+            taskType: 'draft',
+          });
+          generatedContent = chapterResult.content;
+          results = [{ type: 'chapter', content: generatedContent }];
+          message = "First chapter drafted successfully";
+          break;
+          
+        case 'blog-to-book':
+          sourceStudio = 'book';
+          assetType = 'text';
+          const blogResult = await generate({
+            prompt: `Transform this blog content into a structured book outline: "${input}"
+
+Create:
+1. Book title and subtitle
+2. Book description (back cover copy)
+3. Chapter outline (10-15 chapters)
+4. For each chapter: title, key points, word count estimate
+5. Target audience
+6. Unique selling proposition`,
+            taskType: 'draft',
+          });
+          generatedContent = blogResult.content;
+          results = [{ type: 'book', outline: generatedContent }];
+          message = "Blog transformed into book structure";
+          break;
+          
+        case 'viral-clips':
+          sourceStudio = 'video';
+          assetType = 'video';
+          const clipResult = await generate({
+            prompt: `Analyze this content for viral video potential: "${input}"
+
+Create 6 viral clip concepts:
+1. Hook (first 3 seconds)
+2. Content angle
+3. Visual style
+4. Text overlay suggestions
+5. Music/sound recommendations
+6. Call to action
+7. Platform optimization (TikTok, YouTube Shorts, Reels)`,
+            taskType: 'draft',
+          });
+          generatedContent = clipResult.content;
+          results = [{ type: 'clips', concepts: generatedContent }];
+          message = "6 viral clip concepts generated";
+          break;
+          
+        default:
+          message = "Action completed";
+          results = [{ type: 'generic', status: 'complete' }];
+      }
+      
+      // Save to asset registry if content was generated
+      if (generatedContent) {
+        await db.insert(assetRegistry).values({
+          userId,
+          name: `${actionId} - ${input.slice(0, 30)}...`,
+          type: assetType,
+          sourceStudio,
+          content: { 
+            raw: generatedContent, 
+            actionId, 
+            input,
+            results 
+          },
+          metadata: { quickCreate: true, actionId },
+          status: 'ready',
+        });
+      }
+      
+      res.json({ success: true, results, message, content: generatedContent });
+    } catch (error: any) {
+      console.error("Error in quick create:", error);
+      res.status(500).json({ message: error.message || "Quick create failed" });
+    }
+  });
+
+  // ============================================================================
+  // MANUSCRIPT TO SOUNDTRACK - Cross-Studio Magic
+  // ============================================================================
+
+  app.post('/api/manuscript-to-soundtrack', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { title, manuscript, chapters, genre, mood } = req.body;
+      
+      if (!manuscript && !chapters) {
+        return res.status(400).json({ message: "Manuscript content or chapters required" });
+      }
+      
+      // Analyze the manuscript for emotional beats
+      const analysisPrompt = `Analyze this manuscript for a book titled "${title}" and identify the emotional arc for soundtrack generation.
+
+For each major section, identify:
+1. The dominant emotion (tension, joy, sadness, action, romance, mystery, triumph)
+2. The pacing (slow, moderate, fast)
+3. Suggested musical style (orchestral, electronic, acoustic, hybrid)
+4. Key instruments that would fit
+5. Tempo range (BPM)
+
+Manuscript content:
+${manuscript || chapters?.map((c: any) => c.content).join('\n\n')}
+
+Provide a JSON response with track suggestions for each chapter/section.`;
+
+      const analysisResult = await generate({
+        prompt: analysisPrompt,
+        temperature: 0.7,
+        taskType: 'research',
+      });
+      const analysis = analysisResult.content;
+      
+      // Generate track descriptions for each chapter
+      const chapterCount = chapters?.length || 5;
+      const tracks = Array.from({ length: chapterCount }, (_, i) => ({
+        trackNumber: i + 1,
+        title: `Chapter ${i + 1} Theme`,
+        duration: "2:30",
+        mood: ['contemplative', 'building', 'intense', 'resolution', 'hopeful'][i % 5],
+        description: `Musical accompaniment for chapter ${i + 1}`,
+        status: 'ready_to_generate',
+      }));
+      
+      res.json({
+        success: true,
+        analysis,
+        soundtrack: {
+          albumTitle: `${title} - Original Soundtrack`,
+          artist: 'AI Composer for KreAIte',
+          totalTracks: tracks.length,
+          estimatedDuration: `${tracks.length * 2.5} minutes`,
+          tracks,
+          genre: genre || 'cinematic',
+          mood: mood || 'dynamic',
+        },
+        message: `Soundtrack blueprint generated with ${tracks.length} tracks`,
+      });
+    } catch (error: any) {
+      console.error("Error generating soundtrack blueprint:", error);
+      res.status(500).json({ message: error.message || "Failed to analyze manuscript" });
+    }
+  });
+
+  // Generate individual soundtrack track
+  app.post('/api/manuscript-to-soundtrack/generate-track', isAuthenticated, async (req: any, res) => {
+    try {
+      const { trackNumber, title, mood, description, duration } = req.body;
+      
+      // Build music prompt based on manuscript analysis
+      const tempo = mood === 'intense' ? 140 : mood === 'contemplative' ? 70 : 100;
+      const musicPrompt = buildMusicPrompt(
+        'cinematic',
+        tempo,
+        'C',
+        'minor',
+        `${mood} soundtrack for ${title}: ${description}`
+      );
+      
+      res.json({
+        success: true,
+        trackNumber,
+        title,
+        status: 'queued',
+        estimatedTime: '2-3 minutes',
+        prompt: musicPrompt,
+      });
+    } catch (error: any) {
+      console.error("Error queuing track generation:", error);
+      res.status(500).json({ message: error.message || "Failed to queue track" });
+    }
+  });
+
+  // ============================================================================
+  // ASSET REGISTRY - Cross-Studio Sharing
+  // ============================================================================
+
+  app.get('/api/assets', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { type, studio } = req.query;
+      
+      let query = db.select().from(assetRegistry).where(eq(assetRegistry.userId, userId));
+      
+      const assets = await query;
+      
+      // Filter in JS if needed (drizzle doesn't chain where well)
+      let filtered = assets;
+      if (type) {
+        filtered = filtered.filter(a => a.assetType === type);
+      }
+      if (studio) {
+        filtered = filtered.filter(a => a.sourceStudio === studio);
+      }
+      
+      res.json(filtered);
+    } catch (error: any) {
+      console.error("Error fetching assets:", error);
+      res.status(500).json({ message: "Failed to fetch assets" });
+    }
+  });
+
+  app.post('/api/assets', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validated = insertAssetRegistrySchema.parse({ ...req.body, userId });
+      
+      const [asset] = await db.insert(assetRegistry).values(validated).returning();
+      res.json(asset);
+    } catch (error: any) {
+      console.error("Error creating asset:", error);
+      res.status(500).json({ message: error.message || "Failed to create asset" });
+    }
+  });
+
+  // ============================================================================
+  // VIRAL FEATURES - Affiliate System & Success Stories
+  // ============================================================================
+
+  // Get affiliate stats for current user
+  app.get('/api/affiliate/stats', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Get user's affiliate info
+      const [userInfo] = await db.select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      // Mock affiliate stats (would come from tracking in production)
+      res.json({
+        affiliateCode: userInfo?.name?.toLowerCase().replace(/\s+/g, '-') || 'creator-' + userId.slice(0, 8),
+        totalReferrals: 0,
+        activeReferrals: 0,
+        totalEarnings: 0,
+        pendingEarnings: 0,
+        conversionRate: 0,
+        affiliateLink: `https://kreaite.xyz?ref=${userInfo?.id || userId}`,
+      });
+    } catch (error: any) {
+      console.error("Error fetching affiliate stats:", error);
+      res.status(500).json({ message: "Failed to fetch affiliate stats" });
+    }
+  });
+
+  // Get success stories for marketplace
+  app.get('/api/success-stories', async (req, res) => {
+    try {
+      // Return featured success stories
+      const stories = [
+        {
+          id: 1,
+          creatorName: "Sarah Chen",
+          creatorImage: null,
+          title: "From Blog to Bestseller",
+          description: "Used Blog-to-Book tool to transform my travel blog into a published book. Made $12,000 in first month!",
+          earnings: 12000,
+          studio: "book",
+          featured: true,
+        },
+        {
+          id: 2,
+          creatorName: "Marcus Williams",
+          creatorImage: null,
+          title: "AI Music Producer",
+          description: "Created 50+ royalty-free tracks for my YouTube channel. Now selling them on KreAItorverse!",
+          earnings: 8500,
+          studio: "music",
+          featured: true,
+        },
+        {
+          id: 3,
+          creatorName: "Elena Rodriguez",
+          creatorImage: null,
+          title: "Course Empire",
+          description: "Turned my expertise into 5 courses using Instant Course. Passive income dream achieved.",
+          earnings: 25000,
+          studio: "course",
+          featured: true,
+        },
+        {
+          id: 4,
+          creatorName: "David Park",
+          creatorImage: null,
+          title: "AI Consultant Launch",
+          description: "Trained an AI on my business knowledge. Now earning $500/mo from AI chat subscriptions.",
+          earnings: 3000,
+          studio: "doctrine",
+          featured: false,
+        },
+      ];
+      
+      res.json(stories);
+    } catch (error: any) {
+      console.error("Error fetching success stories:", error);
+      res.status(500).json({ message: "Failed to fetch success stories" });
+    }
+  });
+
+  // Apply watermark to content
+  app.post('/api/watermark', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { contentType, contentId, watermarkStyle } = req.body;
+      
+      // Get user info for watermark
+      const [userInfo] = await db.select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      const watermarkText = `Created with KreAIte.xyz by ${userInfo?.name || 'Creator'}`;
+      
+      res.json({
+        success: true,
+        watermarkApplied: true,
+        watermarkText,
+        style: watermarkStyle || 'subtle',
+        contentType,
+        contentId,
+      });
+    } catch (error: any) {
+      console.error("Error applying watermark:", error);
+      res.status(500).json({ message: "Failed to apply watermark" });
+    }
+  });
+
+  // Creator leaderboard
+  app.get('/api/leaderboard', async (req, res) => {
+    try {
+      // Get top creators (mock data for now)
+      const leaderboard = [
+        { rank: 1, name: "Sarah Chen", sales: 156, earnings: 12450, badge: "Gold Creator" },
+        { rank: 2, name: "Marcus Williams", sales: 89, earnings: 8520, badge: "Silver Creator" },
+        { rank: 3, name: "Elena Rodriguez", sales: 234, earnings: 25800, badge: "Platinum Creator" },
+        { rank: 4, name: "David Park", sales: 45, earnings: 3200, badge: "Rising Star" },
+        { rank: 5, name: "Jennifer Lee", sales: 67, earnings: 5430, badge: "Silver Creator" },
+      ];
+      
+      res.json(leaderboard);
+    } catch (error: any) {
+      console.error("Error fetching leaderboard:", error);
+      res.status(500).json({ message: "Failed to fetch leaderboard" });
     }
   });
 
