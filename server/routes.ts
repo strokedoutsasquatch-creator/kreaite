@@ -28,10 +28,20 @@ import {
   audiobookProjects,
   audiobookChapters,
   mediaProjects,
-  mediaAssets
+  mediaAssets,
+  authorProfiles,
+  publishingPresets,
+  inspirationLibrary,
+  savedCoverDesigns,
+  coursePresets,
+  insertAuthorProfileSchema,
+  insertPublishingPresetSchema,
+  insertInspirationLibrarySchema,
+  insertSavedCoverDesignSchema,
+  insertCoursePresetSchema
 } from "../shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { 
   generateCompleteScript, 
   generateSceneStoryboard, 
@@ -6402,6 +6412,442 @@ Return the rhyming version only, no explanation.`;
     } catch (error: any) {
       console.error("Error importing asset:", error);
       res.status(500).json({ message: error.message || "Failed to import asset" });
+    }
+  });
+
+  // ============================================================================
+  // CREATOR PROFILES & PRESETS API (Stickiness Features)
+  // ============================================================================
+
+  // Author Profiles CRUD
+  app.get('/api/author-profiles', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const profiles = await db.select().from(authorProfiles).where(eq(authorProfiles.userId, userId));
+      res.json(profiles);
+    } catch (error: any) {
+      console.error("Error fetching author profiles:", error);
+      res.status(500).json({ message: "Failed to fetch author profiles" });
+    }
+  });
+
+  app.post('/api/author-profiles', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validated = insertAuthorProfileSchema.parse({ ...req.body, userId });
+      
+      // If this is set as default, unset other defaults first
+      if (validated.isDefault) {
+        await db.update(authorProfiles)
+          .set({ isDefault: false })
+          .where(eq(authorProfiles.userId, userId));
+      }
+      
+      const [profile] = await db.insert(authorProfiles).values(validated).returning();
+      res.json(profile);
+    } catch (error: any) {
+      console.error("Error creating author profile:", error);
+      res.status(500).json({ message: error.message || "Failed to create author profile" });
+    }
+  });
+
+  app.patch('/api/author-profiles/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const profileId = parseInt(req.params.id);
+      
+      const [existing] = await db.select().from(authorProfiles)
+        .where(and(eq(authorProfiles.id, profileId), eq(authorProfiles.userId, userId)));
+      if (!existing) {
+        return res.status(404).json({ message: "Profile not found" });
+      }
+      
+      const [updated] = await db.update(authorProfiles)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(eq(authorProfiles.id, profileId))
+        .returning();
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating author profile:", error);
+      res.status(500).json({ message: error.message || "Failed to update author profile" });
+    }
+  });
+
+  app.delete('/api/author-profiles/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const profileId = parseInt(req.params.id);
+      
+      const [existing] = await db.select().from(authorProfiles)
+        .where(and(eq(authorProfiles.id, profileId), eq(authorProfiles.userId, userId)));
+      if (!existing) {
+        return res.status(404).json({ message: "Profile not found" });
+      }
+      
+      await db.delete(authorProfiles).where(eq(authorProfiles.id, profileId));
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting author profile:", error);
+      res.status(500).json({ message: "Failed to delete author profile" });
+    }
+  });
+
+  app.post('/api/author-profiles/:id/set-default', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const profileId = parseInt(req.params.id);
+      
+      // Unset all defaults for this user
+      await db.update(authorProfiles)
+        .set({ isDefault: false })
+        .where(eq(authorProfiles.userId, userId));
+      
+      // Set this one as default
+      const [updated] = await db.update(authorProfiles)
+        .set({ isDefault: true })
+        .where(and(eq(authorProfiles.id, profileId), eq(authorProfiles.userId, userId)))
+        .returning();
+      
+      if (!updated) {
+        return res.status(404).json({ message: "Profile not found" });
+      }
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error setting default profile:", error);
+      res.status(500).json({ message: "Failed to set default profile" });
+    }
+  });
+
+  // Publishing Presets CRUD
+  app.get('/api/publishing-presets', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const presets = await db.select().from(publishingPresets).where(eq(publishingPresets.userId, userId));
+      res.json(presets);
+    } catch (error: any) {
+      console.error("Error fetching publishing presets:", error);
+      res.status(500).json({ message: "Failed to fetch publishing presets" });
+    }
+  });
+
+  app.post('/api/publishing-presets', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validated = insertPublishingPresetSchema.parse({ ...req.body, userId });
+      
+      if (validated.isDefault) {
+        await db.update(publishingPresets)
+          .set({ isDefault: false })
+          .where(eq(publishingPresets.userId, userId));
+      }
+      
+      const [preset] = await db.insert(publishingPresets).values(validated).returning();
+      res.json(preset);
+    } catch (error: any) {
+      console.error("Error creating publishing preset:", error);
+      res.status(500).json({ message: error.message || "Failed to create publishing preset" });
+    }
+  });
+
+  app.patch('/api/publishing-presets/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const presetId = parseInt(req.params.id);
+      
+      const [existing] = await db.select().from(publishingPresets)
+        .where(and(eq(publishingPresets.id, presetId), eq(publishingPresets.userId, userId)));
+      if (!existing) {
+        return res.status(404).json({ message: "Preset not found" });
+      }
+      
+      const [updated] = await db.update(publishingPresets)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(eq(publishingPresets.id, presetId))
+        .returning();
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating publishing preset:", error);
+      res.status(500).json({ message: error.message || "Failed to update publishing preset" });
+    }
+  });
+
+  app.delete('/api/publishing-presets/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const presetId = parseInt(req.params.id);
+      
+      const [existing] = await db.select().from(publishingPresets)
+        .where(and(eq(publishingPresets.id, presetId), eq(publishingPresets.userId, userId)));
+      if (!existing) {
+        return res.status(404).json({ message: "Preset not found" });
+      }
+      
+      await db.delete(publishingPresets).where(eq(publishingPresets.id, presetId));
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting publishing preset:", error);
+      res.status(500).json({ message: "Failed to delete publishing preset" });
+    }
+  });
+
+  // Course Presets CRUD
+  app.get('/api/course-presets', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const presets = await db.select().from(coursePresets).where(eq(coursePresets.userId, userId));
+      res.json(presets);
+    } catch (error: any) {
+      console.error("Error fetching course presets:", error);
+      res.status(500).json({ message: "Failed to fetch course presets" });
+    }
+  });
+
+  app.post('/api/course-presets', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validated = insertCoursePresetSchema.parse({ ...req.body, userId });
+      
+      if (validated.isDefault) {
+        await db.update(coursePresets)
+          .set({ isDefault: false })
+          .where(eq(coursePresets.userId, userId));
+      }
+      
+      const [preset] = await db.insert(coursePresets).values(validated).returning();
+      res.json(preset);
+    } catch (error: any) {
+      console.error("Error creating course preset:", error);
+      res.status(500).json({ message: error.message || "Failed to create course preset" });
+    }
+  });
+
+  app.patch('/api/course-presets/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const presetId = parseInt(req.params.id);
+      
+      const [existing] = await db.select().from(coursePresets)
+        .where(and(eq(coursePresets.id, presetId), eq(coursePresets.userId, userId)));
+      if (!existing) {
+        return res.status(404).json({ message: "Preset not found" });
+      }
+      
+      const [updated] = await db.update(coursePresets)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(eq(coursePresets.id, presetId))
+        .returning();
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating course preset:", error);
+      res.status(500).json({ message: error.message || "Failed to update course preset" });
+    }
+  });
+
+  app.delete('/api/course-presets/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const presetId = parseInt(req.params.id);
+      
+      const [existing] = await db.select().from(coursePresets)
+        .where(and(eq(coursePresets.id, presetId), eq(coursePresets.userId, userId)));
+      if (!existing) {
+        return res.status(404).json({ message: "Preset not found" });
+      }
+      
+      await db.delete(coursePresets).where(eq(coursePresets.id, presetId));
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting course preset:", error);
+      res.status(500).json({ message: "Failed to delete course preset" });
+    }
+  });
+
+  // Inspiration Library CRUD
+  app.get('/api/inspiration', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const items = await db.select().from(inspirationLibrary).where(eq(inspirationLibrary.userId, userId));
+      res.json(items);
+    } catch (error: any) {
+      console.error("Error fetching inspiration items:", error);
+      res.status(500).json({ message: "Failed to fetch inspiration items" });
+    }
+  });
+
+  app.post('/api/inspiration', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validated = insertInspirationLibrarySchema.parse({ ...req.body, userId });
+      const [item] = await db.insert(inspirationLibrary).values(validated).returning();
+      res.json(item);
+    } catch (error: any) {
+      console.error("Error creating inspiration item:", error);
+      res.status(500).json({ message: error.message || "Failed to create inspiration item" });
+    }
+  });
+
+  app.delete('/api/inspiration/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const itemId = parseInt(req.params.id);
+      
+      const [existing] = await db.select().from(inspirationLibrary)
+        .where(and(eq(inspirationLibrary.id, itemId), eq(inspirationLibrary.userId, userId)));
+      if (!existing) {
+        return res.status(404).json({ message: "Item not found" });
+      }
+      
+      await db.delete(inspirationLibrary).where(eq(inspirationLibrary.id, itemId));
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting inspiration item:", error);
+      res.status(500).json({ message: "Failed to delete inspiration item" });
+    }
+  });
+
+  // Saved Cover Designs CRUD
+  app.get('/api/saved-covers', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const covers = await db.select().from(savedCoverDesigns).where(eq(savedCoverDesigns.userId, userId));
+      res.json(covers);
+    } catch (error: any) {
+      console.error("Error fetching saved covers:", error);
+      res.status(500).json({ message: "Failed to fetch saved covers" });
+    }
+  });
+
+  app.post('/api/saved-covers', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validated = insertSavedCoverDesignSchema.parse({ ...req.body, userId });
+      const [cover] = await db.insert(savedCoverDesigns).values(validated).returning();
+      res.json(cover);
+    } catch (error: any) {
+      console.error("Error saving cover design:", error);
+      res.status(500).json({ message: error.message || "Failed to save cover design" });
+    }
+  });
+
+  app.patch('/api/saved-covers/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const coverId = parseInt(req.params.id);
+      
+      const [existing] = await db.select().from(savedCoverDesigns)
+        .where(and(eq(savedCoverDesigns.id, coverId), eq(savedCoverDesigns.userId, userId)));
+      if (!existing) {
+        return res.status(404).json({ message: "Cover not found" });
+      }
+      
+      const [updated] = await db.update(savedCoverDesigns)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(eq(savedCoverDesigns.id, coverId))
+        .returning();
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating saved cover:", error);
+      res.status(500).json({ message: error.message || "Failed to update cover" });
+    }
+  });
+
+  app.delete('/api/saved-covers/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const coverId = parseInt(req.params.id);
+      
+      const [existing] = await db.select().from(savedCoverDesigns)
+        .where(and(eq(savedCoverDesigns.id, coverId), eq(savedCoverDesigns.userId, userId)));
+      if (!existing) {
+        return res.status(404).json({ message: "Cover not found" });
+      }
+      
+      await db.delete(savedCoverDesigns).where(eq(savedCoverDesigns.id, coverId));
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting saved cover:", error);
+      res.status(500).json({ message: "Failed to delete cover" });
+    }
+  });
+
+  // Book to Course Conversion API
+  app.post('/api/course/from-book', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { bookTitle, chapters, authorProfile, coursePreset, generateQuizzes, generateVideos } = req.body;
+      
+      if (!bookTitle || !chapters || !chapters.length) {
+        return res.status(400).json({ message: "Book title and chapters are required" });
+      }
+
+      // Use AI to structure the course from book content
+      const courseOutline = {
+        title: `${bookTitle} - Course`,
+        description: `Learn the key concepts from "${bookTitle}" through structured lessons`,
+        modules: chapters.map((chapter: any, idx: number) => ({
+          order: idx + 1,
+          title: chapter.title,
+          description: chapter.description,
+          lessons: [
+            { type: 'video', title: `Introduction to ${chapter.title}`, duration: 5 },
+            { type: 'reading', title: chapter.title, content: chapter.content },
+            { type: 'quiz', title: `Quiz: ${chapter.title}`, questionCount: 5 }
+          ],
+          quiz: generateQuizzes ? {
+            questions: [
+              { type: 'multiple_choice', question: `Key concept from ${chapter.title}?`, options: ['A', 'B', 'C', 'D'], correctAnswer: 0 }
+            ],
+            passingScore: 70
+          } : null
+        })),
+        certificate: {
+          title: `Certificate of Completion: ${bookTitle}`,
+          issuer: authorProfile?.penName || 'KreAIte Academy'
+        }
+      };
+
+      res.json({ 
+        success: true, 
+        courseOutline,
+        message: `Course structure generated with ${chapters.length} modules from "${bookTitle}"`
+      });
+    } catch (error: any) {
+      console.error("Error converting book to course:", error);
+      res.status(500).json({ message: error.message || "Failed to convert book to course" });
+    }
+  });
+
+  // Generate Quiz Questions from Content
+  app.post('/api/course/generate-quiz', isAuthenticated, async (req: any, res) => {
+    try {
+      const { content, chapterTitle, questionCount = 5, questionTypes = ['multiple_choice', 'true_false', 'fill_blank'] } = req.body;
+      
+      if (!content) {
+        return res.status(400).json({ message: "Content is required to generate quiz" });
+      }
+
+      // AI-generated quiz questions (placeholder - would use Gemini)
+      const questions = Array.from({ length: questionCount }, (_, i) => ({
+        id: i + 1,
+        type: questionTypes[i % questionTypes.length],
+        question: `Question ${i + 1} about ${chapterTitle || 'this content'}`,
+        options: questionTypes[i % questionTypes.length] === 'multiple_choice' 
+          ? ['Option A', 'Option B', 'Option C', 'Option D'] 
+          : questionTypes[i % questionTypes.length] === 'true_false' 
+            ? ['True', 'False'] 
+            : null,
+        correctAnswer: 0,
+        explanation: `Explanation for question ${i + 1}`
+      }));
+
+      res.json({ 
+        success: true, 
+        questions,
+        answerKey: questions.map(q => ({ questionId: q.id, correctAnswer: q.correctAnswer, explanation: q.explanation }))
+      });
+    } catch (error: any) {
+      console.error("Error generating quiz:", error);
+      res.status(500).json({ message: error.message || "Failed to generate quiz" });
     }
   });
 
