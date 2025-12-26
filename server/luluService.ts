@@ -12,8 +12,8 @@
  */
 
 const LULU_API_BASE = process.env.LULU_API_URL || 'https://api.lulu.com';
-const LULU_CLIENT_KEY = process.env.LULU_CLIENT_KEY;
-const LULU_CLIENT_SECRET = process.env.LULU_CLIENT_SECRET;
+const LULU_CLIENT_KEY = process.env.LULU_API_KEY || process.env.LULU_CLIENT_KEY;
+const LULU_CLIENT_SECRET = process.env.LULU_API_SECRET || process.env.LULU_CLIENT_SECRET;
 
 interface LuluAuthToken {
   access_token: string;
@@ -444,5 +444,333 @@ export function suggestRetailPrice(printCost: number): {
 export function generateOrderNumber(): string {
   const timestamp = Date.now().toString(36).toUpperCase();
   const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-  return `SRA-${timestamp}-${random}`;
+  return `KRE-${timestamp}-${random}`;
+}
+
+export const paperThickness = {
+  'standard_white': 0.0025, // inches per sheet
+  'premium_white': 0.0028,
+  'cream': 0.0027,
+  'premium_cream': 0.003,
+  'color': 0.0035,
+} as const;
+
+export function calculateSpineWidth(pageCount: number, paperType: keyof typeof paperTypes): {
+  inches: number;
+  mm: number;
+  display: string;
+} {
+  const thickness = paperThickness[paperType] || 0.0025;
+  const sheets = Math.ceil(pageCount / 2);
+  const spineInches = sheets * thickness;
+  const spineMm = spineInches * 25.4;
+  
+  return {
+    inches: Math.round(spineInches * 1000) / 1000,
+    mm: Math.round(spineMm * 10) / 10,
+    display: `${spineMm.toFixed(1)}mm (${spineInches.toFixed(3)}")`,
+  };
+}
+
+export function calculateCoverDimensions(
+  pageCount: number,
+  trimSize: keyof typeof trimSizes,
+  paperType: keyof typeof paperTypes,
+  hasBleed: boolean = true
+): {
+  width: number;
+  height: number;
+  spineWidth: number;
+  bleed: number;
+  wrapWidth: number;
+  totalWidth: number;
+  totalHeight: number;
+  displaySize: string;
+} {
+  const size = trimSizes[trimSize];
+  const spine = calculateSpineWidth(pageCount, paperType);
+  const bleed = hasBleed ? 0.125 : 0;
+  const wrapWidth = 0.75; // For hardcover wrap
+  
+  const totalWidth = (size.width * 2) + spine.inches + (bleed * 2);
+  const totalHeight = size.height + (bleed * 2);
+  
+  return {
+    width: size.width,
+    height: size.height,
+    spineWidth: spine.inches,
+    bleed,
+    wrapWidth,
+    totalWidth,
+    totalHeight,
+    displaySize: `${totalWidth.toFixed(3)}" × ${totalHeight.toFixed(3)}"`,
+  };
+}
+
+export const kdpMarginPresets = {
+  'standard': {
+    inside: 0.75,
+    outside: 0.5,
+    top: 0.5,
+    bottom: 0.625,
+    gutter: 0.125,
+    display: 'Standard (KDP Recommended)',
+  },
+  'comfortable': {
+    inside: 0.875,
+    outside: 0.625,
+    top: 0.625,
+    bottom: 0.75,
+    gutter: 0.15,
+    display: 'Comfortable (More White Space)',
+  },
+  'compact': {
+    inside: 0.625,
+    outside: 0.375,
+    top: 0.375,
+    bottom: 0.5,
+    gutter: 0.1,
+    display: 'Compact (More Content)',
+  },
+  'academic': {
+    inside: 1.0,
+    outside: 0.75,
+    top: 0.75,
+    bottom: 0.875,
+    gutter: 0.2,
+    display: 'Academic (Wide Margins)',
+  },
+} as const;
+
+export interface ProfessionalBookSpecs {
+  title: string;
+  subtitle?: string;
+  author: string;
+  isbn?: string;
+  pageCount: number;
+  trimSize: keyof typeof trimSizes;
+  bindingType: keyof typeof bindingTypes;
+  paperType: keyof typeof paperTypes;
+  colorInterior: boolean;
+  marginPreset: keyof typeof kdpMarginPresets;
+  hasBleed: boolean;
+  includeBarcode: boolean;
+}
+
+export function generateISBN13(): string {
+  const prefix = '979'; // Modern ISBN prefix
+  const group = '8'; // Self-publishing group
+  const publisher = Math.floor(Math.random() * 900000 + 100000).toString();
+  const title = Math.floor(Math.random() * 90 + 10).toString();
+  
+  const base = prefix + group + publisher + title;
+  
+  let sum = 0;
+  for (let i = 0; i < 12; i++) {
+    sum += parseInt(base[i]) * (i % 2 === 0 ? 1 : 3);
+  }
+  const checkDigit = (10 - (sum % 10)) % 10;
+  
+  return base + checkDigit;
+}
+
+export function validateISBN13(isbn: string): boolean {
+  const clean = isbn.replace(/[-\s]/g, '');
+  if (clean.length !== 13 || !/^\d+$/.test(clean)) return false;
+  
+  let sum = 0;
+  for (let i = 0; i < 12; i++) {
+    sum += parseInt(clean[i]) * (i % 2 === 0 ? 1 : 3);
+  }
+  const checkDigit = (10 - (sum % 10)) % 10;
+  
+  return parseInt(clean[12]) === checkDigit;
+}
+
+export function formatISBN(isbn: string): string {
+  const clean = isbn.replace(/[-\s]/g, '');
+  if (clean.length !== 13) return isbn;
+  return `${clean.slice(0, 3)}-${clean.slice(3, 4)}-${clean.slice(4, 10)}-${clean.slice(10, 12)}-${clean.slice(12)}`;
+}
+
+export async function getLuluPrintCostQuote(
+  specs: ProfessionalBookSpecs,
+  quantity: number = 1,
+  shippingCountry: string = 'US'
+): Promise<{
+  productionCost: number;
+  shippingCost: number;
+  totalCost: number;
+  perUnitCost: number;
+  suggestedRetailPrice: number;
+  creatorEarnings: number;
+  platformFee: number;
+  coverDimensions: ReturnType<typeof calculateCoverDimensions>;
+  spineWidth: ReturnType<typeof calculateSpineWidth>;
+}> {
+  const printCost = calculatePrintCost({
+    pageCount: specs.pageCount,
+    trimSize: specs.trimSize,
+    bindingType: specs.bindingType,
+    paperType: specs.paperType,
+    colorInterior: specs.colorInterior,
+  });
+  
+  const shippingCost = estimateShippingCost(shippingCountry, quantity, 'GROUND');
+  const totalCost = (printCost * quantity) + shippingCost;
+  const perUnitCost = Math.round(totalCost / quantity);
+  
+  const pricing = suggestRetailPrice(printCost);
+  const platformFee = Math.round(pricing.suggested * 0.15);
+  const creatorEarnings = Math.round(pricing.suggested * 0.85) - printCost;
+  
+  return {
+    productionCost: printCost * quantity,
+    shippingCost,
+    totalCost,
+    perUnitCost,
+    suggestedRetailPrice: pricing.suggested,
+    creatorEarnings,
+    platformFee,
+    coverDimensions: calculateCoverDimensions(specs.pageCount, specs.trimSize, specs.paperType, specs.hasBleed),
+    spineWidth: calculateSpineWidth(specs.pageCount, specs.paperType),
+  };
+}
+
+export async function submitProofOrder(
+  specs: ProfessionalBookSpecs,
+  interiorPdfUrl: string,
+  coverPdfUrl: string,
+  shippingAddress: ShippingAddress,
+  contactEmail: string
+): Promise<{
+  success: boolean;
+  orderId?: string;
+  proofCost?: number;
+  estimatedDelivery?: string;
+  error?: string;
+}> {
+  const podPackageId = generatePodPackageId({
+    pageCount: specs.pageCount,
+    trimSize: specs.trimSize,
+    bindingType: specs.bindingType,
+    paperType: specs.paperType,
+    colorInterior: specs.colorInterior,
+  });
+  
+  const printableResult = await createPrintable({
+    externalId: `PROOF-${Date.now()}`,
+    title: `[PROOF] ${specs.title}`,
+    interiorSourceUrl: interiorPdfUrl,
+    coverSourceUrl: coverPdfUrl,
+    podPackageId,
+  });
+  
+  if (!printableResult.success || !printableResult.printableId) {
+    return { success: false, error: printableResult.error || 'Failed to create printable' };
+  }
+  
+  const jobResult = await createPrintJob({
+    externalId: `PROOF-${generateOrderNumber()}`,
+    lineItems: [{
+      printableId: printableResult.printableId,
+      quantity: 1,
+    }],
+    shippingAddress,
+    shippingLevel: 'GROUND',
+    contactEmail,
+  });
+  
+  if (!jobResult.success) {
+    return { success: false, error: jobResult.error };
+  }
+  
+  return {
+    success: true,
+    orderId: jobResult.orderId,
+    proofCost: jobResult.costs?.total,
+    estimatedDelivery: jobResult.estimatedShipDate,
+  };
+}
+
+export async function submitProductionOrder(
+  specs: ProfessionalBookSpecs,
+  interiorPdfUrl: string,
+  coverPdfUrl: string,
+  quantity: number,
+  shippingAddress: ShippingAddress,
+  shippingLevel: 'MAIL' | 'GROUND' | 'EXPEDITED' | 'EXPRESS',
+  contactEmail: string
+): Promise<{
+  success: boolean;
+  orderId?: string;
+  totalCost?: number;
+  estimatedDelivery?: string;
+  trackingAvailable?: boolean;
+  error?: string;
+}> {
+  const podPackageId = generatePodPackageId({
+    pageCount: specs.pageCount,
+    trimSize: specs.trimSize,
+    bindingType: specs.bindingType,
+    paperType: specs.paperType,
+    colorInterior: specs.colorInterior,
+  });
+  
+  const printableResult = await createPrintable({
+    externalId: `PROD-${Date.now()}`,
+    title: specs.title,
+    interiorSourceUrl: interiorPdfUrl,
+    coverSourceUrl: coverPdfUrl,
+    podPackageId,
+  });
+  
+  if (!printableResult.success || !printableResult.printableId) {
+    return { success: false, error: printableResult.error || 'Failed to create printable' };
+  }
+  
+  const jobResult = await createPrintJob({
+    externalId: generateOrderNumber(),
+    lineItems: [{
+      printableId: printableResult.printableId,
+      quantity,
+    }],
+    shippingAddress,
+    shippingLevel,
+    contactEmail,
+  });
+  
+  if (!jobResult.success) {
+    return { success: false, error: jobResult.error };
+  }
+  
+  return {
+    success: true,
+    orderId: jobResult.orderId,
+    totalCost: jobResult.costs?.total,
+    estimatedDelivery: jobResult.estimatedShipDate,
+    trackingAvailable: shippingLevel !== 'MAIL',
+  };
+}
+
+export function getBookProductionStatus(status: string): {
+  stage: 'pending' | 'processing' | 'printing' | 'shipping' | 'delivered' | 'cancelled';
+  progress: number;
+  displayStatus: string;
+  description: string;
+} {
+  const statusMap: Record<string, { stage: any; progress: number; displayStatus: string; description: string }> = {
+    'CREATED': { stage: 'pending', progress: 10, displayStatus: 'Order Received', description: 'Your order has been received and is being prepared.' },
+    'UNPAID': { stage: 'pending', progress: 5, displayStatus: 'Awaiting Payment', description: 'Payment is required to proceed.' },
+    'PAYMENT_IN_PROGRESS': { stage: 'pending', progress: 15, displayStatus: 'Processing Payment', description: 'Payment is being processed.' },
+    'PRODUCTION_READY': { stage: 'processing', progress: 25, displayStatus: 'Ready for Production', description: 'Files verified. Ready for printing.' },
+    'PRODUCTION_DELAYED': { stage: 'processing', progress: 30, displayStatus: 'Production Delayed', description: 'There is a delay in production.' },
+    'IN_PRODUCTION': { stage: 'printing', progress: 50, displayStatus: 'Printing', description: 'Your book is being printed.' },
+    'SHIPPED': { stage: 'shipping', progress: 80, displayStatus: 'Shipped', description: 'Your book is on its way!' },
+    'DELIVERED': { stage: 'delivered', progress: 100, displayStatus: 'Delivered', description: 'Your book has been delivered.' },
+    'CANCELLED': { stage: 'cancelled', progress: 0, displayStatus: 'Cancelled', description: 'Order was cancelled.' },
+    'ERROR': { stage: 'cancelled', progress: 0, displayStatus: 'Error', description: 'There was an error with your order.' },
+  };
+  
+  return statusMap[status] || { stage: 'pending', progress: 0, displayStatus: status, description: 'Status unknown.' };
 }
