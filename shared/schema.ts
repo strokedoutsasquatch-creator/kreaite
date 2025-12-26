@@ -2593,6 +2593,88 @@ export const insertBookImageAssetSchema = createInsertSchema(bookImageAssets).om
 export type InsertBookImageAsset = z.infer<typeof insertBookImageAssetSchema>;
 export type BookImageAsset = typeof bookImageAssets.$inferSelect;
 
+// ============================================================================
+// BOOK STUDIO - PROJECTS (Save & Resume)
+// ============================================================================
+
+export const bookProjects = pgTable("book_projects", {
+  id: serial("id").primaryKey(),
+  ownerId: varchar("owner_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  subtitle: text("subtitle"),
+  authorName: text("author_name"),
+  genre: text("genre").default("memoir"),
+  targetAudience: text("target_audience"),
+  manuscriptHtml: text("manuscript_html"), // Full TipTap HTML content
+  manuscriptText: text("manuscript_text"), // Plain text for analysis
+  wordCount: integer("word_count").default(0),
+  pageCount: integer("page_count").default(0),
+  chapterCount: integer("chapter_count").default(0),
+  currentStep: integer("current_step").default(1), // 1-6 steps in BookStudio
+  trimSize: text("trim_size").default("6x9"), // '6x9', '5x8', '8.5x11'
+  fontSize: integer("font_size").default(11),
+  fontFamily: text("font_family").default("Garamond"),
+  marginInner: real("margin_inner").default(0.75), // inches
+  marginOuter: real("margin_outer").default(0.5),
+  marginTop: real("margin_top").default(0.75),
+  marginBottom: real("margin_bottom").default(0.75),
+  hasFrontMatter: boolean("has_front_matter").default(false),
+  hasBackMatter: boolean("has_back_matter").default(false),
+  readinessScore: integer("readiness_score").default(0), // 0-100
+  coverImageUrl: text("cover_image_url"),
+  spineWidth: real("spine_width"), // Calculated from page count
+  status: text("status").notNull().default("draft"), // draft, in_progress, ready, published
+  lastEditedAt: timestamp("last_edited_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const bookProjectSections = pgTable("book_project_sections", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => bookProjects.id, { onDelete: "cascade" }),
+  sectionNumber: integer("section_number").notNull(),
+  title: text("title").notNull(),
+  type: text("type").notNull().default("chapter"), // 'dedication', 'foreword', 'introduction', 'chapter', 'epilogue', 'acknowledgments', 'about'
+  content: text("content"), // Section HTML content
+  wordCount: integer("word_count").default(0),
+  startPage: integer("start_page"),
+  endPage: integer("end_page"),
+  summary: text("summary"), // AI-generated summary
+  suggestedImages: integer("suggested_images").default(0), // AI suggestion count
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const bookImagePlacements = pgTable("book_image_placements", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => bookProjects.id, { onDelete: "cascade" }),
+  imageAssetId: integer("image_asset_id").references(() => bookImageAssets.id, { onDelete: "set null" }),
+  sectionId: integer("section_id").references(() => bookProjectSections.id, { onDelete: "set null" }),
+  placementMode: text("placement_mode").notNull().default("manual"), // 'auto', 'manual', 'hybrid'
+  anchorType: text("anchor_type").notNull().default("after_paragraph"), // 'start_of_chapter', 'after_paragraph', 'page_break', 'inline'
+  anchorOffset: integer("anchor_offset").default(0), // Paragraph number or character offset
+  pageNumber: integer("page_number"), // Calculated page position
+  positionX: real("position_x").default(0), // 0-1 relative position
+  positionY: real("position_y").default(0),
+  width: real("width").default(1), // 0-1 relative to column width
+  height: real("height"), // Auto or fixed
+  caption: text("caption"),
+  alignment: text("alignment").default("center"), // 'left', 'center', 'right', 'full-bleed'
+  isApproved: boolean("is_approved").default(false), // For hybrid mode
+  aiSuggestionReason: text("ai_suggestion_reason"), // Why AI suggested this placement
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertBookProjectSchema = createInsertSchema(bookProjects).omit({ id: true, createdAt: true, lastEditedAt: true });
+export type InsertBookProject = z.infer<typeof insertBookProjectSchema>;
+export type BookProject = typeof bookProjects.$inferSelect;
+
+export const insertBookProjectSectionSchema = createInsertSchema(bookProjectSections).omit({ id: true, createdAt: true });
+export type InsertBookProjectSection = z.infer<typeof insertBookProjectSectionSchema>;
+export type BookProjectSection = typeof bookProjectSections.$inferSelect;
+
+export const insertBookImagePlacementSchema = createInsertSchema(bookImagePlacements).omit({ id: true, createdAt: true });
+export type InsertBookImagePlacement = z.infer<typeof insertBookImagePlacementSchema>;
+export type BookImagePlacement = typeof bookImagePlacements.$inferSelect;
+
 // Insert schemas for ultra-premium features
 export const insertVoiceCloneSchema = createInsertSchema(voiceClones).omit({
   id: true,
