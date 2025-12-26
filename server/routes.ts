@@ -50,9 +50,11 @@ import {
   users,
   aiQualityTiers,
   aiVoicePresets,
+  creditLedger,
+  usageEvents,
 } from "../shared/schema";
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, gte } from "drizzle-orm";
 import { 
   generateCompleteScript, 
   generateSceneStoryboard, 
@@ -70,6 +72,10 @@ import {
   cancelWorkflow,
   resumeWorkflow
 } from './orchestrationService';
+import * as creditService from './creditService';
+import * as geoService from './geolocationService';
+import * as i18nService from './i18nService';
+import { jobQueue } from './jobQueueService';
 
 async function initStripe() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -7433,6 +7439,289 @@ Provide a JSON response with track suggestions for each chapter/section.`;
     } catch (error: any) {
       console.error("Error fetching leaderboard:", error);
       res.status(500).json({ message: "Failed to fetch leaderboard" });
+    }
+  });
+
+  // ============================================================================
+  // CREDIT SYSTEM - Wallets, Transactions, Balance
+  // ============================================================================
+
+  app.get('/api/credits/balance', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const balance = await creditService.getBalance(userId);
+      res.json(balance);
+    } catch (error: any) {
+      console.error("Error fetching credit balance:", error);
+      res.status(500).json({ message: "Failed to fetch credit balance" });
+    }
+  });
+
+  app.get('/api/credits/transactions', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const transactions = await creditService.getTransactionHistory(userId, limit);
+      res.json(transactions);
+    } catch (error: any) {
+      console.error("Error fetching transactions:", error);
+      res.status(500).json({ message: "Failed to fetch transactions" });
+    }
+  });
+
+  app.get('/api/credits/usage', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const usage = await creditService.getDailyUsageStats(userId);
+      res.json(usage);
+    } catch (error: any) {
+      console.error("Error fetching usage stats:", error);
+      res.status(500).json({ message: "Failed to fetch usage stats" });
+    }
+  });
+
+  app.post('/api/credits/check', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { amount } = req.body;
+      const canAfford = await creditService.hasEnoughCredits(userId, amount);
+      const balance = await creditService.getBalance(userId);
+      res.json({ canAfford, balance: balance.total, required: amount });
+    } catch (error: any) {
+      console.error("Error checking credits:", error);
+      res.status(500).json({ message: "Failed to check credits" });
+    }
+  });
+
+  // ============================================================================
+  // GEOLOCATION & LOCALIZATION
+  // ============================================================================
+
+  app.get('/api/geolocation', async (req: any, res) => {
+    try {
+      const ip = geoService.getClientIP(req);
+      const location = await geoService.detectLocation(ip);
+      const localeConfig = geoService.getLocaleConfig(location.countryCode, location.language);
+      res.json({ location, localeConfig });
+    } catch (error: any) {
+      console.error("Error detecting location:", error);
+      res.status(500).json({ message: "Failed to detect location" });
+    }
+  });
+
+  app.get('/api/i18n/locales', async (req, res) => {
+    try {
+      const languages = geoService.getSupportedLanguages();
+      const currencies = geoService.getSupportedCurrencies();
+      res.json({ languages, currencies });
+    } catch (error: any) {
+      console.error("Error fetching locales:", error);
+      res.status(500).json({ message: "Failed to fetch locales" });
+    }
+  });
+
+  app.get('/api/i18n/translations/:locale', async (req, res) => {
+    try {
+      const locale = req.params.locale as i18nService.SupportedLocale;
+      const translations = i18nService.getTranslation(locale);
+      res.json(translations);
+    } catch (error: any) {
+      console.error("Error fetching translations:", error);
+      res.status(500).json({ message: "Failed to fetch translations" });
+    }
+  });
+
+  // ============================================================================
+  // JOB QUEUE - Background Processing & SSE Streaming
+  // ============================================================================
+
+  app.post('/api/jobs', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { type, data, metadata } = req.body;
+      const job = jobQueue.createJob(type, userId, data, metadata);
+      res.json(job);
+    } catch (error: any) {
+      console.error("Error creating job:", error);
+      res.status(500).json({ message: "Failed to create job" });
+    }
+  });
+
+  app.get('/api/jobs', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const jobs = jobQueue.getUserJobs(userId, limit);
+      res.json(jobs);
+    } catch (error: any) {
+      console.error("Error fetching jobs:", error);
+      res.status(500).json({ message: "Failed to fetch jobs" });
+    }
+  });
+
+  app.get('/api/jobs/:jobId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { jobId } = req.params;
+      const job = jobQueue.getJob(jobId);
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+      res.json(job);
+    } catch (error: any) {
+      console.error("Error fetching job:", error);
+      res.status(500).json({ message: "Failed to fetch job" });
+    }
+  });
+
+  app.delete('/api/jobs/:jobId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { jobId } = req.params;
+      const cancelled = jobQueue.cancelJob(jobId);
+      res.json({ success: cancelled });
+    } catch (error: any) {
+      console.error("Error cancelling job:", error);
+      res.status(500).json({ message: "Failed to cancel job" });
+    }
+  });
+
+  app.get('/api/jobs/stats', isAuthenticated, async (req: any, res) => {
+    try {
+      const stats = jobQueue.getQueueStats();
+      res.json(stats);
+    } catch (error: any) {
+      console.error("Error fetching job stats:", error);
+      res.status(500).json({ message: "Failed to fetch job stats" });
+    }
+  });
+
+  app.get('/api/jobs/:jobId/stream', isAuthenticated, async (req: any, res) => {
+    try {
+      const { jobId } = req.params;
+      const job = jobQueue.getJob(jobId);
+      
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      });
+
+      const sendUpdate = (updatedJob: any) => {
+        res.write(`data: ${JSON.stringify(updatedJob)}\n\n`);
+      };
+
+      sendUpdate(job);
+
+      const unsubscribe = jobQueue.subscribeToJob(jobId, sendUpdate);
+
+      req.on('close', () => {
+        unsubscribe();
+        res.end();
+      });
+    } catch (error: any) {
+      console.error("Error streaming job:", error);
+      res.status(500).json({ message: "Failed to stream job" });
+    }
+  });
+
+  // ============================================================================
+  // ANALYTICS - Usage Statistics & Insights
+  // ============================================================================
+
+  app.get('/api/analytics/credits', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const days = parseInt(req.query.days as string) || 30;
+      
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+
+      const ledgerEntries = await db.select()
+        .from(creditLedger)
+        .where(
+          and(
+            eq(creditLedger.userId, userId),
+            gte(creditLedger.createdAt, startDate)
+          )
+        )
+        .orderBy(creditLedger.createdAt);
+
+      const dailySpend: Record<string, number> = {};
+      const featureUsage: Record<string, number> = {};
+
+      for (const entry of ledgerEntries) {
+        const dateKey = entry.createdAt.toISOString().split('T')[0];
+        if (entry.amount < 0) {
+          dailySpend[dateKey] = (dailySpend[dateKey] || 0) + Math.abs(entry.amount);
+        }
+        if (entry.featureKey) {
+          featureUsage[entry.featureKey] = (featureUsage[entry.featureKey] || 0) + 1;
+        }
+      }
+
+      res.json({
+        dailySpend,
+        featureUsage,
+        totalTransactions: ledgerEntries.length,
+        period: { start: startDate, end: endDate },
+      });
+    } catch (error: any) {
+      console.error("Error fetching credit analytics:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
+  app.get('/api/analytics/usage', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const days = parseInt(req.query.days as string) || 30;
+      
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+
+      const events = await db.select()
+        .from(usageEvents)
+        .where(
+          and(
+            eq(usageEvents.userId, userId),
+            gte(usageEvents.createdAt, startDate)
+          )
+        )
+        .orderBy(usageEvents.createdAt);
+
+      const studioUsage: Record<string, number> = {};
+      const dailyTokens: Record<string, number> = {};
+      let totalCredits = 0;
+      let totalTokens = 0;
+
+      for (const event of events) {
+        if (event.studioType) {
+          studioUsage[event.studioType] = (studioUsage[event.studioType] || 0) + 1;
+        }
+        totalCredits += event.creditsCost;
+        const tokens = (event.inputTokens || 0) + (event.outputTokens || 0);
+        totalTokens += tokens;
+        
+        const dateKey = event.createdAt.toISOString().split('T')[0];
+        dailyTokens[dateKey] = (dailyTokens[dateKey] || 0) + tokens;
+      }
+
+      res.json({
+        studioUsage,
+        dailyTokens,
+        totalGenerations: events.length,
+        totalCredits,
+        totalTokens,
+        period: { start: startDate, end: endDate },
+      });
+    } catch (error: any) {
+      console.error("Error fetching usage analytics:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
     }
   });
 

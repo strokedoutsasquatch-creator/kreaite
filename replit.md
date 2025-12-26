@@ -176,6 +176,28 @@ Icons: lucide-react only (no emoji)
 - Environment-based configuration for development vs production Stripe keys
 - Managed webhook system with UUID routing for reliable event processing
 
+## Wave 1 Global Platform Services (NEW)
+
+### Credit System
+- `server/creditService.ts` - Credit wallet management, deduction logic (bonus credits first)
+- `client/src/lib/hooks/useCredits.ts` - React hooks for credit balance, transactions, usage
+- API endpoints: GET /api/credits/balance, GET /api/credits/transactions, GET /api/credits/usage, POST /api/credits/check
+
+### Geolocation & Localization
+- `server/geolocationService.ts` - IP-based location detection, 50+ countries/currencies
+- `server/i18nService.ts` - 20 language translation system (EN/ES/FR/DE/JA/ZH/KO/AR/HI/TH/VI and more)
+- `client/src/lib/hooks/useLocale.ts` - LocaleProvider context, translation helpers, currency/date formatting
+- API endpoints: GET /api/geolocation, GET /api/i18n/locales, GET /api/i18n/translations/:locale
+
+### Background Job Processing
+- `server/jobQueueService.ts` - EventEmitter-based queue, max 5 concurrent, auto-cleanup 24h
+- `client/src/lib/hooks/useJobs.ts` - Job management with SSE streaming via useJobStream
+- API endpoints: POST /api/jobs, GET /api/jobs, GET /api/jobs/:id, DELETE /api/jobs/:id, GET /api/jobs/:id/stream (SSE)
+
+### Analytics
+- API endpoints: GET /api/analytics/credits, GET /api/analytics/usage
+- Per-studio usage tracking, daily token consumption, feature usage breakdown
+
 ## Important Files
 
 - `client/src/components/ProfessionalEditor.tsx` - TipTap book editor
@@ -187,8 +209,12 @@ Icons: lucide-react only (no emoji)
 - `client/src/pages/MediaStudioPage.tsx` - MediaStudio page
 - `client/src/pages/QuickCreate.tsx` - 1-click magic tools
 - `client/src/pages/AIConsultant.tsx` - AI Consultant training/monetization
-- `server/routes.ts` - API routes
-- `shared/schema.ts` - Database schema (includes conversationSessions, assetRegistry, studioPipelines)
+- `server/routes.ts` - API routes (7700+ lines)
+- `server/creditService.ts` - Credit wallet and transaction management
+- `server/geolocationService.ts` - IP geolocation and locale detection
+- `server/i18nService.ts` - Internationalization with 20 languages
+- `server/jobQueueService.ts` - Background job processing with SSE
+- `shared/schema.ts` - Database schema (includes conversationSessions, assetRegistry, studioPipelines, creditWallets, creditLedger, usageEvents)
 - `client/index.html` - SEO/AEO meta tags and structured data
 
 ## Technical Notes
