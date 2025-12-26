@@ -140,6 +140,116 @@ async function getDailyUsage(userId: string): Promise<number> {
   return result[0]?.total || 0;
 }
 
+// Quality tier configuration
+export interface QualityTierConfig {
+  id: number;
+  name: string;
+  creditCost: number;
+  model: string;
+  temperature: number;
+  maxTokens: number;
+  promptModifiers?: string;
+}
+
+// Voice preset configuration
+export interface VoicePresetConfig {
+  id: number;
+  name: string;
+  systemInstructions: string;
+}
+
+// Language and cultural adaptation
+export interface CulturalContext {
+  language?: string;
+  region?: string;
+  culturalNotes?: string;
+}
+
+// Detect language from text (simple heuristic, AI will auto-adapt)
+function detectLanguageHint(text: string): string | null {
+  const languagePatterns: Record<string, RegExp[]> = {
+    'Spanish': [/¿|¡|ñ|á|é|í|ó|ú/, /\b(el|la|los|las|un|una|que|de|en|es|por|para)\b/i],
+    'French': [/[àâäéèêëîïôùûüç]/, /\b(le|la|les|un|une|de|du|des|et|est|pour|avec)\b/i],
+    'German': [/[äöüß]/, /\b(der|die|das|ein|eine|und|ist|für|mit|auf)\b/i],
+    'Portuguese': [/[ãõçáéíóú]/, /\b(o|a|os|as|um|uma|de|do|da|e|é|para|com)\b/i],
+    'Italian': [/[àèéìíîòóùú]/, /\b(il|la|lo|i|gli|le|un|una|di|che|e|è|per|con)\b/i],
+    'Dutch': [/\b(de|het|een|van|en|in|is|op|te|dat|voor|met)\b/i],
+    'Russian': [/[а-яА-ЯёЁ]/],
+    'Chinese': [/[\u4e00-\u9fff]/],
+    'Japanese': [/[\u3040-\u309f\u30a0-\u30ff]/],
+    'Korean': [/[\uac00-\ud7af\u1100-\u11ff]/],
+    'Arabic': [/[\u0600-\u06ff]/],
+    'Hindi': [/[\u0900-\u097f]/],
+    'Thai': [/[\u0e00-\u0e7f]/],
+    'Vietnamese': [/[àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]/i],
+  };
+  
+  for (const [lang, patterns] of Object.entries(languagePatterns)) {
+    if (patterns.some(p => p.test(text))) {
+      return lang;
+    }
+  }
+  return null;
+}
+
+// Build cultural adaptation instructions
+function buildCulturalInstructions(context: CulturalContext, detectedLang: string | null): string {
+  const parts: string[] = [];
+  
+  const language = context.language || detectedLang;
+  
+  if (language && language !== 'English') {
+    parts.push(`IMPORTANT: Respond entirely in ${language}. Adapt all content, idioms, expressions, and cultural references to be natural and authentic for ${language} speakers.`);
+  }
+  
+  if (context.region) {
+    parts.push(`Cultural context: Adapt content for ${context.region} audience - use locally relevant examples, references, measurements, and cultural norms.`);
+  }
+  
+  if (context.culturalNotes) {
+    parts.push(`Additional cultural notes: ${context.culturalNotes}`);
+  }
+  
+  if (parts.length === 0) {
+    parts.push('Automatically detect the language of the user input and respond in the same language. Adapt cultural references, idioms, and expressions to be natural for that language and culture.');
+  }
+  
+  return parts.join('\n');
+}
+
+// Build enhanced system prompt from tier and voice settings
+export function buildEnhancedSystemPrompt(
+  basePrompt: string,
+  tier?: QualityTierConfig,
+  voice?: VoicePresetConfig,
+  customVoice?: string,
+  culturalContext?: CulturalContext,
+  userPrompt?: string
+): string {
+  const parts: string[] = [];
+  
+  // Universal language/cultural adaptation (always first)
+  const detectedLang = userPrompt ? detectLanguageHint(userPrompt) : null;
+  const culturalInstructions = buildCulturalInstructions(culturalContext || {}, detectedLang);
+  parts.push(culturalInstructions);
+  
+  if (basePrompt) {
+    parts.push(basePrompt);
+  }
+  
+  if (tier?.promptModifiers) {
+    parts.push(`\n\nQuality Instructions:\n${tier.promptModifiers}`);
+  }
+  
+  if (customVoice && customVoice.trim()) {
+    parts.push(`\n\nVoice & Style Instructions:\n${customVoice}`);
+  } else if (voice?.systemInstructions) {
+    parts.push(`\n\nVoice & Style:\n${voice.systemInstructions}`);
+  }
+  
+  return parts.join('\n');
+}
+
 // Main generation interface
 export interface GenerateOptions {
   prompt: string;
@@ -151,6 +261,10 @@ export interface GenerateOptions {
   forceModel?: string;
   skipCache?: boolean;
   jsonMode?: boolean;
+  qualityTier?: QualityTierConfig;
+  voicePreset?: VoicePresetConfig;
+  customVoice?: string;
+  culturalContext?: CulturalContext;
 }
 
 export interface GenerateResult {
@@ -168,12 +282,27 @@ export async function generate(options: GenerateOptions): Promise<GenerateResult
     systemPrompt = "",
     taskType,
     userId,
-    maxTokens = 4096,
-    temperature = 0.7,
+    maxTokens: baseMaxTokens = 4096,
+    temperature: baseTemperature = 0.7,
     forceModel,
     skipCache = false,
     jsonMode = false,
+    qualityTier,
+    voicePreset,
+    customVoice,
+    culturalContext,
   } = options;
+  
+  const maxTokens = qualityTier?.maxTokens || baseMaxTokens;
+  const temperature = qualityTier?.temperature || baseTemperature;
+  const enhancedSystemPrompt = buildEnhancedSystemPrompt(
+    systemPrompt, 
+    qualityTier, 
+    voicePreset, 
+    customVoice,
+    culturalContext,
+    prompt
+  );
 
   // Check daily budget if user specified (150k tokens/day default)
   if (userId) {
@@ -184,12 +313,12 @@ export async function generate(options: GenerateOptions): Promise<GenerateResult
     }
   }
 
-  // Select model based on task type or force override
-  const model = forceModel || TASK_TO_MODEL[taskType];
+  // Select model based on quality tier, force override, or task type
+  const model = qualityTier?.model || forceModel || TASK_TO_MODEL[taskType];
   const isGemini = model.startsWith("gemini");
 
   // Check cache first
-  const cacheKey = getCacheKey(prompt, systemPrompt, model);
+  const cacheKey = getCacheKey(prompt, enhancedSystemPrompt, model);
   if (!skipCache) {
     const cached = responseCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
@@ -215,8 +344,8 @@ export async function generate(options: GenerateOptions): Promise<GenerateResult
     if (isGemini) {
       // Use Gemini
       const contents = [];
-      if (systemPrompt) {
-        contents.push({ role: "user" as const, parts: [{ text: systemPrompt }] });
+      if (enhancedSystemPrompt) {
+        contents.push({ role: "user" as const, parts: [{ text: enhancedSystemPrompt }] });
         contents.push({ role: "model" as const, parts: [{ text: "Understood. I'll follow these instructions." }] });
       }
       contents.push({ role: "user" as const, parts: [{ text: prompt }] });
@@ -231,13 +360,13 @@ export async function generate(options: GenerateOptions): Promise<GenerateResult
       });
 
       content = response.text || "";
-      inputTokens = estimateTokens(systemPrompt + prompt);
+      inputTokens = estimateTokens(enhancedSystemPrompt + prompt);
       outputTokens = estimateTokens(content);
     } else {
       // Use OpenAI
       const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [];
-      if (systemPrompt) {
-        messages.push({ role: "system", content: systemPrompt });
+      if (enhancedSystemPrompt) {
+        messages.push({ role: "system", content: enhancedSystemPrompt });
       }
       messages.push({ role: "user", content: prompt });
 

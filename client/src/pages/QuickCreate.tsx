@@ -7,10 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import CreatorHeader from "@/components/CreatorHeader";
 import Footer from "@/components/Footer";
+import AISettingsPanel from "@/components/AISettingsPanel";
 import {
   Zap,
   BookOpen,
@@ -121,6 +122,17 @@ export default function QuickCreate() {
   const [progress, setProgress] = useState(0);
   const [results, setResults] = useState<any[]>([]);
   const [generatedContent, setGeneratedContent] = useState<string>("");
+  
+  const [selectedTier, setSelectedTier] = useState(2);
+  const [selectedVoice, setSelectedVoice] = useState(1);
+  const [customVoice, setCustomVoice] = useState("");
+  
+  const { data: tiers = [] } = useQuery<any[]>({
+    queryKey: ['/api/ai/quality-tiers'],
+  });
+  
+  const selectedTierData = tiers.find((t: any) => t.id === selectedTier);
+  const userCredits = 100;
 
   const generateMutation = useMutation({
     mutationFn: async ({ actionId, input }: { actionId: string; input: string }) => {
@@ -278,6 +290,17 @@ export default function QuickCreate() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  <AISettingsPanel
+                    selectedTier={selectedTier}
+                    setSelectedTier={setSelectedTier}
+                    selectedVoice={selectedVoice}
+                    setSelectedVoice={setSelectedVoice}
+                    customVoice={customVoice}
+                    setCustomVoice={setCustomVoice}
+                    userCredits={userCredits}
+                    showGenre={selectedAction.category === 'book'}
+                  />
+                  
                   {selectedAction.id === "hum-to-song" || selectedAction.id === "voice-clone" ? (
                     <div className="flex flex-col items-center gap-4 p-8 border-2 border-dashed border-orange-500/30 rounded-lg">
                       <Mic className="w-12 h-12 text-orange-500" />
@@ -377,7 +400,7 @@ export default function QuickCreate() {
                     <Button
                       className="bg-orange-500 hover:bg-orange-600 text-black gap-2"
                       onClick={handleGenerate}
-                      disabled={isGenerating || !inputValue.trim()}
+                      disabled={isGenerating || !inputValue.trim() || (selectedTierData?.creditCost || 0) > userCredits}
                       data-testid="button-generate"
                     >
                       {isGenerating ? (
@@ -389,6 +412,11 @@ export default function QuickCreate() {
                         <>
                           <Wand2 className="w-4 h-4" />
                           Generate Now
+                          {selectedTierData && (
+                            <Badge variant="secondary" className="ml-1 bg-black/20 text-white">
+                              {selectedTierData.creditCost}c
+                            </Badge>
+                          )}
                         </>
                       )}
                     </Button>

@@ -47,6 +47,9 @@ import {
   insertConversationSessionSchema,
   insertConversationMessageSchema,
   insertAssetRegistrySchema,
+  users,
+  aiQualityTiers,
+  aiVoicePresets,
 } from "../shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
@@ -5176,6 +5179,7 @@ Respond in JSON format:
     }
   });
 
+
   // ============================================================================
   // CHILDREN'S BOOK CREATION ROUTES
   // ============================================================================
@@ -7103,16 +7107,16 @@ Create 6 viral clip concepts:
         await db.insert(assetRegistry).values({
           userId,
           name: `${actionId} - ${input.slice(0, 30)}...`,
-          type: assetType,
+          assetType,
           sourceStudio,
-          content: { 
+          description: generatedContent.slice(0, 500),
+          metadata: { 
+            quickCreate: true, 
+            actionId,
             raw: generatedContent, 
-            actionId, 
             input,
             results 
           },
-          metadata: { quickCreate: true, actionId },
-          status: 'ready',
         });
       }
       
@@ -7275,8 +7279,9 @@ Provide a JSON response with track suggestions for each chapter/section.`;
         .where(eq(users.id, userId));
       
       // Mock affiliate stats (would come from tracking in production)
+      const displayName = userInfo?.firstName ? `${userInfo.firstName}-${userInfo.lastName || ''}`.toLowerCase().replace(/\s+/g, '-') : 'creator-' + userId.slice(0, 8);
       res.json({
-        affiliateCode: userInfo?.name?.toLowerCase().replace(/\s+/g, '-') || 'creator-' + userId.slice(0, 8),
+        affiliateCode: displayName,
         totalReferrals: 0,
         activeReferrals: 0,
         totalEarnings: 0,
@@ -7355,7 +7360,7 @@ Provide a JSON response with track suggestions for each chapter/section.`;
         .from(users)
         .where(eq(users.id, userId));
       
-      const watermarkText = `Created with KreAIte.xyz by ${userInfo?.name || 'Creator'}`;
+      const watermarkText = `Created with KreAIte.xyz by ${userInfo?.firstName || 'Creator'}`;
       
       res.json({
         success: true,
@@ -7368,6 +7373,47 @@ Provide a JSON response with track suggestions for each chapter/section.`;
     } catch (error: any) {
       console.error("Error applying watermark:", error);
       res.status(500).json({ message: "Failed to apply watermark" });
+    }
+  });
+
+  // ============================================================================
+  // AI QUALITY SYSTEM - Tiers, Voices, and Presets
+  // ============================================================================
+
+  // Get all quality tiers
+  app.get('/api/ai/quality-tiers', async (req, res) => {
+    try {
+      const tiers = await db.select().from(aiQualityTiers).orderBy(aiQualityTiers.sortOrder);
+      res.json(tiers);
+    } catch (error: any) {
+      console.error("Error fetching quality tiers:", error);
+      res.status(500).json({ message: "Failed to fetch quality tiers" });
+    }
+  });
+
+  // Get all voice presets
+  app.get('/api/ai/voice-presets', async (req, res) => {
+    try {
+      const voices = await db.select().from(aiVoicePresets).orderBy(aiVoicePresets.sortOrder);
+      res.json(voices);
+    } catch (error: any) {
+      console.error("Error fetching voice presets:", error);
+      res.status(500).json({ message: "Failed to fetch voice presets" });
+    }
+  });
+
+  // Get voice presets by category
+  app.get('/api/ai/voice-presets/:category', async (req, res) => {
+    try {
+      const { category } = req.params;
+      const voices = await db.select()
+        .from(aiVoicePresets)
+        .where(eq(aiVoicePresets.category, category))
+        .orderBy(aiVoicePresets.sortOrder);
+      res.json(voices);
+    } catch (error: any) {
+      console.error("Error fetching voice presets by category:", error);
+      res.status(500).json({ message: "Failed to fetch voice presets" });
     }
   });
 
