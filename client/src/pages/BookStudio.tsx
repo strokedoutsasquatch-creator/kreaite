@@ -1316,44 +1316,44 @@ Your journey to healing starts here.`);
       
       <main className="py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-4 mb-8">
-            <img src={publishingLogo} alt="Stroke Lyfe Publishing" className="h-16 w-auto" />
+          <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+            <img src={publishingLogo} alt="Stroke Lyfe Publishing" className="h-10 sm:h-16 w-auto" />
             <div>
-              <h1 className="text-3xl font-bold text-white">Book Studio</h1>
-              <p className="text-muted-foreground">Professional book creation from manuscript to KDP-ready</p>
+              <h1 className="text-xl sm:text-3xl font-bold text-white">Book Studio</h1>
+              <p className="text-xs sm:text-base text-muted-foreground hidden sm:block">Professional book creation from manuscript to KDP-ready</p>
             </div>
           </div>
 
-          <div className="flex items-center justify-between mb-8 overflow-x-auto pb-2">
+          <div className="flex items-center justify-start sm:justify-between mb-6 sm:mb-8 overflow-x-auto pb-2 gap-1 sm:gap-0">
             {steps.map((s, i) => (
               <div key={s.step} className="flex items-center flex-shrink-0">
                 <button
                   onClick={() => setCurrentStep(s.step)}
-                  className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all
+                  className={`flex flex-col items-center gap-1 p-1.5 sm:p-2 rounded-lg transition-all min-w-[44px]
                     ${currentStep === s.step ? 'bg-primary/20' : currentStep > s.step ? 'opacity-70' : 'opacity-50'}`}
                   data-testid={`button-step-${s.step}`}
                 >
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold transition-all
+                  <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold transition-all
                     ${currentStep === s.step ? 'bg-primary text-primary-foreground' : 
                       currentStep > s.step ? 'bg-primary/50 text-white' : 'bg-muted text-muted-foreground'}`}>
-                    {currentStep > s.step ? <Check className="w-5 h-5" /> : <s.icon className="w-5 h-5" />}
+                    {currentStep > s.step ? <Check className="w-4 h-4 sm:w-5 sm:h-5" /> : <s.icon className="w-4 h-4 sm:w-5 sm:h-5" />}
                   </div>
-                  <span className={`text-xs font-medium hidden md:block ${currentStep === s.step ? 'text-primary' : 'text-muted-foreground'}`}>
+                  <span className={`text-[10px] sm:text-xs font-medium hidden sm:block ${currentStep === s.step ? 'text-primary' : 'text-muted-foreground'}`}>
                     {s.label}
                   </span>
                 </button>
                 {i < steps.length - 1 && (
-                  <div className={`w-8 md:w-16 h-1 mx-1 ${currentStep > s.step ? 'bg-primary' : 'bg-muted'}`} />
+                  <div className={`w-4 sm:w-8 md:w-16 h-0.5 sm:h-1 mx-0.5 sm:mx-1 ${currentStep > s.step ? 'bg-primary' : 'bg-muted'}`} />
                 )}
               </div>
             ))}
           </div>
 
           {currentStep === 1 && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {/* AI Chat Panel - Left Side */}
-                <Card className="flex flex-col h-[700px]">
+                <Card className="flex flex-col h-[400px] sm:h-[600px] lg:h-[700px]">
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2">
                       <MessageCircle className="w-5 h-5 text-primary" /> AI Publishing Assistant
@@ -1793,19 +1793,19 @@ Your journey to healing starts here.`);
                     </div>
                     <div>
                       <Label>Genre</Label>
-                      <div className="grid grid-cols-2 gap-2 mt-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2 mt-2">
                         {genres.map((g) => {
                           const Icon = g.icon;
                           return (
                             <button
                               key={g.value}
                               onClick={() => setSelectedGenre(g.value)}
-                              className={`p-2 rounded-lg border-2 flex items-center gap-2 transition-all hover-elevate
+                              className={`p-2 sm:p-2.5 rounded-lg border-2 flex items-center gap-2 transition-all hover-elevate min-h-[44px]
                                 ${selectedGenre === g.value ? 'border-primary bg-primary/10' : 'border-border'}`}
                               data-testid={`button-genre-${g.value}`}
                             >
-                              <Icon className={`w-4 h-4 ${selectedGenre === g.value ? 'text-primary' : ''}`} />
-                              <span className="text-xs font-medium">{g.label}</span>
+                              <Icon className={`w-4 h-4 flex-shrink-0 ${selectedGenre === g.value ? 'text-primary' : ''}`} />
+                              <span className="text-xs font-medium truncate">{g.label}</span>
                             </button>
                           );
                         })}
@@ -1852,10 +1852,11 @@ Your journey to healing starts here.`);
                     <Separator />
                     <div className="space-y-2">
                       <Label>Quick Actions</Label>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <Button 
                           variant="outline" 
                           size="sm"
+                          className="min-h-[44px] justify-start sm:justify-center"
                           onClick={() => {
                             setChatInput("What are the main strengths of my manuscript?");
                             sendChatMessage();
@@ -1867,6 +1868,7 @@ Your journey to healing starts here.`);
                         <Button 
                           variant="outline" 
                           size="sm"
+                          className="min-h-[44px] justify-start sm:justify-center"
                           onClick={() => {
                             setChatInput("Suggest a chapter outline for my book");
                             sendChatMessage();
@@ -1878,6 +1880,7 @@ Your journey to healing starts here.`);
                         <Button 
                           variant="outline" 
                           size="sm"
+                          className="min-h-[44px] justify-start sm:justify-center"
                           onClick={() => {
                             setChatInput("How can I improve the pacing and flow?");
                             sendChatMessage();
@@ -1889,6 +1892,7 @@ Your journey to healing starts here.`);
                         <Button 
                           variant="outline" 
                           size="sm"
+                          className="min-h-[44px] justify-start sm:justify-center"
                           onClick={() => {
                             setChatInput("What's missing that would make this book stronger?");
                             sendChatMessage();
@@ -1922,7 +1926,7 @@ Your journey to healing starts here.`);
                   <CardDescription>Organize your chapters and plan your book's structure</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                     <div className="lg:col-span-2">
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="font-bold">Chapter Outline</h3>
@@ -2049,8 +2053,8 @@ Your journey to healing starts here.`);
           )}
 
           {currentStep === 3 && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
                 {/* Chapter Navigation Sidebar */}
                 <Card className="h-fit">
                   <CardHeader className="pb-3">
@@ -2211,7 +2215,7 @@ Your journey to healing starts here.`);
                     
                     <TabsContent value="illustrations" className="space-y-4">
                       {/* AI Provider & Style Options */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-muted/30 rounded-lg">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-muted/30 rounded-lg">
                         <div>
                           <Label className="text-xs text-muted-foreground">AI Provider</Label>
                           <Select value={selectedAiProvider} onValueChange={(v: "gemini" | "openai" | "xai") => setSelectedAiProvider(v)}>
@@ -2421,7 +2425,7 @@ Your journey to healing starts here.`);
                     
                     <TabsContent value="layout" className="space-y-6">
                       {/* Format Type & Trim Size */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-muted/30 rounded-lg">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-muted/30 rounded-lg">
                         <div>
                           <Label className="text-xs text-muted-foreground">Format Type</Label>
                           <Select value={kdpFormat} onValueChange={setKdpFormat}>
