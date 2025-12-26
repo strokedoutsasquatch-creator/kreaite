@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2 } from "lucide-react";
 import RecoveryHeader from "@/components/RecoveryHeader";
 import HeroSection from "@/components/HeroSection";
+import AIShowcase from "@/components/AIShowcase";
 import RecoveryByDesign from "@/components/RecoveryByDesign";
 import TestimonyVideo from "@/components/TestimonyVideo";
 import AboutNick from "@/components/AboutNick";
@@ -54,6 +55,7 @@ export default function Landing() {
       <RecoveryHeader />
       <main>
         <HeroSection />
+        <AIShowcase />
         <RecoveryByDesign />
         <TestimonyVideo />
         <AboutNick />
