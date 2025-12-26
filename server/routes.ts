@@ -1878,6 +1878,664 @@ ${analysisPrompts[analysisType || 'full']}`;
     }
   });
 
+  // ============================================================================
+  // PROJECT NOTES SYSTEM
+  // ============================================================================
+
+  // Get notes for a project
+  app.get('/api/projects/:projectId/notes', isAuthenticated, async (req: any, res) => {
+    try {
+      const { projectId } = req.params;
+      const { chapterId, noteType, status } = req.query;
+      
+      let conditions = [eq(projectNotes.projectId, parseInt(projectId))];
+      if (chapterId) conditions.push(eq(projectNotes.chapterId, parseInt(chapterId as string)));
+      if (noteType) conditions.push(eq(projectNotes.noteType, noteType as string));
+      if (status) conditions.push(eq(projectNotes.status, status as string));
+      
+      const notes = await db.select().from(projectNotes)
+        .where(and(...conditions))
+        .orderBy(desc(projectNotes.createdAt));
+      
+      res.json(notes);
+    } catch (error) {
+      console.error("Error fetching notes:", error);
+      res.status(500).json({ message: "Failed to fetch notes" });
+    }
+  });
+
+  // Create a note
+  app.post('/api/projects/:projectId/notes', isAuthenticated, async (req: any, res) => {
+    try {
+      const { projectId } = req.params;
+      const { chapterId, noteType, content, priority } = req.body;
+      
+      const [note] = await db.insert(projectNotes).values({
+        projectId: parseInt(projectId),
+        chapterId: chapterId ? parseInt(chapterId) : null,
+        userId: req.user.id,
+        noteType: noteType || 'general',
+        content,
+        priority: priority || 'normal',
+        status: 'open'
+      }).returning();
+      
+      res.json(note);
+    } catch (error) {
+      console.error("Error creating note:", error);
+      res.status(500).json({ message: "Failed to create note" });
+    }
+  });
+
+  // Update a note
+  app.patch('/api/notes/:noteId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { noteId } = req.params;
+      const { content, status, priority, noteType } = req.body;
+      
+      const updates: any = { updatedAt: new Date() };
+      if (content !== undefined) updates.content = content;
+      if (status !== undefined) updates.status = status;
+      if (priority !== undefined) updates.priority = priority;
+      if (noteType !== undefined) updates.noteType = noteType;
+      
+      const [note] = await db.update(projectNotes)
+        .set(updates)
+        .where(eq(projectNotes.id, parseInt(noteId)))
+        .returning();
+      
+      res.json(note);
+    } catch (error) {
+      console.error("Error updating note:", error);
+      res.status(500).json({ message: "Failed to update note" });
+    }
+  });
+
+  // Delete a note
+  app.delete('/api/notes/:noteId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { noteId } = req.params;
+      await db.delete(projectNotes).where(eq(projectNotes.id, parseInt(noteId)));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting note:", error);
+      res.status(500).json({ message: "Failed to delete note" });
+    }
+  });
+
+  // Resolve a note
+  app.post('/api/notes/:noteId/resolve', isAuthenticated, async (req: any, res) => {
+    try {
+      const { noteId } = req.params;
+      const [note] = await db.update(projectNotes)
+        .set({ status: 'resolved', resolvedAt: new Date(), updatedAt: new Date() })
+        .where(eq(projectNotes.id, parseInt(noteId)))
+        .returning();
+      res.json(note);
+    } catch (error) {
+      console.error("Error resolving note:", error);
+      res.status(500).json({ message: "Failed to resolve note" });
+    }
+  });
+
+  // ============================================================================
+  // DOCTRINE OUTLINES SYSTEM (Optional Structured Knowledge)
+  // ============================================================================
+
+  // Get doctrine for a project
+  app.get('/api/projects/:projectId/doctrine', isAuthenticated, async (req: any, res) => {
+    try {
+      const { projectId } = req.params;
+      const [doctrine] = await db.select().from(doctrineOutlines)
+        .where(eq(doctrineOutlines.projectId, parseInt(projectId)));
+      
+      if (doctrine) {
+        const nodes = await db.select().from(doctrineNodes)
+          .where(eq(doctrineNodes.outlineId, doctrine.id))
+          .orderBy(doctrineNodes.order);
+        res.json({ ...doctrine, nodes });
+      } else {
+        res.json(null);
+      }
+    } catch (error) {
+      console.error("Error fetching doctrine:", error);
+      res.status(500).json({ message: "Failed to fetch doctrine" });
+    }
+  });
+
+  // Create doctrine for a project
+  app.post('/api/projects/:projectId/doctrine', isAuthenticated, async (req: any, res) => {
+    try {
+      const { projectId } = req.params;
+      const { title, description } = req.body;
+      
+      const [doctrine] = await db.insert(doctrineOutlines).values({
+        projectId: parseInt(projectId),
+        userId: req.user.id,
+        title: title || 'Book Outline',
+        description,
+        isEnabled: true
+      }).returning();
+      
+      res.json(doctrine);
+    } catch (error) {
+      console.error("Error creating doctrine:", error);
+      res.status(500).json({ message: "Failed to create doctrine" });
+    }
+  });
+
+  // Update doctrine
+  app.patch('/api/doctrine/:outlineId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { outlineId } = req.params;
+      const { title, description, isEnabled } = req.body;
+      
+      const updates: any = { updatedAt: new Date() };
+      if (title !== undefined) updates.title = title;
+      if (description !== undefined) updates.description = description;
+      if (isEnabled !== undefined) updates.isEnabled = isEnabled;
+      
+      const [doctrine] = await db.update(doctrineOutlines)
+        .set(updates)
+        .where(eq(doctrineOutlines.id, parseInt(outlineId)))
+        .returning();
+      
+      res.json(doctrine);
+    } catch (error) {
+      console.error("Error updating doctrine:", error);
+      res.status(500).json({ message: "Failed to update doctrine" });
+    }
+  });
+
+  // Delete doctrine
+  app.delete('/api/doctrine/:outlineId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { outlineId } = req.params;
+      await db.delete(doctrineOutlines).where(eq(doctrineOutlines.id, parseInt(outlineId)));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting doctrine:", error);
+      res.status(500).json({ message: "Failed to delete doctrine" });
+    }
+  });
+
+  // Get doctrine nodes
+  app.get('/api/doctrine/:outlineId/nodes', isAuthenticated, async (req: any, res) => {
+    try {
+      const { outlineId } = req.params;
+      const nodes = await db.select().from(doctrineNodes)
+        .where(eq(doctrineNodes.outlineId, parseInt(outlineId)))
+        .orderBy(doctrineNodes.order);
+      res.json(nodes);
+    } catch (error) {
+      console.error("Error fetching nodes:", error);
+      res.status(500).json({ message: "Failed to fetch nodes" });
+    }
+  });
+
+  // Create doctrine node
+  app.post('/api/doctrine/:outlineId/nodes', isAuthenticated, async (req: any, res) => {
+    try {
+      const { outlineId } = req.params;
+      const { parentId, chapterId, title, content, nodeType, order } = req.body;
+      
+      const [node] = await db.insert(doctrineNodes).values({
+        outlineId: parseInt(outlineId),
+        parentId: parentId ? parseInt(parentId) : null,
+        chapterId: chapterId ? parseInt(chapterId) : null,
+        title,
+        content,
+        nodeType: nodeType || 'topic',
+        order: order || 0
+      }).returning();
+      
+      res.json(node);
+    } catch (error) {
+      console.error("Error creating node:", error);
+      res.status(500).json({ message: "Failed to create node" });
+    }
+  });
+
+  // Update doctrine node
+  app.patch('/api/doctrine/nodes/:nodeId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { nodeId } = req.params;
+      const { title, content, nodeType, order, chapterId, parentId } = req.body;
+      
+      const updates: any = { updatedAt: new Date() };
+      if (title !== undefined) updates.title = title;
+      if (content !== undefined) updates.content = content;
+      if (nodeType !== undefined) updates.nodeType = nodeType;
+      if (order !== undefined) updates.order = order;
+      if (chapterId !== undefined) updates.chapterId = chapterId;
+      if (parentId !== undefined) updates.parentId = parentId;
+      
+      const [node] = await db.update(doctrineNodes)
+        .set(updates)
+        .where(eq(doctrineNodes.id, parseInt(nodeId)))
+        .returning();
+      
+      res.json(node);
+    } catch (error) {
+      console.error("Error updating node:", error);
+      res.status(500).json({ message: "Failed to update node" });
+    }
+  });
+
+  // Delete doctrine node
+  app.delete('/api/doctrine/nodes/:nodeId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { nodeId } = req.params;
+      await db.delete(doctrineNodes).where(eq(doctrineNodes.id, parseInt(nodeId)));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting node:", error);
+      res.status(500).json({ message: "Failed to delete node" });
+    }
+  });
+
+  // ============================================================================
+  // PROFESSIONAL EDITING (Credit-Based Premium Features)
+  // ============================================================================
+
+  const LITERARY_EXPERT_PROMPT = `You are a professional literary editor and writing coach with expertise in:
+- Literary techniques: metaphor, symbolism, foreshadowing, allusion, irony, imagery, motif
+- Story craft: three-act structure, hero's journey, character arcs, pacing, tension, stakes
+- Writing methodology: show don't tell, active voice, dialogue beats, scene construction
+- Genre conventions: romance, thriller, memoir, self-help, business, children's
+- Academic writing: research synthesis, citations, argumentation, clarity
+Provide specific, actionable feedback with examples.`;
+
+  // Developmental Edit (structure, pacing, arcs) - 10 credits
+  app.post('/api/book/edit/developmental', isAuthenticated, async (req: any, res) => {
+    try {
+      const { content, genre, targetAudience } = req.body;
+      const creditCost = 10;
+      
+      // Check and deduct credits
+      const hasCredits = await creditService.checkCredits(req.user.id, creditCost);
+      if (!hasCredits) {
+        return res.status(402).json({ message: "Insufficient credits", required: creditCost });
+      }
+      
+      const prompt = `${LITERARY_EXPERT_PROMPT}
+
+Perform a DEVELOPMENTAL EDIT on this ${genre || 'book'} content for ${targetAudience || 'general readers'}.
+
+Analyze and provide feedback on:
+1. **Overall Structure**: Is the narrative arc effective? Suggest restructuring if needed.
+2. **Pacing**: Where does it drag? Where is it rushed? Specific fixes.
+3. **Character Development**: Are characters believable? What's missing?
+4. **Plot/Argument Flow**: Are there holes? Inconsistencies? 
+5. **Theme Integration**: How well are themes woven throughout?
+6. **Opening Hook**: Does it grab readers? Suggest improvements.
+7. **Ending Impact**: Is it satisfying? Memorable?
+
+Content to edit:
+"""
+${content}
+"""
+
+Provide your feedback as JSON:
+{
+  "overallAssessment": "Brief summary",
+  "structureScore": 1-10,
+  "pacingScore": 1-10,
+  "characterScore": 1-10,
+  "suggestions": [
+    {"area": "Structure", "issue": "...", "fix": "...", "priority": "high/medium/low"},
+    ...
+  ],
+  "strengthsToKeep": ["..."],
+  "rewrittenOpening": "Suggested rewrite of first paragraph if needed"
+}`;
+
+      const result = await generateCoachResponse(prompt, []);
+      await creditService.deductCredits(req.user.id, creditCost, 'developmental_edit', { contentLength: content.length });
+      
+      try {
+        const jsonMatch = result.response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          res.json({ success: true, edit: JSON.parse(jsonMatch[0]), creditsUsed: creditCost });
+        } else {
+          res.json({ success: true, raw: result.response, creditsUsed: creditCost });
+        }
+      } catch {
+        res.json({ success: true, raw: result.response, creditsUsed: creditCost });
+      }
+    } catch (error) {
+      console.error("Error in developmental edit:", error);
+      res.status(500).json({ message: "Failed to perform developmental edit" });
+    }
+  });
+
+  // Line Edit (sentence flow, word choice) - 7 credits
+  app.post('/api/book/edit/line', isAuthenticated, async (req: any, res) => {
+    try {
+      const { content, style } = req.body;
+      const creditCost = 7;
+      
+      const hasCredits = await creditService.checkCredits(req.user.id, creditCost);
+      if (!hasCredits) {
+        return res.status(402).json({ message: "Insufficient credits", required: creditCost });
+      }
+      
+      const prompt = `${LITERARY_EXPERT_PROMPT}
+
+Perform a LINE EDIT on this content. Focus on:
+1. **Sentence Rhythm**: Vary length, improve flow
+2. **Word Choice**: Replace weak verbs, eliminate clichés, use precise language
+3. **Voice Consistency**: Ensure the ${style || 'author'}'s voice is consistent
+4. **Dialogue**: Make it natural, distinctive per character
+5. **Show Don't Tell**: Convert telling to showing
+6. **Sensory Details**: Add where missing
+
+Content:
+"""
+${content}
+"""
+
+Respond with JSON:
+{
+  "editedContent": "The fully line-edited version",
+  "changes": [
+    {"original": "...", "revised": "...", "reason": "..."}
+  ],
+  "voiceNotes": "Assessment of voice/style",
+  "readabilityScore": 1-10
+}`;
+
+      const result = await generateCoachResponse(prompt, []);
+      await creditService.deductCredits(req.user.id, creditCost, 'line_edit', { contentLength: content.length });
+      
+      try {
+        const jsonMatch = result.response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          res.json({ success: true, edit: JSON.parse(jsonMatch[0]), creditsUsed: creditCost });
+        } else {
+          res.json({ success: true, raw: result.response, creditsUsed: creditCost });
+        }
+      } catch {
+        res.json({ success: true, raw: result.response, creditsUsed: creditCost });
+      }
+    } catch (error) {
+      console.error("Error in line edit:", error);
+      res.status(500).json({ message: "Failed to perform line edit" });
+    }
+  });
+
+  // Copy Edit (grammar, punctuation, style) - 5 credits
+  app.post('/api/book/edit/copy', isAuthenticated, async (req: any, res) => {
+    try {
+      const { content, styleGuide } = req.body;
+      const creditCost = 5;
+      
+      const hasCredits = await creditService.checkCredits(req.user.id, creditCost);
+      if (!hasCredits) {
+        return res.status(402).json({ message: "Insufficient credits", required: creditCost });
+      }
+      
+      const prompt = `${LITERARY_EXPERT_PROMPT}
+
+Perform a COPY EDIT following ${styleGuide || 'Chicago Manual of Style'}:
+1. Fix all grammar and punctuation errors
+2. Ensure consistent spelling and capitalization
+3. Check subject-verb agreement
+4. Fix dangling modifiers
+5. Ensure proper hyphenation
+6. Verify quotation mark usage
+7. Check number formatting
+
+Content:
+"""
+${content}
+"""
+
+Respond with JSON:
+{
+  "editedContent": "Fully copy-edited version",
+  "corrections": [
+    {"original": "...", "corrected": "...", "rule": "..."}
+  ],
+  "errorCount": number,
+  "cleanlinessScore": 1-10
+}`;
+
+      const result = await generateCoachResponse(prompt, []);
+      await creditService.deductCredits(req.user.id, creditCost, 'copy_edit', { contentLength: content.length });
+      
+      try {
+        const jsonMatch = result.response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          res.json({ success: true, edit: JSON.parse(jsonMatch[0]), creditsUsed: creditCost });
+        } else {
+          res.json({ success: true, raw: result.response, creditsUsed: creditCost });
+        }
+      } catch {
+        res.json({ success: true, raw: result.response, creditsUsed: creditCost });
+      }
+    } catch (error) {
+      console.error("Error in copy edit:", error);
+      res.status(500).json({ message: "Failed to perform copy edit" });
+    }
+  });
+
+  // Proofread (final polish) - 3 credits
+  app.post('/api/book/edit/proofread', isAuthenticated, async (req: any, res) => {
+    try {
+      const { content } = req.body;
+      const creditCost = 3;
+      
+      const hasCredits = await creditService.checkCredits(req.user.id, creditCost);
+      if (!hasCredits) {
+        return res.status(402).json({ message: "Insufficient credits", required: creditCost });
+      }
+      
+      const prompt = `You are a meticulous proofreader. Final check for:
+1. Typos and misspellings
+2. Missing or extra punctuation
+3. Inconsistent formatting
+4. Spacing issues
+5. Any remaining errors
+
+Content:
+"""
+${content}
+"""
+
+Respond with JSON:
+{
+  "editedContent": "Final proofread version",
+  "typosFixed": ["list of typos found and fixed"],
+  "isPublishReady": true/false,
+  "finalNotes": "Any last observations"
+}`;
+
+      const result = await generateCoachResponse(prompt, []);
+      await creditService.deductCredits(req.user.id, creditCost, 'proofread', { contentLength: content.length });
+      
+      try {
+        const jsonMatch = result.response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          res.json({ success: true, edit: JSON.parse(jsonMatch[0]), creditsUsed: creditCost });
+        } else {
+          res.json({ success: true, raw: result.response, creditsUsed: creditCost });
+        }
+      } catch {
+        res.json({ success: true, raw: result.response, creditsUsed: creditCost });
+      }
+    } catch (error) {
+      console.error("Error in proofread:", error);
+      res.status(500).json({ message: "Failed to proofread" });
+    }
+  });
+
+  // ============================================================================
+  // RESEARCH & CITATIONS (Premium AI Features)
+  // ============================================================================
+
+  // AI Research on topic - 7 credits
+  app.post('/api/book/research', isAuthenticated, async (req: any, res) => {
+    try {
+      const { topic, depth, focusAreas } = req.body;
+      const creditCost = depth === 'deep' ? 15 : 7;
+      
+      const hasCredits = await creditService.checkCredits(req.user.id, creditCost);
+      if (!hasCredits) {
+        return res.status(402).json({ message: "Insufficient credits", required: creditCost });
+      }
+      
+      const prompt = `You are a professional researcher. Conduct ${depth || 'standard'} research on:
+
+Topic: "${topic}"
+${focusAreas ? `Focus areas: ${focusAreas.join(', ')}` : ''}
+
+Provide:
+1. Key facts and statistics
+2. Expert perspectives
+3. Historical context
+4. Current trends
+5. Counterarguments
+6. Suggested sources to cite
+
+Respond with JSON:
+{
+  "summary": "Executive summary of findings",
+  "keyFacts": [{"fact": "...", "source": "...", "reliability": "high/medium/low"}],
+  "statistics": [{"stat": "...", "source": "...", "year": "..."}],
+  "expertQuotes": [{"quote": "...", "author": "...", "credentials": "..."}],
+  "timeline": [{"year": "...", "event": "..."}],
+  "perspectives": {"pro": ["..."], "con": ["..."]},
+  "suggestedSources": [{"title": "...", "author": "...", "type": "book/article/study", "url": "..."}],
+  "researchNotes": [{"content": "...", "type": "research"}]
+}`;
+
+      const result = await generateCoachResponse(prompt, []);
+      await creditService.deductCredits(req.user.id, creditCost, 'research', { topic, depth });
+      
+      try {
+        const jsonMatch = result.response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          res.json({ success: true, research: JSON.parse(jsonMatch[0]), creditsUsed: creditCost });
+        } else {
+          res.json({ success: true, raw: result.response, creditsUsed: creditCost });
+        }
+      } catch {
+        res.json({ success: true, raw: result.response, creditsUsed: creditCost });
+      }
+    } catch (error) {
+      console.error("Error in research:", error);
+      res.status(500).json({ message: "Failed to conduct research" });
+    }
+  });
+
+  // Generate Citations - 5 credits
+  app.post('/api/book/citations', isAuthenticated, async (req: any, res) => {
+    try {
+      const { sources, style } = req.body;
+      const creditCost = 5;
+      
+      const hasCredits = await creditService.checkCredits(req.user.id, creditCost);
+      if (!hasCredits) {
+        return res.status(402).json({ message: "Insufficient credits", required: creditCost });
+      }
+      
+      const citationStyle = style || 'APA';
+      const prompt = `Format these sources as ${citationStyle} citations:
+
+Sources:
+${JSON.stringify(sources, null, 2)}
+
+Provide:
+1. Properly formatted bibliography entries
+2. In-text citation format for each
+3. Any missing information needed
+
+Respond with JSON:
+{
+  "bibliography": [
+    {"source": "original source info", "formatted": "Properly formatted citation", "inText": "(Author, Year)"}
+  ],
+  "missingInfo": ["List any info needed for complete citations"],
+  "style": "${citationStyle}",
+  "sortedBibliography": "Full bibliography sorted alphabetically"
+}`;
+
+      const result = await generateCoachResponse(prompt, []);
+      await creditService.deductCredits(req.user.id, creditCost, 'citations', { style: citationStyle, sourceCount: sources.length });
+      
+      try {
+        const jsonMatch = result.response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          res.json({ success: true, citations: JSON.parse(jsonMatch[0]), creditsUsed: creditCost });
+        } else {
+          res.json({ success: true, raw: result.response, creditsUsed: creditCost });
+        }
+      } catch {
+        res.json({ success: true, raw: result.response, creditsUsed: creditCost });
+      }
+    } catch (error) {
+      console.error("Error generating citations:", error);
+      res.status(500).json({ message: "Failed to generate citations" });
+    }
+  });
+
+  // Writing Coach - inline suggestions - 3 credits
+  app.post('/api/book/writing-coach', isAuthenticated, async (req: any, res) => {
+    try {
+      const { content, genre, focusAreas } = req.body;
+      const creditCost = 3;
+      
+      const hasCredits = await creditService.checkCredits(req.user.id, creditCost);
+      if (!hasCredits) {
+        return res.status(402).json({ message: "Insufficient credits", required: creditCost });
+      }
+      
+      const prompt = `${LITERARY_EXPERT_PROMPT}
+
+As a writing coach, review this ${genre || ''} content and provide inline suggestions:
+${focusAreas ? `Focus on: ${focusAreas.join(', ')}` : 'Focus on: clarity, engagement, literary quality'}
+
+Content:
+"""
+${content}
+"""
+
+Provide suggestions as JSON:
+{
+  "overallFeedback": "Brief encouraging feedback",
+  "suggestions": [
+    {
+      "type": "technique/clarity/engagement/style",
+      "original": "The exact phrase to improve",
+      "suggestion": "Improved version",
+      "explanation": "Why this is better",
+      "literaryTechnique": "Name of technique if applicable"
+    }
+  ],
+  "strengths": ["What's working well"],
+  "nextSteps": ["What to focus on next"]
+}`;
+
+      const result = await generateCoachResponse(prompt, []);
+      await creditService.deductCredits(req.user.id, creditCost, 'writing_coach', { contentLength: content.length });
+      
+      try {
+        const jsonMatch = result.response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          res.json({ success: true, coaching: JSON.parse(jsonMatch[0]), creditsUsed: creditCost });
+        } else {
+          res.json({ success: true, raw: result.response, creditsUsed: creditCost });
+        }
+      } catch {
+        res.json({ success: true, raw: result.response, creditsUsed: creditCost });
+      }
+    } catch (error) {
+      console.error("Error in writing coach:", error);
+      res.status(500).json({ message: "Failed to get coaching" });
+    }
+  });
+
   // Generate illustration using Gemini's image model
   app.post('/api/book/generate-image', isAuthenticated, async (req: any, res) => {
     try {
