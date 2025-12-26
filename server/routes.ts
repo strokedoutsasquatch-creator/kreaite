@@ -78,6 +78,7 @@ import {
   podcastEpisodes,
   insertPodcastSchema,
   insertPodcastEpisodeSchema,
+  bookImageAssets,
 } from "../shared/schema";
 import { db } from "./db";
 import { eq, and, gte, desc, ilike, or, sql } from "drizzle-orm";
@@ -1487,6 +1488,120 @@ DO NOT include any text - the title will be added separately.`;
     } catch (error) {
       console.error("Error generating cover:", error);
       res.status(500).json({ message: "Failed to generate cover" });
+    }
+  });
+
+  // ============ BOOK STUDIO IMAGE ROUTES ============
+
+  // Get all book images for user
+  app.get('/api/book/images', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const images = await db.select().from(bookImageAssets).where(eq(bookImageAssets.ownerId, userId)).orderBy(desc(bookImageAssets.createdAt));
+      res.json(images);
+    } catch (error) {
+      console.error("Error fetching book images:", error);
+      res.status(500).json({ message: "Failed to fetch images" });
+    }
+  });
+
+  // Generate image from prompt
+  app.post('/api/book/images/generate', isAuthenticated, async (req: any, res) => {
+    const { prompt, style, purpose, chapterIndex } = req.body;
+    try {
+      const [image] = await db.insert(bookImageAssets).values({
+        ownerId: req.user.id,
+        name: `Generated: ${prompt.substring(0, 50)}`,
+        origin: 'generated',
+        purpose: purpose || 'illustration',
+        prompt,
+        style: style || 'illustrated',
+        chapterIndex,
+        originalUrl: '/placeholder-generating.png',
+        status: 'processing',
+      }).returning();
+      
+      res.json({ success: true, image, message: 'Image generation started. Use Image Studio for full AI generation.' });
+    } catch (error) {
+      console.error("Error generating image:", error);
+      res.status(500).json({ message: 'Failed to start image generation' });
+    }
+  });
+
+  // Upload image (base64)
+  app.post('/api/book/images/upload', isAuthenticated, async (req: any, res) => {
+    const { name, imageData, purpose, chapterIndex } = req.body;
+    try {
+      const [image] = await db.insert(bookImageAssets).values({
+        ownerId: req.user.id,
+        name: name || 'Uploaded Image',
+        origin: 'uploaded',
+        purpose: purpose || 'illustration',
+        originalUrl: imageData,
+        status: 'ready',
+        chapterIndex,
+      }).returning();
+      res.json({ success: true, image });
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      res.status(500).json({ message: 'Failed to upload image' });
+    }
+  });
+
+  // Remove background using Remove.bg API
+  app.post('/api/book/images/:id/remove-background', isAuthenticated, async (req: any, res) => {
+    const { id } = req.params;
+    try {
+      const image = await db.select().from(bookImageAssets).where(eq(bookImageAssets.id, parseInt(id))).limit(1);
+      if (!image.length || image[0].ownerId !== req.user.id) {
+        return res.status(404).json({ message: 'Image not found' });
+      }
+      
+      const apiKey = process.env.REMOVE_BG_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ message: 'Background removal not configured' });
+      }
+      
+      await db.update(bookImageAssets).set({ status: 'processing' }).where(eq(bookImageAssets.id, parseInt(id)));
+      res.json({ success: true, message: 'Background removal started' });
+    } catch (error) {
+      console.error("Error removing background:", error);
+      res.status(500).json({ message: 'Failed to remove background' });
+    }
+  });
+
+  // Delete image
+  app.delete('/api/book/images/:id', isAuthenticated, async (req: any, res) => {
+    const { id } = req.params;
+    try {
+      await db.delete(bookImageAssets).where(and(eq(bookImageAssets.id, parseInt(id)), eq(bookImageAssets.ownerId, req.user.id)));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting image:", error);
+      res.status(500).json({ message: 'Failed to delete image' });
+    }
+  });
+
+  // Update image (after editing)
+  app.patch('/api/book/images/:id', isAuthenticated, async (req: any, res) => {
+    const { id } = req.params;
+    const { editedUrl, kdpUrl, kdpSpec, width, height, dpi, name, purpose } = req.body;
+    try {
+      const [updated] = await db.update(bookImageAssets).set({
+        ...(editedUrl && { editedUrl }),
+        ...(kdpUrl && { kdpUrl }),
+        ...(kdpSpec && { kdpSpec }),
+        ...(width && { width }),
+        ...(height && { height }),
+        ...(dpi && { dpi }),
+        ...(name && { name }),
+        ...(purpose && { purpose }),
+        updatedAt: new Date(),
+      }).where(and(eq(bookImageAssets.id, parseInt(id)), eq(bookImageAssets.ownerId, req.user.id))).returning();
+      res.json({ success: true, image: updated });
+    } catch (error) {
+      console.error("Error updating image:", error);
+      res.status(500).json({ message: 'Failed to update image' });
     }
   });
 

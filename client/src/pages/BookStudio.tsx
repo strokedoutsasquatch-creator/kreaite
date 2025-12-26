@@ -526,6 +526,109 @@ export default function BookStudio() {
   // Live manuscript editor state
   const [manuscriptEditorContent, setManuscriptEditorContent] = useState("");
   const [showBookDetailsPanel, setShowBookDetailsPanel] = useState(false);
+  
+  // Image workflow state (Step 4)
+  const [activeImageTab, setActiveImageTab] = useState("generate");
+  const [selectedBookImage, setSelectedBookImage] = useState<any>(null);
+  const [imagePurposeFilter, setImagePurposeFilter] = useState<string>("all");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  
+  // Fetch book images for library
+  const { data: bookImages = [], isLoading: isLoadingImages, refetch: refetchImages } = useQuery<any[]>({
+    queryKey: ['/api/book/images'],
+    enabled: !!user,
+  });
+  
+  // Generate image mutation
+  const generateBookImageMutation = useMutation({
+    mutationFn: async (data: { prompt: string; style: string; purpose: string; chapterIndex?: number }) => {
+      const res = await apiRequest('POST', '/api/book/images/generate', data);
+      return res.json();
+    },
+    onSuccess: () => {
+      refetchImages();
+      toast({ title: "Image Generation Started", description: "Your image is being generated" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to generate image", variant: "destructive" });
+    },
+  });
+  
+  // Upload image mutation
+  const uploadBookImageMutation = useMutation({
+    mutationFn: async (data: { name: string; imageData: string; purpose: string; chapterIndex?: number }) => {
+      const res = await apiRequest('POST', '/api/book/images/upload', data);
+      return res.json();
+    },
+    onSuccess: () => {
+      refetchImages();
+      setIsUploadingImage(false);
+      toast({ title: "Image Uploaded", description: "Your image has been added to the library" });
+    },
+    onError: () => {
+      setIsUploadingImage(false);
+      toast({ title: "Error", description: "Failed to upload image", variant: "destructive" });
+    },
+  });
+  
+  // Delete image mutation
+  const deleteBookImageMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest('DELETE', `/api/book/images/${id}`);
+    },
+    onSuccess: () => {
+      refetchImages();
+      setSelectedBookImage(null);
+      toast({ title: "Image Deleted", description: "Image removed from library" });
+    },
+  });
+  
+  // Remove background mutation
+  const removeBgMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest('POST', `/api/book/images/${id}/remove-background`);
+      return res.json();
+    },
+    onSuccess: () => {
+      refetchImages();
+      toast({ title: "Processing", description: "Background removal in progress" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Background removal not available", variant: "destructive" });
+    },
+  });
+  
+  // Handle image file drop/upload
+  const handleImageUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast({ title: "Invalid File", description: "Please upload an image file", variant: "destructive" });
+      return;
+    }
+    setIsUploadingImage(true);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const imageData = e.target?.result as string;
+      uploadBookImageMutation.mutate({
+        name: file.name,
+        imageData,
+        purpose: 'illustration',
+        chapterIndex: selectedImageChapter ? parseInt(selectedImageChapter) : undefined,
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+  
+  const handleImageDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const files = e.dataTransfer.files;
+    if (files.length > 0) handleImageUpload(files[0]);
+  };
+  
+  const filteredBookImages = imagePurposeFilter === 'all' 
+    ? bookImages 
+    : bookImages.filter((img: any) => img.purpose === imagePurposeFilter);
 
   // Publication readiness calculation
   const calculatePublicationReadiness = () => {
@@ -2344,18 +2447,59 @@ Your journey to healing starts here.`);
                   <CardTitle className="flex items-center gap-2">
                     <ImagePlus className="w-5 h-5 text-primary" /> Step 4: Images & Cover Design
                   </CardTitle>
-                  <CardDescription>Generate illustrations and create your book cover</CardDescription>
+                  <CardDescription>Generate illustrations, manage your image library, and create your book cover</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Tabs defaultValue="illustrations" className="w-full">
-                    <TabsList className="mb-4">
-                      <TabsTrigger value="illustrations" data-testid="tab-illustrations">Interior Illustrations</TabsTrigger>
-                      <TabsTrigger value="cover" data-testid="tab-cover">Book Cover</TabsTrigger>
+                  <Tabs value={activeImageTab} onValueChange={setActiveImageTab} className="w-full">
+                    <TabsList className="mb-4 flex-wrap gap-1">
+                      <TabsTrigger value="generate" data-testid="tab-generate">
+                        <Wand2 className="w-4 h-4 mr-1" /> Generate
+                      </TabsTrigger>
+                      <TabsTrigger value="library" data-testid="tab-library">
+                        <Layers className="w-4 h-4 mr-1" /> Library ({bookImages.length})
+                      </TabsTrigger>
+                      <TabsTrigger value="edit" data-testid="tab-edit">
+                        <Edit3 className="w-4 h-4 mr-1" /> Edit
+                      </TabsTrigger>
+                      <TabsTrigger value="cover" data-testid="tab-cover">
+                        <BookOpen className="w-4 h-4 mr-1" /> Cover
+                      </TabsTrigger>
                     </TabsList>
                     
-                    <TabsContent value="illustrations" className="space-y-4">
-                      {/* AI Provider & Style Options */}
+                    {/* Generate Tab */}
+                    <TabsContent value="generate" className="space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-muted/30 rounded-lg">
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Style</Label>
+                          <Select value={illustrationStyle} onValueChange={setIllustrationStyle}>
+                            <SelectTrigger className="h-8" data-testid="select-style">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="realistic">Realistic</SelectItem>
+                              <SelectItem value="illustrated">Illustrated</SelectItem>
+                              <SelectItem value="artistic">Artistic</SelectItem>
+                              <SelectItem value="photographic">Photographic</SelectItem>
+                              <SelectItem value="whimsical watercolor">Whimsical Watercolor</SelectItem>
+                              <SelectItem value="children's book illustration">Children's Book</SelectItem>
+                              <SelectItem value="professional line art">Line Art</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Purpose</Label>
+                          <Select value={imagePurposeFilter === 'all' ? 'illustration' : imagePurposeFilter} onValueChange={(v) => setImagePurposeFilter(v)}>
+                            <SelectTrigger className="h-8" data-testid="select-purpose">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="cover">Cover</SelectItem>
+                              <SelectItem value="illustration">Illustration</SelectItem>
+                              <SelectItem value="diagram">Diagram</SelectItem>
+                              <SelectItem value="photo">Photo</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                         <div>
                           <Label className="text-xs text-muted-foreground">AI Provider</Label>
                           <Select value={selectedAiProvider} onValueChange={(v: "gemini" | "openai" | "xai") => setSelectedAiProvider(v)}>
@@ -2370,38 +2514,8 @@ Your journey to healing starts here.`);
                           </Select>
                         </div>
                         <div>
-                          <Label className="text-xs text-muted-foreground">Style</Label>
-                          <Select value={illustrationStyle} onValueChange={setIllustrationStyle}>
-                            <SelectTrigger className="h-8" data-testid="select-style">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="whimsical watercolor">Whimsical Watercolor</SelectItem>
-                              <SelectItem value="children's book illustration">Children's Book</SelectItem>
-                              <SelectItem value="professional line art">Line Art</SelectItem>
-                              <SelectItem value="realistic digital painting">Realistic Digital</SelectItem>
-                              <SelectItem value="minimalist vector">Minimalist Vector</SelectItem>
-                              <SelectItem value="vintage engraving">Vintage Engraving</SelectItem>
-                              <SelectItem value="cartoon">Cartoon Style</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label className="text-xs text-muted-foreground">Placement Mode</Label>
-                          <Select value={imagePlacementMode} onValueChange={(v: "auto" | "hybrid" | "manual") => setImagePlacementMode(v)}>
-                            <SelectTrigger className="h-8" data-testid="select-placement">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="auto">Auto (AI decides)</SelectItem>
-                              <SelectItem value="hybrid">Hybrid (suggest)</SelectItem>
-                              <SelectItem value="manual">Manual (you place)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
                           <Label className="text-xs text-muted-foreground">For Chapter</Label>
-                          <Select value={selectedImageChapter || "all"} onValueChange={(v) => setSelectedImageChapter(v === "all" ? "" : v)}>
+                          <Select value={selectedImageChapter || "all"} onValueChange={(v) => setSelectedImageChapter(v === "all" ? null : v)}>
                             <SelectTrigger className="h-8" data-testid="select-chapter">
                               <SelectValue placeholder="Select..." />
                             </SelectTrigger>
@@ -2428,17 +2542,24 @@ Your journey to healing starts here.`);
                             />
                           </div>
                           <Button 
-                            onClick={generateImage}
-                            disabled={isGeneratingImage || !imagePrompt.trim()}
+                            onClick={() => {
+                              generateBookImageMutation.mutate({
+                                prompt: imagePrompt,
+                                style: illustrationStyle,
+                                purpose: imagePurposeFilter === 'all' ? 'illustration' : imagePurposeFilter,
+                                chapterIndex: selectedImageChapter ? parseInt(selectedImageChapter) : undefined,
+                              });
+                            }}
+                            disabled={generateBookImageMutation.isPending || !imagePrompt.trim()}
                             className="w-full"
                             data-testid="button-generate-image"
                           >
-                            {isGeneratingImage ? (
-                              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                            {generateBookImageMutation.isPending ? (
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                             ) : (
                               <Sparkles className="w-4 h-4 mr-2" />
                             )}
-                            Generate with {selectedAiProvider === 'gemini' ? 'Gemini' : selectedAiProvider === 'openai' ? 'DALL-E' : 'XAI'}
+                            Generate Image
                           </Button>
                           
                           <div className="space-y-2">
@@ -2465,46 +2586,39 @@ Your journey to healing starts here.`);
                         </div>
                         
                         <div>
-                          <Label className="mb-2 block">Generated Images ({generatedImages.length})</Label>
+                          <Label className="mb-2 block">Recent Generated Images</Label>
                           <ScrollArea className="h-[400px] rounded-lg border p-2">
                             <div className="grid grid-cols-2 gap-3">
-                              {generatedImages.length > 0 ? (
-                                generatedImages.map((img, i) => (
-                                  <div key={i} className="relative group">
+                              {bookImages.filter((img: any) => img.origin === 'generated').slice(0, 6).length > 0 ? (
+                                bookImages.filter((img: any) => img.origin === 'generated').slice(0, 6).map((img: any) => (
+                                  <div key={img.id} className="relative group">
                                     <img 
-                                      src={img} 
-                                      alt={`Generated illustration ${i + 1}`}
+                                      src={img.originalUrl} 
+                                      alt={img.name}
                                       className="w-full aspect-square object-cover rounded-lg border"
                                     />
                                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
-                                      <Button size="sm" variant="secondary" onClick={() => {
-                                        const link = document.createElement('a');
-                                        link.href = img;
-                                        link.download = `illustration-${i + 1}.png`;
-                                        link.click();
-                                      }} data-testid={`button-download-${i}`}>
-                                        <Download className="w-3 h-3 mr-1" /> Save
+                                      <Button size="icon" variant="secondary" onClick={() => {
+                                        setSelectedBookImage(img);
+                                        setActiveImageTab('edit');
+                                      }} data-testid={`button-edit-gen-${img.id}`}>
+                                        <Edit3 className="w-3 h-3" />
                                       </Button>
-                                      {imagePlacementMode === 'manual' && (
-                                        <Button size="sm" variant="outline" onClick={() => {
-                                          if (selectedImageChapter) {
-                                            updateChapter(selectedImageChapter, { imageUrl: img });
-                                            toast({ title: "Image assigned", description: `Added to Chapter ${selectedImageChapter}` });
-                                          }
-                                        }} data-testid={`button-assign-${i}`}>
-                                          <Layers className="w-3 h-3 mr-1" /> Assign
-                                        </Button>
-                                      )}
+                                      <Button size="icon" variant="ghost" onClick={() => deleteBookImageMutation.mutate(img.id)} data-testid={`button-delete-gen-${img.id}`}>
+                                        <Trash2 className="w-3 h-3 text-red-400" />
+                                      </Button>
                                     </div>
+                                    {img.status === 'processing' && (
+                                      <div className="absolute inset-0 bg-black/70 rounded-lg flex items-center justify-center">
+                                        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                                      </div>
+                                    )}
                                   </div>
                                 ))
                               ) : (
                                 <div className="col-span-2 aspect-video bg-muted/30 rounded-lg flex flex-col items-center justify-center p-8">
                                   <Image className="w-16 h-16 text-muted-foreground/50 mb-3" />
                                   <p className="text-sm text-muted-foreground text-center">No images generated yet</p>
-                                  <p className="text-xs text-muted-foreground/70 text-center mt-1">
-                                    Using {selectedAiProvider === 'gemini' ? 'Gemini (free tier)' : selectedAiProvider}
-                                  </p>
                                 </div>
                               )}
                             </div>
@@ -2513,6 +2627,202 @@ Your journey to healing starts here.`);
                       </div>
                     </TabsContent>
                     
+                    {/* Library Tab */}
+                    <TabsContent value="library" className="space-y-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <Label className="text-sm">Filter:</Label>
+                          <Select value={imagePurposeFilter} onValueChange={setImagePurposeFilter}>
+                            <SelectTrigger className="w-32 h-8" data-testid="select-filter-purpose">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All</SelectItem>
+                              <SelectItem value="cover">Cover</SelectItem>
+                              <SelectItem value="illustration">Illustration</SelectItem>
+                              <SelectItem value="diagram">Diagram</SelectItem>
+                              <SelectItem value="photo">Photo</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <input
+                          type="file"
+                          id="image-upload"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleImageUpload(file);
+                          }}
+                        />
+                        <Button variant="outline" onClick={() => document.getElementById('image-upload')?.click()} disabled={isUploadingImage} data-testid="button-upload-image">
+                          {isUploadingImage ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
+                          Upload Image
+                        </Button>
+                      </div>
+                      
+                      <div
+                        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${isDragOver ? 'border-primary bg-primary/5' : 'border-muted-foreground/30'}`}
+                        onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                        onDragLeave={() => setIsDragOver(false)}
+                        onDrop={handleImageDrop}
+                      >
+                        <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">Drag & drop images here</p>
+                      </div>
+                      
+                      {isLoadingImages ? (
+                        <div className="flex justify-center py-8">
+                          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                          {filteredBookImages.map((img: any) => (
+                            <Card key={img.id} className="overflow-hidden group hover-elevate" data-testid={`card-image-${img.id}`}>
+                              <div className="relative aspect-square">
+                                <img 
+                                  src={img.originalUrl} 
+                                  alt={img.name}
+                                  className="w-full h-full object-cover"
+                                />
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                                  <Button size="icon" variant="secondary" onClick={() => {
+                                    setSelectedBookImage(img);
+                                    setActiveImageTab('edit');
+                                  }} data-testid={`button-edit-lib-${img.id}`}>
+                                    <Edit3 className="w-3 h-3" />
+                                  </Button>
+                                  <Button size="icon" variant="secondary" onClick={() => removeBgMutation.mutate(img.id)} data-testid={`button-remove-bg-${img.id}`}>
+                                    <Scissors className="w-3 h-3" />
+                                  </Button>
+                                  <Button size="icon" variant="ghost" onClick={() => deleteBookImageMutation.mutate(img.id)} data-testid={`button-delete-lib-${img.id}`}>
+                                    <Trash2 className="w-3 h-3 text-red-400" />
+                                  </Button>
+                                </div>
+                                {img.status === 'processing' && (
+                                  <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                                  </div>
+                                )}
+                              </div>
+                              <CardContent className="p-2">
+                                <p className="text-xs truncate font-medium">{img.name}</p>
+                                <div className="flex items-center gap-1 mt-1">
+                                  <Badge variant="outline" className="text-xs">{img.purpose}</Badge>
+                                  <Badge variant="secondary" className="text-xs">{img.origin}</Badge>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                          {filteredBookImages.length === 0 && (
+                            <div className="col-span-full py-12 text-center text-muted-foreground">
+                              <Image className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                              <p>No images in your library</p>
+                              <p className="text-sm">Generate or upload images to get started</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </TabsContent>
+                    
+                    {/* Edit Tab */}
+                    <TabsContent value="edit" className="space-y-4">
+                      {selectedBookImage ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-4">
+                            <div className="aspect-square rounded-lg border overflow-hidden bg-muted/30">
+                              <img 
+                                src={selectedBookImage.editedUrl || selectedBookImage.originalUrl} 
+                                alt={selectedBookImage.name}
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                            <div className="flex gap-2 flex-wrap">
+                              <Button variant="outline" onClick={() => removeBgMutation.mutate(selectedBookImage.id)} disabled={removeBgMutation.isPending} data-testid="button-remove-bg-edit">
+                                {removeBgMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Scissors className="w-4 h-4 mr-2" />}
+                                Remove Background
+                              </Button>
+                              <Button variant="outline" onClick={() => {
+                                const link = document.createElement('a');
+                                link.href = selectedBookImage.editedUrl || selectedBookImage.originalUrl;
+                                link.download = `${selectedBookImage.name}.png`;
+                                link.click();
+                              }} data-testid="button-download-edit">
+                                <Download className="w-4 h-4 mr-2" />
+                                Download
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="space-y-4">
+                            <div>
+                              <Label>Image Name</Label>
+                              <Input 
+                                value={selectedBookImage.name} 
+                                onChange={(e) => setSelectedBookImage({...selectedBookImage, name: e.target.value})}
+                                data-testid="input-image-name"
+                              />
+                            </div>
+                            <div>
+                              <Label>Purpose</Label>
+                              <Select value={selectedBookImage.purpose} onValueChange={(v) => setSelectedBookImage({...selectedBookImage, purpose: v})}>
+                                <SelectTrigger data-testid="select-edit-purpose">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="cover">Cover</SelectItem>
+                                  <SelectItem value="illustration">Illustration</SelectItem>
+                                  <SelectItem value="diagram">Diagram</SelectItem>
+                                  <SelectItem value="photo">Photo</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>
+                              <Label>KDP Size Preset</Label>
+                              <Select value={selectedBookImage.kdpSpec || ""} onValueChange={(v) => setSelectedBookImage({...selectedBookImage, kdpSpec: v})}>
+                                <SelectTrigger data-testid="select-kdp-size">
+                                  <SelectValue placeholder="Select size..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="6x9">6" x 9" (Full Page)</SelectItem>
+                                  <SelectItem value="8.5x11">8.5" x 11" (Full Page)</SelectItem>
+                                  <SelectItem value="full-page">Full Page Bleed</SelectItem>
+                                  <SelectItem value="half-page">Half Page</SelectItem>
+                                  <SelectItem value="spot">Spot Illustration</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            {selectedBookImage.prompt && (
+                              <div>
+                                <Label className="text-muted-foreground">Original Prompt</Label>
+                                <p className="text-sm bg-muted/30 p-2 rounded mt-1">{selectedBookImage.prompt}</p>
+                              </div>
+                            )}
+                            <Button 
+                              onClick={() => {
+                                toast({ title: "Open in Media Studio", description: "Navigate to Media Studio for advanced editing" });
+                              }}
+                              variant="outline"
+                              className="w-full"
+                              data-testid="button-open-media-studio"
+                            >
+                              <ExternalLink className="w-4 h-4 mr-2" />
+                              Open in Media Studio
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="py-12 text-center text-muted-foreground">
+                          <Edit3 className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                          <p>No image selected</p>
+                          <p className="text-sm">Select an image from the Library to edit</p>
+                          <Button variant="ghost" onClick={() => setActiveImageTab('library')} data-testid="button-go-to-library">
+                            Go to Library
+                          </Button>
+                        </div>
+                      )}
+                    </TabsContent>
+                    
+                    {/* Cover Tab */}
                     <TabsContent value="cover" className="space-y-4">
                       <CoverDesigner
                         bookTitle={bookTitle}

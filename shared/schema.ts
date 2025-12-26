@@ -2560,6 +2560,39 @@ export const insertMediaAssetSchema = createInsertSchema(mediaAssets).omit({ id:
 export type InsertMediaAsset = z.infer<typeof insertMediaAssetSchema>;
 export type MediaAsset = typeof mediaAssets.$inferSelect;
 
+// ============================================================================
+// BOOK STUDIO - IMAGE ASSETS
+// ============================================================================
+
+export const bookImageAssets = pgTable("book_image_assets", {
+  id: serial("id").primaryKey(),
+  ownerId: varchar("owner_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  origin: text("origin").notNull().default("uploaded"), // 'uploaded', 'generated'
+  purpose: text("purpose").notNull().default("illustration"), // 'cover', 'illustration', 'diagram', 'photo'
+  prompt: text("prompt"), // For AI generated images
+  style: text("style"), // 'realistic', 'illustrated', 'artistic', 'photographic'
+  chapterIndex: integer("chapter_index"), // Optional chapter association
+  originalUrl: text("original_url").notNull(),
+  editedUrl: text("edited_url"), // After editing in MediaStudio
+  noBgUrl: text("no_bg_url"), // After background removal
+  kdpUrl: text("kdp_url"), // After KDP formatting (300 DPI, proper dimensions)
+  width: integer("width"),
+  height: integer("height"),
+  dpi: integer("dpi"),
+  fileSize: integer("file_size"),
+  mimeType: text("mime_type"),
+  kdpSpec: text("kdp_spec"), // '6x9', '8.5x11', 'full-page', 'half-page', 'spot'
+  status: text("status").notNull().default("ready"), // 'ready', 'processing', 'error'
+  metadata: jsonb("metadata"), // Additional metadata
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertBookImageAssetSchema = createInsertSchema(bookImageAssets).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertBookImageAsset = z.infer<typeof insertBookImageAssetSchema>;
+export type BookImageAsset = typeof bookImageAssets.$inferSelect;
+
 // Insert schemas for ultra-premium features
 export const insertVoiceCloneSchema = createInsertSchema(voiceClones).omit({
   id: true,
