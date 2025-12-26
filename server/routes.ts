@@ -98,6 +98,19 @@ import * as creditService from './creditService';
 import * as geoService from './geolocationService';
 import * as i18nService from './i18nService';
 import { jobQueue } from './jobQueueService';
+import {
+  isLuluConfigured,
+  createPrintable,
+  createPrintJob,
+  getPrintJobStatus,
+  getShippingOptions as getLuluShippingOptions,
+  calculatePrintCost,
+  suggestRetailPrice,
+  trimSizes,
+  bindingTypes,
+  paperTypes,
+  generatePodPackageId,
+} from './luluService';
 
 async function initStripe() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -5627,7 +5640,38 @@ Respond in JSON format:
     }
   });
 
-  // Get order details
+  // Get order by Stripe session ID (for success redirect)
+  app.get('/api/marketplace/orders/session/:sessionId', isAuthenticated, async (req: any, res) => {
+    try {
+      const customerId = req.user.claims.sub;
+      const sessionId = req.params.sessionId;
+      
+      const order = await storage.getBookOrderBySessionId(sessionId);
+      if (!order) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+      
+      if (order.customerId !== customerId) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
+      const items = await storage.getOrderItems(order.id);
+      const printJobs = await storage.getLuluPrintJobsByOrder(order.id);
+      
+      res.json({ 
+        ...order, 
+        items,
+        printJobs,
+        hasDigitalItems: items.some(item => item.downloadUrl),
+        hasPrintItems: printJobs.length > 0
+      });
+    } catch (error) {
+      console.error("Error fetching order by session:", error);
+      res.status(500).json({ message: "Failed to fetch order" });
+    }
+  });
+
+  // Get order details with full tracking info
   app.get('/api/marketplace/orders/:id', isAuthenticated, async (req: any, res) => {
     try {
       const customerId = req.user.claims.sub;
@@ -5639,7 +5683,31 @@ Respond in JSON format:
       }
       
       const items = await storage.getOrderItems(orderId);
-      res.json({ ...order, items });
+      const printJobs = await storage.getLuluPrintJobsByOrder(orderId);
+      
+      const itemsWithDetails = await Promise.all(items.map(async (item) => {
+        const edition = await storage.getBookEdition(item.editionId);
+        const listing = await storage.getMarketplaceListing(item.listingId);
+        const itemPrintJobs = printJobs.filter(pj => pj.orderItemId === item.id);
+        
+        return {
+          ...item,
+          editionType: edition?.editionType,
+          listingTitle: listing?.title,
+          coverImage: listing?.coverImageUrl,
+          printJobs: itemPrintJobs,
+          isDigital: edition?.editionType?.includes('digital'),
+          canDownload: !!item.downloadUrl && (!item.downloadExpiresAt || new Date(item.downloadExpiresAt) > new Date())
+        };
+      }));
+      
+      res.json({ 
+        ...order, 
+        items: itemsWithDetails,
+        printJobs,
+        hasDigitalItems: itemsWithDetails.some(item => item.isDigital),
+        hasPrintItems: printJobs.length > 0
+      });
     } catch (error) {
       console.error("Error fetching order:", error);
       res.status(500).json({ message: "Failed to fetch order" });
@@ -5728,6 +5796,186 @@ Respond in JSON format:
   app.get('/api/marketplace/print-specs', (req, res) => {
     const { trimSizes, bindingTypes, paperTypes } = require('./luluService');
     res.json({ trimSizes, bindingTypes, paperTypes });
+  });
+
+  // ============================================================================
+  // LULU PRINT-ON-DEMAND API
+  // ============================================================================
+
+  // Get available print specifications
+  app.get('/api/lulu/print-specs', isAuthenticated, async (req: any, res) => {
+    try {
+      res.json({
+        configured: isLuluConfigured(),
+        trimSizes,
+        bindingTypes,
+        paperTypes,
+      });
+    } catch (error) {
+      console.error("Error getting print specs:", error);
+      res.status(500).json({ message: "Failed to get print specifications" });
+    }
+  });
+
+  // Calculate print cost
+  app.post('/api/lulu/calculate-cost', isAuthenticated, async (req: any, res) => {
+    try {
+      const { pageCount, trimSize, bindingType, paperType, colorInterior, quantity } = req.body;
+
+      if (!pageCount || pageCount < 24) {
+        return res.status(400).json({ message: "pageCount must be at least 24" });
+      }
+
+      const specs = {
+        pageCount: pageCount || 200,
+        trimSize: trimSize || 'us_trade',
+        bindingType: bindingType || 'perfect',
+        paperType: paperType || 'standard_white',
+        colorInterior: colorInterior || false,
+      };
+
+      const printCost = calculatePrintCost(specs);
+      const pricing = suggestRetailPrice(printCost);
+      const podPackageId = generatePodPackageId(specs);
+
+      res.json({
+        printCost,
+        quantity: quantity || 1,
+        totalPrintCost: printCost * (quantity || 1),
+        podPackageId,
+        ...pricing,
+      });
+    } catch (error) {
+      console.error("Error calculating print cost:", error);
+      res.status(500).json({ message: "Failed to calculate print cost" });
+    }
+  });
+
+  // Get shipping options
+  app.post('/api/lulu/shipping-options', isAuthenticated, async (req: any, res) => {
+    try {
+      const { countryCode, pageCount, quantity } = req.body;
+
+      const options = await getLuluShippingOptions(
+        countryCode || 'US',
+        pageCount || 200,
+        quantity || 1
+      );
+
+      res.json(options);
+    } catch (error) {
+      console.error("Error getting shipping options:", error);
+      res.status(500).json({ message: "Failed to get shipping options" });
+    }
+  });
+
+  // Create a book product (printable)
+  app.post('/api/lulu/create-printable', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { title, interiorSourceUrl, coverSourceUrl, podPackageId, externalId } = req.body;
+
+      if (!title || !interiorSourceUrl || !coverSourceUrl || !podPackageId) {
+        return res.status(400).json({ 
+          message: "title, interiorSourceUrl, coverSourceUrl, and podPackageId are required" 
+        });
+      }
+
+      const result = await createPrintable({
+        externalId: externalId || `${userId}-${Date.now()}`,
+        title,
+        interiorSourceUrl,
+        coverSourceUrl,
+        podPackageId,
+      });
+
+      if (!result.success) {
+        return res.status(400).json({ message: result.error });
+      }
+
+      res.json({
+        success: true,
+        printableId: result.printableId,
+      });
+    } catch (error) {
+      console.error("Error creating printable:", error);
+      res.status(500).json({ message: "Failed to create book product" });
+    }
+  });
+
+  // Create a print order
+  app.post('/api/lulu/create-order', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const userEmail = req.user.claims.email || '';
+      const { lineItems, shippingAddress, shippingLevel, externalId } = req.body;
+
+      if (!lineItems || lineItems.length === 0) {
+        return res.status(400).json({ message: "lineItems are required" });
+      }
+
+      if (!shippingAddress) {
+        return res.status(400).json({ message: "shippingAddress is required" });
+      }
+
+      const requiredAddressFields = ['name', 'street1', 'city', 'stateCode', 'postcode', 'countryCode'];
+      for (const field of requiredAddressFields) {
+        if (!shippingAddress[field]) {
+          return res.status(400).json({ message: `shippingAddress.${field} is required` });
+        }
+      }
+
+      const result = await createPrintJob({
+        externalId: externalId || `order-${userId}-${Date.now()}`,
+        lineItems,
+        shippingAddress,
+        shippingLevel: shippingLevel || 'GROUND',
+        contactEmail: userEmail,
+      });
+
+      if (!result.success) {
+        return res.status(400).json({ message: result.error });
+      }
+
+      res.json({
+        success: true,
+        orderId: result.orderId,
+        estimatedShipDate: result.estimatedShipDate,
+        costs: result.costs,
+      });
+    } catch (error) {
+      console.error("Error creating print order:", error);
+      res.status(500).json({ message: "Failed to create print order" });
+    }
+  });
+
+  // Get order status
+  app.get('/api/lulu/order/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const orderId = req.params.id;
+
+      if (!orderId) {
+        return res.status(400).json({ message: "Order ID is required" });
+      }
+
+      const result = await getPrintJobStatus(orderId);
+
+      if (!result.success) {
+        return res.status(400).json({ message: result.error });
+      }
+
+      res.json({
+        success: true,
+        status: result.status,
+        trackingNumber: result.trackingNumber,
+        trackingUrl: result.trackingUrl,
+        carrier: result.carrier,
+        lineItems: result.lineItems,
+      });
+    } catch (error) {
+      console.error("Error getting order status:", error);
+      res.status(500).json({ message: "Failed to get order status" });
+    }
   });
 
   // ============================================================================

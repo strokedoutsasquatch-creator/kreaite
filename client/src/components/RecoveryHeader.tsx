@@ -33,18 +33,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import strokeLyfeLogo from "@assets/Stroke Lyfe OS Logo_1763788031983.png";
 
 const navLinks = [
-  { href: "/recovery-dashboard", label: "DASHBOARD", icon: LayoutDashboard, description: "Your recovery progress" },
-  { href: "/academy", label: "ACADEMY", icon: GraduationCap, description: "Learn recovery techniques" },
-  { href: "/builder", label: "BUILDER", icon: Hammer, description: "Build your recovery plan" },
-  { href: "/exercises", label: "EXERCISES", icon: Dumbbell, description: "Physical therapy exercises" },
-  { href: "/recovery-university", label: "UNIVERSITY", icon: Building2, description: "Advanced learning" },
-  { href: "/community", label: "COMMUNITY", icon: Users, description: "Connect with survivors" },
+  { href: "/recovery", label: "HOME", icon: Heart, description: "Recovery landing page" },
+  { href: "/recovery/academy", label: "COURSES", icon: GraduationCap, description: "Learn recovery techniques" },
+  { href: "/recovery/dashboard", label: "PROGRESS", icon: Target, description: "Track your recovery journey" },
+  { href: "/recovery/social", label: "COMMUNITY", icon: Users, description: "Connect with survivors" },
+  { href: "/recovery/university", label: "RESOURCES", icon: Building2, description: "Guides and tools" },
 ];
 
 const quickFeatures = [
-  { href: "/recovery-dashboard", label: "Progress Tracking", icon: Target, description: "Monitor your milestones" },
-  { href: "/exercises", label: "Daily Exercises", icon: Activity, description: "Personalized routines" },
-  { href: "/academy", label: "Brain Training", icon: Brain, description: "Cognitive exercises" },
+  { href: "/recovery/dashboard", label: "Progress Tracking", icon: Target, description: "Monitor your milestones" },
+  { href: "/recovery/exercises", label: "Daily Exercises", icon: Activity, description: "Personalized routines" },
+  { href: "/recovery/academy", label: "Brain Training", icon: Brain, description: "Cognitive exercises" },
 ];
 
 export default function RecoveryHeader() {
@@ -68,20 +67,20 @@ export default function RecoveryHeader() {
               </Button>
             </Link>
             
-            <Link href="/recovery-dashboard" data-testid="link-recovery-home">
+            <Link href="/recovery" data-testid="link-recovery-home">
               <div className="flex items-center gap-3 hover-elevate active-elevate-2 px-2 py-1 rounded-md cursor-pointer">
                 <img 
                   src={strokeLyfeLogo} 
-                  alt="Sasquatch Recovery" 
+                  alt="Stroke Recovery Academy" 
                   className="h-10 w-auto"
                   data-testid="img-recovery-logo"
                 />
                 <div className="hidden sm:block">
                   <div className="text-sm font-bold text-emerald-400 tracking-wide">
-                    Sasquatch Recovery
+                    Stroke Recovery Academy
                   </div>
                   <div className="text-[10px] font-medium text-emerald-600 uppercase tracking-wider">
-                    Stroke Recovery Platform
+                    Your Path to Recovery
                   </div>
                 </div>
               </div>
@@ -166,9 +165,9 @@ export default function RecoveryHeader() {
                     </Badge>
                   </div>
                   <DropdownMenuItem asChild>
-                    <Link href="/recovery-dashboard" className="cursor-pointer">
+                    <Link href="/recovery/dashboard" className="cursor-pointer">
                       <LayoutDashboard className="w-4 h-4 mr-2 text-emerald-500" />
-                      My Dashboard
+                      My Progress
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>

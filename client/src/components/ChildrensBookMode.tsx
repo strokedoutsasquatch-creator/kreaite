@@ -11,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -56,6 +57,12 @@ import {
   Save,
   Layout,
   FileText,
+  Download,
+  Printer,
+  FileImage,
+  Square,
+  RectangleHorizontal,
+  RectangleVertical,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -146,6 +153,34 @@ const pageLayoutOptions = [
   { value: "text-only", label: "Text Only" },
 ];
 
+// Print-ready export size options for children's books
+const printSizeOptions = [
+  { value: "8x8", label: "8\" x 8\"", description: "Square - Most Popular", dimensions: "8 × 8 inches", icon: Square, aspectRatio: "1:1" },
+  { value: "8x10", label: "8\" x 10\"", description: "Portrait Standard", dimensions: "8 × 10 inches", icon: RectangleVertical, aspectRatio: "4:5" },
+  { value: "8.5x8.5", label: "8.5\" x 8.5\"", description: "Square Large", dimensions: "8.5 × 8.5 inches", icon: Square, aspectRatio: "1:1" },
+  { value: "8.5x11", label: "8.5\" x 11\"", description: "Letter Size", dimensions: "8.5 × 11 inches", icon: RectangleVertical, aspectRatio: "17:22" },
+  { value: "6x9", label: "6\" x 9\"", description: "Chapter Book", dimensions: "6 × 9 inches", icon: RectangleVertical, aspectRatio: "2:3" },
+  { value: "7x10", label: "7\" x 10\"", description: "Large Format", dimensions: "7 × 10 inches", icon: RectangleVertical, aspectRatio: "7:10" },
+  { value: "10x8", label: "10\" x 8\"", description: "Landscape Wide", dimensions: "10 × 8 inches", icon: RectangleHorizontal, aspectRatio: "5:4" },
+  { value: "11x8.5", label: "11\" x 8.5\"", description: "Landscape Letter", dimensions: "11 × 8.5 inches", icon: RectangleHorizontal, aspectRatio: "22:17" },
+];
+
+// Map illustration style to prompt modifiers
+const stylePromptMap: Record<IllustrationStyle, string> = {
+  "whimsical-watercolor": "whimsical watercolor illustration style, soft flowing colors, dreamy atmosphere, gentle brush strokes",
+  "bold-cartoon": "bold cartoon illustration, bright vibrant colors, thick outlines, fun exaggerated features, playful style",
+  "soft-pastel": "soft pastel illustration, gentle soothing colors, delicate and calming, sweet aesthetic",
+  "digital-modern": "clean modern digital illustration, contemporary style, smooth gradients, polished look",
+  "classic-storybook": "classic storybook illustration, traditional picture book art, timeless quality, warm and inviting",
+  "collage-mixed-media": "collage mixed media illustration, textured paper elements, layered artistic look, creative composition",
+  "minimalist-nordic": "minimalist Scandinavian illustration, simple clean lines, muted palette, understated elegance",
+  "vibrant-tropical": "vibrant tropical illustration, rich saturated colors, exotic feel, lush and colorful",
+  "cozy-handdrawn": "cozy hand-drawn illustration, warm sketchy lines, personal feel, charming imperfections",
+  "retro-vintage": "retro vintage illustration, mid-century modern aesthetic, nostalgic color palette, classic charm",
+  "anime-influenced": "anime-influenced illustration, large expressive eyes, dynamic style, Japanese animation inspired",
+  "realistic-detailed": "realistic detailed illustration, lifelike rendering, fine details, naturalistic style",
+};
+
 interface ChildrensBookModeProps {
   onStoryGenerated?: (story: any) => void;
   onExport?: (project: any) => void;
@@ -200,6 +235,15 @@ export default function ChildrensBookMode({ onStoryGenerated, onExport }: Childr
   
   // Read-aloud analysis
   const [readAloudAnalysis, setReadAloudAnalysis] = useState<any>(null);
+  
+  // Export options
+  const [selectedPrintSize, setSelectedPrintSize] = useState("8x8");
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  
+  // Illustration generation tracking
+  const [generatingSpreadId, setGeneratingSpreadId] = useState<string | null>(null);
+  const [generatingAll, setGeneratingAll] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
 
   // Story generation mutation
   const generateStoryMutation = useMutation({

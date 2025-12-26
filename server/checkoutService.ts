@@ -2,6 +2,7 @@ import { db } from './db';
 import { getUncachableStripeClient } from './stripeClient';
 import { getLocaleConfig, detectLocation } from './geolocationService';
 import { addCredits, initializeWallet } from './creditService';
+import { fulfillOrder, calculateRevenueSplit } from './fulfillmentService';
 import { 
   users, 
   marketplaceListings, 
@@ -242,6 +243,13 @@ async function handleMarketplacePurchase(
     });
     
     console.log(`Marketplace purchase completed: Order ${orderNumber}, Creator payout queued for ${sellerId}`);
+    
+    const fulfillmentResult = await fulfillOrder(order.id);
+    if (!fulfillmentResult.success) {
+      console.error(`Fulfillment failed for order ${order.id}:`, fulfillmentResult.error);
+    } else {
+      console.log(`Fulfillment initiated: Digital delivered: ${fulfillmentResult.digitalDelivered}, Print jobs: ${fulfillmentResult.printJobsCreated}`);
+    }
     
     return { success: true };
   } catch (error) {

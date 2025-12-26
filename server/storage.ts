@@ -41,12 +41,13 @@ import {
   type OrderItem, type InsertOrderItem,
   type BookReview, type InsertBookReview,
   type AuthorEarnings, type InsertAuthorEarnings,
+  type LuluPrintJob, type InsertLuluPrintJob,
 } from "@shared/schema";
 import { 
   users, forumCategories, forumThreads, forumPosts, forumReactions,
   books, aiChatSessions, aiChatMessages,
   marketplaceCategories, marketplaceProducts,
-  marketplaceListings, bookEditions, bookOrders, orderItems, bookReviews, authorEarnings,
+  marketplaceListings, bookEditions, bookOrders, orderItems, bookReviews, authorEarnings, luluPrintJobs,
   publishingProjects,
   recoveryPrograms, programModules, programLessons,
   userEnrollments, dailyCheckins, userStreaks,
@@ -316,10 +317,18 @@ export interface IStorage {
   updateListingRating(listingId: number): Promise<void>;
   createBookOrder(order: InsertBookOrder): Promise<BookOrder>;
   getBookOrder(id: number): Promise<BookOrder | undefined>;
+  getBookOrderBySessionId(sessionId: string): Promise<BookOrder | undefined>;
+  getBookOrderByOrderNumber(orderNumber: string): Promise<BookOrder | undefined>;
   updateBookOrder(id: number, updates: Partial<BookOrder>): Promise<BookOrder | undefined>;
   getCustomerOrders(customerId: string): Promise<BookOrder[]>;
   createOrderItem(item: InsertOrderItem): Promise<OrderItem>;
   getOrderItems(orderId: number): Promise<OrderItem[]>;
+  updateOrderItem(id: number, updates: Partial<OrderItem>): Promise<OrderItem | undefined>;
+  createLuluPrintJob(job: InsertLuluPrintJob): Promise<LuluPrintJob>;
+  getLuluPrintJob(id: number): Promise<LuluPrintJob | undefined>;
+  getLuluPrintJobsByOrder(orderId: number): Promise<LuluPrintJob[]>;
+  updateLuluPrintJob(id: number, updates: Partial<LuluPrintJob>): Promise<LuluPrintJob | undefined>;
+  createAuthorEarning(earning: InsertAuthorEarnings): Promise<AuthorEarnings>;
   getAuthorEarnings(authorId: string): Promise<AuthorEarnings[]>;
   getAuthorEarningsSummary(authorId: string): Promise<{ total: number; pending: number; available: number; paid: number }>;
   getAuthorAnalytics(authorId: string): Promise<{ totalSales: number; totalRevenue: number; topBooks: any[] }>;
@@ -2190,6 +2199,16 @@ export class DatabaseStorage implements IStorage {
     return order;
   }
 
+  async getBookOrderBySessionId(sessionId: string): Promise<BookOrder | undefined> {
+    const [order] = await db.select().from(bookOrders).where(eq(bookOrders.stripeCheckoutSessionId, sessionId));
+    return order;
+  }
+
+  async getBookOrderByOrderNumber(orderNumber: string): Promise<BookOrder | undefined> {
+    const [order] = await db.select().from(bookOrders).where(eq(bookOrders.orderNumber, orderNumber));
+    return order;
+  }
+
   async updateBookOrder(id: number, updates: Partial<BookOrder>): Promise<BookOrder | undefined> {
     const [result] = await db.update(bookOrders)
       .set({ ...updates, updatedAt: new Date() })
@@ -2212,6 +2231,43 @@ export class DatabaseStorage implements IStorage {
   async getOrderItems(orderId: number): Promise<OrderItem[]> {
     return db.select().from(orderItems)
       .where(eq(orderItems.orderId, orderId));
+  }
+
+  async updateOrderItem(id: number, updates: Partial<OrderItem>): Promise<OrderItem | undefined> {
+    const [result] = await db.update(orderItems)
+      .set(updates)
+      .where(eq(orderItems.id, id))
+      .returning();
+    return result;
+  }
+
+  async createLuluPrintJob(job: InsertLuluPrintJob): Promise<LuluPrintJob> {
+    const [result] = await db.insert(luluPrintJobs).values(job).returning();
+    return result;
+  }
+
+  async getLuluPrintJob(id: number): Promise<LuluPrintJob | undefined> {
+    const [job] = await db.select().from(luluPrintJobs).where(eq(luluPrintJobs.id, id));
+    return job;
+  }
+
+  async getLuluPrintJobsByOrder(orderId: number): Promise<LuluPrintJob[]> {
+    return db.select().from(luluPrintJobs)
+      .where(eq(luluPrintJobs.orderId, orderId))
+      .orderBy(luluPrintJobs.createdAt);
+  }
+
+  async updateLuluPrintJob(id: number, updates: Partial<LuluPrintJob>): Promise<LuluPrintJob | undefined> {
+    const [result] = await db.update(luluPrintJobs)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(luluPrintJobs.id, id))
+      .returning();
+    return result;
+  }
+
+  async createAuthorEarning(earning: InsertAuthorEarnings): Promise<AuthorEarnings> {
+    const [result] = await db.insert(authorEarnings).values(earning).returning();
+    return result;
   }
 
   async getAuthorEarnings(authorId: string): Promise<AuthorEarnings[]> {
