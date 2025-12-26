@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -6,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import CreatorLanding from "@/pages/CreatorLanding";
 import StrokeRecoveryLanding from "@/pages/Landing";
 import Dashboard from "@/pages/Dashboard";
+import OnboardingFlow, { useOnboardingComplete } from "@/components/OnboardingFlow";
 import Community from "@/pages/Community";
 import Thread from "@/pages/Thread";
 import About from "@/pages/About";
@@ -54,6 +56,11 @@ import CreatorSettings from "@/pages/CreatorSettings";
 import QuickCreate from "@/pages/QuickCreate";
 import AIConsultant from "@/pages/AIConsultant";
 import ListingDetail from "@/pages/ListingDetail";
+import AnalyticsDashboard from "@/pages/AnalyticsDashboard";
+import AffiliateDashboard from "@/pages/AffiliateDashboard";
+import TermsOfService from "@/pages/TermsOfService";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import ModerationDashboard from "@/pages/ModerationDashboard";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 import CreatorScribeWidget from "@/components/CreatorScribeWidget";
@@ -154,8 +161,15 @@ function Router() {
           <AdminPlanBuilder />
         </ProtectedRoute>
       </Route>
+      <Route path="/admin/moderation">
+        <ProtectedRoute>
+          <ModerationDashboard />
+        </ProtectedRoute>
+      </Route>
       <Route path="/about-us" component={AboutUs} />
       <Route path="/pricing" component={Pricing} />
+      <Route path="/terms" component={TermsOfService} />
+      <Route path="/privacy" component={PrivacyPolicy} />
       <Route path="/university" component={RecoveryUniversity} />
       <Route path="/music-studio" component={MusicStudio} />
       <Route path="/book-studio" component={BookStudio} />
@@ -195,6 +209,16 @@ function Router() {
       <Route path="/creator/earnings">
         <ProtectedRoute>
           <CreatorEarnings />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/analytics">
+        <ProtectedRoute>
+          <AnalyticsDashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/affiliate">
+        <ProtectedRoute>
+          <AffiliateDashboard />
         </ProtectedRoute>
       </Route>
       <Route path="/creator/settings">
@@ -241,13 +265,36 @@ function Router() {
 }
 
 function App() {
+  const { isComplete, markComplete } = useOnboardingComplete();
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    if (isComplete === false) {
+      setShowOnboarding(true);
+    }
+  }, [isComplete]);
+
+  const handleOnboardingComplete = () => {
+    markComplete();
+    setShowOnboarding(false);
+  };
+
+  if (isComplete === null) {
+    return null;
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <LocaleProvider>
         <TooltipProvider>
           <Toaster />
-          <Router />
-          <CreatorScribeWidget />
+          {showOnboarding && <OnboardingFlow onComplete={handleOnboardingComplete} />}
+          {!showOnboarding && (
+            <>
+              <Router />
+              <CreatorScribeWidget />
+            </>
+          )}
         </TooltipProvider>
       </LocaleProvider>
     </QueryClientProvider>

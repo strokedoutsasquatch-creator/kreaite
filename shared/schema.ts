@@ -4,6 +4,37 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // ============================================================================
+// AFFILIATE/REFERRAL SYSTEM
+// ============================================================================
+
+export const referralCodes = pgTable("referral_codes", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  code: text("code").notNull().unique(),
+  usageCount: integer("usage_count").notNull().default(0),
+  totalEarnings: integer("total_earnings").notNull().default(0), // in cents
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const referralConversions = pgTable("referral_conversions", {
+  id: serial("id").primaryKey(),
+  referralCodeId: integer("referral_code_id").notNull().references(() => referralCodes.id, { onDelete: "cascade" }),
+  referredUserId: varchar("referred_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  purchaseId: integer("purchase_id"),
+  commission: integer("commission").notNull().default(0), // in cents (10% of first purchase)
+  status: text("status").notNull().default("pending"), // pending, paid
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertReferralCodeSchema = createInsertSchema(referralCodes).omit({ id: true, createdAt: true, usageCount: true, totalEarnings: true });
+export const insertReferralConversionSchema = createInsertSchema(referralConversions).omit({ id: true, createdAt: true });
+
+export type ReferralCode = typeof referralCodes.$inferSelect;
+export type InsertReferralCode = z.infer<typeof insertReferralCodeSchema>;
+export type ReferralConversion = typeof referralConversions.$inferSelect;
+export type InsertReferralConversion = z.infer<typeof insertReferralConversionSchema>;
+
+// ============================================================================
 // SESSION STORAGE (Required for Replit Auth)
 // ============================================================================
 
@@ -1799,10 +1830,36 @@ export const marketplaceListings = pgTable("marketplace_listings", {
   reviewCount: integer("review_count").notNull().default(0),
   pageCount: integer("page_count"),
   wordCount: integer("word_count"),
+  scheduledPublishAt: timestamp("scheduled_publish_at"),
+  scheduledUnpublishAt: timestamp("scheduled_unpublish_at"),
   publishedAt: timestamp("published_at"),
+  moderationStatus: text("moderation_status").notNull().default("pending"), // pending, approved, rejected, flagged
+  moderatedAt: timestamp("moderated_at"),
+  moderatedBy: integer("moderated_by"),
+  moderationNotes: text("moderation_notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
+
+// ============================================================================
+// CONTENT MODERATION SYSTEM
+// ============================================================================
+
+export const contentReports = pgTable("content_reports", {
+  id: serial("id").primaryKey(),
+  listingId: integer("listing_id").notNull().references(() => marketplaceListings.id, { onDelete: "cascade" }),
+  reporterUserId: varchar("reporter_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  reason: text("reason").notNull(), // inappropriate, copyright, spam, other
+  description: text("description"),
+  status: text("status").notNull().default("pending"), // pending, reviewed, resolved
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+  resolvedBy: varchar("resolved_by").references(() => users.id),
+});
+
+export const insertContentReportSchema = createInsertSchema(contentReports).omit({ id: true, createdAt: true, resolvedAt: true, resolvedBy: true });
+export type ContentReport = typeof contentReports.$inferSelect;
+export type InsertContentReport = z.infer<typeof insertContentReportSchema>;
 
 export const bookEditions = pgTable("book_editions", {
   id: serial("id").primaryKey(),

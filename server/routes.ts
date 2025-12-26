@@ -61,6 +61,10 @@ import {
   creatorPayouts,
   insertMarketplaceListingSchema,
   insertBookReviewSchema,
+  referralCodes,
+  referralConversions,
+  contentReports,
+  insertContentReportSchema,
 } from "../shared/schema";
 import { db } from "./db";
 import { eq, and, gte, desc, ilike, or, sql } from "drizzle-orm";
@@ -8352,6 +8356,381 @@ Provide a JSON response with track suggestions for each chapter/section.`;
     } catch (error: any) {
       console.error("Error fetching payouts:", error);
       res.status(500).json({ message: "Failed to fetch payouts" });
+    }
+  });
+
+  // ============================================================================
+  // AFFILIATE/REFERRAL SYSTEM ROUTES
+  // ============================================================================
+
+  // GET /api/affiliate/code - Get or create user's referral code
+  app.get('/api/affiliate/code', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+
+      // Check for existing referral code
+      let [existingCode] = await db.select()
+        .from(referralCodes)
+        .where(eq(referralCodes.userId, userId))
+        .limit(1);
+
+      if (existingCode) {
+        return res.json(existingCode);
+      }
+
+      // Generate unique referral code
+      const generateCode = () => {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let code = '';
+        for (let i = 0; i < 8; i++) {
+          code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return code;
+      };
+
+      let code = generateCode();
+      let attempts = 0;
+      while (attempts < 10) {
+        const [existing] = await db.select()
+          .from(referralCodes)
+          .where(eq(referralCodes.code, code))
+          .limit(1);
+        
+        if (!existing) break;
+        code = generateCode();
+        attempts++;
+      }
+
+      const [newCode] = await db.insert(referralCodes)
+        .values({ userId, code })
+        .returning();
+
+      res.json(newCode);
+    } catch (error: any) {
+      console.error("Error getting/creating referral code:", error);
+      res.status(500).json({ message: "Failed to get referral code" });
+    }
+  });
+
+  // GET /api/affiliate/stats - Get referral statistics
+  app.get('/api/affiliate/stats', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+
+      // Get user's referral code
+      const [referralCode] = await db.select()
+        .from(referralCodes)
+        .where(eq(referralCodes.userId, userId))
+        .limit(1);
+
+      if (!referralCode) {
+        return res.json({
+          totalReferrals: 0,
+          pendingCommissions: 0,
+          paidCommissions: 0,
+          totalEarnings: 0,
+          conversions: [],
+        });
+      }
+
+      // Get all conversions for this referral code
+      const conversions = await db.select()
+        .from(referralConversions)
+        .where(eq(referralConversions.referralCodeId, referralCode.id))
+        .orderBy(desc(referralConversions.createdAt));
+
+      // Calculate stats
+      let pendingCommissions = 0;
+      let paidCommissions = 0;
+
+      for (const conversion of conversions) {
+        if (conversion.status === 'pending') {
+          pendingCommissions += conversion.commission;
+        } else if (conversion.status === 'paid') {
+          paidCommissions += conversion.commission;
+        }
+      }
+
+      res.json({
+        totalReferrals: referralCode.usageCount,
+        pendingCommissions,
+        paidCommissions,
+        totalEarnings: referralCode.totalEarnings,
+        conversions: conversions.slice(0, 20), // Return last 20 conversions
+      });
+    } catch (error: any) {
+      console.error("Error fetching affiliate stats:", error);
+      res.status(500).json({ message: "Failed to fetch affiliate stats" });
+    }
+  });
+
+  // POST /api/affiliate/track - Track referral click/signup
+  app.post('/api/affiliate/track', async (req, res) => {
+    try {
+      const { code, referredUserId, purchaseId, purchaseAmount } = req.body;
+
+      if (!code) {
+        return res.status(400).json({ message: "Referral code is required" });
+      }
+
+      // Find the referral code
+      const [referralCode] = await db.select()
+        .from(referralCodes)
+        .where(eq(referralCodes.code, code.toUpperCase()))
+        .limit(1);
+
+      if (!referralCode) {
+        return res.status(404).json({ message: "Invalid referral code" });
+      }
+
+      // If tracking a purchase, create a conversion
+      if (referredUserId && purchaseAmount) {
+        // Check if user already has a conversion from this referral code
+        const [existingConversion] = await db.select()
+          .from(referralConversions)
+          .where(and(
+            eq(referralConversions.referralCodeId, referralCode.id),
+            eq(referralConversions.referredUserId, referredUserId)
+          ))
+          .limit(1);
+
+        if (!existingConversion) {
+          // Calculate 10% commission
+          const commission = Math.floor(purchaseAmount * 0.10);
+
+          // Create conversion record
+          await db.insert(referralConversions)
+            .values({
+              referralCodeId: referralCode.id,
+              referredUserId,
+              purchaseId: purchaseId || null,
+              commission,
+              status: 'pending',
+            });
+
+          // Update referral code stats
+          await db.update(referralCodes)
+            .set({
+              usageCount: sql`${referralCodes.usageCount} + 1`,
+              totalEarnings: sql`${referralCodes.totalEarnings} + ${commission}`,
+            })
+            .where(eq(referralCodes.id, referralCode.id));
+        }
+      } else if (referredUserId) {
+        // Just tracking a signup, increment usage count
+        const [existingConversion] = await db.select()
+          .from(referralConversions)
+          .where(and(
+            eq(referralConversions.referralCodeId, referralCode.id),
+            eq(referralConversions.referredUserId, referredUserId)
+          ))
+          .limit(1);
+
+        if (!existingConversion) {
+          await db.insert(referralConversions)
+            .values({
+              referralCodeId: referralCode.id,
+              referredUserId,
+              commission: 0,
+              status: 'pending',
+            });
+
+          await db.update(referralCodes)
+            .set({
+              usageCount: sql`${referralCodes.usageCount} + 1`,
+            })
+            .where(eq(referralCodes.id, referralCode.id));
+        }
+      }
+
+      res.json({ success: true, message: "Referral tracked successfully" });
+    } catch (error: any) {
+      console.error("Error tracking referral:", error);
+      res.status(500).json({ message: "Failed to track referral" });
+    }
+  });
+
+  // ============================================================================
+  // CONTENT MODERATION SYSTEM
+  // ============================================================================
+
+  // POST /api/moderation/report - Submit a content report
+  app.post('/api/moderation/report', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validation = insertContentReportSchema.safeParse(req.body);
+      
+      if (!validation.success) {
+        return res.status(400).json({ message: "Invalid report data", errors: validation.error.errors });
+      }
+
+      const { listingId, reason, description } = validation.data;
+
+      // Check if listing exists
+      const [listing] = await db.select()
+        .from(marketplaceListings)
+        .where(eq(marketplaceListings.id, listingId))
+        .limit(1);
+
+      if (!listing) {
+        return res.status(404).json({ message: "Listing not found" });
+      }
+
+      // Check if user already reported this listing
+      const [existingReport] = await db.select()
+        .from(contentReports)
+        .where(and(
+          eq(contentReports.listingId, listingId),
+          eq(contentReports.reporterUserId, userId)
+        ))
+        .limit(1);
+
+      if (existingReport) {
+        return res.status(400).json({ message: "You have already reported this listing" });
+      }
+
+      const [report] = await db.insert(contentReports)
+        .values({
+          listingId,
+          reporterUserId: userId,
+          reason,
+          description: description || null,
+          status: 'pending',
+        })
+        .returning();
+
+      res.json(report);
+    } catch (error: any) {
+      console.error("Error creating content report:", error);
+      res.status(500).json({ message: "Failed to submit report" });
+    }
+  });
+
+  // GET /api/moderation/reports - Get reports (admin only)
+  app.get('/api/moderation/reports', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { status, limit = '50', offset = '0' } = req.query;
+
+      let query = db.select({
+        report: contentReports,
+        listing: marketplaceListings,
+        reporter: users,
+      })
+        .from(contentReports)
+        .leftJoin(marketplaceListings, eq(contentReports.listingId, marketplaceListings.id))
+        .leftJoin(users, eq(contentReports.reporterUserId, users.id))
+        .orderBy(desc(contentReports.createdAt))
+        .limit(parseInt(limit as string))
+        .offset(parseInt(offset as string));
+
+      if (status && status !== 'all') {
+        query = query.where(eq(contentReports.status, status as string)) as typeof query;
+      }
+
+      const reports = await query;
+      res.json(reports);
+    } catch (error: any) {
+      console.error("Error fetching content reports:", error);
+      res.status(500).json({ message: "Failed to fetch reports" });
+    }
+  });
+
+  // PATCH /api/moderation/reports/:id - Update report status (admin only)
+  app.patch('/api/moderation/reports/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const reportId = parseInt(req.params.id);
+      const { status } = req.body;
+
+      if (!['pending', 'reviewed', 'resolved'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+
+      const updateData: any = { status };
+      if (status === 'resolved') {
+        updateData.resolvedAt = new Date();
+        updateData.resolvedBy = userId;
+      }
+
+      const [updatedReport] = await db.update(contentReports)
+        .set(updateData)
+        .where(eq(contentReports.id, reportId))
+        .returning();
+
+      if (!updatedReport) {
+        return res.status(404).json({ message: "Report not found" });
+      }
+
+      res.json(updatedReport);
+    } catch (error: any) {
+      console.error("Error updating content report:", error);
+      res.status(500).json({ message: "Failed to update report" });
+    }
+  });
+
+  // PATCH /api/moderation/listings/:id/status - Update listing moderation status (admin only)
+  app.patch('/api/moderation/listings/:id/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const listingId = parseInt(req.params.id);
+      const { moderationStatus, moderationNotes } = req.body;
+
+      if (!['pending', 'approved', 'rejected', 'flagged'].includes(moderationStatus)) {
+        return res.status(400).json({ message: "Invalid moderation status" });
+      }
+
+      const [updatedListing] = await db.update(marketplaceListings)
+        .set({
+          moderationStatus,
+          moderationNotes: moderationNotes || null,
+          moderatedAt: new Date(),
+          moderatedBy: parseInt(userId) || null,
+          updatedAt: new Date(),
+        })
+        .where(eq(marketplaceListings.id, listingId))
+        .returning();
+
+      if (!updatedListing) {
+        return res.status(404).json({ message: "Listing not found" });
+      }
+
+      // If listing is approved/rejected, resolve any pending reports
+      if (moderationStatus === 'approved' || moderationStatus === 'rejected') {
+        await db.update(contentReports)
+          .set({
+            status: 'resolved',
+            resolvedAt: new Date(),
+            resolvedBy: userId,
+          })
+          .where(and(
+            eq(contentReports.listingId, listingId),
+            eq(contentReports.status, 'pending')
+          ));
+      }
+
+      res.json(updatedListing);
+    } catch (error: any) {
+      console.error("Error updating listing moderation status:", error);
+      res.status(500).json({ message: "Failed to update listing status" });
     }
   });
 
