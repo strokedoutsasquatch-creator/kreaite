@@ -8,6 +8,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Upload,
   FileText,
   Code,
@@ -22,9 +28,12 @@ import {
   Scissors,
   FolderOpen,
   Save,
-  Sparkles,
   Tag,
   Search,
+  Eye,
+  Edit2,
+  Check,
+  X,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -59,6 +68,12 @@ interface MergeSession {
   createdAt: string;
 }
 
+interface SearchResults {
+  sources: DocSource[];
+  snippets: DocSnippet[];
+  query: string;
+}
+
 export function DocHub() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -69,6 +84,12 @@ export function DocHub() {
   const [snippetContent, setSnippetContent] = useState("");
   const [snippetTags, setSnippetTags] = useState("");
   const [isParsing, setIsParsing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<SearchResults | null>(null);
+  const [viewingDoc, setViewingDoc] = useState<DocSource | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingName, setEditingName] = useState("");
 
   const { data: sources = [], isLoading: sourcesLoading } = useQuery<DocSource[]>({
     queryKey: ['/api/doc-hub/sources'],
@@ -89,6 +110,18 @@ export function DocHub() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/doc-hub/sources'] });
       toast({ title: "Document deleted" });
+    },
+  });
+
+  const renameSource = useMutation({
+    mutationFn: async ({ id, originalFilename }: { id: number; originalFilename: string }) => {
+      return apiRequest('PATCH', `/api/doc-hub/sources/${id}`, { originalFilename });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/doc-hub/sources'] });
+      setEditingId(null);
+      setEditingName("");
+      toast({ title: "Document renamed" });
     },
   });
 
@@ -127,6 +160,27 @@ export function DocHub() {
     },
   });
 
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      setSearchResults(null);
+      return;
+    }
+    
+    setIsSearching(true);
+    try {
+      const res = await fetch(`/api/doc-hub/search?q=${encodeURIComponent(searchQuery)}`, {
+        credentials: 'include',
+      });
+      if (res.ok) {
+        const results = await res.json();
+        setSearchResults(results);
+      }
+    } catch (error) {
+      toast({ title: "Search failed", variant: "destructive" });
+    }
+    setIsSearching(false);
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -136,7 +190,12 @@ export function DocHub() {
     for (const file of Array.from(files)) {
       try {
         const arrayBuffer = await file.arrayBuffer();
-        const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+        const bytes = new Uint8Array(arrayBuffer);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        const base64 = btoa(binary);
         
         const parseRes = await fetch('/api/doc-hub/parse', {
           method: 'POST',
@@ -208,6 +267,36 @@ export function DocHub() {
     toast({ title: "Copied to clipboard" });
   };
 
+  const startEditing = (source: DocSource) => {
+    setEditingId(source.id);
+    setEditingName(source.originalFilename);
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditingName("");
+  };
+
+  const saveRename = (id: number) => {
+    if (editingName.trim()) {
+      renameSource.mutate({ id, originalFilename: editingName.trim() });
+    }
+  };
+
+  const exportMergedContent = (session: MergeSession) => {
+    const blob = new Blob([session.mergedContent || ''], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${session.title}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "Exported successfully" });
+  };
+
+  const displayedSources = searchResults ? searchResults.sources : sources;
+  const displayedSnippets = searchResults ? searchResults.snippets : snippets;
+
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8" data-testid="doc-hub">
       <div className="text-center mb-12">
@@ -215,11 +304,57 @@ export function DocHub() {
         <p className="text-lg text-zinc-400 leading-relaxed">Import, Parse, Merge & Build Manuscripts</p>
       </div>
 
+      <Card className="bg-zinc-950 border border-zinc-800/50 shadow-xl">
+        <CardContent className="p-4">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+              <Input
+                placeholder="Search all documents and snippets..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                className="pl-9 bg-black/50 border-zinc-700"
+                data-testid="input-search"
+              />
+            </div>
+            <Button
+              onClick={handleSearch}
+              disabled={isSearching}
+              variant="outline"
+              className="border-zinc-700"
+              data-testid="button-search"
+            >
+              {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : "Search"}
+            </Button>
+            {searchResults && (
+              <Button
+                onClick={() => {
+                  setSearchResults(null);
+                  setSearchQuery("");
+                }}
+                variant="ghost"
+                size="sm"
+                data-testid="button-clear-search"
+              >
+                <X className="w-4 h-4 mr-1" />
+                Clear
+              </Button>
+            )}
+          </div>
+          {searchResults && (
+            <p className="text-sm text-zinc-400 mt-2">
+              Found {searchResults.sources.length} documents and {searchResults.snippets.length} snippets matching "{searchResults.query}"
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid grid-cols-4 bg-zinc-900/50 border border-zinc-800/50">
           <TabsTrigger value="sources" data-testid="tab-sources">
             <FolderOpen className="w-4 h-4 mr-2" />
-            Sources
+            Sources ({displayedSources.length})
           </TabsTrigger>
           <TabsTrigger value="merge" data-testid="tab-merge">
             <Merge className="w-4 h-4 mr-2" />
@@ -227,7 +362,7 @@ export function DocHub() {
           </TabsTrigger>
           <TabsTrigger value="snippets" data-testid="tab-snippets">
             <Scissors className="w-4 h-4 mr-2" />
-            Snippet Vault
+            Snippets ({displayedSnippets.length})
           </TabsTrigger>
           <TabsTrigger value="manuscripts" data-testid="tab-manuscripts">
             <BookOpen className="w-4 h-4 mr-2" />
@@ -243,7 +378,7 @@ export function DocHub() {
                   ref={fileInputRef}
                   type="file"
                   multiple
-                  accept=".pdf,.docx,.doc,.txt,.md,.html,.js,.ts,.py,.json,.css,.jsx,.tsx"
+                  accept=".pdf,.docx,.doc,.txt,.md,.html,.js,.ts,.py,.json,.css,.jsx,.tsx,.rtf"
                   onChange={handleFileUpload}
                   className="hidden"
                   data-testid="input-file-upload"
@@ -251,7 +386,7 @@ export function DocHub() {
                 <Upload className="w-12 h-12 mx-auto mb-4 text-zinc-500" />
                 <h3 className="text-white font-medium mb-2">Drop files here or click to upload</h3>
                 <p className="text-sm text-zinc-500 mb-4">
-                  Supports Word (.docx), PDF, Text, Markdown, HTML, and code files
+                  Supports Word (.docx), PDF, Text, RTF, Markdown, HTML, and code files
                 </p>
                 <Button
                   onClick={() => fileInputRef.current?.click()}
@@ -279,10 +414,11 @@ export function DocHub() {
             <div className="flex justify-center py-8">
               <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
             </div>
-          ) : sources.length > 0 ? (
+          ) : displayedSources.length > 0 ? (
             <div className="grid md:grid-cols-2 gap-4">
-              {sources.map((source) => {
+              {displayedSources.map((source) => {
                 const FormatIcon = getFormatIcon(source.parsedMetadata?.format);
+                const isEditing = editingId === source.id;
                 return (
                   <Card 
                     key={source.id} 
@@ -290,28 +426,72 @@ export function DocHub() {
                     data-testid={`source-card-${source.id}`}
                   >
                     <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded bg-orange-500/20 flex items-center justify-center">
+                      <div className="flex items-start justify-between mb-3 gap-2">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="w-10 h-10 rounded bg-orange-500/20 flex items-center justify-center flex-shrink-0">
                             <FormatIcon className="w-5 h-5 text-orange-500" />
                           </div>
-                          <div>
-                            <h4 className="text-white font-medium text-sm truncate max-w-[200px]">
-                              {source.originalFilename}
-                            </h4>
+                          <div className="flex-1 min-w-0">
+                            {isEditing ? (
+                              <div className="flex items-center gap-1">
+                                <Input
+                                  value={editingName}
+                                  onChange={(e) => setEditingName(e.target.value)}
+                                  className="h-7 text-sm bg-black/50 border-zinc-700"
+                                  autoFocus
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') saveRename(source.id);
+                                    if (e.key === 'Escape') cancelEditing();
+                                  }}
+                                  data-testid={`input-rename-${source.id}`}
+                                />
+                                <Button 
+                                  size="icon" 
+                                  variant="ghost" 
+                                  className="h-7 w-7" 
+                                  onClick={() => saveRename(source.id)}
+                                  data-testid={`button-save-rename-${source.id}`}
+                                >
+                                  <Check className="w-3 h-3 text-green-500" />
+                                </Button>
+                                <Button 
+                                  size="icon" 
+                                  variant="ghost" 
+                                  className="h-7 w-7" 
+                                  onClick={cancelEditing}
+                                  data-testid={`button-cancel-rename-${source.id}`}
+                                >
+                                  <X className="w-3 h-3 text-red-500" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <h4 className="text-white font-medium text-sm truncate">
+                                {source.originalFilename}
+                              </h4>
+                            )}
                             <p className="text-xs text-zinc-500">
-                              {source.wordCount.toLocaleString()} words
+                              {source.wordCount?.toLocaleString() || 0} words
                             </p>
                           </div>
                         </div>
-                        <Badge variant="outline" className="text-[10px]">
+                        <Badge variant="outline" className="text-[10px] flex-shrink-0">
                           {source.parsedMetadata?.format || 'text'}
                         </Badge>
                       </div>
                       <p className="text-xs text-zinc-400 line-clamp-2 mb-3">
                         {source.parsedContent?.substring(0, 150)}...
                       </p>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="border-zinc-700"
+                          onClick={() => setViewingDoc(source)}
+                          data-testid={`button-view-${source.id}`}
+                        >
+                          <Eye className="w-3 h-3 mr-1" />
+                          View
+                        </Button>
                         <Button 
                           size="sm" 
                           variant="outline" 
@@ -321,6 +501,16 @@ export function DocHub() {
                         >
                           <Copy className="w-3 h-3 mr-1" />
                           Copy
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="border-zinc-700"
+                          onClick={() => startEditing(source)}
+                          data-testid={`button-rename-${source.id}`}
+                        >
+                          <Edit2 className="w-3 h-3 mr-1" />
+                          Rename
                         </Button>
                         <Button 
                           size="sm" 
@@ -353,7 +543,9 @@ export function DocHub() {
           ) : (
             <div className="text-center py-12">
               <FileText className="w-12 h-12 mx-auto mb-3 text-zinc-600" />
-              <p className="text-zinc-400">No documents uploaded yet</p>
+              <p className="text-zinc-400">
+                {searchResults ? "No documents found" : "No documents uploaded yet"}
+              </p>
               <p className="text-xs text-zinc-500 mt-1">Upload Word docs, PDFs, or code files to get started</p>
             </div>
           )}
@@ -379,23 +571,29 @@ export function DocHub() {
                 Select documents to merge ({selectedSources.length} selected)
               </p>
               <ScrollArea className="h-[300px] border border-zinc-800 rounded-lg p-4">
-                {sources.map((source) => (
-                  <div 
-                    key={source.id}
-                    onClick={() => toggleSourceSelection(source.id)}
-                    className={`p-3 rounded-lg cursor-pointer mb-2 border transition-colors ${
-                      selectedSources.includes(source.id)
-                        ? 'border-orange-500 bg-orange-500/10'
-                        : 'border-zinc-800 hover:border-zinc-700'
-                    }`}
-                    data-testid={`merge-source-${source.id}`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-white text-sm">{source.originalFilename}</span>
-                      <span className="text-xs text-zinc-500">{source.wordCount} words</span>
+                {sources.length === 0 ? (
+                  <p className="text-zinc-500 text-sm text-center py-8">
+                    Upload documents first to merge them
+                  </p>
+                ) : (
+                  sources.map((source) => (
+                    <div 
+                      key={source.id}
+                      onClick={() => toggleSourceSelection(source.id)}
+                      className={`p-3 rounded-lg cursor-pointer mb-2 border transition-colors ${
+                        selectedSources.includes(source.id)
+                          ? 'border-orange-500 bg-orange-500/10'
+                          : 'border-zinc-800 hover:border-zinc-700'
+                      }`}
+                      data-testid={`merge-source-${source.id}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-white text-sm">{source.originalFilename}</span>
+                        <span className="text-xs text-zinc-500">{source.wordCount} words</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </ScrollArea>
               <Button
                 onClick={handleMerge}
@@ -468,31 +666,44 @@ export function DocHub() {
             <div className="flex justify-center py-8">
               <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
             </div>
-          ) : snippets.length > 0 ? (
+          ) : displayedSnippets.length > 0 ? (
             <div className="grid md:grid-cols-2 gap-4">
-              {snippets.map((snippet) => (
+              {displayedSnippets.map((snippet) => (
                 <Card 
                   key={snippet.id} 
                   className="bg-zinc-950 border border-zinc-800/50"
                   data-testid={`snippet-card-${snippet.id}`}
                 >
                   <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-start justify-between mb-2 gap-2">
                       <h4 className="text-white font-medium">{snippet.label}</h4>
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        className="text-red-500"
-                        onClick={() => deleteSnippet.mutate(snippet.id)}
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="h-7 w-7 p-0"
+                          onClick={() => copyToClipboard(snippet.content)}
+                          data-testid={`button-copy-snippet-${snippet.id}`}
+                        >
+                          <Copy className="w-3 h-3" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="h-7 w-7 p-0 text-red-500"
+                          onClick={() => deleteSnippet.mutate(snippet.id)}
+                          data-testid={`button-delete-snippet-${snippet.id}`}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
                     </div>
                     <p className="text-xs text-zinc-400 line-clamp-3 mb-2">{snippet.content}</p>
                     {snippet.tags?.length > 0 && (
                       <div className="flex flex-wrap gap-1">
                         {snippet.tags.map((tag) => (
-                          <Badge key={tag} className="text-[9px] bg-zinc-800 text-zinc-400">
+                          <Badge key={tag} variant="secondary" className="text-[9px]">
+                            <Tag className="w-2 h-2 mr-1" />
                             {tag}
                           </Badge>
                         ))}
@@ -505,7 +716,9 @@ export function DocHub() {
           ) : (
             <div className="text-center py-12">
               <Scissors className="w-12 h-12 mx-auto mb-3 text-zinc-600" />
-              <p className="text-zinc-400">No snippets saved yet</p>
+              <p className="text-zinc-400">
+                {searchResults ? "No snippets found" : "No snippets saved yet"}
+              </p>
               <p className="text-xs text-zinc-500 mt-1">Save content for future books and projects</p>
             </div>
           )}
@@ -525,11 +738,12 @@ export function DocHub() {
                   data-testid={`manuscript-card-${session.id}`}
                 >
                   <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-start justify-between mb-4 gap-2">
                       <div>
                         <h3 className="text-xl font-serif text-white">{session.title}</h3>
                         <p className="text-sm text-zinc-500">
-                          {session.sourceIds?.length || 0} documents merged
+                          {session.sourceIds?.length || 0} documents merged • 
+                          {session.mergedContent?.split(/\s+/).length || 0} words
                         </p>
                       </div>
                       <Badge className={session.status === 'draft' ? 'bg-zinc-700' : 'bg-green-600'}>
@@ -539,12 +753,45 @@ export function DocHub() {
                     <p className="text-xs text-zinc-400 line-clamp-2 mb-4">
                       {session.mergedContent?.substring(0, 200)}...
                     </p>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" className="border-zinc-700">
-                        <BookOpen className="w-3 h-3 mr-1" />
-                        Open in Editor
+                    <div className="flex gap-2 flex-wrap">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="border-zinc-700"
+                        onClick={() => {
+                          setViewingDoc({
+                            id: session.id,
+                            originalFilename: session.title,
+                            mimeType: 'text/plain',
+                            parsedContent: session.mergedContent || '',
+                            parsedMetadata: { format: 'manuscript' },
+                            wordCount: session.mergedContent?.split(/\s+/).length || 0,
+                            status: session.status,
+                            createdAt: session.createdAt,
+                          });
+                        }}
+                        data-testid={`button-view-manuscript-${session.id}`}
+                      >
+                        <Eye className="w-3 h-3 mr-1" />
+                        View
                       </Button>
-                      <Button size="sm" variant="outline" className="border-zinc-700">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="border-zinc-700"
+                        onClick={() => copyToClipboard(session.mergedContent || '')}
+                        data-testid={`button-copy-manuscript-${session.id}`}
+                      >
+                        <Copy className="w-3 h-3 mr-1" />
+                        Copy
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="border-zinc-700"
+                        onClick={() => exportMergedContent(session)}
+                        data-testid={`button-export-manuscript-${session.id}`}
+                      >
                         <Download className="w-3 h-3 mr-1" />
                         Export
                       </Button>
@@ -562,6 +809,35 @@ export function DocHub() {
           )}
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!viewingDoc} onOpenChange={() => setViewingDoc(null)}>
+        <DialogContent className="max-w-4xl max-h-[80vh] bg-zinc-950 border-zinc-800">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-white">
+              <FileText className="w-5 h-5 text-orange-500" />
+              {viewingDoc?.originalFilename}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center gap-4 text-sm text-zinc-400 border-b border-zinc-800 pb-3">
+            <span>{viewingDoc?.wordCount?.toLocaleString() || 0} words</span>
+            <Badge variant="outline">{viewingDoc?.parsedMetadata?.format || 'text'}</Badge>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="ml-auto border-zinc-700"
+              onClick={() => viewingDoc && copyToClipboard(viewingDoc.parsedContent)}
+            >
+              <Copy className="w-3 h-3 mr-1" />
+              Copy All
+            </Button>
+          </div>
+          <ScrollArea className="h-[50vh] mt-4">
+            <pre className="text-sm text-zinc-300 whitespace-pre-wrap font-sans leading-relaxed">
+              {viewingDoc?.parsedContent}
+            </pre>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

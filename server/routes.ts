@@ -115,6 +115,16 @@ import {
   paperTypes,
   generatePodPackageId,
 } from './luluService';
+import {
+  isAvatarServiceConfigured,
+  generateTalkingAvatar,
+  getAvatarStatus,
+  getAvatarPresets,
+  getVoiceOptions,
+  generateAvatarFromDescription,
+  deleteTalk,
+  getCreditsBalance,
+} from './avatarService';
 
 async function initStripe() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -2844,6 +2854,161 @@ ${aspectRatio === 'portrait' ? 'Vertical portrait orientation.' : aspectRatio ==
       }
     } catch (error) {
       res.status(500).json({ error: "Failed to list voices" });
+    }
+  });
+
+  // ============ AI AVATAR ROUTES (D-ID) ============
+
+  // Check if avatar service is configured
+  app.get('/api/avatar/status', (req, res) => {
+    res.json({ 
+      configured: isAvatarServiceConfigured(),
+      provider: 'D-ID'
+    });
+  });
+
+  // Get available avatar presets
+  app.get('/api/avatar/presets', (req, res) => {
+    try {
+      const presets = getAvatarPresets();
+      const voices = getVoiceOptions();
+      res.json({ presets, voices });
+    } catch (error) {
+      console.error("Error fetching presets:", error);
+      res.status(500).json({ error: "Failed to fetch avatar presets" });
+    }
+  });
+
+  // Generate talking avatar video
+  app.post('/api/avatar/generate', isAuthenticated, async (req: any, res) => {
+    try {
+      const { script, voiceId, avatarImage, presetId, audioUrl } = req.body;
+      
+      if (!script && !audioUrl) {
+        return res.status(400).json({ error: "Script or audio URL is required" });
+      }
+
+      if (!avatarImage && !presetId) {
+        return res.status(400).json({ error: "Avatar image or preset ID is required" });
+      }
+
+      let imageUrl = avatarImage;
+      if (presetId) {
+        const presets = getAvatarPresets();
+        const preset = presets.find(p => p.id === presetId);
+        if (preset) {
+          imageUrl = preset.imageUrl;
+        }
+      }
+
+      const result = await generateTalkingAvatar({
+        imageUrl: imageUrl?.startsWith('http') ? imageUrl : undefined,
+        imageBase64: imageUrl?.startsWith('data:') ? imageUrl : undefined,
+        script,
+        voiceId: voiceId || 'en-US-JennyNeural',
+        audioUrl,
+      });
+
+      if (result.success) {
+        res.json({ 
+          success: true, 
+          id: result.id,
+          status: result.status
+        });
+      } else {
+        res.status(500).json({ success: false, error: result.error });
+      }
+    } catch (error) {
+      console.error("Avatar generation error:", error);
+      res.status(500).json({ error: "Avatar generation failed" });
+    }
+  });
+
+  // Check avatar generation status
+  app.get('/api/avatar/status/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      
+      if (!id) {
+        return res.status(400).json({ error: "Avatar ID is required" });
+      }
+
+      const result = await getAvatarStatus(id);
+
+      if (result.success) {
+        res.json({ 
+          success: true,
+          id: result.id,
+          status: result.status === 'done' ? 'completed' : result.status,
+          resultUrl: result.resultUrl,
+          duration: result.duration
+        });
+      } else {
+        res.status(500).json({ success: false, error: result.error });
+      }
+    } catch (error) {
+      console.error("Status check error:", error);
+      res.status(500).json({ error: "Failed to check avatar status" });
+    }
+  });
+
+  // Generate avatar image from description
+  app.post('/api/avatar/generate-image', isAuthenticated, async (req: any, res) => {
+    try {
+      const { description } = req.body;
+      
+      if (!description) {
+        return res.status(400).json({ error: "Description is required" });
+      }
+
+      const result = await generateAvatarFromDescription(description);
+
+      if (result.success) {
+        res.json({ success: true, imageUrl: result.imageUrl });
+      } else {
+        res.status(500).json({ success: false, error: result.error });
+      }
+    } catch (error) {
+      console.error("Avatar image generation error:", error);
+      res.status(500).json({ error: "Avatar image generation failed" });
+    }
+  });
+
+  // Delete avatar video
+  app.delete('/api/avatar/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      
+      if (!id) {
+        return res.status(400).json({ error: "Avatar ID is required" });
+      }
+
+      const result = await deleteTalk(id);
+
+      if (result.success) {
+        res.json({ success: true });
+      } else {
+        res.status(500).json({ success: false, error: result.error });
+      }
+    } catch (error) {
+      console.error("Delete avatar error:", error);
+      res.status(500).json({ error: "Failed to delete avatar" });
+    }
+  });
+
+  // Get D-ID credits balance
+  app.get('/api/avatar/credits', isAuthenticated, async (req: any, res) => {
+    try {
+      const result = await getCreditsBalance();
+
+      if (result.success) {
+        res.json({ success: true, credits: result.credits });
+      } else {
+        res.status(500).json({ success: false, error: result.error });
+      }
+    } catch (error) {
+      console.error("Credits check error:", error);
+      res.status(500).json({ error: "Failed to check credits" });
     }
   });
 
@@ -10652,6 +10817,99 @@ Provide a JSON response with track suggestions for each chapter/section.`;
     } catch (error) {
       console.error("Error deleting doc source:", error);
       res.status(500).json({ message: "Failed to delete document" });
+    }
+  });
+
+  // GET /api/doc-hub/sources/:id - Get single document content
+  app.get('/api/doc-hub/sources/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const sourceId = parseInt(req.params.id);
+      const { docSources } = await import('../shared/schema');
+      
+      const [source] = await db.select().from(docSources)
+        .where(and(eq(docSources.id, sourceId), eq(docSources.userId, userId)));
+      
+      if (!source) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      
+      res.json(source);
+    } catch (error) {
+      console.error("Error fetching doc source:", error);
+      res.status(500).json({ message: "Failed to fetch document" });
+    }
+  });
+
+  // PATCH /api/doc-hub/sources/:id - Rename/update document source
+  app.patch('/api/doc-hub/sources/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const sourceId = parseInt(req.params.id);
+      const { originalFilename, status } = req.body;
+      const { docSources } = await import('../shared/schema');
+      
+      const [updated] = await db.update(docSources)
+        .set({
+          ...(originalFilename && { originalFilename }),
+          ...(status && { status }),
+          updatedAt: new Date(),
+        })
+        .where(and(eq(docSources.id, sourceId), eq(docSources.userId, userId)))
+        .returning();
+      
+      if (!updated) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating doc source:", error);
+      res.status(500).json({ message: "Failed to update document" });
+    }
+  });
+
+  // GET /api/doc-hub/search - Full-text search across documents
+  app.get('/api/doc-hub/search', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { q } = req.query;
+      
+      if (!q || typeof q !== 'string') {
+        return res.status(400).json({ message: "Search query required" });
+      }
+      
+      const { docSources, docSnippets } = await import('../shared/schema');
+      
+      const searchTerm = `%${q.toLowerCase()}%`;
+      
+      const [sources, snippets] = await Promise.all([
+        db.select().from(docSources)
+          .where(and(
+            eq(docSources.userId, userId),
+            or(
+              ilike(docSources.originalFilename, searchTerm),
+              ilike(docSources.parsedContent, searchTerm)
+            )
+          ))
+          .orderBy(desc(docSources.createdAt))
+          .limit(50),
+        db.select().from(docSnippets)
+          .where(and(
+            eq(docSnippets.userId, userId),
+            or(
+              ilike(docSnippets.label, searchTerm),
+              ilike(docSnippets.content, searchTerm)
+            )
+          ))
+          .orderBy(desc(docSnippets.createdAt))
+          .limit(50),
+      ]);
+      
+      res.json({ sources, snippets, query: q });
+    } catch (error) {
+      console.error("Error searching documents:", error);
+      res.status(500).json({ message: "Search failed" });
     }
   });
 
