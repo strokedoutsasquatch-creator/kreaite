@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,8 +31,16 @@ import {
   Heart,
   Share2,
   User,
+  Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { 
+  useMarketplaceListings, 
+  useMyListings,
+  useCreateListing,
+  useCreateCheckout,
+  type MarketplaceListing 
+} from "@/lib/hooks/useMarketplace";
 
 interface Template {
   id: string;
@@ -106,19 +113,31 @@ export function TemplateMarketplace() {
   const [activeTab, setActiveTab] = useState("browse");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [templates] = useState<Template[]>(mockTemplates);
 
-  const filteredTemplates = templates.filter((t) => {
-    if (selectedCategory !== "all" && t.category !== selectedCategory) return false;
-    if (searchQuery && !t.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    return true;
+  const { data: listingsData, isLoading } = useMarketplaceListings({
+    contentType: selectedCategory !== "all" ? selectedCategory : undefined,
+    search: searchQuery || undefined,
   });
 
-  const purchaseTemplate = (template: Template) => {
-    toast({
-      title: "Template purchased!",
-      description: `"${template.title}" has been added to your library`,
-    });
+  const { data: myListings, isLoading: myListingsLoading } = useMyListings();
+  const createListing = useCreateListing();
+  const createCheckout = useCreateCheckout();
+
+  const listings = listingsData?.listings || [];
+
+  const purchaseListing = async (listing: MarketplaceListing) => {
+    try {
+      const result = await createCheckout.mutateAsync({ listingId: listing.id });
+      if (result.url) {
+        window.location.href = result.url;
+      }
+    } catch {
+      toast({
+        title: "Checkout failed",
+        description: "Unable to start checkout. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const getCategoryIcon = (category: string) => {
@@ -178,68 +197,85 @@ export function TemplateMarketplace() {
             </Select>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredTemplates.map((template) => {
-              const CategoryIcon = getCategoryIcon(template.category);
-              return (
-                <Card
-                  key={template.id}
-                  className="bg-black border-orange-500/20 overflow-hidden hover:border-orange-500/50 transition-colors"
-                  data-testid={`template-card-${template.id}`}
-                >
-                  <div className="h-32 bg-gradient-to-br from-orange-500/20 to-purple-500/20 flex items-center justify-center">
-                    <CategoryIcon className="w-12 h-12 text-orange-500/50" />
-                  </div>
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <Badge variant="outline" className="text-[10px]">
-                        {template.category}
-                      </Badge>
-                      <div className="flex items-center gap-1 text-yellow-500">
-                        <Star className="w-3 h-3 fill-current" />
-                        <span className="text-xs">{template.rating}</span>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {listings.map((listing: MarketplaceListing) => {
+                const CategoryIcon = getCategoryIcon(listing.genre);
+                return (
+                  <Card
+                    key={listing.id}
+                    className="bg-zinc-950 border border-zinc-800/50 shadow-xl overflow-hidden hover:border-orange-500/50 transition-colors"
+                    data-testid={`listing-card-${listing.id}`}
+                  >
+                    {listing.coverImageUrl ? (
+                      <img src={listing.coverImageUrl} alt={listing.title} className="h-32 w-full object-cover" />
+                    ) : (
+                      <div className="h-32 bg-gradient-to-br from-orange-500/20 to-purple-500/20 flex items-center justify-center">
+                        <CategoryIcon className="w-12 h-12 text-orange-500/50" />
                       </div>
-                    </div>
-                    <h3 className="text-sm font-medium text-white mb-1">{template.title}</h3>
-                    <p className="text-xs text-gray-400 line-clamp-2 mb-3">{template.description}</p>
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {template.tags.slice(0, 3).map((tag) => (
-                        <Badge key={tag} className="text-[9px] bg-gray-800 text-gray-400">
-                          {tag}
+                    )}
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <Badge variant="outline" className="text-[10px]">
+                          {listing.genre}
                         </Badge>
-                      ))}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-lg font-bold text-orange-500">${template.price}</span>
-                        <span className="text-xs text-gray-500 ml-2">
-                          <Download className="w-3 h-3 inline mr-1" />
-                          {template.downloads}
-                        </span>
+                        {listing.averageRating && (
+                          <div className="flex items-center gap-1 text-yellow-500">
+                            <Star className="w-3 h-3 fill-current" />
+                            <span className="text-xs">{listing.averageRating.toFixed(1)}</span>
+                          </div>
+                        )}
                       </div>
-                      <Button
-                        size="sm"
-                        onClick={() => purchaseTemplate(template)}
-                        className="bg-orange-500 hover:bg-orange-600"
-                        data-testid={`button-buy-${template.id}`}
-                      >
-                        <ShoppingCart className="w-3 h-3 mr-1" />
-                        Buy
-                      </Button>
-                    </div>
-                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-orange-500/10">
-                      <div className="w-5 h-5 rounded-full bg-orange-500/20 flex items-center justify-center">
-                        <User className="w-3 h-3 text-orange-500" />
+                      <h3 className="text-sm font-medium text-white mb-1">{listing.title}</h3>
+                      <p className="text-xs text-zinc-400 line-clamp-2 mb-3">{listing.description}</p>
+                      {listing.tags && listing.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {listing.tags.slice(0, 3).map((tag: string) => (
+                            <Badge key={tag} className="text-[9px] bg-zinc-800 text-zinc-400">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-lg font-bold text-orange-500">
+                            ${(listing.totalRevenue / 100).toFixed(2)}
+                          </span>
+                          <span className="text-xs text-zinc-500 ml-2">
+                            <Download className="w-3 h-3 inline mr-1" />
+                            {listing.totalSales}
+                          </span>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => purchaseListing(listing)}
+                          disabled={createCheckout.isPending}
+                          className="bg-orange-500 hover:bg-orange-600"
+                          data-testid={`button-buy-${listing.id}`}
+                        >
+                          {createCheckout.isPending ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <>
+                              <ShoppingCart className="w-3 h-3 mr-1" />
+                              Buy
+                            </>
+                          )}
+                        </Button>
                       </div>
-                      <span className="text-xs text-gray-400">{template.creatorName}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
 
-          {filteredTemplates.length === 0 && (
+          {!isLoading && listings.length === 0 && (
             <div className="text-center py-12">
               <Layout className="w-12 h-12 mx-auto mb-3 text-gray-600" />
               <p className="text-gray-400">No templates found</p>

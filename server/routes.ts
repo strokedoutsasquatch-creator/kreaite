@@ -9872,6 +9872,237 @@ Provide a JSON response with track suggestions for each chapter/section.`;
     }
   });
 
+  // ============================================================================
+  // DOC HUB - Document Upload, Parsing & Merging
+  // ============================================================================
+
+  // POST /api/doc-hub/parse - Parse uploaded document content
+  app.post('/api/doc-hub/parse', isAuthenticated, async (req: any, res) => {
+    try {
+      const { content, filename, mimeType } = req.body;
+      
+      if (!content || !filename) {
+        return res.status(400).json({ message: "Content and filename are required" });
+      }
+
+      const { parseDocument, detectMimeType } = await import('./documentService');
+      const buffer = Buffer.from(content, 'base64');
+      const detectedMime = mimeType || detectMimeType(filename);
+      
+      const parsed = await parseDocument(buffer, detectedMime, filename);
+      
+      res.json({
+        success: true,
+        filename,
+        ...parsed,
+      });
+    } catch (error) {
+      console.error("Document parsing error:", error);
+      res.status(500).json({ message: "Failed to parse document" });
+    }
+  });
+
+  // POST /api/doc-hub/sources - Save parsed document source
+  app.post('/api/doc-hub/sources', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { originalFilename, mimeType, parsedContent, parsedMetadata, wordCount } = req.body;
+
+      if (!originalFilename || !parsedContent) {
+        return res.status(400).json({ message: "Filename and content required" });
+      }
+
+      const { docSources } = await import('../shared/schema');
+      const [source] = await db.insert(docSources).values({
+        userId,
+        originalFilename,
+        mimeType: mimeType || 'text/plain',
+        parsedContent,
+        parsedMetadata,
+        wordCount: wordCount || 0,
+        status: 'parsed',
+      }).returning();
+
+      res.json(source);
+    } catch (error) {
+      console.error("Error saving doc source:", error);
+      res.status(500).json({ message: "Failed to save document" });
+    }
+  });
+
+  // GET /api/doc-hub/sources - List user's document sources
+  app.get('/api/doc-hub/sources', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { docSources } = await import('../shared/schema');
+      
+      const sources = await db.select().from(docSources)
+        .where(eq(docSources.userId, userId))
+        .orderBy(desc(docSources.createdAt));
+      
+      res.json(sources);
+    } catch (error) {
+      console.error("Error fetching doc sources:", error);
+      res.status(500).json({ message: "Failed to fetch documents" });
+    }
+  });
+
+  // DELETE /api/doc-hub/sources/:id - Delete document source
+  app.delete('/api/doc-hub/sources/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const sourceId = parseInt(req.params.id);
+      const { docSources } = await import('../shared/schema');
+      
+      await db.delete(docSources)
+        .where(and(eq(docSources.id, sourceId), eq(docSources.userId, userId)));
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting doc source:", error);
+      res.status(500).json({ message: "Failed to delete document" });
+    }
+  });
+
+  // POST /api/doc-hub/snippets - Save content snippet
+  app.post('/api/doc-hub/snippets', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { label, content, tags, category, sourceId } = req.body;
+
+      if (!label || !content) {
+        return res.status(400).json({ message: "Label and content required" });
+      }
+
+      const { docSnippets } = await import('../shared/schema');
+      const [snippet] = await db.insert(docSnippets).values({
+        userId,
+        label,
+        content,
+        tags: tags || [],
+        category,
+        sourceId,
+        status: 'active',
+      }).returning();
+
+      res.json(snippet);
+    } catch (error) {
+      console.error("Error saving snippet:", error);
+      res.status(500).json({ message: "Failed to save snippet" });
+    }
+  });
+
+  // GET /api/doc-hub/snippets - List user's snippets
+  app.get('/api/doc-hub/snippets', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { docSnippets } = await import('../shared/schema');
+      
+      const snippets = await db.select().from(docSnippets)
+        .where(eq(docSnippets.userId, userId))
+        .orderBy(desc(docSnippets.createdAt));
+      
+      res.json(snippets);
+    } catch (error) {
+      console.error("Error fetching snippets:", error);
+      res.status(500).json({ message: "Failed to fetch snippets" });
+    }
+  });
+
+  // DELETE /api/doc-hub/snippets/:id - Delete snippet
+  app.delete('/api/doc-hub/snippets/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const snippetId = parseInt(req.params.id);
+      const { docSnippets } = await import('../shared/schema');
+      
+      await db.delete(docSnippets)
+        .where(and(eq(docSnippets.id, snippetId), eq(docSnippets.userId, userId)));
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting snippet:", error);
+      res.status(500).json({ message: "Failed to delete snippet" });
+    }
+  });
+
+  // POST /api/doc-hub/merge - Create merge session
+  app.post('/api/doc-hub/merge', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { title, description, sourceIds, sectionOrder, mergedContent } = req.body;
+
+      if (!title) {
+        return res.status(400).json({ message: "Title required" });
+      }
+
+      const { docMergeSessions } = await import('../shared/schema');
+      const [session] = await db.insert(docMergeSessions).values({
+        userId,
+        title,
+        description,
+        sourceIds: sourceIds || [],
+        sectionOrder,
+        mergedContent,
+        status: 'draft',
+      }).returning();
+
+      res.json(session);
+    } catch (error) {
+      console.error("Error creating merge session:", error);
+      res.status(500).json({ message: "Failed to create merge session" });
+    }
+  });
+
+  // GET /api/doc-hub/merge - List user's merge sessions
+  app.get('/api/doc-hub/merge', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { docMergeSessions } = await import('../shared/schema');
+      
+      const sessions = await db.select().from(docMergeSessions)
+        .where(eq(docMergeSessions.userId, userId))
+        .orderBy(desc(docMergeSessions.createdAt));
+      
+      res.json(sessions);
+    } catch (error) {
+      console.error("Error fetching merge sessions:", error);
+      res.status(500).json({ message: "Failed to fetch merge sessions" });
+    }
+  });
+
+  // PATCH /api/doc-hub/merge/:id - Update merge session
+  app.patch('/api/doc-hub/merge/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const sessionId = parseInt(req.params.id);
+      const { title, description, sourceIds, sectionOrder, mergedContent, status } = req.body;
+      const { docMergeSessions } = await import('../shared/schema');
+      
+      const [updated] = await db.update(docMergeSessions)
+        .set({
+          ...(title && { title }),
+          ...(description !== undefined && { description }),
+          ...(sourceIds && { sourceIds }),
+          ...(sectionOrder && { sectionOrder }),
+          ...(mergedContent !== undefined && { mergedContent }),
+          ...(status && { status }),
+          updatedAt: new Date(),
+        })
+        .where(and(eq(docMergeSessions.id, sessionId), eq(docMergeSessions.userId, userId)))
+        .returning();
+      
+      if (!updated) {
+        return res.status(404).json({ message: "Merge session not found" });
+      }
+
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating merge session:", error);
+      res.status(500).json({ message: "Failed to update merge session" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

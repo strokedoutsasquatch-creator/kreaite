@@ -26,6 +26,8 @@ KreAIte.xyz is an ultra-premium AI-powered creator platform with 6 professional 
 - **Professional Editor** - TipTap WYSIWYG with tables, images, formatting, find/replace, zoom
 - **AI Integration** - Google Gemini and OpenAI for text, Lyria for music, specialized models for images/video
 - **Marketplace (KreAItorverse)** - Sell books, courses, music, videos with 85% creator revenue share
+- **Template Marketplace** - Buy/sell creator templates with real Stripe checkout, 85/15 revenue split
+- **Doc Hub** - Document import/parsing (Word, PDF, code), merge documents, snippet vault, manuscript builder
 - **Stripe Integration** - Payments, subscriptions, customer portal
 - **Quick Create** - 1-click magic tools: instant covers, hum-to-song, instant course, AI ghostwriter, blog-to-book
 - **AI Consultant** - Train AI on your content, monetize with chat subscriptions, embed on external sites
@@ -209,7 +211,11 @@ Icons: lucide-react only (no emoji)
 - `client/src/pages/MediaStudioPage.tsx` - MediaStudio page
 - `client/src/pages/QuickCreate.tsx` - 1-click magic tools
 - `client/src/pages/AIConsultant.tsx` - AI Consultant training/monetization
-- `server/routes.ts` - API routes (7700+ lines)
+- `client/src/pages/DocHubPage.tsx` - Doc Hub page wrapper
+- `client/src/features/doc-hub/DocHub.tsx` - Doc Hub component (sources, merge, snippets, manuscripts)
+- `client/src/features/template-marketplace/TemplateMarketplace.tsx` - Template marketplace with real Stripe checkout
+- `server/documentService.ts` - Document parsing service (mammoth for Word, pdf-parse for PDFs)
+- `server/routes.ts` - API routes (10000+ lines)
 - `server/creditService.ts` - Credit wallet and transaction management
 - `server/geolocationService.ts` - IP geolocation and locale detection
 - `server/i18nService.ts` - Internationalization with 20 languages

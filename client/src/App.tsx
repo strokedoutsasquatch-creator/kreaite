@@ -64,6 +64,7 @@ import ModerationDashboard from "@/pages/ModerationDashboard";
 import PodcastStudioPage from "@/pages/PodcastStudioPage";
 import AvatarStudioPage from "@/pages/AvatarStudioPage";
 import TemplateMarketplacePage from "@/pages/TemplateMarketplacePage";
+import DocHubPage from "@/pages/DocHubPage";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 import CreatorScribeWidget from "@/components/CreatorScribeWidget";
@@ -275,6 +276,11 @@ function Router() {
       <Route path="/templates">
         <ProtectedRoute>
           <TemplateMarketplacePage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/doc-hub">
+        <ProtectedRoute>
+          <DocHubPage />
         </ProtectedRoute>
       </Route>
       <Route component={NotFound} />
