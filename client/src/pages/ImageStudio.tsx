@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react";
+import { apiRequest } from "@/lib/queryClient";
 import CreatorHeader from "@/components/CreatorHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -161,6 +162,7 @@ export default function ImageStudio() {
   const [generateStyle, setGenerateStyle] = useState("photorealistic");
   const [generateAspectRatio, setGenerateAspectRatio] = useState("1:1");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   
   const [batchMode, setBatchMode] = useState(false);
   const [batchImages, setBatchImages] = useState<string[]>([]);
@@ -337,26 +339,62 @@ export default function ImageStudio() {
     }
 
     setIsGenerating(true);
-    setProcessingMessage("Generating image with AI...");
+    setProcessingMessage("Generating image with xAI Grok...");
     setProcessingProgress(0);
+    setGeneratedImageUrl(null);
 
     const interval = setInterval(() => {
-      setProcessingProgress(prev => Math.min(prev + 3, 90));
+      setProcessingProgress(prev => Math.min(prev + 2, 85));
     }, 500);
 
-    await new Promise(resolve => setTimeout(resolve, 8000));
+    try {
+      const stylePrompt = generateStyle !== "none" ? `, ${generateStyle} style` : "";
+      const fullPrompt = `${generatePrompt}${stylePrompt}, high quality, detailed`;
+      
+      const response = await apiRequest("POST", "/api/video/generate-image", {
+        prompt: fullPrompt,
+      });
+      
+      const data = await response.json();
+      
+      clearInterval(interval);
+      setProcessingProgress(100);
 
-    clearInterval(interval);
-    setProcessingProgress(100);
-
-    setTimeout(() => {
+      if (data.success && data.imageUrl) {
+        setGeneratedImageUrl(data.imageUrl);
+        
+        const newImage: UploadedImage = {
+          id: `gen-${Date.now()}`,
+          name: `AI Generated - ${generatePrompt.slice(0, 30)}...`,
+          url: data.imageUrl,
+          originalUrl: data.imageUrl,
+          width: 1024,
+          height: 1024,
+          size: 0,
+          format: "PNG",
+          createdAt: new Date(),
+        };
+        setUploadedImages(prev => [...prev, newImage]);
+        setSelectedImage(newImage);
+        
+        toast({
+          title: "Image Generated!",
+          description: "Your AI-generated image has been created using xAI Grok.",
+        });
+      } else {
+        throw new Error(data.error || "Failed to generate image");
+      }
+    } catch (error) {
+      clearInterval(interval);
+      toast({
+        title: "Generation Failed",
+        description: error instanceof Error ? error.message : "Failed to generate image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsGenerating(false);
       setProcessingProgress(0);
-      toast({
-        title: "Image Generated",
-        description: "Your AI-generated image is ready!",
-      });
-    }, 500);
+    }
   };
 
   const handleExport = () => {
@@ -893,11 +931,46 @@ export default function ImageStudio() {
                   <CardDescription>Your AI-generated images will appear here</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center justify-center min-h-[300px] bg-gray-800 rounded-lg border border-dashed border-gray-700">
-                    <div className="text-center">
-                      <ImageIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                      <p className="text-gray-400" data-testid="text-preview-placeholder">Your generated images will appear here</p>
-                    </div>
+                  <div className="flex items-center justify-center min-h-[300px] bg-gray-800 rounded-lg border border-dashed border-gray-700 overflow-hidden">
+                    {generatedImageUrl ? (
+                      <div className="relative w-full h-full">
+                        <img 
+                          src={generatedImageUrl} 
+                          alt="AI Generated" 
+                          className="w-full h-full object-contain max-h-[400px]"
+                          data-testid="img-generated"
+                        />
+                        <div className="absolute bottom-2 right-2 flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => window.open(generatedImageUrl, '_blank')}
+                            data-testid="button-open-fullsize"
+                          >
+                            <Maximize2 className="w-4 h-4 mr-1" />
+                            Full Size
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              const link = document.createElement('a');
+                              link.href = generatedImageUrl;
+                              link.download = 'ai-generated-image.png';
+                              link.click();
+                            }}
+                            data-testid="button-download-generated"
+                          >
+                            <Download className="w-4 h-4 mr-1" />
+                            Download
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center">
+                        <ImageIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                        <p className="text-gray-400" data-testid="text-preview-placeholder">Your generated images will appear here</p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

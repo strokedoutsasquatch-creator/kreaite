@@ -7715,14 +7715,47 @@ Return the rhyming version only, no explanation.`;
         case 'instant-cover':
           sourceStudio = 'image';
           assetType = 'image';
-          const coverResult = await generate({
-            prompt: `Create 5 unique book cover concepts for a book titled "${input}". For each, describe the visual style, color palette, and imagery in detail so an artist could create them.`,
-            temperature: 0.9,
-            taskType: 'draft',
+          
+          const coverStyles = [
+            `Professional book cover for "${input}". Elegant typography, sophisticated design, bestseller quality, high-end publishing look, clean layout`,
+            `Dramatic book cover for "${input}". Bold imagery, striking colors, impactful visual, eye-catching design, premium finish`,
+            `Minimalist book cover for "${input}". Modern design, clean typography, subtle elegance, sophisticated simplicity, professional publishing`
+          ];
+          
+          const coverPromises = coverStyles.map(async (coverPrompt, index) => {
+            try {
+              const result = await generateImage(coverPrompt);
+              if (result.success && result.imageUrl) {
+                return { 
+                  type: 'cover', 
+                  index: index + 1,
+                  imageUrl: result.imageUrl, 
+                  style: ['Elegant', 'Dramatic', 'Minimalist'][index] 
+                };
+              }
+              return null;
+            } catch (e) {
+              console.error(`Cover ${index + 1} generation failed:`, e);
+              return null;
+            }
           });
-          generatedContent = coverResult.content;
-          results = [{ type: 'covers', description: generatedContent }];
-          message = "Generated 5 cover concepts";
+          
+          const coverImages = (await Promise.all(coverPromises)).filter(Boolean);
+          
+          if (coverImages.length > 0) {
+            results = coverImages;
+            message = `Generated ${coverImages.length} AI book cover(s) using xAI Grok`;
+            generatedContent = `Successfully generated ${coverImages.length} unique book covers for "${input}"`;
+          } else {
+            const fallbackResult = await generate({
+              prompt: `Create 3 unique book cover concepts for a book titled "${input}". For each, describe the visual style, color palette, and imagery.`,
+              temperature: 0.9,
+              taskType: 'draft',
+            });
+            generatedContent = fallbackResult.content;
+            results = [{ type: 'covers', description: generatedContent }];
+            message = "Generated cover concepts (descriptions)";
+          }
           break;
           
         case 'hum-to-song':
