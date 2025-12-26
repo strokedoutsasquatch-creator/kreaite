@@ -3339,3 +3339,64 @@ export type AiVoicePreset = typeof aiVoicePresets.$inferSelect;
 export type InsertAiVoicePreset = z.infer<typeof insertAiVoicePresetSchema>;
 export type UserAiPreferences = typeof userAiPreferences.$inferSelect;
 export type InsertUserAiPreferences = z.infer<typeof insertUserAiPreferencesSchema>;
+
+// ============================================================================
+// DOC HUB - Universal Document Management & Merging
+// ============================================================================
+
+export const docSources = pgTable("doc_sources", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  projectId: integer("project_id"),
+  originalFilename: text("original_filename").notNull(),
+  mimeType: text("mime_type").notNull(),
+  fileSize: integer("file_size"),
+  storageRef: text("storage_ref"),
+  parsedContent: text("parsed_content"),
+  parsedMetadata: jsonb("parsed_metadata"),
+  language: text("language"),
+  wordCount: integer("word_count"),
+  status: text("status").notNull().default("pending"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const docSnippets = pgTable("doc_snippets", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  sourceId: integer("source_id").references(() => docSources.id, { onDelete: "set null" }),
+  projectId: integer("project_id"),
+  label: text("label").notNull(),
+  content: text("content").notNull(),
+  tags: text("tags").array(),
+  category: text("category"),
+  status: text("status").notNull().default("active"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const docMergeSessions = pgTable("doc_merge_sessions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  sourceIds: integer("source_ids").array(),
+  sectionOrder: jsonb("section_order"),
+  mergedContent: text("merged_content"),
+  outputFormat: text("output_format").default("manuscript"),
+  status: text("status").notNull().default("draft"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertDocSourceSchema = createInsertSchema(docSources).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertDocSnippetSchema = createInsertSchema(docSnippets).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertDocMergeSessionSchema = createInsertSchema(docMergeSessions).omit({ id: true, createdAt: true, updatedAt: true });
+
+// Doc Hub Types
+export type DocSource = typeof docSources.$inferSelect;
+export type InsertDocSource = z.infer<typeof insertDocSourceSchema>;
+export type DocSnippet = typeof docSnippets.$inferSelect;
+export type InsertDocSnippet = z.infer<typeof insertDocSnippetSchema>;
+export type DocMergeSession = typeof docMergeSessions.$inferSelect;
+export type InsertDocMergeSession = z.infer<typeof insertDocMergeSessionSchema>;
