@@ -52,9 +52,18 @@ import {
   aiVoicePresets,
   creditLedger,
   usageEvents,
+  marketplaceListings,
+  bookEditions,
+  bookOrders,
+  orderItems,
+  bookReviews,
+  authorEarnings,
+  creatorPayouts,
+  insertMarketplaceListingSchema,
+  insertBookReviewSchema,
 } from "../shared/schema";
 import { db } from "./db";
-import { eq, and, gte } from "drizzle-orm";
+import { eq, and, gte, desc, ilike, or, sql } from "drizzle-orm";
 import { 
   generateCompleteScript, 
   generateSceneStoryboard, 
@@ -7722,6 +7731,627 @@ Provide a JSON response with track suggestions for each chapter/section.`;
     } catch (error: any) {
       console.error("Error fetching usage analytics:", error);
       res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
+  // ============================================================================
+  // MARKETPLACE CRUD ROUTES
+  // ============================================================================
+
+  // GET /api/marketplace/listings - Get published listings with filters
+  app.get('/api/marketplace/listings', async (req, res) => {
+    try {
+      const { contentType, tags, search, sort = 'newest', page = '1', limit = '20' } = req.query;
+      const pageNum = parseInt(page as string) || 1;
+      const limitNum = Math.min(parseInt(limit as string) || 20, 100);
+      const offset = (pageNum - 1) * limitNum;
+
+      let query = db.select().from(marketplaceListings).where(eq(marketplaceListings.status, 'published'));
+
+      const conditions: any[] = [eq(marketplaceListings.status, 'published')];
+
+      if (contentType) {
+        conditions.push(eq(marketplaceListings.genre, contentType as string));
+      }
+
+      if (search) {
+        const searchTerm = `%${search}%`;
+        conditions.push(
+          or(
+            ilike(marketplaceListings.title, searchTerm),
+            ilike(marketplaceListings.description, searchTerm)
+          )
+        );
+      }
+
+      let orderBy: any = desc(marketplaceListings.createdAt);
+      if (sort === 'popular') {
+        orderBy = desc(marketplaceListings.totalSales);
+      } else if (sort === 'rating') {
+        orderBy = desc(marketplaceListings.averageRating);
+      } else if (sort === 'oldest') {
+        orderBy = marketplaceListings.createdAt;
+      }
+
+      const listings = await db.select()
+        .from(marketplaceListings)
+        .where(and(...conditions))
+        .orderBy(orderBy)
+        .limit(limitNum)
+        .offset(offset);
+
+      const countResult = await db.select({ count: sql<number>`count(*)` })
+        .from(marketplaceListings)
+        .where(and(...conditions));
+
+      const total = Number(countResult[0]?.count || 0);
+
+      res.json({
+        listings,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total,
+          totalPages: Math.ceil(total / limitNum),
+        },
+      });
+    } catch (error: any) {
+      console.error("Error fetching marketplace listings:", error);
+      res.status(500).json({ message: "Failed to fetch listings" });
+    }
+  });
+
+  // GET /api/marketplace/listings/:id - Get single listing details
+  app.get('/api/marketplace/listings/:id', async (req, res) => {
+    try {
+      const listingId = parseInt(req.params.id);
+      if (isNaN(listingId)) {
+        return res.status(400).json({ message: "Invalid listing ID" });
+      }
+
+      const listing = await db.select()
+        .from(marketplaceListings)
+        .where(eq(marketplaceListings.id, listingId))
+        .limit(1);
+
+      if (listing.length === 0) {
+        return res.status(404).json({ message: "Listing not found" });
+      }
+
+      const editions = await db.select()
+        .from(bookEditions)
+        .where(eq(bookEditions.listingId, listingId));
+
+      const author = await db.select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        profileImageUrl: users.profileImageUrl,
+      })
+        .from(users)
+        .where(eq(users.id, listing[0].authorId))
+        .limit(1);
+
+      res.json({
+        ...listing[0],
+        editions,
+        author: author[0] || null,
+      });
+    } catch (error: any) {
+      console.error("Error fetching listing:", error);
+      res.status(500).json({ message: "Failed to fetch listing" });
+    }
+  });
+
+  // POST /api/marketplace/listings - Create new listing
+  app.post('/api/marketplace/listings', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validatedData = insertMarketplaceListingSchema.parse({
+        ...req.body,
+        authorId: userId,
+      });
+
+      const [listing] = await db.insert(marketplaceListings)
+        .values(validatedData)
+        .returning();
+
+      res.status(201).json(listing);
+    } catch (error: any) {
+      console.error("Error creating listing:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create listing" });
+    }
+  });
+
+  // PATCH /api/marketplace/listings/:id - Update own listing
+  app.patch('/api/marketplace/listings/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const listingId = parseInt(req.params.id);
+      if (isNaN(listingId)) {
+        return res.status(400).json({ message: "Invalid listing ID" });
+      }
+
+      const existing = await db.select()
+        .from(marketplaceListings)
+        .where(eq(marketplaceListings.id, listingId))
+        .limit(1);
+
+      if (existing.length === 0) {
+        return res.status(404).json({ message: "Listing not found" });
+      }
+
+      if (existing[0].authorId !== userId) {
+        return res.status(403).json({ message: "Not authorized to update this listing" });
+      }
+
+      const updateData = { ...req.body, updatedAt: new Date() };
+      delete updateData.id;
+      delete updateData.authorId;
+      delete updateData.createdAt;
+
+      const [updated] = await db.update(marketplaceListings)
+        .set(updateData)
+        .where(eq(marketplaceListings.id, listingId))
+        .returning();
+
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating listing:", error);
+      res.status(500).json({ message: "Failed to update listing" });
+    }
+  });
+
+  // DELETE /api/marketplace/listings/:id - Delete own listing
+  app.delete('/api/marketplace/listings/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const listingId = parseInt(req.params.id);
+      if (isNaN(listingId)) {
+        return res.status(400).json({ message: "Invalid listing ID" });
+      }
+
+      const existing = await db.select()
+        .from(marketplaceListings)
+        .where(eq(marketplaceListings.id, listingId))
+        .limit(1);
+
+      if (existing.length === 0) {
+        return res.status(404).json({ message: "Listing not found" });
+      }
+
+      if (existing[0].authorId !== userId) {
+        return res.status(403).json({ message: "Not authorized to delete this listing" });
+      }
+
+      await db.delete(marketplaceListings)
+        .where(eq(marketplaceListings.id, listingId));
+
+      res.json({ message: "Listing deleted successfully" });
+    } catch (error: any) {
+      console.error("Error deleting listing:", error);
+      res.status(500).json({ message: "Failed to delete listing" });
+    }
+  });
+
+  // GET /api/marketplace/my-listings - Get current user's listings
+  app.get('/api/marketplace/my-listings', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+
+      const listings = await db.select()
+        .from(marketplaceListings)
+        .where(eq(marketplaceListings.authorId, userId))
+        .orderBy(desc(marketplaceListings.createdAt));
+
+      res.json(listings);
+    } catch (error: any) {
+      console.error("Error fetching user listings:", error);
+      res.status(500).json({ message: "Failed to fetch listings" });
+    }
+  });
+
+  // ============================================================================
+  // MARKETPLACE PURCHASES ROUTES
+  // ============================================================================
+
+  // GET /api/marketplace/purchases - Get user's purchases
+  app.get('/api/marketplace/purchases', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+
+      const orders = await db.select()
+        .from(bookOrders)
+        .where(eq(bookOrders.customerId, userId))
+        .orderBy(desc(bookOrders.createdAt));
+
+      const ordersWithItems = await Promise.all(
+        orders.map(async (order) => {
+          const items = await db.select({
+            id: orderItems.id,
+            listingId: orderItems.listingId,
+            editionId: orderItems.editionId,
+            quantity: orderItems.quantity,
+            unitPrice: orderItems.unitPrice,
+            subtotal: orderItems.subtotal,
+            downloadUrl: orderItems.downloadUrl,
+            downloadExpiresAt: orderItems.downloadExpiresAt,
+            listingTitle: marketplaceListings.title,
+            listingCover: marketplaceListings.coverImageUrl,
+          })
+            .from(orderItems)
+            .leftJoin(marketplaceListings, eq(orderItems.listingId, marketplaceListings.id))
+            .where(eq(orderItems.orderId, order.id));
+
+          return { ...order, items };
+        })
+      );
+
+      res.json(ordersWithItems);
+    } catch (error: any) {
+      console.error("Error fetching purchases:", error);
+      res.status(500).json({ message: "Failed to fetch purchases" });
+    }
+  });
+
+  // POST /api/marketplace/checkout/:listingId - Create checkout session for listing
+  app.post('/api/marketplace/checkout/:listingId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const listingId = parseInt(req.params.listingId);
+      const { editionId } = req.body;
+
+      if (isNaN(listingId)) {
+        return res.status(400).json({ message: "Invalid listing ID" });
+      }
+
+      const listing = await db.select()
+        .from(marketplaceListings)
+        .where(and(
+          eq(marketplaceListings.id, listingId),
+          eq(marketplaceListings.status, 'published')
+        ))
+        .limit(1);
+
+      if (listing.length === 0) {
+        return res.status(404).json({ message: "Listing not found or not published" });
+      }
+
+      const editions = await db.select()
+        .from(bookEditions)
+        .where(and(
+          eq(bookEditions.listingId, listingId),
+          eq(bookEditions.isActive, true)
+        ));
+
+      if (editions.length === 0) {
+        return res.status(400).json({ message: "No editions available for purchase" });
+      }
+
+      const selectedEdition = editionId 
+        ? editions.find(e => e.id === editionId)
+        : editions[0];
+
+      if (!selectedEdition) {
+        return res.status(400).json({ message: "Selected edition not found" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      let customerId = user.stripeCustomerId;
+      if (!customerId) {
+        const customer = await stripeService.createCustomer(user.email || '', user.id);
+        await stripeService.updateUserStripeInfo(user.id, { stripeCustomerId: customer.id });
+        customerId = customer.id;
+      }
+
+      const session = await stripeService.createCheckoutSession(
+        customerId,
+        selectedEdition.price.toString(),
+        `${req.protocol}://${req.get('host')}/marketplace/purchase-success?listing=${listingId}`,
+        `${req.protocol}://${req.get('host')}/marketplace/listing/${listingId}`,
+        'payment'
+      );
+
+      res.json({ url: session.url, sessionId: session.id });
+    } catch (error: any) {
+      console.error("Error creating checkout session:", error);
+      res.status(500).json({ message: "Failed to create checkout session" });
+    }
+  });
+
+  // POST /api/marketplace/checkout/credits - Buy credits
+  app.post('/api/marketplace/checkout/credits', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { creditPackageId, amount } = req.body;
+
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ message: "Invalid credit amount" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      let customerId = user.stripeCustomerId;
+      if (!customerId) {
+        const customer = await stripeService.createCustomer(user.email || '', user.id);
+        await stripeService.updateUserStripeInfo(user.id, { stripeCustomerId: customer.id });
+        customerId = customer.id;
+      }
+
+      const creditPrice = amount * 100;
+
+      const session = await stripeService.createCheckoutSession(
+        customerId,
+        creditPrice.toString(),
+        `${req.protocol}://${req.get('host')}/credits/success?amount=${amount}`,
+        `${req.protocol}://${req.get('host')}/pricing`,
+        'payment'
+      );
+
+      res.json({ url: session.url, sessionId: session.id });
+    } catch (error: any) {
+      console.error("Error creating credit checkout session:", error);
+      res.status(500).json({ message: "Failed to create checkout session" });
+    }
+  });
+
+  // ============================================================================
+  // MARKETPLACE REVIEWS ROUTES
+  // ============================================================================
+
+  // GET /api/marketplace/listings/:id/reviews - Get reviews for a listing
+  app.get('/api/marketplace/listings/:id/reviews', async (req, res) => {
+    try {
+      const listingId = parseInt(req.params.id);
+      const { page = '1', limit = '10' } = req.query;
+      const pageNum = parseInt(page as string) || 1;
+      const limitNum = Math.min(parseInt(limit as string) || 10, 50);
+      const offset = (pageNum - 1) * limitNum;
+
+      if (isNaN(listingId)) {
+        return res.status(400).json({ message: "Invalid listing ID" });
+      }
+
+      const reviews = await db.select({
+        id: bookReviews.id,
+        rating: bookReviews.rating,
+        title: bookReviews.title,
+        content: bookReviews.content,
+        isVerifiedPurchase: bookReviews.isVerifiedPurchase,
+        helpfulCount: bookReviews.helpfulCount,
+        createdAt: bookReviews.createdAt,
+        reviewerFirstName: users.firstName,
+        reviewerLastName: users.lastName,
+        reviewerImage: users.profileImageUrl,
+      })
+        .from(bookReviews)
+        .leftJoin(users, eq(bookReviews.reviewerId, users.id))
+        .where(and(
+          eq(bookReviews.listingId, listingId),
+          eq(bookReviews.isApproved, true)
+        ))
+        .orderBy(desc(bookReviews.createdAt))
+        .limit(limitNum)
+        .offset(offset);
+
+      const countResult = await db.select({ count: sql<number>`count(*)` })
+        .from(bookReviews)
+        .where(and(
+          eq(bookReviews.listingId, listingId),
+          eq(bookReviews.isApproved, true)
+        ));
+
+      const total = Number(countResult[0]?.count || 0);
+
+      const statsResult = await db.select({
+        avgRating: sql<number>`avg(${bookReviews.rating})`,
+        totalReviews: sql<number>`count(*)`,
+      })
+        .from(bookReviews)
+        .where(and(
+          eq(bookReviews.listingId, listingId),
+          eq(bookReviews.isApproved, true)
+        ));
+
+      res.json({
+        reviews,
+        stats: {
+          averageRating: Number(statsResult[0]?.avgRating || 0).toFixed(1),
+          totalReviews: Number(statsResult[0]?.totalReviews || 0),
+        },
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total,
+          totalPages: Math.ceil(total / limitNum),
+        },
+      });
+    } catch (error: any) {
+      console.error("Error fetching reviews:", error);
+      res.status(500).json({ message: "Failed to fetch reviews" });
+    }
+  });
+
+  // POST /api/marketplace/listings/:id/reviews - Add review (verified purchase only)
+  app.post('/api/marketplace/listings/:id/reviews', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const listingId = parseInt(req.params.id);
+
+      if (isNaN(listingId)) {
+        return res.status(400).json({ message: "Invalid listing ID" });
+      }
+
+      const listing = await db.select()
+        .from(marketplaceListings)
+        .where(eq(marketplaceListings.id, listingId))
+        .limit(1);
+
+      if (listing.length === 0) {
+        return res.status(404).json({ message: "Listing not found" });
+      }
+
+      const existingReview = await db.select()
+        .from(bookReviews)
+        .where(and(
+          eq(bookReviews.listingId, listingId),
+          eq(bookReviews.reviewerId, userId)
+        ))
+        .limit(1);
+
+      if (existingReview.length > 0) {
+        return res.status(400).json({ message: "You have already reviewed this listing" });
+      }
+
+      const purchaseCheck = await db.select()
+        .from(orderItems)
+        .innerJoin(bookOrders, eq(orderItems.orderId, bookOrders.id))
+        .where(and(
+          eq(orderItems.listingId, listingId),
+          eq(bookOrders.customerId, userId),
+          eq(bookOrders.status, 'paid')
+        ))
+        .limit(1);
+
+      const isVerifiedPurchase = purchaseCheck.length > 0;
+
+      const validatedData = insertBookReviewSchema.parse({
+        listingId,
+        reviewerId: userId,
+        rating: req.body.rating,
+        title: req.body.title,
+        content: req.body.content,
+        isVerifiedPurchase,
+        orderId: purchaseCheck[0]?.book_orders?.id || null,
+      });
+
+      const [review] = await db.insert(bookReviews)
+        .values(validatedData)
+        .returning();
+
+      const avgResult = await db.select({
+        avgRating: sql<number>`avg(${bookReviews.rating}) * 10`,
+        count: sql<number>`count(*)`,
+      })
+        .from(bookReviews)
+        .where(and(
+          eq(bookReviews.listingId, listingId),
+          eq(bookReviews.isApproved, true)
+        ));
+
+      await db.update(marketplaceListings)
+        .set({
+          averageRating: Math.round(Number(avgResult[0]?.avgRating || 0)),
+          reviewCount: Number(avgResult[0]?.count || 0),
+        })
+        .where(eq(marketplaceListings.id, listingId));
+
+      res.status(201).json(review);
+    } catch (error: any) {
+      console.error("Error creating review:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create review" });
+    }
+  });
+
+  // ============================================================================
+  // CREATOR DASHBOARD ROUTES
+  // ============================================================================
+
+  // GET /api/marketplace/earnings - Get creator earnings summary
+  app.get('/api/marketplace/earnings', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+
+      const earnings = await db.select()
+        .from(authorEarnings)
+        .where(eq(authorEarnings.authorId, userId))
+        .orderBy(desc(authorEarnings.createdAt));
+
+      const summary = {
+        totalEarnings: 0,
+        pendingEarnings: 0,
+        availableEarnings: 0,
+        paidEarnings: 0,
+        totalSales: earnings.length,
+      };
+
+      for (const earning of earnings) {
+        summary.totalEarnings += earning.netEarnings;
+        if (earning.status === 'pending') {
+          summary.pendingEarnings += earning.netEarnings;
+        } else if (earning.status === 'available') {
+          summary.availableEarnings += earning.netEarnings;
+        } else if (earning.status === 'paid') {
+          summary.paidEarnings += earning.netEarnings;
+        }
+      }
+
+      const listings = await db.select({
+        id: marketplaceListings.id,
+        title: marketplaceListings.title,
+        totalSales: marketplaceListings.totalSales,
+        totalRevenue: marketplaceListings.totalRevenue,
+        averageRating: marketplaceListings.averageRating,
+        reviewCount: marketplaceListings.reviewCount,
+      })
+        .from(marketplaceListings)
+        .where(eq(marketplaceListings.authorId, userId));
+
+      res.json({
+        summary,
+        recentEarnings: earnings.slice(0, 20),
+        listings,
+      });
+    } catch (error: any) {
+      console.error("Error fetching earnings:", error);
+      res.status(500).json({ message: "Failed to fetch earnings" });
+    }
+  });
+
+  // GET /api/marketplace/payouts - Get payout history
+  app.get('/api/marketplace/payouts', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+
+      const payouts = await db.select()
+        .from(creatorPayouts)
+        .where(eq(creatorPayouts.creatorId, userId))
+        .orderBy(desc(creatorPayouts.createdAt));
+
+      const summary = {
+        totalPayouts: payouts.length,
+        totalPaidOut: 0,
+        pendingPayouts: 0,
+      };
+
+      for (const payout of payouts) {
+        if (payout.status === 'completed') {
+          summary.totalPaidOut += payout.amount;
+        } else if (payout.status === 'pending' || payout.status === 'processing') {
+          summary.pendingPayouts += payout.amount;
+        }
+      }
+
+      res.json({
+        summary,
+        payouts,
+      });
+    } catch (error: any) {
+      console.error("Error fetching payouts:", error);
+      res.status(500).json({ message: "Failed to fetch payouts" });
     }
   });
 
