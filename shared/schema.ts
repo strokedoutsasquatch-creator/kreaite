@@ -2991,6 +2991,72 @@ export const inspirationLibrary = pgTable("inspiration_library", {
 });
 
 // ============================================================================
+// PROJECT NOTES SYSTEM (Annotations for Book/Course Projects)
+// ============================================================================
+
+export const projectNotes = pgTable("project_notes", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => publishingProjects.id, { onDelete: "cascade" }),
+  chapterId: integer("chapter_id").references(() => manuscriptChapters.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  noteType: text("note_type").notNull().default("general"), // planning, research, revision, feedback, general
+  content: text("content").notNull(),
+  status: text("status").notNull().default("open"), // open, resolved, archived
+  priority: text("priority").default("normal"), // low, normal, high
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+}, (table) => [
+  index("idx_notes_project").on(table.projectId),
+  index("idx_notes_chapter").on(table.chapterId),
+]);
+
+// ============================================================================
+// DOCTRINE OUTLINES (Optional Structured Knowledge for Projects)
+// ============================================================================
+
+export const doctrineOutlines = pgTable("doctrine_outlines", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => publishingProjects.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  isEnabled: boolean("is_enabled").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const doctrineNodes = pgTable("doctrine_nodes", {
+  id: serial("id").primaryKey(),
+  outlineId: integer("outline_id").notNull().references(() => doctrineOutlines.id, { onDelete: "cascade" }),
+  parentId: integer("parent_id"), // Self-reference for tree structure
+  chapterId: integer("chapter_id").references(() => manuscriptChapters.id, { onDelete: "set null" }),
+  title: text("title").notNull(),
+  content: text("content"),
+  nodeType: text("node_type").notNull().default("topic"), // topic, concept, reference, quote, argument
+  order: integer("order").notNull().default(0),
+  metadata: jsonb("metadata").default({}),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_doctrine_outline").on(table.outlineId),
+  index("idx_doctrine_chapter").on(table.chapterId),
+]);
+
+// Insert schemas for Notes and Doctrine
+export const insertProjectNoteSchema = createInsertSchema(projectNotes).omit({ id: true, createdAt: true, updatedAt: true, resolvedAt: true });
+export const insertDoctrineOutlineSchema = createInsertSchema(doctrineOutlines).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertDoctrineNodeSchema = createInsertSchema(doctrineNodes).omit({ id: true, createdAt: true, updatedAt: true });
+
+// Types for Notes and Doctrine
+export type ProjectNote = typeof projectNotes.$inferSelect;
+export type InsertProjectNote = z.infer<typeof insertProjectNoteSchema>;
+export type DoctrineOutline = typeof doctrineOutlines.$inferSelect;
+export type InsertDoctrineOutline = z.infer<typeof insertDoctrineOutlineSchema>;
+export type DoctrineNode = typeof doctrineNodes.$inferSelect;
+export type InsertDoctrineNode = z.infer<typeof insertDoctrineNodeSchema>;
+
+// ============================================================================
 // UNIFIED CONVERSATION SYSTEM (Cross-Studio AI Collaboration)
 // ============================================================================
 
