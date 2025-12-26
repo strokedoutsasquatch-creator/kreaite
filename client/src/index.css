@@ -2,8 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* STROKE RECOVERY OS - Dark Theme with Orange Accents */
-/* Using pure black background with vibrant orange (#FF6B35) as primary */
+/* KreAIte.xyz - Literary Creator Platform */
+/* Pure black background (#000000) with orange (#FF6B35) accent - elegant creator aesthetic */
 :root {
   --button-outline: rgba(255,255,255, .10);
   --badge-outline: rgba(255,255,255, .05);
