@@ -127,10 +127,10 @@ export function TemplateMarketplace() {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6" data-testid="template-marketplace">
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-white mb-2">Template Marketplace</h1>
-        <p className="text-gray-400">Buy and sell templates for books, courses, music, and more</p>
+    <div className="p-8 max-w-6xl mx-auto space-y-8" data-testid="template-marketplace">
+      <div className="text-center mb-12">
+        <h1 className="text-5xl font-serif font-bold tracking-tight text-white mb-3">Template Gallery</h1>
+        <p className="text-lg text-zinc-400 leading-relaxed">Curated Templates from Fellow Creators</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
@@ -149,10 +149,10 @@ export function TemplateMarketplace() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="browse" className="space-y-4">
+        <TabsContent value="browse" className="space-y-6">
           <div className="flex gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
               <Input
                 placeholder="Search templates..."
                 value={searchQuery}
@@ -178,7 +178,7 @@ export function TemplateMarketplace() {
             </Select>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredTemplates.map((template) => {
               const CategoryIcon = getCategoryIcon(template.category);
               return (

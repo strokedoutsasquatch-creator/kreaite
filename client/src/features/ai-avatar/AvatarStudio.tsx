@@ -135,14 +135,14 @@ export function AvatarStudio() {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6" data-testid="avatar-studio">
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-white mb-2">AI Avatar Studio</h1>
-        <p className="text-gray-400">Create talking head videos with your own likeness</p>
+    <div className="p-8 max-w-5xl mx-auto space-y-8" data-testid="avatar-studio">
+      <div className="text-center mb-12">
+        <h1 className="text-5xl font-serif font-bold tracking-tight text-white mb-3">Avatar Studio</h1>
+        <p className="text-lg text-zinc-400 leading-relaxed">Bring Your Vision to Life</p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <Card className="bg-black border-orange-500/20">
+      <div className="grid md:grid-cols-2 gap-8">
+        <Card className="bg-zinc-950 border border-zinc-800/50 shadow-xl">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2 text-sm">
               <Camera className="w-4 h-4 text-orange-500" />
@@ -152,16 +152,16 @@ export function AvatarStudio() {
           <CardContent className="space-y-4">
             <div
               className={`aspect-square rounded-lg border-2 border-dashed ${
-                avatarImage ? "border-orange-500" : "border-gray-700"
+                avatarImage ? "border-orange-500" : "border-zinc-700"
               } flex items-center justify-center overflow-hidden`}
             >
               {avatarImage ? (
                 <img src={avatarImage} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
                 <label className="cursor-pointer text-center p-4" data-testid="label-upload-avatar">
-                  <User className="w-12 h-12 mx-auto mb-2 text-gray-600" />
-                  <p className="text-sm text-gray-400">Upload your photo</p>
-                  <p className="text-xs text-gray-500 mt-1">For best results, use a front-facing headshot</p>
+                  <User className="w-12 h-12 mx-auto mb-2 text-zinc-600" />
+                  <p className="text-sm text-zinc-400">Upload your photo</p>
+                  <p className="text-xs text-zinc-500 mt-1">For best results, use a front-facing headshot</p>
                   <input
                     type="file"
                     accept="image/*"

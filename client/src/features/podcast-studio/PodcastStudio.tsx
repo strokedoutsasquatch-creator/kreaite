@@ -142,14 +142,14 @@ export function PodcastStudio() {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6" data-testid="podcast-studio">
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-white mb-2">Podcast Studio</h1>
-        <p className="text-gray-400">Record, edit, and publish professional podcasts</p>
+    <div className="p-8 max-w-5xl mx-auto space-y-8" data-testid="podcast-studio">
+      <div className="text-center mb-12">
+        <h1 className="text-5xl font-serif font-bold tracking-tight text-white mb-3">Podcast Studio</h1>
+        <p className="text-lg text-zinc-400 leading-relaxed">Your Audio Sanctuary</p>
       </div>
 
       <Tabs defaultValue="record" className="space-y-4">
-        <TabsList className="grid grid-cols-3 bg-black/50">
+        <TabsList className="grid grid-cols-3 bg-zinc-900/50 border border-zinc-800/50">
           <TabsTrigger value="record" data-testid="tab-record">
             <Mic className="w-4 h-4 mr-2" />
             Record
@@ -164,8 +164,8 @@ export function PodcastStudio() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="record" className="space-y-4">
-          <Card className="bg-black border-orange-500/20">
+        <TabsContent value="record" className="space-y-6">
+          <Card className="bg-zinc-950 border border-zinc-800/50 shadow-xl">
             <CardContent className="p-8">
               <div className="text-center space-y-6">
                 <div className="relative inline-block">
