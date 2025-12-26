@@ -58,7 +58,7 @@ export default function CreatorScribeWidget() {
     mutationFn: async (message: string) => {
       const response = await apiRequest("POST", "/api/creator/chat", {
         message,
-        context: `Current route: ${location}`,
+        context: "creative assistant",
         history: messages.slice(-10).map((m) => ({
           role: m.role,
           content: m.content,
