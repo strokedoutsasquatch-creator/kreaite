@@ -25,7 +25,7 @@ export default function CreatorScribeWidget() {
     {
       id: "welcome",
       role: "assistant",
-      content: "Welcome to KreAIte! I'm your AI Creative Scribe. Whether you're writing books, composing music, or building courses - I'm here to help spark your creativity. What would you like to create today?",
+      content: "Welcome to KreAIte. I'm your Creative Partner, here to help you bring your ideas to life. Whether you're drafting a book, designing a course, or composing music, I can generate content directly into your project. How can I help you create today?",
       timestamp: new Date(),
     },
   ]);
@@ -37,11 +37,11 @@ export default function CreatorScribeWidget() {
   useEffect(() => {
     if (isOpen && messages.length === 1) {
       let contextHint = "";
-      if (location.includes("book-studio")) contextHint = "I see you're in the Book Studio! Ready to draft your next masterpiece?";
-      if (location.includes("music-studio")) contextHint = "I see you're in the Music Studio! Shall we work on some lyrics or composition ideas?";
-      if (location.includes("course-studio")) contextHint = "I see you're in the Course Studio! How can I help structure your curriculum today?";
-      if (location.includes("video-studio")) contextHint = "I see you're in the Video Studio! Need help with a script or storyboard?";
-      if (location.includes("image-studio")) contextHint = "I see you're in the Image Studio! Let's brainstorm some visual concepts.";
+      if (location.includes("book-studio")) contextHint = "You're in the Book Studio. I can help you generate chapters, outlines, character profiles, or dialogue. Just describe what you need and I'll draft it directly into your editor.";
+      if (location.includes("music-studio")) contextHint = "You're in the Music Studio. I can help compose lyrics, suggest chord progressions, or create song structures. What would you like to create?";
+      if (location.includes("course-studio")) contextHint = "You're in the Course Studio. I can help design your curriculum, generate lesson content, create quizzes, or structure learning modules. How can I assist?";
+      if (location.includes("video-studio")) contextHint = "You're in the Video Studio. I can help write scripts, create storyboards, or develop video concepts. What's your project?";
+      if (location.includes("image-studio")) contextHint = "You're in the Image Studio. I can help generate image prompts, suggest compositions, or describe visual concepts for AI generation.";
 
       if (contextHint) {
         setMessages(prev => [...prev, {
@@ -80,7 +80,7 @@ export default function CreatorScribeWidget() {
       const errorMessage: Message = {
         id: Date.now().toString(),
         role: "assistant",
-        content: "Writer's block! I'm having trouble connecting right now, but don't let that stop your flow. Keep creating!",
+        content: "I'm experiencing a temporary connection issue. Please try again in a moment, or continue working on your project while I reconnect.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -150,8 +150,8 @@ export default function CreatorScribeWidget() {
             <div className="flex flex-col items-center justify-center h-full p-8 text-center space-y-6">
               <BookOpen className="w-16 h-16 text-[#FF6B35]" />
               <div className="space-y-2">
-                <h3 className="text-xl font-bold text-white">Unlock Your Creative Potential</h3>
-                <p className="text-sm text-gray-400">Please sign in to access your AI Creative Scribe and start building your next masterpiece.</p>
+                <h3 className="text-xl font-bold text-white">Your Creative Partner Awaits</h3>
+                <p className="text-sm text-gray-400">Sign in to access AI-powered content generation. I can write chapters, design courses, compose music, and more.</p>
               </div>
               <Button 
                 className="w-full bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white font-bold"
@@ -180,10 +180,10 @@ export default function CreatorScribeWidget() {
                 </div>
                 <div className="flex-1">
                   <h3 className="font-bold text-white flex items-center gap-2 tracking-tight">
-                    Creative Scribe
+                    Creative Partner
                     <Sparkles className="w-4 h-4 text-[#FF6B35]" />
                   </h3>
-                  <p className="text-[10px] text-[#FF6B35]/70 uppercase tracking-widest font-sans">AI Writing Assistant</p>
+                  <p className="text-[10px] text-[#FF6B35]/70 uppercase tracking-widest font-sans">KreAIte AI Assistant</p>
                 </div>
                 <Button
                   size="icon"
@@ -259,7 +259,7 @@ export default function CreatorScribeWidget() {
                   </Button>
                 </div>
                 <p className="text-[10px] text-gray-600 text-center mt-2 font-sans tracking-tight">
-                  Powered by KreAIte Engine &bull; Drafting your masterpiece
+                  Powered by KreAIte &bull; AI-generated content for review
                 </p>
               </div>
             </>

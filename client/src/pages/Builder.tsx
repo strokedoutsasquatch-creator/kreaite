@@ -64,12 +64,12 @@ const initialFormData: FormData = {
   dailyTime: "",
 };
 
-const sasquatchQuotes = [
-  "Every warrior's journey starts with a single step. Let's map yours.",
-  "Your stroke doesn't define you - your comeback does. Let's build it.",
-  "The brain can rewire itself. Let me show you how to command it.",
-  "From wheelchair to walking isn't luck - it's strategy. Let's create yours.",
-  "You've survived the worst day. Now let's conquer every day after.",
+const recoveryCoachTips = [
+  "Every recovery journey begins with understanding where you are. Let's assess your situation together.",
+  "Your stroke doesn't define your future. Let's build a personalized plan for your recovery.",
+  "Research shows the brain has remarkable ability to adapt and heal. Let's create a strategy that works for you.",
+  "Consistent, targeted effort leads to real progress. Let's design a practical routine you can follow.",
+  "You've already shown incredible strength. Now let's channel that into structured recovery work.",
 ];
 
 const goalOptions = [
@@ -87,7 +87,7 @@ const timeOptions = [
   { value: "15-30", label: "15-30 minutes", description: "Light daily practice" },
   { value: "30-60", label: "30-60 minutes", description: "Moderate commitment" },
   { value: "60-90", label: "1-2 hours", description: "Intensive recovery" },
-  { value: "90+", label: "2+ hours", description: "Full warrior mode" },
+  { value: "90+", label: "2+ hours", description: "Intensive daily practice" },
 ];
 
 function StepIndicator({ currentStep, totalSteps }: { currentStep: number; totalSteps: number }) {
@@ -134,7 +134,7 @@ function StepIndicator({ currentStep, totalSteps }: { currentStep: number; total
   );
 }
 
-function SasquatchQuote({ quote }: { quote: string }) {
+function RecoveryCoachTip({ quote }: { quote: string }) {
   return (
     <div className="bg-card/50 border border-border rounded-lg p-4 mb-8 max-w-2xl mx-auto">
       <div className="flex items-start gap-3">
@@ -142,8 +142,8 @@ function SasquatchQuote({ quote }: { quote: string }) {
           <Zap className="h-5 w-5 text-primary" aria-hidden="true" />
         </div>
         <div>
-          <p className="text-sm font-medium text-primary mb-1">Sasquatch Coach says:</p>
-          <p className="text-foreground italic" data-testid="text-sasquatch-quote">"{quote}"</p>
+          <p className="text-sm font-medium text-primary mb-1">Recovery Coach:</p>
+          <p className="text-foreground italic" data-testid="text-recovery-coach-tip">"{quote}"</p>
         </div>
       </div>
     </div>
@@ -583,8 +583,8 @@ function ResultsSection({ formData, enrollmentData }: { formData: FormData; enro
 
   const getTierDescription = (tier: string) => {
     switch (tier) {
-      case 'champion': return "You're ready for intensive recovery with 60+ minutes daily. Maximum results incoming!";
-      case 'warrior': return "With moderate commitment and mobility, you'll make steady, strong progress.";
+      case 'champion': return "You're ready for intensive recovery with 60+ minutes daily. This level of commitment supports significant progress.";
+      case 'warrior': return "With moderate commitment and mobility, you'll make steady, meaningful progress.";
       default: return "Start where you are. Every step forward builds momentum for your recovery.";
     }
   };
@@ -630,7 +630,7 @@ function ResultsSection({ formData, enrollmentData }: { formData: FormData; enro
         </p>
       </div>
 
-      <SasquatchQuote quote="You've got your mission. Now it's time to execute. One day at a time, one rep at a time." />
+      <RecoveryCoachTip quote="Your personalized recovery plan is ready. Remember: small, consistent steps lead to meaningful progress." />
 
       <div className="grid lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
@@ -773,11 +773,7 @@ export default function Builder() {
 
   const enrollmentMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const response = await apiRequest('/api/recovery/enrollment', {
-        method: 'POST',
-        body: JSON.stringify(data),
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const response = await apiRequest('POST', '/api/recovery/enrollment', data);
       return response.json();
     },
     onSuccess: (data) => {
@@ -945,7 +941,7 @@ export default function Builder() {
               <>
                 <StepIndicator currentStep={currentStep} totalSteps={totalSteps} />
                 
-                <SasquatchQuote quote={sasquatchQuotes[currentStep - 1]} />
+                <RecoveryCoachTip quote={recoveryCoachTips[currentStep - 1]} />
 
                 {currentStep === 1 && (
                   <Step1BasicInfo formData={formData} setFormData={setFormData} />

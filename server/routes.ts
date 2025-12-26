@@ -7,7 +7,7 @@ import { setupAuth, isAuthenticated } from "./replitAuth";
 import { stripeService } from "./stripeService";
 import { getStripeSync, getStripePublishableKey } from "./stripeClient";
 import { runMigrations } from "stripe-replit-sync";
-import { generateCoachResponse, getRandomQuote } from "./geminiService";
+import { generateCoachResponse, getRandomQuote, generateStructuredContent, type ContentType, type GenerationRequest } from "./geminiService";
 import { searchAmazonProducts, getAmazonProduct, isConfigured as isAmazonConfigured } from "./amazonService";
 import { generateInstrumental, buildMusicPrompt, isLyriaConfigured, estimateCost } from "./lyriaService";
 import { synthesizeSpeech, createVoiceClone, synthesizeWithClone, listVoices, isVoiceServiceConfigured, getVoiceStyles, getCharacterPresets, getGoogleVoices } from "./voiceService";
@@ -710,6 +710,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         response: "Writer's block! I'm having trouble connecting right now, but don't let that stop your flow. Keep creating!",
         quote: getRandomQuote()
+      });
+    }
+  });
+
+  // AI Content Generation endpoint (for inserting content into studios)
+  app.post('/api/creator/generate', isAuthenticated, async (req: any, res) => {
+    try {
+      const { type, prompt, context } = req.body as GenerationRequest;
+      
+      if (!type || !prompt) {
+        return res.status(400).json({ message: "Type and prompt are required" });
+      }
+
+      const validTypes: ContentType[] = ['chapter', 'outline', 'lesson', 'quiz', 'lyrics', 'script', 'blog', 'social', 'curriculum'];
+      if (!validTypes.includes(type)) {
+        return res.status(400).json({ message: `Invalid content type. Valid types: ${validTypes.join(', ')}` });
+      }
+
+      const result = await generateStructuredContent({ type, prompt, context });
+      
+      res.json({
+        success: true,
+        content: result.content,
+        type: result.type,
+        wordCount: result.wordCount,
+        title: result.title,
+        metadata: result.metadata
+      });
+    } catch (error) {
+      console.error("Error generating content:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to generate content. Please try again."
       });
     }
   });

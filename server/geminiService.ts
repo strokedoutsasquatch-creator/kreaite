@@ -60,30 +60,35 @@ When responding:
 
 Never provide medical advice. Always encourage working with their healthcare team. You're a motivational coach, not a doctor.`;
 
-const CREATOR_SYSTEM_PROMPT = `You are the KreAIte Creative Scribe - an AI assistant for content creators. You help writers, musicians, course builders, and all types of digital creators.
+const CREATOR_SYSTEM_PROMPT = `You are the KreAIte Creative Partner - a professional AI assistant for content creators. You help writers, musicians, course builders, and digital creators produce high-quality content.
 
-Your personality:
-- Enthusiastic and supportive of creative endeavors
-- Knowledgeable about books, music, video, courses, and digital content
-- Encouraging but practical about the creative process
-- Helpful with brainstorming, outlining, and creative blocks
+Your communication style:
+- Professional, warm, and supportive
+- Clear and direct without being abrupt
+- Knowledgeable and practical
+- Focused on actionable guidance
 
-Key areas you can help with:
-1. Book writing - outlines, chapters, characters, plot development
-2. Music composition - lyrics, song structure, genre guidance
-3. Course creation - curriculum design, lesson planning, quiz ideas
-4. Video content - scripts, storyboards, content ideas
-5. Image creation - prompts, style guidance, composition tips
-6. General creativity - brainstorming, overcoming blocks, motivation
+Key capabilities:
+1. Book writing - Generate chapters, outlines, character profiles, dialogue, and plot structures
+2. Music composition - Write lyrics, suggest chord progressions, create song structures
+3. Course creation - Design curricula, write lesson content, create quizzes and assessments
+4. Video content - Write scripts, develop storyboards, create content outlines
+5. Image creation - Generate detailed prompts, suggest compositions, describe visual concepts
 
 When responding:
-- Keep responses helpful and focused on their creative project
-- Offer specific suggestions and actionable ideas
-- Ask clarifying questions to better understand their vision
-- Celebrate creative wins and progress
-- Suggest features in KreAIte that could help them
+- Provide specific, actionable content they can use immediately
+- When asked to generate content, produce complete, polished drafts
+- Offer brief explanations of your approach when helpful
+- Ask clarifying questions only when essential information is missing
+- Keep conversational responses concise; make generated content thorough
 
-Remember: You're here to amplify their creativity, not replace it.`;
+Content generation guidelines:
+- Match the user's requested tone and style
+- Produce professional-quality drafts ready for review
+- Include appropriate structure (headings, sections, formatting)
+- Flag any assumptions you've made
+
+You can generate content directly into their project. When they ask for chapters, outlines, or other content, provide complete, usable drafts.`;
 
 export async function generateCoachResponse(
   userMessage: string,
@@ -95,8 +100,8 @@ export async function generateCoachResponse(
     
     const systemPrompt = context === "creative assistant" ? CREATOR_SYSTEM_PROMPT : SYSTEM_PROMPT;
     const ackMessage = context === "creative assistant" 
-      ? "I understand. I'm the KreAIte Creative Scribe, ready to help you create amazing content. What are we building today?"
-      : "I understand. I'm the Stroked Out Sasquatch, ready to coach stroke survivors through their recovery journey. Let's get to work!";
+      ? "I understand. I'm your KreAIte Creative Partner, here to help you create professional content. What would you like to work on?"
+      : "I understand. I'm your recovery coach, here to support your journey. Let's make progress together.";
     
     const contents = [
       { role: "user" as const, parts: [{ text: systemPrompt }] },
@@ -129,6 +134,136 @@ export async function generateCoachResponse(
 
 export function getRandomQuote(): string {
   return SASQUATCH_QUOTES[Math.floor(Math.random() * SASQUATCH_QUOTES.length)];
+}
+
+export type ContentType = 
+  | 'chapter' 
+  | 'outline' 
+  | 'lesson' 
+  | 'quiz' 
+  | 'lyrics' 
+  | 'script' 
+  | 'blog' 
+  | 'social'
+  | 'curriculum';
+
+export interface GenerationRequest {
+  type: ContentType;
+  prompt: string;
+  context?: {
+    title?: string;
+    genre?: string;
+    tone?: string;
+    audience?: string;
+    style?: string;
+    existingContent?: string;
+    wordCount?: number;
+  };
+}
+
+export interface GeneratedContent {
+  content: string;
+  title?: string;
+  type: ContentType;
+  wordCount: number;
+  metadata?: Record<string, any>;
+}
+
+const CONTENT_GENERATION_PROMPTS: Record<ContentType, string> = {
+  chapter: `Generate a complete book chapter based on the following request. 
+Write in a professional, engaging style with proper paragraph structure.
+Include vivid descriptions, natural dialogue where appropriate, and smooth transitions.
+Format with the chapter title as a heading.`,
+
+  outline: `Create a detailed book outline based on the following request.
+Include chapter titles, brief summaries of each chapter, and key plot points or themes.
+Structure it clearly with numbered chapters and bullet points for details.`,
+
+  lesson: `Create a comprehensive course lesson based on the following request.
+Include clear learning objectives, main content sections, key takeaways, and practical examples.
+Structure with proper headings and subheadings.`,
+
+  quiz: `Generate a quiz or assessment based on the following topic.
+Include a mix of question types (multiple choice, true/false, short answer).
+Provide answer keys with brief explanations.
+Format clearly with numbered questions.`,
+
+  lyrics: `Write song lyrics based on the following request.
+Include verse structure, chorus, and bridge where appropriate.
+Format with clear section labels (Verse 1, Chorus, etc.).
+Consider rhythm and rhyme scheme.`,
+
+  script: `Write a video script based on the following request.
+Include scene descriptions, dialogue, and visual/audio cues.
+Format in standard script format with clear speaker labels.
+Include timing estimates where relevant.`,
+
+  blog: `Write a blog post based on the following request.
+Include an engaging introduction, clear sections with headings, and a compelling conclusion.
+Optimize for readability with short paragraphs and bullet points where appropriate.`,
+
+  social: `Create social media content based on the following request.
+Optimize for engagement with compelling hooks and calls to action.
+Include appropriate hashtag suggestions where relevant.`,
+
+  curriculum: `Design a complete course curriculum based on the following request.
+Include module titles, lesson breakdowns, learning objectives, and suggested assessments.
+Structure as a comprehensive learning path.`
+};
+
+export async function generateStructuredContent(request: GenerationRequest): Promise<GeneratedContent> {
+  try {
+    const basePrompt = CONTENT_GENERATION_PROMPTS[request.type];
+    
+    let contextString = '';
+    if (request.context) {
+      const ctx = request.context;
+      if (ctx.title) contextString += `Title/Topic: ${ctx.title}\n`;
+      if (ctx.genre) contextString += `Genre: ${ctx.genre}\n`;
+      if (ctx.tone) contextString += `Tone: ${ctx.tone}\n`;
+      if (ctx.audience) contextString += `Target Audience: ${ctx.audience}\n`;
+      if (ctx.style) contextString += `Style: ${ctx.style}\n`;
+      if (ctx.wordCount) contextString += `Target Word Count: ${ctx.wordCount}\n`;
+      if (ctx.existingContent) contextString += `\nExisting Content for Reference:\n${ctx.existingContent}\n`;
+    }
+
+    const fullPrompt = `${basePrompt}
+
+${contextString}
+
+User Request: ${request.prompt}
+
+Generate professional, publication-ready content. Do not include meta-commentary about the content - just produce the content itself.`;
+
+    const contents = [
+      { role: "user" as const, parts: [{ text: CREATOR_SYSTEM_PROMPT }] },
+      { role: "model" as const, parts: [{ text: "I understand. I'm ready to generate professional content for you." }] },
+      { role: "user" as const, parts: [{ text: fullPrompt }] }
+    ];
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents,
+    });
+
+    const generatedText = response.text || '';
+    const wordCount = generatedText.split(/\s+/).filter(word => word.length > 0).length;
+
+    return {
+      content: generatedText,
+      type: request.type,
+      wordCount,
+      title: request.context?.title,
+      metadata: {
+        generatedAt: new Date().toISOString(),
+        model: 'gemini-2.5-flash',
+        requestType: request.type
+      }
+    };
+  } catch (error) {
+    console.error("Content generation error:", error);
+    throw new Error("Failed to generate content. Please try again.");
+  }
 }
 
 export { SASQUATCH_QUOTES };
