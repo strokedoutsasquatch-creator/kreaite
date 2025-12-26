@@ -42,6 +42,8 @@ import {
   type BookReview, type InsertBookReview,
   type AuthorEarnings, type InsertAuthorEarnings,
   type LuluPrintJob, type InsertLuluPrintJob,
+  type Podcast, type InsertPodcast,
+  type PodcastEpisode, type InsertPodcastEpisode,
 } from "@shared/schema";
 import { 
   users, forumCategories, forumThreads, forumPosts, forumReactions,
@@ -68,6 +70,7 @@ import {
   conversations, conversationParticipants, directMessages,
   forumPostMedia, videoSessions, videoSessionParticipants, seoPages,
   blogPosts, blogPostReactions, blogPostComments,
+  podcasts, podcastEpisodes,
   type AccountabilityPod, type InsertAccountabilityPod,
   type PodMember, type InsertPodMember,
 } from "@shared/schema";
@@ -2325,6 +2328,82 @@ export class DatabaseStorage implements IStorage {
       totalRevenue: Number(totals[0]?.totalRevenue) || 0,
       topBooks: listings
     };
+  }
+
+  // Podcast Studio methods
+  async getPodcasts(userId: string): Promise<Podcast[]> {
+    return db.select().from(podcasts)
+      .where(eq(podcasts.userId, userId))
+      .orderBy(desc(podcasts.updatedAt));
+  }
+
+  async getPodcast(id: number): Promise<Podcast | undefined> {
+    const [podcast] = await db.select().from(podcasts).where(eq(podcasts.id, id));
+    return podcast;
+  }
+
+  async createPodcast(podcast: InsertPodcast): Promise<Podcast> {
+    const [result] = await db.insert(podcasts).values(podcast).returning();
+    return result;
+  }
+
+  async updatePodcast(id: number, updates: Partial<Podcast>): Promise<Podcast | undefined> {
+    const [result] = await db.update(podcasts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(podcasts.id, id))
+      .returning();
+    return result;
+  }
+
+  async deletePodcast(id: number): Promise<boolean> {
+    const result = await db.delete(podcasts).where(eq(podcasts.id, id));
+    return result.rowCount > 0;
+  }
+
+  async getPodcastEpisodes(podcastId: number): Promise<PodcastEpisode[]> {
+    return db.select().from(podcastEpisodes)
+      .where(eq(podcastEpisodes.podcastId, podcastId))
+      .orderBy(desc(podcastEpisodes.createdAt));
+  }
+
+  async getPodcastEpisode(id: number): Promise<PodcastEpisode | undefined> {
+    const [episode] = await db.select().from(podcastEpisodes).where(eq(podcastEpisodes.id, id));
+    return episode;
+  }
+
+  async createPodcastEpisode(episode: InsertPodcastEpisode): Promise<PodcastEpisode> {
+    const [result] = await db.insert(podcastEpisodes).values(episode).returning();
+    await db.update(podcasts)
+      .set({ 
+        episodeCount: sql`${podcasts.episodeCount} + 1`,
+        totalDuration: sql`${podcasts.totalDuration} + ${episode.duration || 0}`,
+        updatedAt: new Date()
+      })
+      .where(eq(podcasts.id, episode.podcastId));
+    return result;
+  }
+
+  async updatePodcastEpisode(id: number, updates: Partial<PodcastEpisode>): Promise<PodcastEpisode | undefined> {
+    const [result] = await db.update(podcastEpisodes)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(podcastEpisodes.id, id))
+      .returning();
+    return result;
+  }
+
+  async deletePodcastEpisode(id: number): Promise<boolean> {
+    const [episode] = await db.select().from(podcastEpisodes).where(eq(podcastEpisodes.id, id));
+    if (episode) {
+      await db.update(podcasts)
+        .set({ 
+          episodeCount: sql`GREATEST(${podcasts.episodeCount} - 1, 0)`,
+          totalDuration: sql`GREATEST(${podcasts.totalDuration} - ${episode.duration || 0}, 0)`,
+          updatedAt: new Date()
+        })
+        .where(eq(podcasts.id, episode.podcastId));
+    }
+    const result = await db.delete(podcastEpisodes).where(eq(podcastEpisodes.id, id));
+    return result.rowCount > 0;
   }
 }
 

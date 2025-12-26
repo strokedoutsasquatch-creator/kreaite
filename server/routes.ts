@@ -74,6 +74,10 @@ import {
   referralConversions,
   contentReports,
   insertContentReportSchema,
+  podcasts,
+  podcastEpisodes,
+  insertPodcastSchema,
+  insertPodcastEpisodeSchema,
 } from "../shared/schema";
 import { db } from "./db";
 import { eq, and, gte, desc, ilike, or, sql } from "drizzle-orm";
@@ -200,6 +204,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Magic Link Authentication routes
+  app.post('/api/auth/magic-link', async (req, res) => {
+    try {
+      const { email } = req.body;
+      if (!email || typeof email !== 'string') {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ message: "Invalid email format" });
+      }
+
+      const { generateMagicLink } = await import('./magicLinkService');
+      const result = await generateMagicLink(email);
+      
+      if (!result.success) {
+        return res.status(500).json({ message: result.error || "Failed to send magic link" });
+      }
+
+      res.json({ success: true, message: "Magic link sent to your email" });
+    } catch (error: any) {
+      console.error("Magic link error:", error);
+      res.status(500).json({ message: error.message || "Failed to send magic link" });
+    }
+  });
+
+  app.get('/api/auth/magic-link/verify/:token', async (req: any, res) => {
+    try {
+      const { token } = req.params;
+      if (!token) {
+        return res.status(400).json({ message: "Token is required" });
+      }
+
+      const { verifyMagicLink } = await import('./magicLinkService');
+      const result = await verifyMagicLink(token);
+
+      if (!result.success) {
+        return res.status(400).json({ message: result.error || "Invalid magic link" });
+      }
+
+      const user = await storage.getUser(result.userId!);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      req.login({ 
+        claims: { sub: user.id, email: user.email },
+        access_token: null,
+        refresh_token: null,
+        expires_at: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60)
+      }, (err: any) => {
+        if (err) {
+          console.error("Login error:", err);
+          return res.status(500).json({ message: "Failed to create session" });
+        }
+        res.json({ success: true, user });
+      });
+    } catch (error: any) {
+      console.error("Magic link verification error:", error);
+      res.status(500).json({ message: error.message || "Failed to verify magic link" });
     }
   });
 
@@ -10723,6 +10791,583 @@ Provide a JSON response with track suggestions for each chapter/section.`;
     } catch (error) {
       console.error("Error updating merge session:", error);
       res.status(500).json({ message: "Failed to update merge session" });
+    }
+  });
+
+  // ============================================================================
+  // ADMIN PANEL ROUTES
+  // ============================================================================
+
+  // Admin middleware - checks if user has admin role
+  const isAdmin = async (req: any, res: any, next: any) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    const userId = req.user.claims.sub;
+    const user = await storage.getUser(userId);
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    next();
+  };
+
+  // GET /api/admin/users - List/search users (admin only)
+  app.get('/api/admin/users', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { search, limit = 50, offset = 0 } = req.query;
+      const { creditWallets } = await import('../shared/schema');
+      
+      let query = db.select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        profileImageUrl: users.profileImageUrl,
+        role: users.role,
+        subscriptionStatus: users.subscriptionStatus,
+        createdAt: users.createdAt,
+      }).from(users);
+      
+      if (search) {
+        query = query.where(
+          or(
+            ilike(users.email, `%${search}%`),
+            ilike(users.firstName, `%${search}%`),
+            ilike(users.lastName, `%${search}%`)
+          )
+        ) as any;
+      }
+      
+      const userList = await query
+        .orderBy(desc(users.createdAt))
+        .limit(Number(limit))
+        .offset(Number(offset));
+      
+      // Get credit balances for all users
+      const userIds = userList.map(u => u.id);
+      const wallets = userIds.length > 0 
+        ? await db.select().from(creditWallets).where(sql`${creditWallets.userId} = ANY(${userIds})`)
+        : [];
+      
+      const walletMap = new Map(wallets.map(w => [w.userId, w]));
+      
+      const usersWithCredits = userList.map(u => ({
+        ...u,
+        credits: walletMap.get(u.id) || { balance: 0, bonusCredits: 0, lifetimeEarned: 0, lifetimeSpent: 0 },
+      }));
+      
+      // Get total count
+      const [{ count }] = await db.select({ count: sql<number>`count(*)` }).from(users);
+      
+      res.json({ 
+        users: usersWithCredits, 
+        total: Number(count),
+        limit: Number(limit),
+        offset: Number(offset),
+      });
+    } catch (error) {
+      console.error("Error fetching admin users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  // GET /api/admin/users/:id - Get single user details
+  app.get('/api/admin/users/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const userId = req.params.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const balance = await creditService.getBalance(userId);
+      const transactions = await creditService.getTransactionHistory(userId, 20);
+      
+      res.json({ 
+        user, 
+        credits: balance,
+        recentTransactions: transactions,
+      });
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+      res.status(500).json({ message: "Failed to fetch user details" });
+    }
+  });
+
+  // POST /api/admin/users/:id/credits - Add credits to user
+  app.post('/api/admin/users/:id/credits', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const targetUserId = req.params.id;
+      const adminId = req.user.claims.sub;
+      const { amount, reason } = req.body;
+      
+      if (!amount || typeof amount !== 'number' || amount <= 0) {
+        return res.status(400).json({ message: "Valid positive amount required" });
+      }
+      
+      const user = await storage.getUser(targetUserId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const result = await creditService.addCredits(
+        targetUserId,
+        amount,
+        'bonus',
+        reason || `Admin credit grant by ${adminId}`,
+        { grantedBy: adminId }
+      );
+      
+      res.json({ 
+        success: true, 
+        newBalance: result.newBalance,
+        message: `Added ${amount} credits to user`,
+      });
+    } catch (error) {
+      console.error("Error adding credits:", error);
+      res.status(500).json({ message: "Failed to add credits" });
+    }
+  });
+
+  // POST /api/admin/users/:id/unlimited - Set unlimited credits (999999999)
+  app.post('/api/admin/users/:id/unlimited', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const targetUserId = req.params.id;
+      const adminId = req.user.claims.sub;
+      const { creditWallets } = await import('../shared/schema');
+      
+      const user = await storage.getUser(targetUserId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const UNLIMITED_CREDITS = 999999999;
+      
+      // Check if wallet exists
+      const existing = await db.select().from(creditWallets).where(eq(creditWallets.userId, targetUserId)).limit(1);
+      
+      if (existing.length === 0) {
+        await db.insert(creditWallets).values({
+          userId: targetUserId,
+          balance: UNLIMITED_CREDITS,
+          bonusCredits: 0,
+          lifetimeEarned: UNLIMITED_CREDITS,
+          lifetimeSpent: 0,
+        });
+      } else {
+        await db.update(creditWallets)
+          .set({ 
+            balance: UNLIMITED_CREDITS,
+            updatedAt: new Date(),
+          })
+          .where(eq(creditWallets.userId, targetUserId));
+      }
+      
+      // Log this action
+      await db.insert(creditLedger).values({
+        userId: targetUserId,
+        transactionType: 'bonus',
+        amount: UNLIMITED_CREDITS,
+        balanceAfter: UNLIMITED_CREDITS,
+        description: `Unlimited credits granted by admin ${adminId}`,
+        metadata: { grantedBy: adminId },
+      });
+      
+      res.json({ 
+        success: true, 
+        message: "Unlimited credits granted",
+        balance: UNLIMITED_CREDITS,
+      });
+    } catch (error) {
+      console.error("Error setting unlimited credits:", error);
+      res.status(500).json({ message: "Failed to set unlimited credits" });
+    }
+  });
+
+  // POST /api/admin/users/:id/role - Update user role
+  app.post('/api/admin/users/:id/role', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const targetUserId = req.params.id;
+      const adminId = req.user.claims.sub;
+      const { role } = req.body;
+      
+      if (!role || !['member', 'admin'].includes(role)) {
+        return res.status(400).json({ message: "Valid role required (member or admin)" });
+      }
+      
+      // Prevent admin from demoting themselves
+      if (targetUserId === adminId && role !== 'admin') {
+        return res.status(400).json({ message: "Cannot demote yourself" });
+      }
+      
+      const updatedUser = await storage.updateUserRole(targetUserId, role);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json({ 
+        success: true, 
+        user: updatedUser,
+        message: `User role updated to ${role}`,
+      });
+    } catch (error) {
+      console.error("Error updating user role:", error);
+      res.status(500).json({ message: "Failed to update user role" });
+    }
+  });
+
+  // GET /api/admin/stats - Platform statistics
+  app.get('/api/admin/stats', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { creditWallets } = await import('../shared/schema');
+      
+      // Total users
+      const [{ totalUsers }] = await db.select({ totalUsers: sql<number>`count(*)` }).from(users);
+      
+      // Users by role
+      const roleStats = await db.select({ 
+        role: users.role, 
+        count: sql<number>`count(*)` 
+      })
+      .from(users)
+      .groupBy(users.role);
+      
+      // Credit statistics
+      const [creditStats] = await db.select({
+        totalBalance: sql<number>`COALESCE(SUM(${creditWallets.balance}), 0)`,
+        totalBonusCredits: sql<number>`COALESCE(SUM(${creditWallets.bonusCredits}), 0)`,
+        totalEarned: sql<number>`COALESCE(SUM(${creditWallets.lifetimeEarned}), 0)`,
+        totalSpent: sql<number>`COALESCE(SUM(${creditWallets.lifetimeSpent}), 0)`,
+      }).from(creditWallets);
+      
+      // Recent signups (last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const [{ recentSignups }] = await db.select({ 
+        recentSignups: sql<number>`count(*)` 
+      })
+      .from(users)
+      .where(gte(users.createdAt, thirtyDaysAgo));
+      
+      // Usage events (last 24 hours)
+      const oneDayAgo = new Date();
+      oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+      
+      const [usageStats] = await db.select({
+        totalEvents: sql<number>`count(*)`,
+        totalCreditsUsed: sql<number>`COALESCE(SUM(${usageEvents.creditsCost}), 0)`,
+      })
+      .from(usageEvents)
+      .where(gte(usageEvents.createdAt, oneDayAgo));
+      
+      res.json({
+        users: {
+          total: Number(totalUsers),
+          byRole: roleStats.reduce((acc, r) => ({ ...acc, [r.role]: Number(r.count) }), {}),
+          recentSignups: Number(recentSignups),
+        },
+        credits: {
+          totalBalance: Number(creditStats?.totalBalance || 0),
+          totalBonusCredits: Number(creditStats?.totalBonusCredits || 0),
+          totalEarned: Number(creditStats?.totalEarned || 0),
+          totalSpent: Number(creditStats?.totalSpent || 0),
+        },
+        usage: {
+          last24Hours: {
+            events: Number(usageStats?.totalEvents || 0),
+            creditsUsed: Number(usageStats?.totalCreditsUsed || 0),
+          },
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching admin stats:", error);
+      res.status(500).json({ message: "Failed to fetch statistics" });
+    }
+  });
+
+  // ============================================================================
+  // PODCAST STUDIO ROUTES
+  // ============================================================================
+
+  // GET /api/podcasts - List user's podcasts
+  app.get('/api/podcasts', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const userPodcasts = await storage.getPodcasts(userId);
+      res.json(userPodcasts);
+    } catch (error) {
+      console.error("Error fetching podcasts:", error);
+      res.status(500).json({ message: "Failed to fetch podcasts" });
+    }
+  });
+
+  // POST /api/podcasts - Create podcast
+  app.post('/api/podcasts', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validatedData = insertPodcastSchema.parse({ ...req.body, userId });
+      const podcast = await storage.createPodcast(validatedData);
+      res.status(201).json(podcast);
+    } catch (error: any) {
+      console.error("Error creating podcast:", error);
+      res.status(400).json({ message: error.message || "Failed to create podcast" });
+    }
+  });
+
+  // GET /api/podcasts/:id - Get single podcast
+  app.get('/api/podcasts/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const podcastId = parseInt(req.params.id);
+      const podcast = await storage.getPodcast(podcastId);
+      
+      if (!podcast) {
+        return res.status(404).json({ message: "Podcast not found" });
+      }
+      
+      if (podcast.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      res.json(podcast);
+    } catch (error) {
+      console.error("Error fetching podcast:", error);
+      res.status(500).json({ message: "Failed to fetch podcast" });
+    }
+  });
+
+  // PATCH /api/podcasts/:id - Update podcast
+  app.patch('/api/podcasts/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const podcastId = parseInt(req.params.id);
+      const podcast = await storage.getPodcast(podcastId);
+      
+      if (!podcast) {
+        return res.status(404).json({ message: "Podcast not found" });
+      }
+      
+      if (podcast.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const updated = await storage.updatePodcast(podcastId, req.body);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating podcast:", error);
+      res.status(500).json({ message: "Failed to update podcast" });
+    }
+  });
+
+  // DELETE /api/podcasts/:id - Delete podcast
+  app.delete('/api/podcasts/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const podcastId = parseInt(req.params.id);
+      const podcast = await storage.getPodcast(podcastId);
+      
+      if (!podcast) {
+        return res.status(404).json({ message: "Podcast not found" });
+      }
+      
+      if (podcast.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      await storage.deletePodcast(podcastId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting podcast:", error);
+      res.status(500).json({ message: "Failed to delete podcast" });
+    }
+  });
+
+  // GET /api/podcasts/:id/episodes - List episodes
+  app.get('/api/podcasts/:id/episodes', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const podcastId = parseInt(req.params.id);
+      const podcast = await storage.getPodcast(podcastId);
+      
+      if (!podcast) {
+        return res.status(404).json({ message: "Podcast not found" });
+      }
+      
+      if (podcast.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const episodes = await storage.getPodcastEpisodes(podcastId);
+      res.json(episodes);
+    } catch (error) {
+      console.error("Error fetching episodes:", error);
+      res.status(500).json({ message: "Failed to fetch episodes" });
+    }
+  });
+
+  // POST /api/podcasts/:id/episodes - Create episode
+  app.post('/api/podcasts/:id/episodes', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const podcastId = parseInt(req.params.id);
+      const podcast = await storage.getPodcast(podcastId);
+      
+      if (!podcast) {
+        return res.status(404).json({ message: "Podcast not found" });
+      }
+      
+      if (podcast.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const validatedData = insertPodcastEpisodeSchema.parse({ ...req.body, podcastId });
+      const episode = await storage.createPodcastEpisode(validatedData);
+      res.status(201).json(episode);
+    } catch (error: any) {
+      console.error("Error creating episode:", error);
+      res.status(400).json({ message: error.message || "Failed to create episode" });
+    }
+  });
+
+  // GET /api/podcasts/:id/episodes/:episodeId - Get single episode
+  app.get('/api/podcasts/:id/episodes/:episodeId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const podcastId = parseInt(req.params.id);
+      const episodeId = parseInt(req.params.episodeId);
+      const podcast = await storage.getPodcast(podcastId);
+      
+      if (!podcast || podcast.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const episode = await storage.getPodcastEpisode(episodeId);
+      if (!episode || episode.podcastId !== podcastId) {
+        return res.status(404).json({ message: "Episode not found" });
+      }
+      
+      res.json(episode);
+    } catch (error) {
+      console.error("Error fetching episode:", error);
+      res.status(500).json({ message: "Failed to fetch episode" });
+    }
+  });
+
+  // PATCH /api/podcasts/:id/episodes/:episodeId - Update episode
+  app.patch('/api/podcasts/:id/episodes/:episodeId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const podcastId = parseInt(req.params.id);
+      const episodeId = parseInt(req.params.episodeId);
+      const podcast = await storage.getPodcast(podcastId);
+      
+      if (!podcast || podcast.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const episode = await storage.getPodcastEpisode(episodeId);
+      if (!episode || episode.podcastId !== podcastId) {
+        return res.status(404).json({ message: "Episode not found" });
+      }
+      
+      const updated = await storage.updatePodcastEpisode(episodeId, req.body);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating episode:", error);
+      res.status(500).json({ message: "Failed to update episode" });
+    }
+  });
+
+  // DELETE /api/podcasts/:id/episodes/:episodeId - Delete episode
+  app.delete('/api/podcasts/:id/episodes/:episodeId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const podcastId = parseInt(req.params.id);
+      const episodeId = parseInt(req.params.episodeId);
+      const podcast = await storage.getPodcast(podcastId);
+      
+      if (!podcast || podcast.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const episode = await storage.getPodcastEpisode(episodeId);
+      if (!episode || episode.podcastId !== podcastId) {
+        return res.status(404).json({ message: "Episode not found" });
+      }
+      
+      await storage.deletePodcastEpisode(episodeId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting episode:", error);
+      res.status(500).json({ message: "Failed to delete episode" });
+    }
+  });
+
+  // POST /api/podcasts/:id/episodes/:episodeId/transcribe - AI Transcription
+  app.post('/api/podcasts/:id/episodes/:episodeId/transcribe', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const podcastId = parseInt(req.params.id);
+      const episodeId = parseInt(req.params.episodeId);
+      const podcast = await storage.getPodcast(podcastId);
+      
+      if (!podcast || podcast.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const episode = await storage.getPodcastEpisode(episodeId);
+      if (!episode || episode.podcastId !== podcastId) {
+        return res.status(404).json({ message: "Episode not found" });
+      }
+      
+      // Update transcription status to processing
+      await storage.updatePodcastEpisode(episodeId, { transcriptionStatus: 'processing' });
+      
+      // Stub for AI transcription - in production would call actual transcription service
+      const stubTranscript = `[AI Transcription]\n\nThis is a placeholder transcription for episode "${episode.title}".\n\nIn production, this would connect to a speech-to-text service like Google Cloud Speech-to-Text, OpenAI Whisper, or AssemblyAI to transcribe the audio content.\n\nDuration: ${Math.floor((episode.duration || 0) / 60)} minutes ${(episode.duration || 0) % 60} seconds`;
+      
+      const updated = await storage.updatePodcastEpisode(episodeId, { 
+        transcript: stubTranscript,
+        transcriptionStatus: 'completed'
+      });
+      
+      res.json(updated);
+    } catch (error) {
+      console.error("Error transcribing episode:", error);
+      res.status(500).json({ message: "Failed to transcribe episode" });
+    }
+  });
+
+  // POST /api/podcasts/:id/episodes/:episodeId/publish - Publish episode
+  app.post('/api/podcasts/:id/episodes/:episodeId/publish', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const podcastId = parseInt(req.params.id);
+      const episodeId = parseInt(req.params.episodeId);
+      const podcast = await storage.getPodcast(podcastId);
+      
+      if (!podcast || podcast.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const episode = await storage.getPodcastEpisode(episodeId);
+      if (!episode || episode.podcastId !== podcastId) {
+        return res.status(404).json({ message: "Episode not found" });
+      }
+      
+      const updated = await storage.updatePodcastEpisode(episodeId, { 
+        status: 'published',
+        isPublished: true,
+        publishedAt: new Date()
+      });
+      
+      res.json(updated);
+    } catch (error) {
+      console.error("Error publishing episode:", error);
+      res.status(500).json({ message: "Failed to publish episode" });
     }
   });
 

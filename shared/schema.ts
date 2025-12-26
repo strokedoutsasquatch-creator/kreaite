@@ -3400,3 +3400,69 @@ export type DocSnippet = typeof docSnippets.$inferSelect;
 export type InsertDocSnippet = z.infer<typeof insertDocSnippetSchema>;
 export type DocMergeSession = typeof docMergeSessions.$inferSelect;
 export type InsertDocMergeSession = z.infer<typeof insertDocMergeSessionSchema>;
+
+// ============================================================================
+// PODCAST STUDIO
+// ============================================================================
+
+export const podcasts = pgTable("podcasts", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  coverArtUrl: text("cover_art_url"),
+  category: text("category"),
+  language: text("language").default("en"),
+  isPublished: boolean("is_published").notNull().default(false),
+  publishedAt: timestamp("published_at"),
+  episodeCount: integer("episode_count").notNull().default(0),
+  totalDuration: integer("total_duration").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const podcastEpisodes = pgTable("podcast_episodes", {
+  id: serial("id").primaryKey(),
+  podcastId: integer("podcast_id").notNull().references(() => podcasts.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  showNotes: text("show_notes"),
+  audioUrl: text("audio_url"),
+  coverArtUrl: text("cover_art_url"),
+  duration: integer("duration").notNull().default(0),
+  transcript: text("transcript"),
+  transcriptionStatus: text("transcription_status").default("none"),
+  episodeNumber: integer("episode_number"),
+  status: text("status").notNull().default("draft"),
+  isPublished: boolean("is_published").notNull().default(false),
+  publishedAt: timestamp("published_at"),
+  playCount: integer("play_count").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertPodcastSchema = createInsertSchema(podcasts).omit({ id: true, createdAt: true, updatedAt: true, episodeCount: true, totalDuration: true });
+export const insertPodcastEpisodeSchema = createInsertSchema(podcastEpisodes).omit({ id: true, createdAt: true, updatedAt: true, playCount: true });
+
+export type Podcast = typeof podcasts.$inferSelect;
+export type InsertPodcast = z.infer<typeof insertPodcastSchema>;
+export type PodcastEpisode = typeof podcastEpisodes.$inferSelect;
+export type InsertPodcastEpisode = z.infer<typeof insertPodcastEpisodeSchema>;
+
+// ============================================================================
+// MAGIC LINK AUTHENTICATION
+// ============================================================================
+
+export const magicLinkTokens = pgTable("magic_link_tokens", {
+  id: serial("id").primaryKey(),
+  email: varchar("email").notNull(),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertMagicLinkTokenSchema = createInsertSchema(magicLinkTokens).omit({ id: true, createdAt: true, usedAt: true });
+
+export type MagicLinkToken = typeof magicLinkTokens.$inferSelect;
+export type InsertMagicLinkToken = z.infer<typeof insertMagicLinkTokenSchema>;

@@ -368,6 +368,105 @@ export default function ChildrensBookMode({ onStoryGenerated, onExport }: Childr
     },
   });
 
+  // Illustration generation mutation
+  const generateIllustrationMutation = useMutation({
+    mutationFn: async (spreadId: string) => {
+      const spread = spreads.find(s => s.id === spreadId);
+      if (!spread?.illustrationPrompt) throw new Error("No illustration description for this page");
+      
+      setGeneratingSpreadId(spreadId);
+      
+      const styleModifier = stylePromptMap[illustrationStyle] || "";
+      const mainChar = characters[0];
+      const characterContext = mainChar?.name ? `featuring ${mainChar.name}` : "";
+      
+      const fullPrompt = `Children's book illustration for ages ${ageBand}, ${styleModifier}. Scene: ${spread.illustrationPrompt} ${characterContext}. Safe for children, warm and inviting, professional quality book illustration.`;
+      
+      const selectedSize = printSizeOptions.find(s => s.value === selectedPrintSize);
+      let aspectRatio = "1:1";
+      if (selectedSize?.aspectRatio) {
+        const [w, h] = selectedSize.aspectRatio.split(":").map(Number);
+        if (w > h) aspectRatio = "4:3";
+        else if (h > w) aspectRatio = "3:4";
+      }
+      
+      const response = await apiRequest("POST", "/api/image/generate-imagen", {
+        prompt: fullPrompt,
+        aspectRatio,
+      });
+      return { spreadId, data: await response.json() };
+    },
+    onSuccess: ({ spreadId, data }) => {
+      setGeneratingSpreadId(null);
+      if (data.success && data.imageBase64) {
+        const imageUrl = `data:${data.mimeType || "image/png"};base64,${data.imageBase64}`;
+        setSpreads(prev => prev.map(s => 
+          s.id === spreadId ? { ...s, illustrationUrl: imageUrl } : s
+        ));
+        toast({ title: "Illustration Generated!", description: `Page ${spreadId} is ready` });
+      }
+    },
+    onError: (error: any) => {
+      setGeneratingSpreadId(null);
+      toast({ title: "Generation Failed", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Batch generate all illustrations
+  const generateAllIllustrations = async () => {
+    const spreadsToGenerate = spreads.filter(s => s.illustrationPrompt && !s.illustrationUrl);
+    if (spreadsToGenerate.length === 0) {
+      toast({ title: "Nothing to generate", description: "All pages already have illustrations or no descriptions" });
+      return;
+    }
+    
+    setGeneratingAll(true);
+    setGenerationProgress(0);
+    
+    for (let i = 0; i < spreadsToGenerate.length; i++) {
+      const spread = spreadsToGenerate[i];
+      try {
+        setGeneratingSpreadId(spread.id!);
+        
+        const styleModifier = stylePromptMap[illustrationStyle] || "";
+        const mainChar = characters[0];
+        const characterContext = mainChar?.name ? `featuring ${mainChar.name}` : "";
+        
+        const fullPrompt = `Children's book illustration for ages ${ageBand}, ${styleModifier}. Scene: ${spread.illustrationPrompt} ${characterContext}. Safe for children, warm and inviting, professional quality book illustration.`;
+        
+        const selectedSize = printSizeOptions.find(s => s.value === selectedPrintSize);
+        let aspectRatio = "1:1";
+        if (selectedSize?.aspectRatio) {
+          const [w, h] = selectedSize.aspectRatio.split(":").map(Number);
+          if (w > h) aspectRatio = "4:3";
+          else if (h > w) aspectRatio = "3:4";
+        }
+        
+        const response = await apiRequest("POST", "/api/image/generate-imagen", {
+          prompt: fullPrompt,
+          aspectRatio,
+        });
+        const data = await response.json();
+        
+        if (data.success && data.imageBase64) {
+          const imageUrl = `data:${data.mimeType || "image/png"};base64,${data.imageBase64}`;
+          setSpreads(prev => prev.map(s => 
+            s.id === spread.id ? { ...s, illustrationUrl: imageUrl } : s
+          ));
+        }
+      } catch (error: any) {
+        toast({ title: `Failed on page ${spread.pageNumber}`, description: error.message, variant: "destructive" });
+      }
+      
+      setGenerationProgress(((i + 1) / spreadsToGenerate.length) * 100);
+    }
+    
+    setGeneratingSpreadId(null);
+    setGeneratingAll(false);
+    setGenerationProgress(100);
+    toast({ title: "Batch Generation Complete!", description: `Generated ${spreadsToGenerate.length} illustrations` });
+  };
+
   const toggleTheme = (theme: ChildBookTheme) => {
     setSelectedThemes(prev => 
       prev.includes(theme) 
@@ -1076,47 +1175,105 @@ export default function ChildrensBookMode({ onStoryGenerated, onExport }: Childr
 
             <Card className="bg-black border-orange-500/20">
               <CardHeader>
-                <CardTitle>Illustration Queue</CardTitle>
-                <CardDescription>
-                  Style: {illustrationStyleOptions.find(s => s.value === illustrationStyle)?.label}
-                </CardDescription>
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div>
+                    <CardTitle>Illustration Queue</CardTitle>
+                    <CardDescription>
+                      Style: {illustrationStyleOptions.find(s => s.value === illustrationStyle)?.label}
+                    </CardDescription>
+                  </div>
+                  <Button
+                    onClick={generateAllIllustrations}
+                    disabled={generatingAll || generateIllustrationMutation.isPending}
+                    className="bg-orange-500 hover:bg-orange-600 text-black"
+                    data-testid="button-generate-all-illustrations"
+                  >
+                    {generatingAll ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
+                    ) : (
+                      <><Sparkles className="w-4 h-4 mr-2" /> Generate All Illustrations</>
+                    )}
+                  </Button>
+                </div>
+                {generatingAll && (
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between text-sm mb-2">
+                      <span className="text-muted-foreground">Batch Progress</span>
+                      <span className="text-orange-500">{Math.round(generationProgress)}%</span>
+                    </div>
+                    <Progress value={generationProgress} className="h-2" />
+                  </div>
+                )}
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {spreads.map((spread, index) => (
-                    <Card key={spread.id} className="bg-white/5 border-border">
-                      <CardContent className="p-4">
-                        <div className="aspect-[4/3] bg-black/50 rounded-lg mb-3 flex items-center justify-center border border-dashed border-border">
-                          {spread.illustrationUrl ? (
-                            <img src={spread.illustrationUrl} alt={`Page ${index + 1}`} className="w-full h-full object-cover rounded-lg" />
-                          ) : (
-                            <div className="text-center text-muted-foreground">
-                              <Image className="w-8 h-8 mx-auto mb-2" />
-                              <div className="text-xs">Page {index + 1}</div>
-                            </div>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-                          {spread.illustrationPrompt || "No description"}
-                        </p>
-                        <Button
-                          size="sm"
-                          className="w-full"
-                          variant={spread.illustrationUrl ? "outline" : "default"}
-                          data-testid={`button-generate-illustration-${spread.id}`}
-                        >
-                          {spread.illustrationUrl ? (
-                            <><RefreshCw className="w-3 h-3 mr-1" /> Regenerate</>
-                          ) : (
-                            <><Wand2 className="w-3 h-3 mr-1" /> Generate</>
-                          )}
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
+                  {spreads.map((spread, index) => {
+                    const isGenerating = generatingSpreadId === spread.id;
+                    return (
+                      <Card key={spread.id} className={`bg-white/5 border-border ${isGenerating ? "ring-2 ring-orange-500" : ""}`}>
+                        <CardContent className="p-4">
+                          <div className="aspect-[4/3] bg-black/50 rounded-lg mb-3 flex items-center justify-center border border-dashed border-border relative overflow-hidden">
+                            {isGenerating ? (
+                              <div className="text-center text-orange-500">
+                                <Loader2 className="w-8 h-8 mx-auto mb-2 animate-spin" />
+                                <div className="text-xs">Generating...</div>
+                              </div>
+                            ) : spread.illustrationUrl ? (
+                              <img src={spread.illustrationUrl} alt={`Page ${index + 1}`} className="w-full h-full object-cover rounded-lg" />
+                            ) : (
+                              <div className="text-center text-muted-foreground">
+                                <Image className="w-8 h-8 mx-auto mb-2" />
+                                <div className="text-xs">Page {index + 1}</div>
+                              </div>
+                            )}
+                            {spread.illustrationUrl && (
+                              <Badge className="absolute top-2 right-2 bg-green-500/80 text-white">
+                                <Check className="w-3 h-3" />
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
+                            {spread.illustrationPrompt || "No description"}
+                          </p>
+                          <Button
+                            size="sm"
+                            className="w-full"
+                            variant={spread.illustrationUrl ? "outline" : "default"}
+                            onClick={() => generateIllustrationMutation.mutate(spread.id!)}
+                            disabled={isGenerating || generatingAll || !spread.illustrationPrompt}
+                            data-testid={`button-generate-illustration-${spread.id}`}
+                          >
+                            {isGenerating ? (
+                              <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Generating...</>
+                            ) : spread.illustrationUrl ? (
+                              <><RefreshCw className="w-3 h-3 mr-1" /> Regenerate</>
+                            ) : (
+                              <><Wand2 className="w-3 h-3 mr-1" /> Generate</>
+                            )}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
+
+            {/* Generation Stats */}
+            <div className="flex items-center justify-center gap-6 text-sm">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-500">{spreads.filter(s => s.illustrationUrl).length}</div>
+                <div className="text-muted-foreground">Generated</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-orange-500">{spreads.filter(s => s.illustrationPrompt && !s.illustrationUrl).length}</div>
+                <div className="text-muted-foreground">Pending</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-muted-foreground">{spreads.filter(s => !s.illustrationPrompt).length}</div>
+                <div className="text-muted-foreground">No Description</div>
+              </div>
+            </div>
 
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setCurrentStep(3)} data-testid="button-back-step-4">

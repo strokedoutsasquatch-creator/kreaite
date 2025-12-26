@@ -46,12 +46,14 @@ import AffiliateDashboard from "@/pages/AffiliateDashboard";
 import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import ModerationDashboard from "@/pages/ModerationDashboard";
+import AdminPanel from "@/pages/AdminPanel";
 import PodcastStudioPage from "@/pages/PodcastStudioPage";
 import AvatarStudioPage from "@/pages/AvatarStudioPage";
 import TemplateMarketplacePage from "@/pages/TemplateMarketplacePage";
 import DocHubPage from "@/pages/DocHubPage";
 import CreatorStore from "@/pages/CreatorStore";
 import Settings from "@/pages/Settings";
+import MagicLinkLogin, { MagicLinkVerify } from "@/pages/MagicLinkLogin";
 
 // Stroke Recovery Platform Pages (under /recovery/*)
 import StrokeRecoveryLanding from "@/pages/Landing";
@@ -125,6 +127,10 @@ function Router() {
       <Route path="/pricing" component={Pricing} />
       <Route path="/terms" component={TermsOfService} />
       <Route path="/privacy" component={PrivacyPolicy} />
+      
+      {/* Magic Link Authentication */}
+      <Route path="/magic-link" component={MagicLinkLogin} />
+      <Route path="/magic-link/verify/:token" component={MagicLinkVerify} />
       
       {/* Creator Studios */}
       <Route path="/music-studio" component={MusicStudio} />
@@ -244,6 +250,11 @@ function Router() {
       <Route path="/admin/moderation">
         <ProtectedRoute>
           <ModerationDashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin">
+        <ProtectedRoute>
+          <AdminPanel />
         </ProtectedRoute>
       </Route>
 
