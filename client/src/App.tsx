@@ -75,14 +75,29 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 import CreatorScribeWidget from "@/components/CreatorScribeWidget";
 import { LocaleProvider } from "@/lib/hooks/useLocale";
+import { usePlatform } from "@/lib/hooks/usePlatform";
+
+function HomeLanding() {
+  const platform = usePlatform();
+  
+  if (platform === "recovery") {
+    return <StrokeRecoveryLanding />;
+  }
+  
+  return <CreatorLanding />;
+}
 
 function Router() {
   return (
     <Switch>
       {/* ============================================ */}
+      {/* HOME - Domain-based landing page */}
+      {/* ============================================ */}
+      <Route path="/" component={HomeLanding} />
+      
+      {/* ============================================ */}
       {/* CREATOR PLATFORM - Main Routes */}
       {/* ============================================ */}
-      <Route path="/" component={CreatorLanding} />
       <Route path="/dashboard">
         <ProtectedRoute>
           <Dashboard />
