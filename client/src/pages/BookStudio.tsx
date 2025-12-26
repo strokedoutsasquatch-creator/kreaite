@@ -650,13 +650,16 @@ export default function BookStudio() {
 
   // Scroll to bottom when new messages are added
   useEffect(() => {
-    if (chatScrollRef.current) {
-      const scrollContainer = chatScrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (scrollContainer) {
-        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+    // Use setTimeout to ensure DOM has updated
+    setTimeout(() => {
+      if (chatScrollRef.current) {
+        const scrollContainer = chatScrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+        if (scrollContainer) {
+          scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        }
       }
-    }
-  }, [chatMessages]);
+    }, 100);
+  }, [chatMessages, isChatLoading]);
 
   const sendChatMessage = async () => {
     if (!chatInput.trim() || isChatLoading) return;
@@ -1400,7 +1403,7 @@ Your journey to healing starts here.`);
                   <CardContent className="flex-1 flex flex-col min-h-0">
                     {/* Chat Messages */}
                     <ScrollArea className="flex-1 pr-4 mb-4" ref={chatScrollRef}>
-                      <div className="space-y-4">
+                      <div className="flex flex-col space-y-4">
                         {chatMessages.map((msg) => (
                           <div
                             key={msg.id}
