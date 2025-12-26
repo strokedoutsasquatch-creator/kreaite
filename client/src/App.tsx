@@ -53,9 +53,11 @@ import MediaStudioPage from "@/pages/MediaStudioPage";
 import CreatorSettings from "@/pages/CreatorSettings";
 import QuickCreate from "@/pages/QuickCreate";
 import AIConsultant from "@/pages/AIConsultant";
+import ListingDetail from "@/pages/ListingDetail";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 import CreatorScribeWidget from "@/components/CreatorScribeWidget";
+import { LocaleProvider } from "@/lib/hooks/useLocale";
 
 function Router() {
   return (
@@ -71,6 +73,7 @@ function Router() {
       <Route path="/community/thread/:id" component={Thread} />
       <Route path="/about" component={About} />
       <Route path="/marketplace" component={Marketplace} />
+      <Route path="/listing/:id" component={ListingDetail} />
       <Route path="/books" component={BookMarketplace} />
       <Route path="/author-dashboard">
         <ProtectedRoute>
@@ -240,11 +243,13 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-        <CreatorScribeWidget />
-      </TooltipProvider>
+      <LocaleProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+          <CreatorScribeWidget />
+        </TooltipProvider>
+      </LocaleProvider>
     </QueryClientProvider>
   );
 }
