@@ -1401,7 +1401,32 @@ Your journey to healing starts here.`);
                     <CardDescription>Upload your manuscript and chat about it. I'll help you analyze and improve your book.</CardDescription>
                   </CardHeader>
                   <CardContent className="flex-1 flex flex-col min-h-0">
-                    {/* Chat Messages */}
+                    {/* File Upload Zone - At Top */}
+                    <div 
+                      className="border-2 border-dashed border-border rounded-lg p-4 text-center hover:border-primary/50 transition-colors cursor-pointer mb-4"
+                      onClick={() => fileInputRef.current?.click()}
+                      data-testid="upload-zone"
+                    >
+                      <input 
+                        type="file" 
+                        ref={fileInputRef}
+                        onChange={handleFileUpload}
+                        accept=".txt,.md,.doc,.docx,.pdf"
+                        className="hidden"
+                        data-testid="input-file-upload"
+                      />
+                      <div className="flex items-center justify-center gap-3">
+                        <FileUp className="w-6 h-6 text-muted-foreground" />
+                        <div className="text-left">
+                          <p className="font-medium text-sm">
+                            {uploadedFileName ? `Uploaded: ${uploadedFileName}` : 'Drop manuscript or click to upload'}
+                          </p>
+                          <p className="text-xs text-muted-foreground">.txt, .md, .doc, .docx, .pdf</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Chat Messages - Flow Below Upload */}
                     <ScrollArea className="flex-1 pr-4 mb-4" ref={chatScrollRef}>
                       <div className="flex flex-col space-y-4">
                         {chatMessages.map((msg) => (
@@ -1464,31 +1489,6 @@ Your journey to healing starts here.`);
                         )}
                       </div>
                     </ScrollArea>
-                    
-                    {/* File Upload Zone */}
-                    <div 
-                      className="border-2 border-dashed border-border rounded-lg p-4 text-center hover:border-primary/50 transition-colors cursor-pointer mb-3"
-                      onClick={() => fileInputRef.current?.click()}
-                      data-testid="upload-zone"
-                    >
-                      <input 
-                        type="file" 
-                        ref={fileInputRef}
-                        onChange={handleFileUpload}
-                        accept=".txt,.md,.doc,.docx"
-                        className="hidden"
-                        data-testid="input-file-upload"
-                      />
-                      <div className="flex items-center justify-center gap-3">
-                        <FileUp className="w-6 h-6 text-muted-foreground" />
-                        <div className="text-left">
-                          <p className="font-medium text-sm">
-                            {uploadedFileName ? `Uploaded: ${uploadedFileName}` : 'Drop manuscript or click to upload'}
-                          </p>
-                          <p className="text-xs text-muted-foreground">.txt, .md, .doc, .docx</p>
-                        </div>
-                      </div>
-                    </div>
                     
                     {/* Use This Discussion Button */}
                     {chatMessages.length >= 3 && (
