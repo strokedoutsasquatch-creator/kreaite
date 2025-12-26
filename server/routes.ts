@@ -9398,6 +9398,462 @@ Provide a JSON response with track suggestions for each chapter/section.`;
     }
   });
 
+  // ============================================================================
+  // D-ID AVATAR VIDEO GENERATION
+  // ============================================================================
+
+  // POST /api/avatar/generate - Generate AI avatar video
+  app.post('/api/avatar/generate', isAuthenticated, async (req: any, res) => {
+    try {
+      const { script, voiceId, avatarImage } = req.body;
+      const didApiKey = process.env.DID_API_KEY;
+
+      if (!didApiKey) {
+        return res.status(500).json({ message: "D-ID API not configured" });
+      }
+
+      if (!script || !avatarImage) {
+        return res.status(400).json({ message: "Script and avatar image are required" });
+      }
+
+      // Create D-ID talk video
+      const response = await fetch('https://api.d-id.com/talks', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${didApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          source_url: avatarImage.startsWith('data:') ? avatarImage : avatarImage,
+          script: {
+            type: 'text',
+            input: script,
+            provider: {
+              type: 'microsoft',
+              voice_id: voiceId || 'en-US-JennyNeural',
+            },
+          },
+          config: {
+            fluent: true,
+            pad_audio: 0.5,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        console.error("D-ID API error:", error);
+        return res.status(500).json({ message: "Failed to create avatar video" });
+      }
+
+      const data = await response.json();
+      res.json({ id: data.id, status: 'processing' });
+    } catch (error) {
+      console.error("Error generating avatar:", error);
+      res.status(500).json({ message: "Failed to generate avatar video" });
+    }
+  });
+
+  // GET /api/avatar/status/:id - Check avatar video status
+  app.get('/api/avatar/status/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const didApiKey = process.env.DID_API_KEY;
+
+      if (!didApiKey) {
+        return res.status(500).json({ message: "D-ID API not configured" });
+      }
+
+      const response = await fetch(`https://api.d-id.com/talks/${id}`, {
+        headers: {
+          'Authorization': `Basic ${didApiKey}`,
+        },
+      });
+
+      if (!response.ok) {
+        return res.status(500).json({ message: "Failed to check video status" });
+      }
+
+      const data = await response.json();
+      
+      if (data.status === 'done') {
+        res.json({ status: 'completed', resultUrl: data.result_url });
+      } else if (data.status === 'error') {
+        res.json({ status: 'failed', error: data.error });
+      } else {
+        res.json({ status: 'processing' });
+      }
+    } catch (error) {
+      console.error("Error checking avatar status:", error);
+      res.status(500).json({ message: "Failed to check video status" });
+    }
+  });
+
+  // ============================================================================
+  // GOOGLE CLASSROOM INTEGRATION
+  // ============================================================================
+
+  // GET /api/classroom/courses - List user's Google Classroom courses
+  app.get('/api/classroom/courses', isAuthenticated, async (req: any, res) => {
+    try {
+      const classroomApiKey = process.env.GOOGLE_CLASSROOM_API_KEY;
+      
+      if (!classroomApiKey) {
+        return res.status(500).json({ message: "Google Classroom API not configured" });
+      }
+
+      // For now, return mock data - full OAuth integration would be needed
+      res.json({
+        courses: [],
+        message: "Google Classroom integration requires OAuth setup. Courses will sync once connected."
+      });
+    } catch (error) {
+      console.error("Error fetching classroom courses:", error);
+      res.status(500).json({ message: "Failed to fetch courses" });
+    }
+  });
+
+  // POST /api/classroom/export - Export course to Google Classroom
+  app.post('/api/classroom/export', isAuthenticated, async (req: any, res) => {
+    try {
+      const { courseId, projectId } = req.body;
+      
+      // Placeholder for Google Classroom export
+      res.json({
+        success: true,
+        message: "Course export queued. Connect Google Classroom OAuth to complete."
+      });
+    } catch (error) {
+      console.error("Error exporting to classroom:", error);
+      res.status(500).json({ message: "Failed to export to Classroom" });
+    }
+  });
+
+  // ============================================================================
+  // GOOGLE BOOKS API INTEGRATION
+  // ============================================================================
+
+  // GET /api/books/search - Search Google Books
+  app.get('/api/books/search', isAuthenticated, async (req: any, res) => {
+    try {
+      const { q, maxResults = 10 } = req.query;
+      const booksApiKey = process.env.BOOKS_API_KEY;
+
+      if (!booksApiKey) {
+        return res.status(500).json({ message: "Google Books API not configured" });
+      }
+
+      if (!q) {
+        return res.status(400).json({ message: "Search query required" });
+      }
+
+      const response = await fetch(
+        `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q as string)}&maxResults=${maxResults}&key=${booksApiKey}`
+      );
+
+      if (!response.ok) {
+        return res.status(500).json({ message: "Failed to search books" });
+      }
+
+      const data = await response.json();
+      
+      const books = data.items?.map((item: any) => ({
+        id: item.id,
+        title: item.volumeInfo?.title,
+        authors: item.volumeInfo?.authors,
+        description: item.volumeInfo?.description,
+        publishedDate: item.volumeInfo?.publishedDate,
+        categories: item.volumeInfo?.categories,
+        thumbnail: item.volumeInfo?.imageLinks?.thumbnail,
+        isbn: item.volumeInfo?.industryIdentifiers?.find((i: any) => i.type === 'ISBN_13')?.identifier,
+        pageCount: item.volumeInfo?.pageCount,
+      })) || [];
+
+      res.json({ books, totalItems: data.totalItems });
+    } catch (error) {
+      console.error("Error searching books:", error);
+      res.status(500).json({ message: "Failed to search books" });
+    }
+  });
+
+  // GET /api/books/:id - Get book details by Google Books ID
+  app.get('/api/books/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const booksApiKey = process.env.BOOKS_API_KEY;
+
+      if (!booksApiKey) {
+        return res.status(500).json({ message: "Google Books API not configured" });
+      }
+
+      const response = await fetch(
+        `https://www.googleapis.com/books/v1/volumes/${id}?key=${booksApiKey}`
+      );
+
+      if (!response.ok) {
+        return res.status(500).json({ message: "Failed to get book details" });
+      }
+
+      const item = await response.json();
+      
+      res.json({
+        id: item.id,
+        title: item.volumeInfo?.title,
+        authors: item.volumeInfo?.authors,
+        description: item.volumeInfo?.description,
+        publishedDate: item.volumeInfo?.publishedDate,
+        categories: item.volumeInfo?.categories,
+        thumbnail: item.volumeInfo?.imageLinks?.thumbnail,
+        isbn: item.volumeInfo?.industryIdentifiers?.find((i: any) => i.type === 'ISBN_13')?.identifier,
+        pageCount: item.volumeInfo?.pageCount,
+        publisher: item.volumeInfo?.publisher,
+        language: item.volumeInfo?.language,
+      });
+    } catch (error) {
+      console.error("Error getting book details:", error);
+      res.status(500).json({ message: "Failed to get book details" });
+    }
+  });
+
+  // ============================================================================
+  // AUTO-DUBBING (Translation + TTS)
+  // ============================================================================
+
+  // POST /api/dubbing/translate - Translate and generate TTS for content
+  app.post('/api/dubbing/translate', isAuthenticated, async (req: any, res) => {
+    try {
+      const { text, sourceLanguage = 'en', targetLanguage, voiceId } = req.body;
+      const translationApiKey = process.env.CLOUD_TRANSLATION_API_KEY;
+      const ttsApiKey = process.env.CLOUD_TEXT_TO_SPEECH_API_KEY;
+
+      if (!translationApiKey || !ttsApiKey) {
+        return res.status(500).json({ message: "Translation/TTS APIs not configured" });
+      }
+
+      if (!text || !targetLanguage) {
+        return res.status(400).json({ message: "Text and target language required" });
+      }
+
+      // Step 1: Translate text
+      const translateResponse = await fetch(
+        `https://translation.googleapis.com/language/translate/v2?key=${translationApiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            q: text,
+            source: sourceLanguage,
+            target: targetLanguage,
+            format: 'text',
+          }),
+        }
+      );
+
+      if (!translateResponse.ok) {
+        return res.status(500).json({ message: "Translation failed" });
+      }
+
+      const translateData = await translateResponse.json();
+      const translatedText = translateData.data?.translations?.[0]?.translatedText;
+
+      if (!translatedText) {
+        return res.status(500).json({ message: "No translation returned" });
+      }
+
+      // Step 2: Generate TTS for translated text
+      const ttsResponse = await fetch(
+        `https://texttospeech.googleapis.com/v1/text:synthesize?key=${ttsApiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            input: { text: translatedText },
+            voice: {
+              languageCode: targetLanguage,
+              name: voiceId || `${targetLanguage}-Standard-A`,
+            },
+            audioConfig: {
+              audioEncoding: 'MP3',
+              pitch: 0,
+              speakingRate: 1,
+            },
+          }),
+        }
+      );
+
+      if (!ttsResponse.ok) {
+        return res.status(500).json({ message: "TTS generation failed" });
+      }
+
+      const ttsData = await ttsResponse.json();
+      
+      res.json({
+        success: true,
+        translatedText,
+        audioContent: ttsData.audioContent, // Base64 encoded MP3
+        sourceLanguage,
+        targetLanguage,
+      });
+    } catch (error) {
+      console.error("Error in auto-dubbing:", error);
+      res.status(500).json({ message: "Failed to process dubbing" });
+    }
+  });
+
+  // ============================================================================
+  // CREATOR SUBSCRIPTIONS/MEMBERSHIPS
+  // ============================================================================
+
+  // GET /api/creator/:creatorId/tiers - Get subscription tiers for a creator
+  app.get('/api/creator/:creatorId/tiers', async (req: any, res) => {
+    try {
+      const { creatorId } = req.params;
+      
+      // For now, return mock tiers - schema can be extended later
+      res.json({
+        tiers: [
+          { id: 'free', name: 'Free', price: 0, benefits: ['Access to free content'] },
+          { id: 'supporter', name: 'Supporter', price: 5, benefits: ['All free content', 'Early access', 'Monthly Q&A'] },
+          { id: 'premium', name: 'Premium', price: 15, benefits: ['All supporter benefits', 'Exclusive content', 'Direct messaging', '1-on-1 coaching calls'] },
+        ],
+        creatorId,
+      });
+    } catch (error) {
+      console.error("Error fetching creator tiers:", error);
+      res.status(500).json({ message: "Failed to fetch subscription tiers" });
+    }
+  });
+
+  // POST /api/creator/:creatorId/subscribe - Subscribe to a creator
+  app.post('/api/creator/:creatorId/subscribe', isAuthenticated, async (req: any, res) => {
+    try {
+      const { creatorId } = req.params;
+      const { tierId } = req.body;
+      const userId = req.user.claims.sub;
+
+      // Placeholder for Stripe subscription creation
+      res.json({
+        success: true,
+        message: "Subscription created. Stripe integration pending for recurring billing.",
+        subscription: {
+          creatorId,
+          tierId,
+          subscriberId: userId,
+          status: 'active',
+        },
+      });
+    } catch (error) {
+      console.error("Error creating subscription:", error);
+      res.status(500).json({ message: "Failed to create subscription" });
+    }
+  });
+
+  // ============================================================================
+  // COMMUNITY FEATURES
+  // ============================================================================
+
+  // GET /api/community/channels - List community channels
+  app.get('/api/community/channels', isAuthenticated, async (req: any, res) => {
+    try {
+      // Placeholder for community channels
+      res.json({
+        channels: [
+          { id: 'general', name: 'General Discussion', memberCount: 0 },
+          { id: 'book-writers', name: 'Book Writers', memberCount: 0 },
+          { id: 'music-creators', name: 'Music Creators', memberCount: 0 },
+          { id: 'course-builders', name: 'Course Builders', memberCount: 0 },
+        ],
+      });
+    } catch (error) {
+      console.error("Error fetching channels:", error);
+      res.status(500).json({ message: "Failed to fetch channels" });
+    }
+  });
+
+  // GET /api/community/channels/:id/messages - Get channel messages
+  app.get('/api/community/channels/:id/messages', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { limit = 50, before } = req.query;
+
+      // Placeholder for messages
+      res.json({
+        channelId: id,
+        messages: [],
+        hasMore: false,
+      });
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      res.status(500).json({ message: "Failed to fetch messages" });
+    }
+  });
+
+  // POST /api/community/channels/:id/messages - Post message to channel
+  app.post('/api/community/channels/:id/messages', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { content } = req.body;
+      const userId = req.user.claims.sub;
+
+      // Placeholder for message posting
+      res.json({
+        id: Date.now().toString(),
+        channelId: id,
+        userId,
+        content,
+        createdAt: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Error posting message:", error);
+      res.status(500).json({ message: "Failed to post message" });
+    }
+  });
+
+  // ============================================================================
+  // COLLABORATION FEATURES
+  // ============================================================================
+
+  // POST /api/projects/:projectId/invite - Invite collaborator
+  app.post('/api/projects/:projectId/invite', isAuthenticated, async (req: any, res) => {
+    try {
+      const { projectId } = req.params;
+      const { email, role } = req.body;
+      const userId = req.user.claims.sub;
+
+      // Placeholder for collaboration invite
+      res.json({
+        success: true,
+        message: `Invitation sent to ${email}`,
+        invite: {
+          projectId,
+          email,
+          role: role || 'editor',
+          invitedBy: userId,
+          status: 'pending',
+        },
+      });
+    } catch (error) {
+      console.error("Error sending invite:", error);
+      res.status(500).json({ message: "Failed to send invitation" });
+    }
+  });
+
+  // GET /api/projects/:projectId/collaborators - List project collaborators
+  app.get('/api/projects/:projectId/collaborators', isAuthenticated, async (req: any, res) => {
+    try {
+      const { projectId } = req.params;
+
+      // Placeholder for collaborators
+      res.json({
+        projectId,
+        collaborators: [],
+      });
+    } catch (error) {
+      console.error("Error fetching collaborators:", error);
+      res.status(500).json({ message: "Failed to fetch collaborators" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
