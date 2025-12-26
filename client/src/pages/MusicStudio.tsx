@@ -2548,10 +2548,22 @@ Repeat the hook...`}
                           
                           {generatedBeat ? (
                             <div className="space-y-4">
-                              <div className="flex items-center justify-center gap-4">
+                              <div className="flex items-center justify-center gap-4 flex-wrap">
                                 <Button size="lg" onClick={handlePlay} data-testid="button-play-beat">
                                   {isPlaying ? <Pause className="w-5 h-5 mr-2" /> : <Play className="w-5 h-5 mr-2" />}
                                   {isPlaying ? "Pause" : "Play"} Beat
+                                </Button>
+                                <Button variant="outline" size="lg" onClick={() => {
+                                  const link = document.createElement('a');
+                                  link.href = generatedBeat;
+                                  link.download = `${projectTitle.replace(/\s+/g, '_')}_${selectedGenre}_${bpm}bpm.wav`;
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                  toast({ title: "Download Started", description: "Your beat is being downloaded!" });
+                                }} data-testid="button-download-beat">
+                                  <Download className="w-4 h-4 mr-2" />
+                                  Download
                                 </Button>
                                 <Button variant="outline" size="lg" onClick={() => {
                                   setGeneratedBeat(null);
@@ -2770,6 +2782,23 @@ Repeat the hook...`}
                               <div>
                                 <h4 className="font-bold mb-2">Generated Beat</h4>
                                 <audio src={generatedBeat} controls className="w-full" data-testid="audio-final-preview" />
+                                <Button 
+                                  variant="outline" 
+                                  className="w-full mt-2"
+                                  onClick={() => {
+                                    const link = document.createElement('a');
+                                    link.href = generatedBeat;
+                                    link.download = `${projectTitle.replace(/\s+/g, '_')}_${selectedGenre}_${bpm}bpm.wav`;
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                    toast({ title: "Download Started", description: "Your beat is being downloaded!" });
+                                  }}
+                                  data-testid="button-download-final-beat"
+                                >
+                                  <Download className="w-4 h-4 mr-2" />
+                                  Download Beat
+                                </Button>
                               </div>
                             )}
                           </div>
@@ -2844,6 +2873,20 @@ Repeat the hook...`}
                               <Slider value={[track.volume]} onValueChange={([v]) => updateTrack(track.id, { volume: v })}
                                 max={100} data-testid={`slider-volume-${track.id}`} />
                             </div>
+                            {track.audioUrl && (
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary"
+                                onClick={() => {
+                                  const link = document.createElement('a');
+                                  link.href = track.audioUrl!;
+                                  link.download = `${track.name.replace(/\s+/g, '_')}.wav`;
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                  toast({ title: "Download Started", description: `Downloading ${track.name}` });
+                                }} data-testid={`button-download-track-${track.id}`}>
+                                <Download className="w-4 h-4" />
+                              </Button>
+                            )}
                             <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive"
                               onClick={() => removeTrack(track.id)} data-testid={`button-delete-${track.id}`}>
                               <Trash2 className="w-4 h-4" />

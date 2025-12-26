@@ -10,6 +10,7 @@ import { runMigrations } from "stripe-replit-sync";
 import { generateCoachResponse, getRandomQuote, generateStructuredContent, type ContentType, type GenerationRequest } from "./geminiService";
 import { searchAmazonProducts, getAmazonProduct, isConfigured as isAmazonConfigured } from "./amazonService";
 import { generateInstrumental, buildMusicPrompt, isLyriaConfigured, estimateCost } from "./lyriaService";
+import { generateImageWithImagen, isImagenConfigured } from "./imagenService";
 import { synthesizeSpeech, createVoiceClone, synthesizeWithClone, listVoices, isVoiceServiceConfigured, getVoiceStyles, getCharacterPresets, getGoogleVoices } from "./voiceService";
 import { generateImage, generateMovieScript, generateStoryboard, isVideoServiceConfigured, getMovieStyles, movieStyles } from "./videoService";
 import { createGoogleDoc, getGoogleDoc, updateGoogleDoc, createGoogleSlides, createGoogleSheet, createGoogleForm, exportDocument, isGoogleWorkspaceConfigured, getWorkspaceStatus } from "./googleWorkspaceService";
@@ -6926,6 +6927,42 @@ Return the rhyming version only, no explanation.`;
     }
   });
 
+  // Generate image with Vertex AI Imagen 3
+  app.post('/api/image/generate-imagen', isAuthenticated, async (req: any, res) => {
+    try {
+      const { prompt, aspectRatio } = req.body;
+      
+      if (!prompt) {
+        return res.status(400).json({ message: "Prompt is required" });
+      }
+
+      if (!isImagenConfigured()) {
+        return res.status(500).json({ 
+          success: false,
+          message: "Imagen service not configured. GOOGLE_SERVICE_ACCOUNT_KEY is required." 
+        });
+      }
+
+      const result = await generateImageWithImagen(prompt, aspectRatio);
+      
+      if (result.success) {
+        res.json({
+          success: true,
+          imageBase64: result.imageBase64,
+          mimeType: result.mimeType
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: result.error
+        });
+      }
+    } catch (error: any) {
+      console.error("Imagen generation error:", error);
+      res.status(500).json({ message: error.message || "Failed to generate image" });
+    }
+  });
+
   // Get user's media projects
   app.get('/api/media/projects', isAuthenticated, async (req: any, res) => {
     try {
@@ -7761,18 +7798,104 @@ Return the rhyming version only, no explanation.`;
         case 'hum-to-song':
           sourceStudio = 'music';
           assetType = 'audio';
-          const musicResult = await generate({
-            prompt: `Based on this audio/music description: "${input}", create a detailed musical arrangement with:
+          
+          // Parse user input for music parameters or use sensible defaults
+          const inputLower = input.toLowerCase();
+          let detectedGenre = 'pop';
+          let detectedBpm = 120;
+          let detectedKey = 'C';
+          let detectedScale = 'major';
+          
+          // Detect genre from input
+          if (inputLower.includes('rock')) detectedGenre = 'rock';
+          else if (inputLower.includes('rap') || inputLower.includes('hip hop') || inputLower.includes('hip-hop')) detectedGenre = 'rap';
+          else if (inputLower.includes('country')) detectedGenre = 'country';
+          else if (inputLower.includes('metal')) detectedGenre = 'metal';
+          else if (inputLower.includes('punk')) detectedGenre = 'punk';
+          else if (inputLower.includes('edm') || inputLower.includes('electronic') || inputLower.includes('dance')) detectedGenre = 'edm';
+          else if (inputLower.includes('ambient') || inputLower.includes('calm') || inputLower.includes('relaxing') || inputLower.includes('healing')) detectedGenre = 'ambient';
+          
+          // Detect tempo hints
+          if (inputLower.includes('fast') || inputLower.includes('upbeat') || inputLower.includes('energetic')) detectedBpm = 140;
+          else if (inputLower.includes('slow') || inputLower.includes('chill') || inputLower.includes('relaxed')) detectedBpm = 80;
+          else if (inputLower.includes('moderate') || inputLower.includes('medium')) detectedBpm = 100;
+          
+          // Detect mood/scale hints
+          if (inputLower.includes('sad') || inputLower.includes('dark') || inputLower.includes('emotional') || inputLower.includes('melancholy')) {
+            detectedScale = 'minor';
+          } else if (inputLower.includes('happy') || inputLower.includes('uplifting') || inputLower.includes('bright') || inputLower.includes('triumphant')) {
+            detectedScale = 'major';
+          }
+          
+          // Check if Lyria is configured
+          if (isLyriaConfigured()) {
+            try {
+              const lyriaResult = await generateInstrumental(
+                detectedGenre,
+                detectedBpm,
+                detectedKey,
+                detectedScale,
+                input // Use user's description as custom description
+              );
+              
+              if (lyriaResult.success && lyriaResult.audioBase64) {
+                generatedContent = `Generated ${detectedGenre} track at ${detectedBpm} BPM in ${detectedKey} ${detectedScale}`;
+                results = [{ 
+                  type: 'audio', 
+                  audioBase64: lyriaResult.audioBase64,
+                  mimeType: lyriaResult.mimeType || 'audio/wav',
+                  genre: detectedGenre,
+                  bpm: detectedBpm,
+                  key: detectedKey,
+                  scale: detectedScale,
+                  prompt: lyriaResult.prompt
+                }];
+                message = `AI music generated: ${detectedGenre} at ${detectedBpm} BPM`;
+              } else {
+                // Lyria failed, fall back to arrangement description
+                const musicResult = await generate({
+                  prompt: `Based on this audio/music description: "${input}", create a detailed musical arrangement with:
 1. Genre and style
 2. Tempo and key
 3. Instrument layers
 4. Song structure (intro, verse, chorus, bridge, outro)
 5. Mixing notes`,
-            taskType: 'draft',
-          });
-          generatedContent = musicResult.content;
-          results = [{ type: 'audio', arrangement: generatedContent }];
-          message = "Song arrangement created - ready for production";
+                  taskType: 'draft',
+                });
+                generatedContent = musicResult.content;
+                results = [{ type: 'audio', arrangement: generatedContent, error: lyriaResult.error }];
+                message = "Song arrangement created (audio generation unavailable)";
+              }
+            } catch (lyriaError: any) {
+              console.error("Lyria generation error:", lyriaError);
+              const musicResult = await generate({
+                prompt: `Based on this audio/music description: "${input}", create a detailed musical arrangement with:
+1. Genre and style
+2. Tempo and key
+3. Instrument layers
+4. Song structure (intro, verse, chorus, bridge, outro)
+5. Mixing notes`,
+                taskType: 'draft',
+              });
+              generatedContent = musicResult.content;
+              results = [{ type: 'audio', arrangement: generatedContent }];
+              message = "Song arrangement created - ready for production";
+            }
+          } else {
+            // Lyria not configured, generate arrangement description
+            const musicResult = await generate({
+              prompt: `Based on this audio/music description: "${input}", create a detailed musical arrangement with:
+1. Genre and style
+2. Tempo and key
+3. Instrument layers
+4. Song structure (intro, verse, chorus, bridge, outro)
+5. Mixing notes`,
+              taskType: 'draft',
+            });
+            generatedContent = musicResult.content;
+            results = [{ type: 'audio', arrangement: generatedContent }];
+            message = "Song arrangement created - ready for production";
+          }
           break;
           
         case 'instant-course':
