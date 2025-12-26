@@ -54,6 +54,8 @@ import DocHubPage from "@/pages/DocHubPage";
 import CreatorStore from "@/pages/CreatorStore";
 import Settings from "@/pages/Settings";
 import MagicLinkLogin, { MagicLinkVerify } from "@/pages/MagicLinkLogin";
+import AuthorProfile from "@/pages/AuthorProfile";
+import AuthorStorefront from "@/pages/AuthorStorefront";
 
 // Stroke Recovery Platform Pages (under /recovery/*)
 import StrokeRecoveryLanding from "@/pages/Landing";
@@ -123,6 +125,12 @@ function Router() {
           <AuthorDashboard />
         </ProtectedRoute>
       </Route>
+      <Route path="/author-profile">
+        <ProtectedRoute>
+          <AuthorProfile />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/author/:slug" component={AuthorStorefront} />
       <Route path="/publishing" component={Publishing} />
       <Route path="/pricing" component={Pricing} />
       <Route path="/terms" component={TermsOfService} />
