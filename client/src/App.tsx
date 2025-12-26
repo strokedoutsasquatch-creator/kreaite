@@ -65,6 +65,7 @@ import PodcastStudioPage from "@/pages/PodcastStudioPage";
 import AvatarStudioPage from "@/pages/AvatarStudioPage";
 import TemplateMarketplacePage from "@/pages/TemplateMarketplacePage";
 import DocHubPage from "@/pages/DocHubPage";
+import CreatorStore from "@/pages/CreatorStore";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 import CreatorScribeWidget from "@/components/CreatorScribeWidget";
@@ -177,6 +178,7 @@ function Router() {
       <Route path="/university" component={RecoveryUniversity} />
       <Route path="/music-studio" component={MusicStudio} />
       <Route path="/book-studio" component={BookStudio} />
+      <Route path="/creator-store" component={CreatorStore} />
       <Route path="/video-studio" component={VideoStudio} />
       <Route path="/course-studio" component={CourseStudio} />
       <Route path="/image-studio" component={ImageStudio} />

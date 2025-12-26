@@ -16,6 +16,7 @@ import { createGoogleDoc, getGoogleDoc, updateGoogleDoc, createGoogleSlides, cre
 import { synthesizeSpeechTTS, synthesizeChapter, audiobookStyles, narratorVoices, estimateAudioDuration, estimateTTSCost, isTTSConfigured } from "./textToSpeechService";
 import { getAllPresets, getMusicalScales, getMusicalKeys, calculateSyncedDelay } from "./audioProcessingService";
 import { seedRecoveryData } from "./seedRecoveryData";
+import { seedCreatorToolCategories } from "./seedCreatorTools";
 import { generate, generateStream, bookGenerator, marketingGenerator, screenplayGenerator, courseGenerator, researchGenerator, getUsageStats } from "./aiOrchestrator";
 import { 
   generateChildStoryRequestSchema,
@@ -141,6 +142,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Initialize Stripe
   await initStripe();
+
+  // Seed creator tool categories
+  await seedCreatorToolCategories();
 
   // Auth routes
   app.get('/api/auth/user', async (req: any, res) => {
