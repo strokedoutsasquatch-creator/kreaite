@@ -79,6 +79,12 @@ import {
   insertPodcastSchema,
   insertPodcastEpisodeSchema,
   bookImageAssets,
+  bookProjects,
+  bookProjectSections,
+  bookImagePlacements,
+  insertBookProjectSchema,
+  insertBookProjectSectionSchema,
+  insertBookImagePlacementSchema,
 } from "../shared/schema";
 import { db } from "./db";
 import { eq, and, gte, desc, ilike, or, sql } from "drizzle-orm";
@@ -1602,6 +1608,737 @@ DO NOT include any text - the title will be added separately.`;
     } catch (error) {
       console.error("Error updating image:", error);
       res.status(500).json({ message: 'Failed to update image' });
+    }
+  });
+
+  // ============================================================================
+  // BOOK PROJECTS API - Full CRUD for book project management
+  // ============================================================================
+
+  // Create new book project
+  app.post('/api/book-projects', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const validatedData = insertBookProjectSchema.parse({
+        ...req.body,
+        ownerId: userId,
+      });
+
+      const [project] = await db.insert(bookProjects).values(validatedData).returning();
+      res.status(201).json(project);
+    } catch (error: any) {
+      console.error("Error creating book project:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: 'Invalid request data', errors: error.errors });
+      }
+      res.status(500).json({ message: 'Failed to create book project' });
+    }
+  });
+
+  // List user's book projects
+  app.get('/api/book-projects', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const projects = await db.select()
+        .from(bookProjects)
+        .where(eq(bookProjects.ownerId, userId))
+        .orderBy(desc(bookProjects.lastEditedAt));
+
+      res.json(projects);
+    } catch (error) {
+      console.error("Error fetching book projects:", error);
+      res.status(500).json({ message: 'Failed to fetch book projects' });
+    }
+  });
+
+  // Get single book project with sections
+  app.get('/api/book-projects/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const projectId = parseInt(req.params.id);
+      const [project] = await db.select()
+        .from(bookProjects)
+        .where(and(eq(bookProjects.id, projectId), eq(bookProjects.ownerId, userId)));
+
+      if (!project) {
+        return res.status(404).json({ message: 'Book project not found' });
+      }
+
+      const sections = await db.select()
+        .from(bookProjectSections)
+        .where(eq(bookProjectSections.projectId, projectId))
+        .orderBy(bookProjectSections.sectionNumber);
+
+      const imagePlacements = await db.select()
+        .from(bookImagePlacements)
+        .where(eq(bookImagePlacements.projectId, projectId));
+
+      res.json({ ...project, sections, imagePlacements });
+    } catch (error) {
+      console.error("Error fetching book project:", error);
+      res.status(500).json({ message: 'Failed to fetch book project' });
+    }
+  });
+
+  // Update book project (including autosave support)
+  app.patch('/api/book-projects/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const projectId = parseInt(req.params.id);
+      
+      const [existing] = await db.select()
+        .from(bookProjects)
+        .where(and(eq(bookProjects.id, projectId), eq(bookProjects.ownerId, userId)));
+
+      if (!existing) {
+        return res.status(404).json({ message: 'Book project not found' });
+      }
+
+      const allowedFields = [
+        'title', 'subtitle', 'authorName', 'genre', 'targetAudience',
+        'manuscriptHtml', 'manuscriptText', 'wordCount', 'pageCount', 'chapterCount',
+        'currentStep', 'trimSize', 'fontSize', 'fontFamily',
+        'marginInner', 'marginOuter', 'marginTop', 'marginBottom',
+        'hasFrontMatter', 'hasBackMatter', 'readinessScore',
+        'coverImageUrl', 'spineWidth', 'status'
+      ];
+
+      const updateData: any = { lastEditedAt: new Date() };
+      for (const field of allowedFields) {
+        if (req.body[field] !== undefined) {
+          updateData[field] = req.body[field];
+        }
+      }
+
+      const [updated] = await db.update(bookProjects)
+        .set(updateData)
+        .where(and(eq(bookProjects.id, projectId), eq(bookProjects.ownerId, userId)))
+        .returning();
+
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating book project:", error);
+      res.status(500).json({ message: 'Failed to update book project' });
+    }
+  });
+
+  // Delete book project
+  app.delete('/api/book-projects/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const projectId = parseInt(req.params.id);
+      
+      const [deleted] = await db.delete(bookProjects)
+        .where(and(eq(bookProjects.id, projectId), eq(bookProjects.ownerId, userId)))
+        .returning();
+
+      if (!deleted) {
+        return res.status(404).json({ message: 'Book project not found' });
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting book project:", error);
+      res.status(500).json({ message: 'Failed to delete book project' });
+    }
+  });
+
+  // ============================================================================
+  // BOOK PROJECT SECTIONS API
+  // ============================================================================
+
+  // Add section/chapter to book project
+  app.post('/api/book-projects/:id/sections', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const projectId = parseInt(req.params.id);
+      
+      const [project] = await db.select()
+        .from(bookProjects)
+        .where(and(eq(bookProjects.id, projectId), eq(bookProjects.ownerId, userId)));
+
+      if (!project) {
+        return res.status(404).json({ message: 'Book project not found' });
+      }
+
+      const existingSections = await db.select()
+        .from(bookProjectSections)
+        .where(eq(bookProjectSections.projectId, projectId));
+      
+      const maxSectionNumber = existingSections.reduce((max, s) => Math.max(max, s.sectionNumber), 0);
+
+      const validatedData = insertBookProjectSectionSchema.parse({
+        ...req.body,
+        projectId,
+        sectionNumber: req.body.sectionNumber ?? maxSectionNumber + 1,
+      });
+
+      const [section] = await db.insert(bookProjectSections).values(validatedData).returning();
+      
+      await db.update(bookProjects)
+        .set({ lastEditedAt: new Date(), chapterCount: existingSections.length + 1 })
+        .where(eq(bookProjects.id, projectId));
+
+      res.status(201).json(section);
+    } catch (error: any) {
+      console.error("Error creating section:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: 'Invalid request data', errors: error.errors });
+      }
+      res.status(500).json({ message: 'Failed to create section' });
+    }
+  });
+
+  // Update section
+  app.patch('/api/book-projects/:id/sections/:sectionId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const projectId = parseInt(req.params.id);
+      const sectionId = parseInt(req.params.sectionId);
+
+      const [project] = await db.select()
+        .from(bookProjects)
+        .where(and(eq(bookProjects.id, projectId), eq(bookProjects.ownerId, userId)));
+
+      if (!project) {
+        return res.status(404).json({ message: 'Book project not found' });
+      }
+
+      const allowedFields = [
+        'title', 'type', 'content', 'wordCount', 'startPage', 'endPage',
+        'summary', 'suggestedImages', 'sectionNumber'
+      ];
+
+      const updateData: any = {};
+      for (const field of allowedFields) {
+        if (req.body[field] !== undefined) {
+          updateData[field] = req.body[field];
+        }
+      }
+
+      const [updated] = await db.update(bookProjectSections)
+        .set(updateData)
+        .where(and(eq(bookProjectSections.id, sectionId), eq(bookProjectSections.projectId, projectId)))
+        .returning();
+
+      if (!updated) {
+        return res.status(404).json({ message: 'Section not found' });
+      }
+
+      await db.update(bookProjects)
+        .set({ lastEditedAt: new Date() })
+        .where(eq(bookProjects.id, projectId));
+
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating section:", error);
+      res.status(500).json({ message: 'Failed to update section' });
+    }
+  });
+
+  // Delete section
+  app.delete('/api/book-projects/:id/sections/:sectionId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const projectId = parseInt(req.params.id);
+      const sectionId = parseInt(req.params.sectionId);
+
+      const [project] = await db.select()
+        .from(bookProjects)
+        .where(and(eq(bookProjects.id, projectId), eq(bookProjects.ownerId, userId)));
+
+      if (!project) {
+        return res.status(404).json({ message: 'Book project not found' });
+      }
+
+      const [deleted] = await db.delete(bookProjectSections)
+        .where(and(eq(bookProjectSections.id, sectionId), eq(bookProjectSections.projectId, projectId)))
+        .returning();
+
+      if (!deleted) {
+        return res.status(404).json({ message: 'Section not found' });
+      }
+
+      const remainingSections = await db.select()
+        .from(bookProjectSections)
+        .where(eq(bookProjectSections.projectId, projectId));
+
+      await db.update(bookProjects)
+        .set({ lastEditedAt: new Date(), chapterCount: remainingSections.length })
+        .where(eq(bookProjects.id, projectId));
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting section:", error);
+      res.status(500).json({ message: 'Failed to delete section' });
+    }
+  });
+
+  // Reorder sections
+  app.put('/api/book-projects/:id/sections/reorder', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const projectId = parseInt(req.params.id);
+      const { sectionOrder } = req.body;
+
+      if (!Array.isArray(sectionOrder)) {
+        return res.status(400).json({ message: 'sectionOrder must be an array of section IDs' });
+      }
+
+      const [project] = await db.select()
+        .from(bookProjects)
+        .where(and(eq(bookProjects.id, projectId), eq(bookProjects.ownerId, userId)));
+
+      if (!project) {
+        return res.status(404).json({ message: 'Book project not found' });
+      }
+
+      for (let i = 0; i < sectionOrder.length; i++) {
+        await db.update(bookProjectSections)
+          .set({ sectionNumber: i + 1 })
+          .where(and(eq(bookProjectSections.id, sectionOrder[i]), eq(bookProjectSections.projectId, projectId)));
+      }
+
+      await db.update(bookProjects)
+        .set({ lastEditedAt: new Date() })
+        .where(eq(bookProjects.id, projectId));
+
+      const sections = await db.select()
+        .from(bookProjectSections)
+        .where(eq(bookProjectSections.projectId, projectId))
+        .orderBy(bookProjectSections.sectionNumber);
+
+      res.json(sections);
+    } catch (error) {
+      console.error("Error reordering sections:", error);
+      res.status(500).json({ message: 'Failed to reorder sections' });
+    }
+  });
+
+  // ============================================================================
+  // BOOK IMAGE PLACEMENTS API
+  // ============================================================================
+
+  // Add image placement
+  app.post('/api/book-projects/:id/image-placements', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const projectId = parseInt(req.params.id);
+
+      const [project] = await db.select()
+        .from(bookProjects)
+        .where(and(eq(bookProjects.id, projectId), eq(bookProjects.ownerId, userId)));
+
+      if (!project) {
+        return res.status(404).json({ message: 'Book project not found' });
+      }
+
+      const validatedData = insertBookImagePlacementSchema.parse({
+        ...req.body,
+        projectId,
+      });
+
+      const [placement] = await db.insert(bookImagePlacements).values(validatedData).returning();
+      res.status(201).json(placement);
+    } catch (error: any) {
+      console.error("Error creating image placement:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: 'Invalid request data', errors: error.errors });
+      }
+      res.status(500).json({ message: 'Failed to create image placement' });
+    }
+  });
+
+  // Update image placement
+  app.patch('/api/book-projects/:id/image-placements/:placementId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const projectId = parseInt(req.params.id);
+      const placementId = parseInt(req.params.placementId);
+
+      const [project] = await db.select()
+        .from(bookProjects)
+        .where(and(eq(bookProjects.id, projectId), eq(bookProjects.ownerId, userId)));
+
+      if (!project) {
+        return res.status(404).json({ message: 'Book project not found' });
+      }
+
+      const allowedFields = [
+        'imageAssetId', 'sectionId', 'placementMode', 'anchorType', 'anchorOffset',
+        'pageNumber', 'positionX', 'positionY', 'width', 'height',
+        'caption', 'alignment', 'isApproved', 'aiSuggestionReason'
+      ];
+
+      const updateData: any = {};
+      for (const field of allowedFields) {
+        if (req.body[field] !== undefined) {
+          updateData[field] = req.body[field];
+        }
+      }
+
+      const [updated] = await db.update(bookImagePlacements)
+        .set(updateData)
+        .where(and(eq(bookImagePlacements.id, placementId), eq(bookImagePlacements.projectId, projectId)))
+        .returning();
+
+      if (!updated) {
+        return res.status(404).json({ message: 'Image placement not found' });
+      }
+
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating image placement:", error);
+      res.status(500).json({ message: 'Failed to update image placement' });
+    }
+  });
+
+  // Delete image placement
+  app.delete('/api/book-projects/:id/image-placements/:placementId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const projectId = parseInt(req.params.id);
+      const placementId = parseInt(req.params.placementId);
+
+      const [project] = await db.select()
+        .from(bookProjects)
+        .where(and(eq(bookProjects.id, projectId), eq(bookProjects.ownerId, userId)));
+
+      if (!project) {
+        return res.status(404).json({ message: 'Book project not found' });
+      }
+
+      const [deleted] = await db.delete(bookImagePlacements)
+        .where(and(eq(bookImagePlacements.id, placementId), eq(bookImagePlacements.projectId, projectId)))
+        .returning();
+
+      if (!deleted) {
+        return res.status(404).json({ message: 'Image placement not found' });
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting image placement:", error);
+      res.status(500).json({ message: 'Failed to delete image placement' });
+    }
+  });
+
+  // ============================================================================
+  // AUTHOR PROFILES API
+  // ============================================================================
+
+  // Get user's author profiles
+  app.get('/api/author-profiles', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const profiles = await db.select()
+        .from(authorProfiles)
+        .where(eq(authorProfiles.userId, userId))
+        .orderBy(desc(authorProfiles.isDefault), desc(authorProfiles.createdAt));
+
+      res.json(profiles);
+    } catch (error) {
+      console.error("Error fetching author profiles:", error);
+      res.status(500).json({ message: 'Failed to fetch author profiles' });
+    }
+  });
+
+  // Create author profile
+  app.post('/api/author-profiles', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const validatedData = insertAuthorProfileSchema.parse({
+        ...req.body,
+        userId,
+      });
+
+      if (validatedData.isDefault) {
+        await db.update(authorProfiles)
+          .set({ isDefault: false })
+          .where(eq(authorProfiles.userId, userId));
+      }
+
+      const [profile] = await db.insert(authorProfiles).values(validatedData).returning();
+      res.status(201).json(profile);
+    } catch (error: any) {
+      console.error("Error creating author profile:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: 'Invalid request data', errors: error.errors });
+      }
+      res.status(500).json({ message: 'Failed to create author profile' });
+    }
+  });
+
+  // Update author profile
+  app.patch('/api/author-profiles/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const profileId = parseInt(req.params.id);
+
+      const allowedFields = [
+        'penName', 'isDefault', 'bio', 'shortBio', 'photoUrl',
+        'websiteUrl', 'socialLinks', 'genres', 'otherBooks', 'publisherInfo'
+      ];
+
+      const updateData: any = { updatedAt: new Date() };
+      for (const field of allowedFields) {
+        if (req.body[field] !== undefined) {
+          updateData[field] = req.body[field];
+        }
+      }
+
+      if (updateData.isDefault) {
+        await db.update(authorProfiles)
+          .set({ isDefault: false })
+          .where(eq(authorProfiles.userId, userId));
+      }
+
+      const [updated] = await db.update(authorProfiles)
+        .set(updateData)
+        .where(and(eq(authorProfiles.id, profileId), eq(authorProfiles.userId, userId)))
+        .returning();
+
+      if (!updated) {
+        return res.status(404).json({ message: 'Author profile not found' });
+      }
+
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating author profile:", error);
+      res.status(500).json({ message: 'Failed to update author profile' });
+    }
+  });
+
+  // Public storefront by pen name slug
+  app.get('/api/author/:slug', async (req, res) => {
+    try {
+      const slug = req.params.slug.toLowerCase().replace(/-/g, ' ');
+      
+      const profiles = await db.select()
+        .from(authorProfiles)
+        .where(ilike(authorProfiles.penName, `%${slug}%`));
+
+      if (!profiles.length) {
+        return res.status(404).json({ message: 'Author not found' });
+      }
+
+      const profile = profiles[0];
+
+      const publishedBooks = await db.select()
+        .from(bookProjects)
+        .where(and(
+          eq(bookProjects.ownerId, profile.userId),
+          eq(bookProjects.status, 'published')
+        ))
+        .orderBy(desc(bookProjects.createdAt));
+
+      res.json({
+        author: {
+          penName: profile.penName,
+          bio: profile.bio,
+          shortBio: profile.shortBio,
+          photoUrl: profile.photoUrl,
+          websiteUrl: profile.websiteUrl,
+          socialLinks: profile.socialLinks,
+          genres: profile.genres,
+          otherBooks: profile.otherBooks,
+        },
+        books: publishedBooks.map(book => ({
+          id: book.id,
+          title: book.title,
+          subtitle: book.subtitle,
+          genre: book.genre,
+          coverImageUrl: book.coverImageUrl,
+          wordCount: book.wordCount,
+          pageCount: book.pageCount,
+        })),
+      });
+    } catch (error) {
+      console.error("Error fetching author storefront:", error);
+      res.status(500).json({ message: 'Failed to fetch author storefront' });
+    }
+  });
+
+  // ============================================================================
+  // PUBLISHING READINESS ANALYSIS
+  // ============================================================================
+
+  // Analyze manuscript for publication readiness
+  app.post('/api/book-projects/:id/analyze', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const projectId = parseInt(req.params.id);
+
+      const [project] = await db.select()
+        .from(bookProjects)
+        .where(and(eq(bookProjects.id, projectId), eq(bookProjects.ownerId, userId)));
+
+      if (!project) {
+        return res.status(404).json({ message: 'Book project not found' });
+      }
+
+      const sections = await db.select()
+        .from(bookProjectSections)
+        .where(eq(bookProjectSections.projectId, projectId));
+
+      const checklist: { item: string; passed: boolean; weight: number; details?: string }[] = [];
+      let totalScore = 0;
+      let maxScore = 0;
+
+      const hasTitleCheck = !!project.title && project.title.trim().length > 0;
+      checklist.push({ item: 'Book title defined', passed: hasTitleCheck, weight: 10 });
+      maxScore += 10;
+      if (hasTitleCheck) totalScore += 10;
+
+      const hasAuthorCheck = !!project.authorName && project.authorName.trim().length > 0;
+      checklist.push({ item: 'Author name set', passed: hasAuthorCheck, weight: 10 });
+      maxScore += 10;
+      if (hasAuthorCheck) totalScore += 10;
+
+      const minWordCount = 10000;
+      const wordCountCheck = (project.wordCount || 0) >= minWordCount;
+      checklist.push({ 
+        item: `Minimum word count (${minWordCount.toLocaleString()})`, 
+        passed: wordCountCheck, 
+        weight: 15,
+        details: `Current: ${(project.wordCount || 0).toLocaleString()} words`
+      });
+      maxScore += 15;
+      if (wordCountCheck) totalScore += 15;
+
+      const hasSectionsCheck = sections.length >= 3;
+      checklist.push({ 
+        item: 'At least 3 chapters/sections', 
+        passed: hasSectionsCheck, 
+        weight: 10,
+        details: `Current: ${sections.length} sections`
+      });
+      maxScore += 10;
+      if (hasSectionsCheck) totalScore += 10;
+
+      const hasCoverCheck = !!project.coverImageUrl;
+      checklist.push({ item: 'Cover image uploaded', passed: hasCoverCheck, weight: 15 });
+      maxScore += 15;
+      if (hasCoverCheck) totalScore += 15;
+
+      const hasFrontMatterCheck = project.hasFrontMatter === true;
+      checklist.push({ item: 'Front matter complete', passed: hasFrontMatterCheck, weight: 10 });
+      maxScore += 10;
+      if (hasFrontMatterCheck) totalScore += 10;
+
+      const hasBackMatterCheck = project.hasBackMatter === true;
+      checklist.push({ item: 'Back matter complete', passed: hasBackMatterCheck, weight: 10 });
+      maxScore += 10;
+      if (hasBackMatterCheck) totalScore += 10;
+
+      const allSectionsHaveContent = sections.every(s => s.content && s.content.length > 100);
+      checklist.push({ item: 'All sections have content', passed: allSectionsHaveContent, weight: 10 });
+      maxScore += 10;
+      if (allSectionsHaveContent) totalScore += 10;
+
+      const hasGenreCheck = !!project.genre && project.genre !== 'memoir';
+      checklist.push({ item: 'Genre specified', passed: hasGenreCheck, weight: 5 });
+      maxScore += 5;
+      if (hasGenreCheck) totalScore += 5;
+
+      const hasTargetAudienceCheck = !!project.targetAudience && project.targetAudience.trim().length > 0;
+      checklist.push({ item: 'Target audience defined', passed: hasTargetAudienceCheck, weight: 5 });
+      maxScore += 5;
+      if (hasTargetAudienceCheck) totalScore += 5;
+
+      const readinessScore = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
+
+      await db.update(bookProjects)
+        .set({ readinessScore, lastEditedAt: new Date() })
+        .where(eq(bookProjects.id, projectId));
+
+      let recommendation = 'Not ready for publication';
+      if (readinessScore >= 90) {
+        recommendation = 'Excellent! Your manuscript is ready for publication.';
+      } else if (readinessScore >= 70) {
+        recommendation = 'Almost there! Complete the remaining items before publishing.';
+      } else if (readinessScore >= 50) {
+        recommendation = 'Good progress, but more work needed before publication.';
+      }
+
+      res.json({
+        score: readinessScore,
+        checklist,
+        recommendation,
+        statistics: {
+          wordCount: project.wordCount || 0,
+          pageCount: project.pageCount || 0,
+          chapterCount: sections.length,
+          estimatedReadTime: Math.ceil((project.wordCount || 0) / 250),
+        }
+      });
+    } catch (error) {
+      console.error("Error analyzing book project:", error);
+      res.status(500).json({ message: 'Failed to analyze book project' });
     }
   });
 
