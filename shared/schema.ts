@@ -3041,6 +3041,47 @@ export const studioPipelines = pgTable("studio_pipelines", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+// AI Quality Tiers - Different quality levels with credit costs
+export const aiQualityTiers = pgTable("ai_quality_tiers", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // Draft, Standard, Premium, Ultra
+  description: text("description").notNull(),
+  creditCost: integer("credit_cost").notNull(), // 1, 3, 7, 15
+  model: text("model").notNull(), // gemini-2.5-flash, gpt-5-mini, etc.
+  temperature: real("temperature").notNull().default(0.7),
+  maxTokens: integer("max_tokens").notNull().default(4096),
+  promptModifiers: text("prompt_modifiers"), // Extra instructions for this tier
+  sortOrder: integer("sort_order").notNull().default(0),
+});
+
+// AI Voice Presets - Different writing styles/voices
+export const aiVoicePresets = pgTable("ai_voice_presets", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // Morgan Freeman, Shakespeare, Hemingway, etc.
+  description: text("description").notNull(),
+  category: text("category").notNull().default("narrative"), // narrative, educational, poetic, conversational
+  systemInstructions: text("system_instructions").notNull(), // Detailed prompt for voice style
+  exampleOutput: text("example_output"), // Sample of what this voice sounds like
+  isBuiltIn: boolean("is_built_in").notNull().default(true),
+  createdBy: varchar("created_by").references(() => users.id),
+  sortOrder: integer("sort_order").notNull().default(0),
+});
+
+// User AI Preferences - Saves user's preferred settings
+export const userAiPreferences = pgTable("user_ai_preferences", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
+  preferredTierId: integer("preferred_tier_id").references(() => aiQualityTiers.id),
+  preferredVoiceId: integer("preferred_voice_id").references(() => aiVoicePresets.id),
+  customVoiceProfile: text("custom_voice_profile"), // User's custom voice description
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Insert schemas for AI Quality System
+export const insertAiQualityTierSchema = createInsertSchema(aiQualityTiers).omit({ id: true });
+export const insertAiVoicePresetSchema = createInsertSchema(aiVoicePresets).omit({ id: true });
+export const insertUserAiPreferencesSchema = createInsertSchema(userAiPreferences).omit({ id: true, updatedAt: true });
+
 // Insert schemas for billing system
 export const insertSubscriptionTierSchema = createInsertSchema(subscriptionTiers).omit({ id: true, createdAt: true });
 export const insertFeatureGateSchema = createInsertSchema(featureGates).omit({ id: true, createdAt: true });
@@ -3167,3 +3208,11 @@ export type InsertAsset = z.infer<typeof insertAssetRegistrySchema>;
 // Studio Pipeline Types
 export type StudioPipeline = typeof studioPipelines.$inferSelect;
 export type InsertStudioPipeline = z.infer<typeof insertStudioPipelineSchema>;
+
+// AI Quality System Types
+export type AiQualityTier = typeof aiQualityTiers.$inferSelect;
+export type InsertAiQualityTier = z.infer<typeof insertAiQualityTierSchema>;
+export type AiVoicePreset = typeof aiVoicePresets.$inferSelect;
+export type InsertAiVoicePreset = z.infer<typeof insertAiVoicePresetSchema>;
+export type UserAiPreferences = typeof userAiPreferences.$inferSelect;
+export type InsertUserAiPreferences = z.infer<typeof insertUserAiPreferencesSchema>;
