@@ -12,11 +12,27 @@ const CREATOR_DOMAINS = [
   "www.kreaite.xyz",
 ];
 
+const RECOVERY_KEYWORDS = ["strokerecovery", "sasquatch"];
+
+function isRecoveryHostname(hostname: string): boolean {
+  const lowerHostname = hostname.toLowerCase();
+  
+  if (RECOVERY_DOMAINS.some(domain => lowerHostname === domain || lowerHostname.endsWith(`.${domain}`))) {
+    return true;
+  }
+  
+  if (RECOVERY_KEYWORDS.some(keyword => lowerHostname.includes(keyword))) {
+    return true;
+  }
+  
+  return false;
+}
+
 export function usePlatform(): Platform {
   return useMemo(() => {
-    const hostname = window.location.hostname.toLowerCase();
+    const hostname = window.location.hostname;
     
-    if (RECOVERY_DOMAINS.some(domain => hostname === domain || hostname.endsWith(`.${domain}`))) {
+    if (isRecoveryHostname(hostname)) {
       return "recovery";
     }
     
@@ -25,8 +41,7 @@ export function usePlatform(): Platform {
 }
 
 export function isRecoveryDomain(): boolean {
-  const hostname = window.location.hostname.toLowerCase();
-  return RECOVERY_DOMAINS.some(domain => hostname === domain || hostname.endsWith(`.${domain}`));
+  return isRecoveryHostname(window.location.hostname);
 }
 
 export function isCreatorDomain(): boolean {
@@ -34,10 +49,10 @@ export function isCreatorDomain(): boolean {
   return CREATOR_DOMAINS.some(domain => hostname === domain || hostname.endsWith(`.${domain}`));
 }
 
-export function getPlatformFromHostname(): Platform {
-  const hostname = window.location.hostname.toLowerCase();
+export function getPlatformFromHostname(hostname?: string): Platform {
+  const h = hostname || window.location.hostname;
   
-  if (RECOVERY_DOMAINS.some(domain => hostname === domain || hostname.endsWith(`.${domain}`))) {
+  if (isRecoveryHostname(h)) {
     return "recovery";
   }
   

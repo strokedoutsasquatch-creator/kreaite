@@ -135,7 +135,34 @@ async function initStripe() {
   }
 }
 
+// Platform detection keywords for recovery platform
+const RECOVERY_KEYWORDS = ["strokerecovery", "sasquatch"];
+const RECOVERY_DOMAINS = ["strokerecoveryacademy.com"];
+
+function detectPlatform(hostname: string): "creator" | "recovery" {
+  const lowerHostname = hostname.toLowerCase();
+  
+  if (RECOVERY_DOMAINS.some(domain => lowerHostname === domain || lowerHostname.endsWith(`.${domain}`))) {
+    return "recovery";
+  }
+  
+  if (RECOVERY_KEYWORDS.some(keyword => lowerHostname.includes(keyword))) {
+    return "recovery";
+  }
+  
+  return "creator";
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Platform detection middleware - sets X-Platform header based on host domain
+  app.use((req, res, next) => {
+    const host = req.get('host') || req.hostname || 'localhost';
+    const platform = detectPlatform(host);
+    res.setHeader('X-Platform', platform);
+    (req as any).platform = platform;
+    next();
+  });
+
   // Serve stock images from attached_assets
   app.use('/stock_images', express.static(path.join(process.cwd(), 'attached_assets', 'stock_images')));
   
