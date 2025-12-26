@@ -58,7 +58,7 @@ export default function About() {
                   <img 
                     src={nickBeforeImage} 
                     alt="Nick during early recovery with walker" 
-                    className="w-full h-80 object-cover object-top"
+                    className="w-full h-auto object-contain"
                     data-testid="img-nick-before"
                   />
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
@@ -76,7 +76,7 @@ export default function About() {
                   <img 
                     src={nickTodayImage} 
                     alt="Nick today - recovered and thriving" 
-                    className="w-full h-80 object-cover object-top"
+                    className="w-full h-auto object-contain"
                     data-testid="img-nick-today"
                   />
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
