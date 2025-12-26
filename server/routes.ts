@@ -1168,21 +1168,54 @@ Include recovery metaphors and triumphant imagery.`;
   // Interactive AI chat for manuscript analysis
   app.post('/api/book/chat-analyze', async (req, res) => {
     try {
-      const { message, content, fileName, bookTitle, genre, targetAudience, chatHistory, isInitialAnalysis } = req.body;
+      const { 
+        message, content, fileName, bookTitle, genre, targetAudience, 
+        chatHistory, isInitialAnalysis, isAddingMoreFiles, totalFiles, totalWords, isMultiFile 
+      } = req.body;
       
-      let systemPrompt = `You are an expert book editor and publishing consultant for Stroke Lyfe Publishing. 
-You help authors analyze and improve their manuscripts, especially recovery memoirs and self-help books.
+      let systemPrompt = `You are an expert book editor and publishing consultant - the "AI Writing Partner" for professional manuscript review. 
+You help authors analyze and improve their manuscripts with the same expertise as a senior acquisitions editor at a major publishing house.
 You provide actionable, encouraging feedback while maintaining high editorial standards.
 Keep responses conversational but substantive. Use markdown formatting for clarity.
-Focus on what makes the content strong and specific improvements.`;
+Focus on what makes the content strong and specific improvements.
+
+IMPORTANT: At the end of EVERY analysis, include a "Publication Readiness" assessment:
+- Score the manuscript 0-100% based on: content completeness, structure, voice consistency, market readiness
+- List what's needed before publication (specific, actionable items)
+- If the score is 80%+ say "This manuscript is approaching publication readiness!"`;
 
       let userPrompt = '';
       
+      // Handle file uploads (initial or additional)
       if (isInitialAnalysis && content) {
         const wordCount = content.split(/\s+/).length;
         const estimatedPages = Math.ceil(wordCount / 250);
         
-        userPrompt = `I just received a manuscript upload. Here are the details:
+        if (isAddingMoreFiles) {
+          // Adding more files to existing manuscript
+          userPrompt = `The author has added ${isMultiFile ? 'additional files' : 'another file'} to their manuscript.
+          
+Updated manuscript details:
+- Files: ${fileName || 'manuscript files'} (${totalFiles || 1} total files)
+- Total word count: ${(totalWords || wordCount).toLocaleString()} words
+- Estimated pages: ~${Math.ceil((totalWords || wordCount) / 250)} pages
+- Genre: ${genre || 'memoir'}
+
+Here's the updated content sample (first 10,000 characters of combined content):
+"""
+${content.substring(0, 10000)}
+"""
+
+Please provide an UPDATED analysis that incorporates the new material:
+1. **New Material Assessment** - How does this addition strengthen the manuscript?
+2. **Updated Structure Review** - Does the flow still work with the new content?
+3. **Consistency Check** - Is the voice/tone consistent across all sections?
+4. **Progress Update** - How much closer is this to being publication-ready?
+5. **Next Steps** - What should the author focus on next?
+6. **Publication Readiness Score** - Rate 0-100% with specific items needed`;
+        } else {
+          // Initial upload
+          userPrompt = `I just received a manuscript upload. Here are the details:
 - File: ${fileName || 'manuscript.txt'}
 - Word count: ${wordCount.toLocaleString()} words
 - Estimated pages: ~${estimatedPages} pages
@@ -1200,14 +1233,29 @@ Please provide an initial analysis including:
 4. **Strengths** - What's working well
 5. **Key Recommendations** - Top 3 things to focus on
 6. **Questions for the Author** - What would help you give better feedback
+7. **Publication Readiness Score** - Rate 0-100% with checklist of what's needed
 
-Be encouraging but honest. This is about helping them succeed.`;
+Be encouraging but honest. This is about helping them succeed.
+Remind the author they can upload additional files anytime to build their complete manuscript.`;
+        }
       } else if (message) {
+        // Regular chat message
         const context = content ? `\nContext from their manuscript (excerpt): "${content.substring(0, 3000)}..."` : '';
         const bookContext = bookTitle ? `\nBook title: "${bookTitle}"` : '';
         const audienceContext = targetAudience ? `\nTarget audience: ${targetAudience}` : '';
         
-        userPrompt = `${message}${bookContext}${audienceContext}${context}`;
+        userPrompt = `${message}${bookContext}${audienceContext}${context}
+        
+Remember to assess publication readiness if discussing the manuscript.`;
+      } else if (content) {
+        // Content provided but no specific message - treat as analysis request
+        const wordCount = content.split(/\s+/).length;
+        userPrompt = `Please analyze this manuscript content (${wordCount.toLocaleString()} words):
+"""
+${content.substring(0, 10000)}
+"""
+
+Provide a comprehensive analysis with publication readiness score.`;
       } else {
         return res.status(400).json({ message: "Message or content is required" });
       }
@@ -1218,7 +1266,7 @@ Be encouraging but honest. This is about helping them succeed.`;
         content: msg.content
       }));
       
-      // Use creative assistant (AI Writing Partner) for manuscript reviews, not Sasquatch
+      // Use creative assistant (AI Writing Partner) for manuscript reviews
       const result = await generateCoachResponse(userPrompt, history, "creative assistant");
       res.json({ response: result.response });
     } catch (error) {

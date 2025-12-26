@@ -6,6 +6,7 @@ import ChildrensBookMode from "@/components/ChildrensBookMode";
 import ProfessionalEditor from "@/components/ProfessionalEditor";
 import CoverDesigner from "@/components/CoverDesigner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -519,7 +520,101 @@ export default function BookStudio() {
   const [chatInput, setChatInput] = useState("");
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<{name: string, content: string, wordCount: number}[]>([]);
   const chatScrollRef = useRef<HTMLDivElement>(null);
+  
+  // Live manuscript editor state
+  const [manuscriptEditorContent, setManuscriptEditorContent] = useState("");
+  const [showBookDetailsPanel, setShowBookDetailsPanel] = useState(false);
+
+  // Publication readiness calculation
+  const calculatePublicationReadiness = () => {
+    const wordCount = manuscriptEditorContent 
+      ? manuscriptEditorContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().split(/\s+/).filter(Boolean).length 
+      : 0;
+    const estimatedPages = Math.ceil(wordCount / 250);
+    
+    // Extract chapters from content (look for h1, h2 headings or "Chapter" patterns)
+    const chapterMatches = manuscriptEditorContent.match(/<h[12][^>]*>.*?<\/h[12]>/gi) || [];
+    const chapterCount = chapterMatches.length || chapters.filter(c => c.content && c.content.length > 100).length;
+    
+    // Check for front matter
+    const hasFrontMatter = manuscriptEditorContent.toLowerCase().includes('introduction') || 
+                           manuscriptEditorContent.toLowerCase().includes('preface') ||
+                           manuscriptEditorContent.toLowerCase().includes('foreword');
+    
+    // Check for back matter
+    const hasBackMatter = manuscriptEditorContent.toLowerCase().includes('acknowledgment') || 
+                          manuscriptEditorContent.toLowerCase().includes('about the author') ||
+                          manuscriptEditorContent.toLowerCase().includes('resources');
+    
+    // Calculate readiness score (0-100)
+    let score = 0;
+    const minWordCount = 10000;
+    const wordScore = Math.min((wordCount / minWordCount) * 40, 40); // Up to 40 points
+    const chapterScore = Math.min(chapterCount * 5, 25); // Up to 25 points (5 chapters max score)
+    const frontMatterScore = hasFrontMatter ? 15 : 0;
+    const backMatterScore = hasBackMatter ? 20 : 0;
+    
+    score = Math.round(wordScore + chapterScore + frontMatterScore + backMatterScore);
+    
+    return {
+      wordCount,
+      estimatedPages,
+      chapterCount,
+      hasFrontMatter,
+      hasBackMatter,
+      score: Math.min(score, 100),
+      isReady: score >= 80
+    };
+  };
+
+  // Parse AI response for actionable suggestions
+  const parseAISuggestions = (content: string): { text: string; isActionable: boolean }[] => {
+    const lines = content.split('\n');
+    const suggestions: { text: string; isActionable: boolean }[] = [];
+    
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      
+      // Check if line is a numbered suggestion or bullet point with actionable content
+      const isNumbered = /^\d+[\.\)]\s/.test(trimmed);
+      const isBullet = /^[-•*]\s/.test(trimmed);
+      const hasActionWords = /^(add|include|consider|try|use|write|create|expand|develop|strengthen|improve)/i.test(
+        trimmed.replace(/^\d+[\.\)]\s|^[-•*]\s/, '')
+      );
+      
+      const isActionable = (isNumbered || isBullet) && hasActionWords;
+      
+      suggestions.push({
+        text: trimmed,
+        isActionable
+      });
+    }
+    
+    return suggestions;
+  };
+
+  // Apply suggestion to manuscript
+  const applySuggestionToManuscript = (suggestion: string) => {
+    const cleanSuggestion = suggestion
+      .replace(/^\d+[\.\)]\s|^[-•*]\s/, '') // Remove numbering/bullets
+      .replace(/^\*\*|^\*|^__/, '') // Remove markdown formatting
+      .trim();
+    
+    // Add as a new paragraph at the end
+    const newContent = manuscriptEditorContent 
+      ? `${manuscriptEditorContent}<p><em>[AI Suggestion: ${cleanSuggestion}]</em></p>`
+      : `<p><em>[AI Suggestion: ${cleanSuggestion}]</em></p>`;
+    
+    setManuscriptEditorContent(newContent);
+    
+    toast({
+      title: "Suggestion Applied",
+      description: "The suggestion has been added to your manuscript"
+    });
+  };
 
   const steps = [
     { step: 1, label: "Upload & Analyze", icon: Upload },
@@ -531,106 +626,146 @@ export default function BookStudio() {
   ];
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
     
-    // File size limit: 5MB
+    // File size limit: 5MB per file
     const MAX_FILE_SIZE = 5 * 1024 * 1024;
-    if (file.size > MAX_FILE_SIZE) {
-      toast({ 
-        title: "File Too Large", 
-        description: "Please upload a file smaller than 5MB. For larger manuscripts, try splitting into chapters.",
-        variant: "destructive"
-      });
-      return;
+    const validFiles: File[] = [];
+    
+    for (const file of Array.from(files)) {
+      if (file.size > MAX_FILE_SIZE) {
+        toast({ 
+          title: "File Too Large", 
+          description: `${file.name} is too large. Maximum 5MB per file.`,
+          variant: "destructive"
+        });
+      } else {
+        validFiles.push(file);
+      }
     }
     
-    // Add user message with attachment immediately
+    if (validFiles.length === 0) return;
+    
+    // Add user message with attachments
+    const fileNames = validFiles.map(f => f.name).join(", ");
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: "user",
-      content: `I've uploaded my manuscript: "${file.name}"`,
+      content: validFiles.length === 1 
+        ? `I've uploaded: "${validFiles[0].name}"` 
+        : `I've uploaded ${validFiles.length} files: ${fileNames}`,
       timestamp: new Date(),
       hasAttachment: true,
-      attachmentName: file.name,
+      attachmentName: fileNames,
     };
     setChatMessages(prev => [...prev, userMessage]);
     setIsChatLoading(true);
     
     try {
-      let content = '';
-      const fileName = file.name.toLowerCase();
+      const newFiles: {name: string, content: string, wordCount: number}[] = [];
+      let allContent = '';
+      let failedFiles: string[] = [];
       
-      // Check if file needs server-side parsing (Word docs, PDFs)
-      if (fileName.endsWith('.docx') || fileName.endsWith('.doc') || fileName.endsWith('.pdf')) {
-        // Read as ArrayBuffer and send to parser
-        const arrayBuffer = await file.arrayBuffer();
-        const bytes = new Uint8Array(arrayBuffer);
-        let binary = '';
-        for (let i = 0; i < bytes.byteLength; i++) {
-          binary += String.fromCharCode(bytes[i]);
+      // Process each file
+      for (const file of validFiles) {
+        try {
+          let content = '';
+          const fileName = file.name.toLowerCase();
+          
+          // Check if file needs server-side parsing (Word docs, PDFs)
+          if (fileName.endsWith('.docx') || fileName.endsWith('.doc') || fileName.endsWith('.pdf')) {
+            const arrayBuffer = await file.arrayBuffer();
+            const bytes = new Uint8Array(arrayBuffer);
+            let binary = '';
+            for (let i = 0; i < bytes.byteLength; i++) {
+              binary += String.fromCharCode(bytes[i]);
+            }
+            const base64 = btoa(binary);
+            
+            const parseResponse = await fetch('/api/doc-hub/parse', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({
+                content: base64,
+                filename: file.name,
+                mimeType: file.type,
+              }),
+            });
+            
+            if (!parseResponse.ok) throw new Error('Parse failed');
+            const parsed = await parseResponse.json();
+            content = parsed.content || '';
+          } else {
+            content = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onerror = () => reject(new Error('Failed to read file'));
+              reader.onload = (e) => resolve(e.target?.result as string || '');
+              reader.readAsText(file);
+            });
+          }
+          
+          if (content && content.length > 0) {
+            const wordCount = content.split(/\s+/).filter(w => w.length > 0).length;
+            newFiles.push({ name: file.name, content, wordCount });
+            allContent += `\n\n--- ${file.name} ---\n${content}`;
+          }
+        } catch (err) {
+          failedFiles.push(file.name);
         }
-        const base64 = btoa(binary);
-        
-        // Parse via server
-        const parseResponse = await fetch('/api/doc-hub/parse', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            content: base64,
-            filename: file.name,
-            mimeType: file.type,
-          }),
-        });
-        
-        if (!parseResponse.ok) {
-          throw new Error('Failed to parse document');
-        }
-        
-        const parsed = await parseResponse.json();
-        content = parsed.content || '';
-        
-        if (!content || content.length === 0) {
-          throw new Error('Document appears to be empty');
-        }
-      } else {
-        // Plain text files - read directly
-        content = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onerror = () => reject(new Error('Failed to read file'));
-          reader.onload = (e) => resolve(e.target?.result as string || '');
-          reader.readAsText(file);
-        });
       }
       
-      if (!content || content.length === 0) {
-        toast({ 
-          title: "Empty File", 
-          description: "The file appears to be empty.",
-          variant: "destructive"
-        });
-        setIsChatLoading(false);
-        return;
+      if (newFiles.length === 0) {
+        throw new Error('Could not read any files');
       }
       
-      setUploadedContent(content);
-      setUploadedFileName(file.name);
-      toast({ title: "File Uploaded", description: `${file.name} loaded successfully (${(file.size / 1024).toFixed(1)}KB)` });
+      // Add to tracked files
+      setUploadedFiles(prev => [...prev, ...newFiles]);
+      const allFiles = [...uploadedFiles, ...newFiles];
+      const totalWords = allFiles.reduce((sum, f) => sum + f.wordCount, 0);
+      const combinedContent = allFiles.map(f => f.content).join('\n\n');
       
-      // Auto-analyze the uploaded content
+      setUploadedContent(combinedContent);
+      setUploadedFileName(allFiles.map(f => f.name).join(', '));
+      
+      // Populate the manuscript editor with the combined content (convert to HTML)
+      const htmlContent = combinedContent
+        .split('\n\n')
+        .map(para => para.trim())
+        .filter(para => para.length > 0)
+        .map(para => `<p>${para.replace(/\n/g, '<br/>')}</p>`)
+        .join('');
+      setManuscriptEditorContent(htmlContent);
+      
+      toast({ 
+        title: "Files Uploaded", 
+        description: `${newFiles.length} file(s) added. Total: ${allFiles.length} files, ${totalWords.toLocaleString()} words` 
+      });
+      
+      // Analyze all content together - always treat new file uploads as analysis requests
+      const isAddingMoreFiles = uploadedFiles.length > 0;
       const response = await apiRequest("POST", "/api/book/chat-analyze", {
-        content: content.substring(0, 10000),
-        fileName: file.name,
+        content: combinedContent.substring(0, 15000),
+        fileName: allFiles.map(f => f.name).join(', '),
         genre: selectedGenre,
-        isInitialAnalysis: true,
+        isInitialAnalysis: true, // Always analyze when files are uploaded
+        isAddingMoreFiles,
+        totalFiles: allFiles.length,
+        totalWords,
+        isMultiFile: allFiles.length > 1,
       });
       const data = await response.json();
+      
+      let responseText = data.response || '';
+      if (failedFiles.length > 0) {
+        responseText += `\n\n**Note:** I couldn't read these files: ${failedFiles.join(', ')}. Try saving them as .txt format.`;
+      }
       
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: data.response || `I've received your manuscript "${file.name}" (${content.split(/\s+/).length.toLocaleString()} words). Let me analyze it...\n\n**Initial Observations:**\n- Word count: ${content.split(/\s+/).length.toLocaleString()} words\n- Estimated pages: ~${Math.ceil(content.split(/\s+/).length / 250)} pages\n\n**What I noticed:**\n1. The content has a personal, narrative voice\n2. There are opportunities to strengthen the structure\n3. Some sections could benefit from more specific details\n\n**Recommended Next Steps:**\n1. Define your target audience more specifically\n2. Create a clear chapter outline\n3. Identify the key emotional beats\n\nWould you like me to dive deeper into any of these areas? Or do you have specific questions about your manuscript?`,
+        content: responseText || `I've received ${allFiles.length} file(s) with ${totalWords.toLocaleString()} total words.\n\nYou can upload more files anytime - I'll incorporate them into my analysis. When your manuscript is complete, I'll let you know when it's ready for publication.`,
         timestamp: new Date(),
       };
       setChatMessages(prev => [...prev, assistantMessage]);
@@ -639,12 +774,14 @@ export default function BookStudio() {
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: `I had trouble reading "${file.name}". This can happen with some document formats.\n\n**Please try one of these options:**\n1. Save your document as a .txt file and upload again\n2. Copy and paste your text directly into the chat\n3. If it's a PDF, make sure it contains selectable text (not scanned images)\n\nOnce I can read your content, I'll provide a thorough analysis.`,
+        content: `I had trouble reading the uploaded files. This can happen with some document formats.\n\n**Please try:**\n1. Save documents as .txt files and upload again\n2. Copy and paste text directly into the chat\n3. For PDFs, ensure they contain selectable text\n\nOnce I can read your content, I'll provide a thorough analysis.`,
         timestamp: new Date(),
       };
       setChatMessages(prev => [...prev, assistantMessage]);
     } finally {
       setIsChatLoading(false);
+      // Reset file input to allow re-uploading same files
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -1391,104 +1528,253 @@ Your journey to healing starts here.`);
 
           {currentStep === 1 && (
             <div className="space-y-4 sm:space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                {/* AI Chat Panel - Left Side */}
-                <Card className="flex flex-col h-[400px] sm:h-[600px] lg:h-[700px]">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2">
-                      <MessageCircle className="w-5 h-5 text-primary" /> AI Publishing Assistant
-                    </CardTitle>
-                    <CardDescription>Upload your manuscript and chat about it. I'll help you analyze and improve your book.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex-1 flex flex-col min-h-0">
-                    {/* File Upload Zone - At Top */}
-                    <div 
-                      className="border-2 border-dashed border-border rounded-lg p-4 text-center hover:border-primary/50 transition-colors cursor-pointer mb-4"
-                      onClick={() => fileInputRef.current?.click()}
-                      data-testid="upload-zone"
-                    >
-                      <input 
-                        type="file" 
-                        ref={fileInputRef}
-                        onChange={handleFileUpload}
-                        accept=".txt,.md,.doc,.docx,.pdf"
-                        className="hidden"
-                        data-testid="input-file-upload"
-                      />
-                      <div className="flex items-center justify-center gap-3">
-                        <FileUp className="w-6 h-6 text-muted-foreground" />
-                        <div className="text-left">
-                          <p className="font-medium text-sm">
-                            {uploadedFileName ? `Uploaded: ${uploadedFileName}` : 'Drop manuscript or click to upload'}
-                          </p>
-                          <p className="text-xs text-muted-foreground">.txt, .md, .doc, .docx, .pdf</p>
+              {/* Mobile View - Tabs */}
+              <div className="lg:hidden">
+                <Tabs defaultValue="chat" className="w-full">
+                  <TabsList className="w-full grid grid-cols-2">
+                    <TabsTrigger value="chat" data-testid="tab-chat-mobile">
+                      <MessageCircle className="w-4 h-4 mr-2" /> Chat
+                    </TabsTrigger>
+                    <TabsTrigger value="manuscript" data-testid="tab-manuscript-mobile">
+                      <FileText className="w-4 h-4 mr-2" /> Manuscript
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="chat" className="mt-4">
+                    <Card className="flex flex-col h-[500px]">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="flex items-center gap-2">
+                          <MessageCircle className="w-5 h-5 text-primary" /> AI Publishing Assistant
+                        </CardTitle>
+                        <CardDescription>Upload your manuscript and chat about it.</CardDescription>
+                      </CardHeader>
+                      <CardContent className="flex-1 flex flex-col min-h-0">
+                        <div 
+                          className="border-2 border-dashed border-border rounded-lg p-4 text-center hover:border-primary/50 transition-colors cursor-pointer mb-4"
+                          onClick={() => fileInputRef.current?.click()}
+                          data-testid="upload-zone-mobile"
+                        >
+                          <input 
+                            type="file" 
+                            ref={fileInputRef}
+                            onChange={handleFileUpload}
+                            accept=".txt,.md,.doc,.docx,.pdf"
+                            multiple
+                            className="hidden"
+                          />
+                          <div className="flex items-center justify-center gap-3">
+                            <FileUp className="w-6 h-6 text-muted-foreground" />
+                            <div className="text-left">
+                              <p className="font-medium text-sm">
+                                {uploadedFiles.length > 0 
+                                  ? `${uploadedFiles.length} file(s) uploaded`
+                                  : 'Upload files'}
+                              </p>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                    
-                    {/* Chat Messages - Flow Below Upload */}
-                    <ScrollArea className="flex-1 pr-4 mb-4" ref={chatScrollRef}>
-                      <div className="flex flex-col space-y-4">
-                        {chatMessages.map((msg) => (
-                          <div
-                            key={msg.id}
-                            className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
-                          >
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                              msg.role === 'assistant' ? 'bg-primary text-primary-foreground' : 'bg-muted'
-                            }`}>
-                              {msg.role === 'assistant' ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
-                            </div>
-                            <div className={`flex-1 max-w-[85%] ${msg.role === 'user' ? 'text-right' : ''}`}>
-                              {msg.hasAttachment && (
-                                <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 mb-2 ${
-                                  msg.role === 'user' ? 'ml-auto' : ''
+                        <ScrollArea className="flex-1 pr-4 mb-4">
+                          <div className="flex flex-col space-y-4">
+                            {chatMessages.map((msg) => (
+                              <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                  msg.role === 'assistant' ? 'bg-primary text-primary-foreground' : 'bg-muted'
                                 }`}>
-                                  <Paperclip className="w-3 h-3 text-primary" />
-                                  <span className="text-xs font-medium text-primary">{msg.attachmentName}</span>
+                                  {msg.role === 'assistant' ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
                                 </div>
-                              )}
-                              <div className={`rounded-lg px-4 py-3 ${
-                                msg.role === 'assistant' 
-                                  ? 'bg-muted text-foreground' 
-                                  : 'bg-primary text-primary-foreground ml-auto'
-                              }`}>
-                                <div className="text-sm whitespace-pre-wrap prose prose-sm dark:prose-invert max-w-none">
-                                  {msg.content.split('\n').map((line, i) => {
-                                    if (line.startsWith('**') && line.endsWith('**')) {
-                                      return <p key={i} className="font-bold mt-2 first:mt-0">{line.slice(2, -2)}</p>;
-                                    }
-                                    if (line.startsWith('- ')) {
-                                      return <p key={i} className="ml-2">{line}</p>;
-                                    }
-                                    if (line.match(/^\d+\.\s/)) {
-                                      return <p key={i} className="ml-2">{line}</p>;
-                                    }
-                                    return line ? <p key={i}>{line}</p> : <br key={i} />;
-                                  })}
+                                <div className={`flex-1 max-w-[85%] ${msg.role === 'user' ? 'text-right' : ''}`}>
+                                  <div className={`rounded-lg px-4 py-3 ${
+                                    msg.role === 'assistant' ? 'bg-muted text-foreground' : 'bg-primary text-primary-foreground ml-auto'
+                                  }`}>
+                                    <div className="text-sm whitespace-pre-wrap">{msg.content}</div>
+                                  </div>
                                 </div>
                               </div>
-                              <span className="text-xs text-muted-foreground mt-1 block">
-                                {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </span>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                        <div className="flex gap-2">
+                          <Input
+                            value={chatInput}
+                            onChange={(e) => setChatInput(e.target.value)}
+                            placeholder="Ask about your manuscript..."
+                            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendChatMessage()}
+                            disabled={isChatLoading}
+                          />
+                          <Button onClick={sendChatMessage} disabled={!chatInput.trim() || isChatLoading} size="icon">
+                            <Send className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  <TabsContent value="manuscript" className="mt-4">
+                    <Card className="flex flex-col h-[500px]">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <CardTitle className="flex items-center gap-2">
+                            <FileText className="w-5 h-5 text-primary" /> Live Manuscript
+                          </CardTitle>
+                          {(() => {
+                            const readiness = calculatePublicationReadiness();
+                            return readiness.isReady ? (
+                              <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+                                <CheckCircle className="w-3 h-3 mr-1" /> Ready for Publication
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="border-orange-500/30 text-orange-400">
+                                {readiness.score}% Complete
+                              </Badge>
+                            );
+                          })()}
+                        </div>
+                      </CardHeader>
+                      <CardContent className="flex-1 min-h-0 overflow-auto">
+                        <ProfessionalEditor
+                          content={manuscriptEditorContent}
+                          onChange={setManuscriptEditorContent}
+                          placeholder="Start writing your manuscript here..."
+                        />
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
+              </div>
+
+              {/* Desktop View - Resizable Panels */}
+              <div className="hidden lg:block">
+                <ResizablePanelGroup direction="horizontal" className="min-h-[700px] rounded-lg border">
+                  {/* Left Panel - Chat (40%) */}
+                  <ResizablePanel defaultSize={40} minSize={25}>
+                    <Card className="flex flex-col h-full border-0 rounded-none">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="flex items-center gap-2">
+                          <MessageCircle className="w-5 h-5 text-primary" /> AI Publishing Assistant
+                        </CardTitle>
+                        <CardDescription>Upload your manuscript and chat about it. I'll help you analyze and improve your book.</CardDescription>
+                      </CardHeader>
+                      <CardContent className="flex-1 flex flex-col min-h-0">
+                        {/* File Upload Zone - At Top */}
+                        <div 
+                          className="border-2 border-dashed border-border rounded-lg p-4 text-center hover:border-primary/50 transition-colors cursor-pointer mb-4"
+                          onClick={() => fileInputRef.current?.click()}
+                          data-testid="upload-zone"
+                        >
+                          <input 
+                            type="file" 
+                            ref={fileInputRef}
+                            onChange={handleFileUpload}
+                            accept=".txt,.md,.doc,.docx,.pdf"
+                            multiple
+                            className="hidden"
+                            data-testid="input-file-upload"
+                          />
+                          <div className="flex items-center justify-center gap-3">
+                            <FileUp className="w-6 h-6 text-muted-foreground" />
+                            <div className="text-left">
+                              <p className="font-medium text-sm">
+                                {uploadedFiles.length > 0 
+                                  ? `${uploadedFiles.length} file(s) uploaded - Click to add more`
+                                  : 'Drop files or click to upload (multiple allowed)'}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {uploadedFiles.length > 0 
+                                  ? `${uploadedFiles.reduce((sum, f) => sum + f.wordCount, 0).toLocaleString()} words total`
+                                  : '.txt, .md, .doc, .docx, .pdf'}
+                              </p>
                             </div>
                           </div>
-                        ))}
-                        {isChatLoading && (
-                          <div className="flex gap-3">
-                            <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-                              <Bot className="w-4 h-4" />
-                            </div>
-                            <div className="bg-muted rounded-lg px-4 py-3">
-                              <div className="flex items-center gap-2">
-                                <RefreshCw className="w-4 h-4 animate-spin" />
-                                <span className="text-sm">Analyzing...</span>
+                        </div>
+                        
+                        {/* Chat Messages - Flow Below Upload */}
+                        <ScrollArea className="flex-1 pr-4 mb-4" ref={chatScrollRef}>
+                          <div className="flex flex-col space-y-4">
+                            {chatMessages.map((msg) => (
+                              <div
+                                key={msg.id}
+                                className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
+                              >
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                  msg.role === 'assistant' ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                                }`}>
+                                  {msg.role === 'assistant' ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
+                                </div>
+                                <div className={`flex-1 max-w-[85%] ${msg.role === 'user' ? 'text-right' : ''}`}>
+                                  {msg.hasAttachment && (
+                                    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 mb-2 ${
+                                      msg.role === 'user' ? 'ml-auto' : ''
+                                    }`}>
+                                      <Paperclip className="w-3 h-3 text-primary" />
+                                      <span className="text-xs font-medium text-primary">{msg.attachmentName}</span>
+                                    </div>
+                                  )}
+                                  <div className={`rounded-lg px-4 py-3 ${
+                                    msg.role === 'assistant' 
+                                      ? 'bg-muted text-foreground' 
+                                      : 'bg-primary text-primary-foreground ml-auto'
+                                  }`}>
+                                    {msg.role === 'assistant' ? (
+                                      <div className="text-sm whitespace-pre-wrap prose prose-sm dark:prose-invert max-w-none space-y-1">
+                                        {parseAISuggestions(msg.content).map((suggestion, i) => (
+                                          <div key={i} className="flex items-start gap-2">
+                                            <span className="flex-1">
+                                              {suggestion.text.startsWith('**') && suggestion.text.endsWith('**') ? (
+                                                <span className="font-bold">{suggestion.text.slice(2, -2)}</span>
+                                              ) : (
+                                                suggestion.text
+                                              )}
+                                            </span>
+                                            {suggestion.isActionable && (
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-6 px-2 text-xs shrink-0"
+                                                onClick={() => applySuggestionToManuscript(suggestion.text)}
+                                                data-testid={`button-apply-suggestion-${i}`}
+                                              >
+                                                <Plus className="w-3 h-3 mr-1" /> Apply
+                                              </Button>
+                                            )}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <div className="text-sm whitespace-pre-wrap prose prose-sm dark:prose-invert max-w-none">
+                                        {msg.content.split('\n').map((line, i) => {
+                                          if (line.startsWith('**') && line.endsWith('**')) {
+                                            return <p key={i} className="font-bold mt-2 first:mt-0">{line.slice(2, -2)}</p>;
+                                          }
+                                          if (line.startsWith('- ')) {
+                                            return <p key={i} className="ml-2">{line}</p>;
+                                          }
+                                          if (line.match(/^\d+\.\s/)) {
+                                            return <p key={i} className="ml-2">{line}</p>;
+                                          }
+                                          return line ? <p key={i}>{line}</p> : <br key={i} />;
+                                        })}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <span className="text-xs text-muted-foreground mt-1 block">
+                                    {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                </div>
                               </div>
-                            </div>
+                            ))}
+                            {isChatLoading && (
+                              <div className="flex gap-3">
+                                <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                                  <Bot className="w-4 h-4" />
+                                </div>
+                                <div className="bg-muted rounded-lg px-4 py-3">
+                                  <div className="flex items-center gap-2">
+                                    <RefreshCw className="w-4 h-4 animate-spin" />
+                                    <span className="text-sm">Analyzing...</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    </ScrollArea>
+                        </ScrollArea>
                     
                     {/* Use This Discussion Button */}
                     {chatMessages.length >= 3 && (
@@ -1613,345 +1899,159 @@ Your journey to healing starts here.`);
                     </div>
                   </CardContent>
                 </Card>
+                  </ResizablePanel>
 
-                {/* Book Details Panel - Right Side */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BookOpen className="w-5 h-5 text-primary" /> 
-                      {quickGenerateMode ? 'Content Factory' : 'Book Details'}
-                    </CardTitle>
-                    <CardDescription>
-                      {quickGenerateMode 
-                        ? 'Generate a complete book from a single idea'
-                        : 'Tell us about your book project'
-                      }
-                    </CardDescription>
-                    {/* Mode Toggle */}
-                    <div className="flex items-center gap-2 pt-2">
-                      <Switch 
-                        checked={quickGenerateMode}
-                        onCheckedChange={setQuickGenerateMode}
-                        data-testid="switch-quick-mode"
-                      />
-                      <Label className="text-sm cursor-pointer" onClick={() => setQuickGenerateMode(!quickGenerateMode)}>
-                        <Rocket className="w-3 h-3 inline mr-1" />
-                        Quick Generate Mode
-                      </Label>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {/* Quick Generate Mode */}
-                    {quickGenerateMode && (
-                      <>
-                        <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-4 border border-primary/20">
-                          <h4 className="font-medium text-sm flex items-center gap-2 mb-2">
-                            <Wand2 className="w-4 h-4 text-primary" /> One-Click Book Generation
-                          </h4>
-                          <p className="text-xs text-muted-foreground mb-3">
-                            Enter a topic and generate a complete book with chapters, content, and polish.
-                          </p>
-                          <div className="space-y-3">
-                            <div>
-                              <Label>What's your book about?</Label>
-                              <Textarea
-                                value={quickTopic}
-                                onChange={(e) => setQuickTopic(e.target.value)}
-                                placeholder="e.g., 'A stroke survivor's journey to 90% recovery through innovative neuroplasticity exercises and mindset shifts'"
-                                className="min-h-[80px]"
-                                data-testid="textarea-quick-topic"
-                              />
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-2">
-                              <div>
-                                <Label className="text-xs">Genre</Label>
-                                <Select value={selectedGenre} onValueChange={setSelectedGenre}>
-                                  <SelectTrigger data-testid="select-genre">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {genres.map((g) => (
-                                      <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div className="flex items-end gap-2">
-                                <div className="flex items-center gap-2">
-                                  <Switch 
-                                    checked={isChildrensBook}
-                                    onCheckedChange={setIsChildrensBook}
-                                    data-testid="switch-childrens"
-                                  />
-                                  <Label className="text-xs">Children's Book</Label>
-                                </div>
-                              </div>
-                            </div>
-                            
-                            <div>
-                              <Label className="text-xs">Author Voice (optional)</Label>
-                              <Input
-                                value={authorVoice}
-                                onChange={(e) => setAuthorVoice(e.target.value)}
-                                placeholder="e.g., 'Warm and encouraging, with humor'"
-                                data-testid="input-author-voice"
-                              />
-                            </div>
-                            
-                            {isQuickGenerating && generationProgress > 0 && (
-                              <div className="space-y-1">
-                                <Progress value={generationProgress} />
-                                <p className="text-xs text-muted-foreground text-center">
-                                  {generationProgress < 50 ? 'Creating outline...' : 'Generating content...'}
-                                </p>
-                              </div>
-                            )}
-                            
-                            <div className="flex gap-2">
-                              <Button 
-                                onClick={performKeywordResearch}
-                                variant="outline"
-                                size="sm"
-                                disabled={isResearchingKeywords || !quickTopic}
-                                className="flex-1"
-                                data-testid="button-keyword-research"
-                              >
-                                {isResearchingKeywords ? <RefreshCw className="w-3 h-3 animate-spin mr-1" /> : <Target className="w-3 h-3 mr-1" />}
-                                Research Keywords
-                              </Button>
-                              <Button 
-                                onClick={quickGenerateBook}
-                                disabled={isQuickGenerating || !quickTopic}
-                                className="flex-1"
-                                data-testid="button-quick-generate"
-                              >
-                                {isQuickGenerating ? <RefreshCw className="w-3 h-3 animate-spin mr-1" /> : <Sparkles className="w-3 h-3 mr-1" />}
-                                Generate Outline
-                              </Button>
-                            </div>
-                          </div>
+                  <ResizableHandle withHandle />
+
+                  {/* Right Panel - Live Manuscript Editor (60%) */}
+                  <ResizablePanel defaultSize={60} minSize={30}>
+                    <div className="flex flex-col h-full bg-background">
+                      {/* Header with Publication Readiness */}
+                      <div className="p-4 border-b">
+                        <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
+                          <h3 className="font-semibold text-lg flex items-center gap-2">
+                            <FileText className="w-5 h-5 text-primary" /> Live Manuscript
+                          </h3>
+                          {(() => {
+                            const readiness = calculatePublicationReadiness();
+                            return readiness.isReady ? (
+                              <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+                                <CheckCircle className="w-3 h-3 mr-1" /> Ready for Publication
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="border-orange-500/30 text-orange-400">
+                                {readiness.score}% Complete
+                              </Badge>
+                            );
+                          })()}
                         </div>
                         
-                        {/* Keyword Research Results */}
-                        {keywordResearch && (
-                          <div className="bg-muted/50 rounded-lg p-3 space-y-2">
-                            <h5 className="font-medium text-xs flex items-center gap-1">
-                              <Target className="w-3 h-3" /> Keyword Research
-                            </h5>
-                            {keywordResearch.primary && (
-                              <div>
-                                <Label className="text-xs text-muted-foreground">Primary Keywords</Label>
-                                <div className="flex flex-wrap gap-1 mt-1">
-                                  {keywordResearch.primary.slice(0, 7).map((kw: string, i: number) => (
-                                    <Badge key={i} variant="secondary" className="text-xs">{kw}</Badge>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                            {keywordResearch.hooks && (
-                              <div>
-                                <Label className="text-xs text-muted-foreground">Title Ideas</Label>
-                                <div className="space-y-1 mt-1">
-                                  {keywordResearch.hooks.slice(0, 3).map((hook: string, i: number) => (
-                                    <p key={i} className="text-xs bg-background rounded px-2 py-1 cursor-pointer hover:bg-primary/10"
-                                      onClick={() => setBookTitle(hook)}
-                                    >{hook}</p>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        
-                        {/* Generated Outline Preview */}
-                        {generatedOutline && (
-                          <div className="bg-muted/50 rounded-lg p-3 space-y-2">
-                            <h5 className="font-medium text-sm">{generatedOutline.title}</h5>
-                            <p className="text-xs text-muted-foreground">{generatedOutline.subtitle}</p>
-                            <p className="text-xs italic">"{generatedOutline.hook}"</p>
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              <Button onClick={generateAllChapters} disabled={isQuickGenerating} size="sm" className="flex-1">
-                                <Wand2 className="w-3 h-3 mr-1" /> Generate All Chapters
-                              </Button>
-                              <Button onClick={() => setCurrentStep(2)} variant="outline" size="sm">
-                                <Edit3 className="w-3 h-3 mr-1" /> Edit Outline
-                              </Button>
-                              <Button 
-                                onClick={openInGoogleDocs} 
-                                disabled={isCreatingGoogleDoc} 
-                                variant="outline" 
-                                size="sm"
-                                data-testid="button-open-google-docs"
-                              >
-                                {isCreatingGoogleDoc ? (
-                                  <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                                ) : (
-                                  <ExternalLink className="w-3 h-3 mr-1" />
-                                )}
-                                Edit in Google Docs
-                              </Button>
-                            </div>
-                            {googleDocUrl && (
-                              <div className="mt-2 text-xs">
-                                <a 
-                                  href={googleDocUrl} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer" 
-                                  className="text-primary hover:underline flex items-center gap-1"
-                                  data-testid="link-google-doc"
-                                >
-                                  <ExternalLink className="w-3 h-3" /> Open saved Google Doc
-                                </a>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        
-                        <Separator />
-                      </>
-                    )}
-                    
-                    {/* Standard Mode - Book Details */}
-                    <div>
-                      <Label>Book Title *</Label>
-                      <Input
-                        value={bookTitle}
-                        onChange={(e) => setBookTitle(e.target.value)}
-                        placeholder="My Recovery Story"
-                        data-testid="input-book-title"
-                      />
-                    </div>
-                    <div>
-                      <Label>Subtitle (Optional)</Label>
-                      <Input
-                        value={bookSubtitle}
-                        onChange={(e) => setBookSubtitle(e.target.value)}
-                        placeholder="A Journey of Hope and Healing"
-                        data-testid="input-book-subtitle"
-                      />
-                    </div>
-                    <div>
-                      <Label>Genre</Label>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2 mt-2">
-                        {genres.map((g) => {
-                          const Icon = g.icon;
+                        {/* Publication Readiness Progress */}
+                        {(() => {
+                          const readiness = calculatePublicationReadiness();
                           return (
-                            <button
-                              key={g.value}
-                              onClick={() => setSelectedGenre(g.value)}
-                              className={`p-2 sm:p-2.5 rounded-lg border-2 flex items-center gap-2 transition-all hover-elevate min-h-[44px]
-                                ${selectedGenre === g.value ? 'border-primary bg-primary/10' : 'border-border'}`}
-                              data-testid={`button-genre-${g.value}`}
-                            >
-                              <Icon className={`w-4 h-4 flex-shrink-0 ${selectedGenre === g.value ? 'text-primary' : ''}`} />
-                              <span className="text-xs font-medium truncate">{g.label}</span>
-                            </button>
+                            <div className="space-y-3">
+                              <div className="space-y-1">
+                                <div className="flex justify-between text-xs text-muted-foreground">
+                                  <span>Publication Readiness</span>
+                                  <span>{readiness.score}%</span>
+                                </div>
+                                <Progress value={readiness.score} className="h-2" />
+                              </div>
+                              
+                              {/* Checklist Badges */}
+                              <div className="flex flex-wrap gap-2">
+                                <Badge 
+                                  variant={readiness.wordCount >= 10000 ? "default" : "secondary"}
+                                  className="text-xs"
+                                >
+                                  {readiness.wordCount >= 10000 ? <CheckCircle className="w-3 h-3 mr-1" /> : <AlertCircle className="w-3 h-3 mr-1" />}
+                                  {readiness.wordCount.toLocaleString()} words
+                                </Badge>
+                                <Badge 
+                                  variant={readiness.chapterCount >= 3 ? "default" : "secondary"}
+                                  className="text-xs"
+                                >
+                                  {readiness.chapterCount >= 3 ? <CheckCircle className="w-3 h-3 mr-1" /> : <AlertCircle className="w-3 h-3 mr-1" />}
+                                  {readiness.chapterCount} chapters
+                                </Badge>
+                                <Badge 
+                                  variant={readiness.hasFrontMatter ? "default" : "secondary"}
+                                  className="text-xs"
+                                >
+                                  {readiness.hasFrontMatter ? <CheckCircle className="w-3 h-3 mr-1" /> : <AlertCircle className="w-3 h-3 mr-1" />}
+                                  Front Matter
+                                </Badge>
+                                <Badge 
+                                  variant={readiness.hasBackMatter ? "default" : "secondary"}
+                                  className="text-xs"
+                                >
+                                  {readiness.hasBackMatter ? <CheckCircle className="w-3 h-3 mr-1" /> : <AlertCircle className="w-3 h-3 mr-1" />}
+                                  Back Matter
+                                </Badge>
+                              </div>
+                              
+                              {/* Toggle Book Details Button */}
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => setShowBookDetailsPanel(!showBookDetailsPanel)}
+                                className="w-full"
+                                data-testid="button-toggle-book-details"
+                              >
+                                <BookOpen className="w-4 h-4 mr-2" />
+                                {showBookDetailsPanel ? 'Hide' : 'Show'} Book Details
+                              </Button>
+                            </div>
                           );
-                        })}
+                        })()}
                       </div>
-                    </div>
-                    <div>
-                      <Label>Target Audience</Label>
-                      <Input
-                        value={targetAudience}
-                        onChange={(e) => setTargetAudience(e.target.value)}
-                        placeholder="Stroke survivors, caregivers..."
-                        data-testid="input-target-audience"
-                      />
-                    </div>
-                    <div>
-                      <Label>Brief Description</Label>
-                      <Textarea
-                        value={bookDescription}
-                        onChange={(e) => setBookDescription(e.target.value)}
-                        placeholder="What is your book about? What message do you want to share?"
-                        className="min-h-[100px]"
-                        data-testid="textarea-description"
-                      />
-                    </div>
-                    
-                    {/* Manuscript Preview */}
-                    {uploadedContent && (
-                      <div>
-                        <Label>Manuscript Preview</Label>
-                        <div className="border rounded-lg p-3 bg-muted/50 max-h-[150px] overflow-y-auto">
-                          <p className="text-xs text-muted-foreground font-mono whitespace-pre-wrap">
-                            {uploadedContent.substring(0, 500)}
-                            {uploadedContent.length > 500 && '...'}
-                          </p>
+                      
+                      {/* Book Details Panel (Collapsible) */}
+                      {showBookDetailsPanel && (
+                        <div className="p-4 border-b bg-muted/30 space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <Label className="text-xs">Book Title *</Label>
+                              <Input
+                                value={bookTitle}
+                                onChange={(e) => setBookTitle(e.target.value)}
+                                placeholder="My Book Title"
+                                data-testid="input-book-title-panel"
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-xs">Genre</Label>
+                              <Select value={selectedGenre} onValueChange={setSelectedGenre}>
+                                <SelectTrigger data-testid="select-genre-panel">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {genres.map((g) => (
+                                    <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          <div>
+                            <Label className="text-xs">Target Audience</Label>
+                            <Input
+                              value={targetAudience}
+                              onChange={(e) => setTargetAudience(e.target.value)}
+                              placeholder="Who is this book for?"
+                              data-testid="input-audience-panel"
+                            />
+                          </div>
                         </div>
-                        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                          <span>{uploadedContent.split(/\s+/).length.toLocaleString()} words</span>
-                          <span>~{Math.ceil(uploadedContent.split(/\s+/).length / 250)} pages</span>
+                      )}
+                      
+                      {/* Professional Editor */}
+                      <div className="flex-1 min-h-0 overflow-auto">
+                        <ProfessionalEditor
+                          content={manuscriptEditorContent}
+                          onChange={setManuscriptEditorContent}
+                          placeholder="Start writing your manuscript here. Add chapters, front matter (introduction, preface), and back matter (acknowledgments, about the author) to increase your publication readiness score..."
+                          showWordCount={true}
+                        />
+                      </div>
+                      
+                      {/* Footer Actions */}
+                      <div className="p-4 border-t flex items-center justify-between gap-2">
+                        <div className="text-xs text-muted-foreground">
+                          {(() => {
+                            const readiness = calculatePublicationReadiness();
+                            return `${readiness.wordCount.toLocaleString()} words | ~${readiness.estimatedPages} pages`;
+                          })()}
                         </div>
-                      </div>
-                    )}
-
-                    {/* Quick Actions */}
-                    <Separator />
-                    <div className="space-y-2">
-                      <Label>Quick Actions</Label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="min-h-[44px] justify-start sm:justify-center"
-                          onClick={() => {
-                            setChatInput("What are the main strengths of my manuscript?");
-                            sendChatMessage();
-                          }}
-                          disabled={!uploadedContent || isChatLoading}
-                        >
-                          <Sparkles className="w-3 h-3 mr-1" /> Analyze Strengths
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="min-h-[44px] justify-start sm:justify-center"
-                          onClick={() => {
-                            setChatInput("Suggest a chapter outline for my book");
-                            sendChatMessage();
-                          }}
-                          disabled={!uploadedContent || isChatLoading}
-                        >
-                          <Layers className="w-3 h-3 mr-1" /> Suggest Outline
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="min-h-[44px] justify-start sm:justify-center"
-                          onClick={() => {
-                            setChatInput("How can I improve the pacing and flow?");
-                            sendChatMessage();
-                          }}
-                          disabled={!uploadedContent || isChatLoading}
-                        >
-                          <Target className="w-3 h-3 mr-1" /> Improve Pacing
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="min-h-[44px] justify-start sm:justify-center"
-                          onClick={() => {
-                            setChatInput("What's missing that would make this book stronger?");
-                            sendChatMessage();
-                          }}
-                          disabled={!uploadedContent || isChatLoading}
-                        >
-                          <Lightbulb className="w-3 h-3 mr-1" /> Find Gaps
+                        <Button onClick={() => setCurrentStep(2)} disabled={!bookTitle} data-testid="button-next-step-1">
+                          Next: Structure & Outline
+                          <ChevronRight className="w-4 h-4 ml-2" />
                         </Button>
                       </div>
                     </div>
-                    
-                    <div className="flex justify-end pt-4">
-                      <Button onClick={() => setCurrentStep(2)} disabled={!bookTitle} data-testid="button-next-step-1">
-                        Next: Structure & Outline
-                        <ChevronRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                  </ResizablePanel>
+                </ResizablePanelGroup>
               </div>
             </div>
           )}
