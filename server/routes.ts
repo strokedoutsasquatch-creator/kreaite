@@ -8795,9 +8795,21 @@ Return the rhyming version only, no explanation.`;
         return res.status(404).json({ message: "Profile not found" });
       }
       
+      const allowedFields = [
+        'penName', 'isDefault', 'bio', 'shortBio', 'photoUrl',
+        'websiteUrl', 'socialLinks', 'genres', 'otherBooks', 'publisherInfo'
+      ];
+      
+      const updateData: any = { updatedAt: new Date() };
+      for (const field of allowedFields) {
+        if (req.body[field] !== undefined) {
+          updateData[field] = req.body[field];
+        }
+      }
+      
       const [updated] = await db.update(authorProfiles)
-        .set({ ...req.body, updatedAt: new Date() })
-        .where(eq(authorProfiles.id, profileId))
+        .set(updateData)
+        .where(and(eq(authorProfiles.id, profileId), eq(authorProfiles.userId, userId)))
         .returning();
       res.json(updated);
     } catch (error: any) {

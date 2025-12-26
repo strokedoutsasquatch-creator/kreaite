@@ -34,6 +34,11 @@ KreAIte.xyz is an ultra-premium AI-powered creator platform with 6 professional 
 - **Conversation System** - Cross-studio AI chat with session history and action support
 - **Manuscript-to-Soundtrack** - Analyze book emotional arc and generate companion soundtrack
 - **Viral Features** - Affiliate system, success stories, creator leaderboard, watermarks
+- **Book Projects** - Save/resume book projects with autosave, chapter management, and full workflow persistence
+- **Book Preview** - Real-time paginated preview with spread view, thumbnails, zoom controls
+- **Manuscript Analysis** - AI-powered structure detection, chapter extraction, publication readiness scoring (0-100)
+- **Image Placement** - Auto/manual/hybrid modes for positioning images within manuscripts
+- **Author Storefronts** - KDP Author Central-style profiles with public storefront, social links, achievements
 
 ### Platform Model:
 - **Centralized at KreAIte.xyz** - Single platform with creator tools

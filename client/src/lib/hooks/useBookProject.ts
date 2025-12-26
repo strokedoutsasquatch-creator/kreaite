@@ -76,8 +76,9 @@ export function useBookProject(initialProjectId?: number): UseBookProjectReturn 
   const [pendingChanges, setPendingChanges] = useState<Partial<BookProject>>({});
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const autosaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isSavingRef = useRef(false);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const saveLockRef = useRef(false);
+  const pendingUpdateRef = useRef<Partial<BookProject> | null>(null);
 
   const { data: projects = [], isLoading: isLoadingProjects } = useQuery<BookProject[]>({
     queryKey: ['/api/book-projects'],
@@ -95,10 +96,12 @@ export function useBookProject(initialProjectId?: number): UseBookProjectReturn 
       const response = await apiRequest('POST', '/api/book-projects', data);
       return response.json();
     },
-    onSuccess: (newProject) => {
+    onSuccess: (newProject: BookProject) => {
       queryClient.invalidateQueries({ queryKey: ['/api/book-projects'] });
+      setPendingChanges({});
       setCurrentProjectId(newProject.id);
-      setLastSaved(new Date());
+      setLastSaved(new Date(newProject.createdAt));
+      setSaveError(null);
     },
   });
 
@@ -131,11 +134,16 @@ export function useBookProject(initialProjectId?: number): UseBookProjectReturn 
   });
 
   const performSave = useCallback(async () => {
-    if (!currentProjectId || Object.keys(pendingChanges).length === 0 || isSavingRef.current) {
+    if (!currentProjectId || Object.keys(pendingChanges).length === 0) {
       return;
     }
 
-    isSavingRef.current = true;
+    if (saveLockRef.current) {
+      pendingUpdateRef.current = { ...pendingChanges };
+      return;
+    }
+
+    saveLockRef.current = true;
     const changesToSave = { ...pendingChanges };
     setPendingChanges({});
 
@@ -144,15 +152,21 @@ export function useBookProject(initialProjectId?: number): UseBookProjectReturn 
     } catch (error) {
       setPendingChanges((prev) => ({ ...prev, ...changesToSave }));
     } finally {
-      isSavingRef.current = false;
+      saveLockRef.current = false;
+      if (pendingUpdateRef.current) {
+        const pending = pendingUpdateRef.current;
+        pendingUpdateRef.current = null;
+        setPendingChanges((prev) => ({ ...prev, ...pending }));
+        scheduleSave();
+      }
     }
   }, [currentProjectId, pendingChanges, updateMutation]);
 
   const scheduleSave = useCallback(() => {
-    if (autosaveTimeoutRef.current) {
-      clearTimeout(autosaveTimeoutRef.current);
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
     }
-    autosaveTimeoutRef.current = setTimeout(() => {
+    debounceTimerRef.current = setTimeout(() => {
       performSave();
     }, AUTOSAVE_DELAY);
   }, [performSave]);
@@ -163,12 +177,18 @@ export function useBookProject(initialProjectId?: number): UseBookProjectReturn 
   }, [scheduleSave]);
 
   const saveNow = useCallback(async () => {
-    if (autosaveTimeoutRef.current) {
-      clearTimeout(autosaveTimeoutRef.current);
-      autosaveTimeoutRef.current = null;
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
     }
+    
+    if (saveLockRef.current) {
+      pendingUpdateRef.current = { ...pendingChanges };
+      return;
+    }
+    
     await performSave();
-  }, [performSave]);
+  }, [performSave, pendingChanges]);
 
   const createProject = useCallback(async (data: { title: string; genre?: string }) => {
     const newProject = await createMutation.mutateAsync(data);
@@ -176,14 +196,15 @@ export function useBookProject(initialProjectId?: number): UseBookProjectReturn 
   }, [createMutation]);
 
   const loadProject = useCallback((id: number) => {
-    if (autosaveTimeoutRef.current) {
-      clearTimeout(autosaveTimeoutRef.current);
-      autosaveTimeoutRef.current = null;
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
     }
     if (currentProjectId && Object.keys(pendingChanges).length > 0) {
       performSave();
     }
     setPendingChanges({});
+    pendingUpdateRef.current = null;
     setCurrentProjectId(id);
   }, [currentProjectId, pendingChanges, performSave]);
 
@@ -192,14 +213,15 @@ export function useBookProject(initialProjectId?: number): UseBookProjectReturn 
   }, [deleteMutation]);
 
   const clearProject = useCallback(() => {
-    if (autosaveTimeoutRef.current) {
-      clearTimeout(autosaveTimeoutRef.current);
-      autosaveTimeoutRef.current = null;
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
     }
     if (currentProjectId && Object.keys(pendingChanges).length > 0) {
       performSave();
     }
     setPendingChanges({});
+    pendingUpdateRef.current = null;
     setCurrentProjectId(undefined);
     setLastSaved(null);
   }, [currentProjectId, pendingChanges, performSave]);
@@ -219,11 +241,16 @@ export function useBookProject(initialProjectId?: number): UseBookProjectReturn 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      if (autosaveTimeoutRef.current) {
-        clearTimeout(autosaveTimeoutRef.current);
-      }
     };
   }, [pendingChanges, currentProjectId]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (project?.lastEditedAt && !lastSaved) {
