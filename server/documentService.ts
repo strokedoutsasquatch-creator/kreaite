@@ -1,5 +1,6 @@
 import mammoth from 'mammoth';
-// @ts-ignore - pdf-parse has complex exports
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
 const pdfParse = require('pdf-parse');
 
 export interface ParsedDocument {
