@@ -191,3 +191,8 @@ export function LocaleProvider({ children }: LocaleProviderProps) {
 }
 
 export { LocaleContext };
+
+export function useT() {
+  const { t } = useLocaleContext();
+  return t;
+}
