@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import CreatorHeader from "@/components/CreatorHeader";
 import Footer from "@/components/Footer";
@@ -16,6 +16,14 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useBookProject, BookProject } from "@/lib/hooks/useBookProject";
 import {
   Select,
   SelectContent,
@@ -97,6 +105,11 @@ import {
   Zap,
   Loader2,
   ExternalLink,
+  Clock,
+  FolderOpen,
+  Pencil,
+  ChevronDown,
+  LogOut,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -270,6 +283,26 @@ export default function BookStudio() {
   const { isAuthenticated, user } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [showProjectSelector, setShowProjectSelector] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editingTitleValue, setEditingTitleValue] = useState("");
+  
+  const {
+    project,
+    projects,
+    isLoading: isLoadingProject,
+    isLoadingProjects,
+    isSaving,
+    lastSaved,
+    saveError,
+    updateProject,
+    createProject,
+    loadProject,
+    deleteProject,
+    clearProject,
+    saveNow,
+  } = useBookProject();
   
   const [currentStep, setCurrentStep] = useState(1);
   const [uploadedContent, setUploadedContent] = useState("");
@@ -526,6 +559,86 @@ export default function BookStudio() {
   // Live manuscript editor state
   const [manuscriptEditorContent, setManuscriptEditorContent] = useState("");
   const [showBookDetailsPanel, setShowBookDetailsPanel] = useState(false);
+  
+  // Restore state from loaded project
+  useEffect(() => {
+    if (project) {
+      if (project.title && project.title !== bookTitle) setBookTitle(project.title);
+      if (project.subtitle) setBookSubtitle(project.subtitle);
+      if (project.genre) setSelectedGenre(project.genre);
+      if (project.targetAudience) setTargetAudience(project.targetAudience);
+      if (project.currentStep) setCurrentStep(project.currentStep);
+      if (project.manuscriptHtml) setManuscriptEditorContent(project.manuscriptHtml);
+      if (project.coverImageUrl) setCoverImage(project.coverImageUrl);
+      if (project.trimSize) setTrimSize(project.trimSize);
+      if (project.fontSize) setFontSize(project.fontSize);
+      if (project.fontFamily) setSelectedFont(project.fontFamily);
+      if (project.authorName) setAuthorName(project.authorName);
+    }
+  }, [project?.id]);
+  
+  // Debounced autosave for manuscript content changes
+  const debouncedAutosave = useCallback((content: string) => {
+    if (project) {
+      const wordCount = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().split(/\s+/).filter(Boolean).length;
+      const pageCount = Math.ceil(wordCount / 250);
+      updateProject({ 
+        manuscriptHtml: content, 
+        manuscriptText: content.replace(/<[^>]*>/g, ' ').trim(),
+        wordCount,
+        pageCount 
+      });
+    }
+  }, [project, updateProject]);
+  
+  // Save on step changes
+  useEffect(() => {
+    if (project && currentStep !== project.currentStep) {
+      updateProject({ currentStep });
+    }
+  }, [currentStep, project, updateProject]);
+  
+  // Handle creating new project
+  const handleCreateNewProject = async () => {
+    try {
+      const newProject = await createProject({ 
+        title: bookTitle || "Untitled Book", 
+        genre: selectedGenre 
+      });
+      toast({ title: "Project Created", description: "Your new book project has been created" });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to create project", variant: "destructive" });
+    }
+  };
+  
+  // Handle loading a project
+  const handleLoadProject = (projectId: number) => {
+    loadProject(projectId);
+    setShowProjectSelector(false);
+    toast({ title: "Project Loaded", description: "Your project has been restored" });
+  };
+  
+  // Handle title edit
+  const handleTitleSave = () => {
+    if (editingTitleValue.trim()) {
+      setBookTitle(editingTitleValue.trim());
+      if (project) {
+        updateProject({ title: editingTitleValue.trim() });
+      }
+    }
+    setIsEditingTitle(false);
+  };
+  
+  // Format last saved time
+  const formatLastSaved = (date: Date | null) => {
+    if (!date) return null;
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    if (diff < 60000) return "Just now";
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+    return date.toLocaleDateString();
+  };
   
   // Image workflow state (Step 4)
   const [activeImageTab, setActiveImageTab] = useState("generate");
@@ -1603,6 +1716,152 @@ Your journey to healing starts here.`);
               <p className="text-xs sm:text-base text-muted-foreground hidden sm:block">Professional book creation from manuscript to KDP-ready</p>
             </div>
           </div>
+
+          {/* Project Management Header Bar */}
+          <Card className="mb-6">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  {isEditingTitle ? (
+                    <div className="flex items-center gap-2 flex-1">
+                      <Input
+                        value={editingTitleValue}
+                        onChange={(e) => setEditingTitleValue(e.target.value)}
+                        onBlur={handleTitleSave}
+                        onKeyDown={(e) => e.key === 'Enter' && handleTitleSave()}
+                        className="max-w-xs"
+                        autoFocus
+                        data-testid="input-project-title"
+                      />
+                      <Button size="sm" onClick={handleTitleSave} data-testid="button-save-title">
+                        <Check className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 min-w-0">
+                      <BookOpen className="w-5 h-5 text-primary flex-shrink-0" />
+                      <span 
+                        className="font-semibold text-foreground truncate cursor-pointer hover:text-primary transition-colors"
+                        onClick={() => {
+                          setEditingTitleValue(bookTitle || "Untitled Book");
+                          setIsEditingTitle(true);
+                        }}
+                        data-testid="text-project-title"
+                      >
+                        {bookTitle || "Untitled Book"}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 flex-shrink-0"
+                        onClick={() => {
+                          setEditingTitleValue(bookTitle || "Untitled Book");
+                          setIsEditingTitle(true);
+                        }}
+                        data-testid="button-edit-title"
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  )}
+                  
+                  {/* Save Status Indicator */}
+                  <div className="flex items-center gap-2 text-sm flex-shrink-0">
+                    {isSaving ? (
+                      <Badge variant="outline" className="gap-1">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        Saving...
+                      </Badge>
+                    ) : saveError ? (
+                      <Badge variant="destructive" className="gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        Error
+                      </Badge>
+                    ) : lastSaved ? (
+                      <Badge variant="outline" className="gap-1 text-muted-foreground">
+                        <Clock className="w-3 h-3" />
+                        {formatLastSaved(lastSaved)}
+                      </Badge>
+                    ) : null}
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {/* My Projects Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" data-testid="button-my-projects">
+                        <FolderOpen className="w-4 h-4 mr-2" />
+                        My Projects
+                        <ChevronDown className="w-4 h-4 ml-2" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-64">
+                      {isLoadingProjects ? (
+                        <DropdownMenuItem disabled>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Loading projects...
+                        </DropdownMenuItem>
+                      ) : projects.length === 0 ? (
+                        <DropdownMenuItem disabled>
+                          No projects yet
+                        </DropdownMenuItem>
+                      ) : (
+                        projects.slice(0, 10).map((p) => (
+                          <DropdownMenuItem
+                            key={p.id}
+                            onClick={() => handleLoadProject(p.id)}
+                            className="flex flex-col items-start gap-1"
+                            data-testid={`dropdown-project-${p.id}`}
+                          >
+                            <span className="font-medium truncate max-w-full">{p.title}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(p.lastEditedAt).toLocaleDateString()} • Step {p.currentStep || 1}
+                            </span>
+                          </DropdownMenuItem>
+                        ))
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          clearProject();
+                          setBookTitle("");
+                          setManuscriptEditorContent("");
+                          setCurrentStep(1);
+                        }}
+                        data-testid="dropdown-new-project"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        New Project
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  
+                  {/* Save Now / Create Project Button */}
+                  {project ? (
+                    <Button 
+                      size="sm" 
+                      onClick={() => saveNow()}
+                      disabled={isSaving}
+                      data-testid="button-save-project"
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      Save
+                    </Button>
+                  ) : (
+                    <Button 
+                      size="sm"
+                      onClick={handleCreateNewProject}
+                      data-testid="button-create-project"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Project
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           <div className="flex items-center justify-start sm:justify-between mb-6 sm:mb-8 overflow-x-auto pb-2 gap-1 sm:gap-0">
             {steps.map((s, i) => (
