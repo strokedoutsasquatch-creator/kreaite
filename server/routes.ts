@@ -1218,7 +1218,8 @@ Be encouraging but honest. This is about helping them succeed.`;
         content: msg.content
       }));
       
-      const result = await generateCoachResponse(userPrompt, history);
+      // Use creative assistant (AI Writing Partner) for manuscript reviews, not Sasquatch
+      const result = await generateCoachResponse(userPrompt, history, "creative assistant");
       res.json({ response: result.response });
     } catch (error) {
       console.error("Error in book chat analysis:", error);

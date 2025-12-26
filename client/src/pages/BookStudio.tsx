@@ -545,70 +545,107 @@ export default function BookStudio() {
       return;
     }
     
-    const reader = new FileReader();
-    reader.onerror = () => {
-      toast({ 
-        title: "Upload Error", 
-        description: "Failed to read file. Please try again.",
-        variant: "destructive"
-      });
+    // Add user message with attachment immediately
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: "user",
+      content: `I've uploaded my manuscript: "${file.name}"`,
+      timestamp: new Date(),
+      hasAttachment: true,
+      attachmentName: file.name,
     };
-    reader.onload = async (e) => {
-      const content = e.target?.result as string;
+    setChatMessages(prev => [...prev, userMessage]);
+    setIsChatLoading(true);
+    
+    try {
+      let content = '';
+      const fileName = file.name.toLowerCase();
+      
+      // Check if file needs server-side parsing (Word docs, PDFs)
+      if (fileName.endsWith('.docx') || fileName.endsWith('.doc') || fileName.endsWith('.pdf')) {
+        // Read as ArrayBuffer and send to parser
+        const arrayBuffer = await file.arrayBuffer();
+        const bytes = new Uint8Array(arrayBuffer);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        const base64 = btoa(binary);
+        
+        // Parse via server
+        const parseResponse = await fetch('/api/doc-hub/parse', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            content: base64,
+            filename: file.name,
+            mimeType: file.type,
+          }),
+        });
+        
+        if (!parseResponse.ok) {
+          throw new Error('Failed to parse document');
+        }
+        
+        const parsed = await parseResponse.json();
+        content = parsed.content || '';
+        
+        if (!content || content.length === 0) {
+          throw new Error('Document appears to be empty');
+        }
+      } else {
+        // Plain text files - read directly
+        content = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onerror = () => reject(new Error('Failed to read file'));
+          reader.onload = (e) => resolve(e.target?.result as string || '');
+          reader.readAsText(file);
+        });
+      }
+      
       if (!content || content.length === 0) {
         toast({ 
           title: "Empty File", 
           description: "The file appears to be empty.",
           variant: "destructive"
         });
+        setIsChatLoading(false);
         return;
       }
+      
       setUploadedContent(content);
       setUploadedFileName(file.name);
       toast({ title: "File Uploaded", description: `${file.name} loaded successfully (${(file.size / 1024).toFixed(1)}KB)` });
       
-      // Add user message with attachment
-      const userMessage: ChatMessage = {
-        id: Date.now().toString(),
-        role: "user",
-        content: `I've uploaded my manuscript: "${file.name}"`,
-        timestamp: new Date(),
-        hasAttachment: true,
-        attachmentName: file.name,
-      };
-      setChatMessages(prev => [...prev, userMessage]);
-      
       // Auto-analyze the uploaded content
-      setIsChatLoading(true);
-      try {
-        const response = await apiRequest("POST", "/api/book/chat-analyze", {
-          content: content.substring(0, 10000),
-          fileName: file.name,
-          genre: selectedGenre,
-          isInitialAnalysis: true,
-        });
-        const data = await response.json();
-        
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: data.response || `I've received your manuscript "${file.name}" (${content.split(/\s+/).length.toLocaleString()} words). Let me analyze it...\n\n**Initial Observations:**\n- Word count: ${content.split(/\s+/).length.toLocaleString()} words\n- Estimated pages: ~${Math.ceil(content.split(/\s+/).length / 250)} pages\n\n**What I noticed:**\n1. The content has a personal, narrative voice\n2. There are opportunities to strengthen the structure\n3. Some sections could benefit from more specific details\n\n**Recommended Next Steps:**\n1. Define your target audience more specifically\n2. Create a clear chapter outline\n3. Identify the key emotional beats\n\nWould you like me to dive deeper into any of these areas? Or do you have specific questions about your manuscript?`,
-          timestamp: new Date(),
-        };
-        setChatMessages(prev => [...prev, assistantMessage]);
-      } catch (error) {
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: `I've received your manuscript "${file.name}" (${content.split(/\s+/).length.toLocaleString()} words).\n\n**Initial Analysis:**\n- Word count: ${content.split(/\s+/).length.toLocaleString()} words\n- Estimated pages: ~${Math.ceil(content.split(/\s+/).length / 250)} pages\n- Format: Text document\n\n**What would you like me to focus on?**\n1. Overall structure and pacing analysis\n2. Tone and voice consistency\n3. Chapter breakdown suggestions\n4. Specific section feedback\n\nJust ask me anything about your manuscript!`,
-          timestamp: new Date(),
-        };
-        setChatMessages(prev => [...prev, assistantMessage]);
-      } finally {
-        setIsChatLoading(false);
-      }
-    };
-    reader.readAsText(file);
+      const response = await apiRequest("POST", "/api/book/chat-analyze", {
+        content: content.substring(0, 10000),
+        fileName: file.name,
+        genre: selectedGenre,
+        isInitialAnalysis: true,
+      });
+      const data = await response.json();
+      
+      const assistantMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: data.response || `I've received your manuscript "${file.name}" (${content.split(/\s+/).length.toLocaleString()} words). Let me analyze it...\n\n**Initial Observations:**\n- Word count: ${content.split(/\s+/).length.toLocaleString()} words\n- Estimated pages: ~${Math.ceil(content.split(/\s+/).length / 250)} pages\n\n**What I noticed:**\n1. The content has a personal, narrative voice\n2. There are opportunities to strengthen the structure\n3. Some sections could benefit from more specific details\n\n**Recommended Next Steps:**\n1. Define your target audience more specifically\n2. Create a clear chapter outline\n3. Identify the key emotional beats\n\nWould you like me to dive deeper into any of these areas? Or do you have specific questions about your manuscript?`,
+        timestamp: new Date(),
+      };
+      setChatMessages(prev => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error("File upload error:", error);
+      const assistantMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: `I had trouble reading "${file.name}". This can happen with some document formats.\n\n**Please try one of these options:**\n1. Save your document as a .txt file and upload again\n2. Copy and paste your text directly into the chat\n3. If it's a PDF, make sure it contains selectable text (not scanned images)\n\nOnce I can read your content, I'll provide a thorough analysis.`,
+        timestamp: new Date(),
+      };
+      setChatMessages(prev => [...prev, assistantMessage]);
+    } finally {
+      setIsChatLoading(false);
+    }
   };
 
   // Scroll to bottom when new messages are added
