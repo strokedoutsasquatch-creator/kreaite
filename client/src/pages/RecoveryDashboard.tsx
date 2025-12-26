@@ -26,6 +26,7 @@ import {
   CheckCircle2, Target, Star, TrendingUp, Calendar, Heart, Zap, LogOut,
   Plus, UserPlus, DoorOpen, Smile, Activity
 } from "lucide-react";
+import RecoveryHeader from "@/components/RecoveryHeader";
 
 const motivationalQuotes = [
   "Your recovery is your superpower. Keep pushing.",
@@ -71,7 +72,7 @@ export default function RecoveryDashboard() {
 
   const checkinMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest("/api/recovery/checkin", { method: "POST", body: JSON.stringify(data) });
+      return apiRequest("POST", "/api/recovery/checkin", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/recovery/dashboard"] });
@@ -84,7 +85,7 @@ export default function RecoveryDashboard() {
 
   const habitLogMutation = useMutation({
     mutationFn: async (userHabitId: number) => {
-      return apiRequest(`/api/recovery/habits/${userHabitId}/log`, { method: "POST" });
+      return apiRequest("POST", `/api/recovery/habits/${userHabitId}/log`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/recovery/dashboard"] });
@@ -93,7 +94,7 @@ export default function RecoveryDashboard() {
 
   const createPodMutation = useMutation({
     mutationFn: async (data: { name: string; description: string; focusArea: string }) => {
-      return apiRequest("/api/pods", { method: "POST", body: JSON.stringify(data) });
+      return apiRequest("POST", "/api/pods", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user/pod"] });
@@ -111,7 +112,7 @@ export default function RecoveryDashboard() {
 
   const joinPodMutation = useMutation({
     mutationFn: async (podId: number) => {
-      return apiRequest(`/api/pods/${podId}/join`, { method: "POST" });
+      return apiRequest("POST", `/api/pods/${podId}/join`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user/pod"] });
@@ -125,7 +126,7 @@ export default function RecoveryDashboard() {
 
   const leavePodMutation = useMutation({
     mutationFn: async (podId: number) => {
-      return apiRequest(`/api/pods/${podId}/leave`, { method: "POST" });
+      return apiRequest("POST", `/api/pods/${podId}/leave`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user/pod"] });
@@ -170,29 +171,7 @@ export default function RecoveryDashboard() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <header className="sticky top-0 z-50 bg-black/95 border-b border-gray-800 backdrop-blur">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-3">
-              <div className="text-lg font-black tracking-tight text-white">RECOVERY COMMAND CENTER</div>
-            </Link>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-400" data-testid="text-user-name">
-                {user?.firstName || "Warrior"}
-              </span>
-              <Button 
-                variant="ghost"
-                size="sm"
-                onClick={() => window.location.href = '/api/logout'}
-                data-testid="button-logout"
-                className="text-gray-400 hover:text-white"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <RecoveryHeader />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <section className="mb-8">
@@ -387,7 +366,7 @@ export default function RecoveryDashboard() {
                   </div>
                 )}
                 
-                <Link href="/academy">
+                <Link href="/recovery/academy">
                   <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold" data-testid="button-continue-learning">
                     Continue Learning
                   </Button>
@@ -397,7 +376,7 @@ export default function RecoveryDashboard() {
               <div className="text-center py-8">
                 <Target className="h-12 w-12 text-gray-600 mx-auto mb-4" />
                 <p className="text-gray-400 mb-4">Start your personalized recovery journey</p>
-                <Link href="/builder">
+                <Link href="/recovery/builder">
                   <Button className="bg-orange-500 hover:bg-orange-600 text-white font-bold" data-testid="button-start-program">
                     Build Your Program
                   </Button>
@@ -468,7 +447,7 @@ export default function RecoveryDashboard() {
             ) : (
               <div className="text-center py-4">
                 <p className="text-gray-400 mb-3">No habits tracked yet</p>
-                <Link href="/builder">
+                <Link href="/recovery/builder">
                   <Button variant="outline" className="border-orange-500 text-orange-500 hover:bg-orange-500/10" data-testid="button-add-habit">
                     Add New Habit
                   </Button>
@@ -792,7 +771,7 @@ export default function RecoveryDashboard() {
               </Card>
             </Link>
             
-            <Link href="/academy">
+            <Link href="/recovery/academy">
               <Card className="bg-gray-900 border-gray-800 p-4 hover-elevate cursor-pointer" data-testid="action-academy">
                 <BookOpen className="h-8 w-8 text-orange-500 mb-2" />
                 <div className="font-semibold text-white">Academy</div>

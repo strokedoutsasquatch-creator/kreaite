@@ -24,6 +24,7 @@ import {
   Crown,
   Sparkles,
 } from "lucide-react";
+import RecoveryHeader from "@/components/RecoveryHeader";
 
 const curriculumParts = [
   {
@@ -159,6 +160,7 @@ export default function RecoveryUniversity() {
 
   return (
     <div className="min-h-screen bg-background">
+      <RecoveryHeader />
       <section className="py-16 px-4 border-b border-border">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row gap-8 items-start">

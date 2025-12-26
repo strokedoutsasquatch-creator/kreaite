@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import CreatorHeader from "@/components/CreatorHeader";
+import RecoveryHeader from "@/components/RecoveryHeader";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -609,7 +609,7 @@ function ResultsSection({ formData, enrollmentData }: { formData: FormData; enro
                   {getTierDescription(enrollmentData.tier)}
                 </p>
               </div>
-              <Link href="/recovery">
+              <Link href="/recovery/dashboard">
                 <Button size="lg" className="gap-2 mt-2" data-testid="button-go-to-dashboard">
                   Go to Recovery Dashboard
                   <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -743,7 +743,7 @@ function ResultsSection({ formData, enrollmentData }: { formData: FormData; enro
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
-              <Link href="/academy">
+              <Link href="/recovery/academy">
                 <Button size="lg" className="gap-2" data-testid="button-access-academy">
                   Access Academy
                   <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -888,7 +888,7 @@ export default function Builder() {
 
   return (
     <div className="min-h-screen bg-background">
-      <CreatorHeader />
+      <RecoveryHeader />
       
       <main>
         <section className="relative py-16 md:py-20 overflow-hidden" aria-labelledby="builder-heading">

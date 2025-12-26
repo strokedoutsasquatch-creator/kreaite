@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import CreatorHeader from "@/components/CreatorHeader";
+import RecoveryHeader from "@/components/RecoveryHeader";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -317,7 +317,7 @@ export default function Academy() {
 
   return (
     <div className="min-h-screen bg-background">
-      <CreatorHeader />
+      <RecoveryHeader />
       
       <main>
         <section 

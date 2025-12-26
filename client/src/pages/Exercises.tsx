@@ -21,6 +21,7 @@ import {
   Star, Play, Lock, Zap, TrendingUp, Award, Flame, ChevronRight,
   Loader2, BarChart3, Clock
 } from "lucide-react";
+import RecoveryHeader from "@/components/RecoveryHeader";
 
 const CATEGORIES = [
   { id: "upper_extremity", name: "Upper Extremity", icon: Hand, description: "Hand, arm, and shoulder exercises", color: "text-primary" },
@@ -144,6 +145,7 @@ export default function Exercises() {
 
   return (
     <div className="min-h-screen bg-black text-white">
+      <RecoveryHeader />
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2" data-testid="text-exercises-title">

@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2 } from "lucide-react";
-import CreatorHeader from "@/components/CreatorHeader";
+import RecoveryHeader from "@/components/RecoveryHeader";
 import HeroSection from "@/components/HeroSection";
 import RecoveryByDesign from "@/components/RecoveryByDesign";
 import TestimonyVideo from "@/components/TestimonyVideo";
@@ -25,7 +25,7 @@ export default function Landing() {
   // Redirect authenticated users to dashboard
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      setLocation('/dashboard');
+      setLocation('/recovery/dashboard');
     }
   }, [isLoading, isAuthenticated, setLocation]);
 
@@ -51,7 +51,7 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-black">
-      <CreatorHeader />
+      <RecoveryHeader />
       <main>
         <HeroSection />
         <RecoveryByDesign />
