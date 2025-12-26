@@ -87,20 +87,44 @@ const studios: StudioCard[] = [
 
 const ultraPremiumTools = [
   {
+    id: "podcast-studio",
+    name: "Podcast Studio",
+    description: "Record, edit, and publish professional podcasts",
+    icon: Mic2,
+    route: "/podcast-studio",
+    color: "from-amber-500 to-orange-600"
+  },
+  {
+    id: "avatar-studio",
+    name: "AI Avatar Studio",
+    description: "Create talking head videos with D-ID",
+    icon: Users,
+    route: "/avatar-studio",
+    color: "from-purple-500 to-pink-600"
+  },
+  {
+    id: "templates",
+    name: "Template Marketplace",
+    description: "Buy and sell templates for all studios",
+    icon: Layers,
+    route: "/templates",
+    color: "from-green-500 to-emerald-600"
+  },
+  {
     id: "voice-library",
     name: "Voice Cloning Library",
     description: "Create and reuse AI voices across all studios",
-    icon: Mic2,
+    icon: Headphones,
     route: "/voice-library",
-    color: "from-amber-500 to-orange-600"
+    color: "from-teal-500 to-cyan-600"
   },
   {
     id: "audiobook-factory",
     name: "Audiobook Factory",
     description: "Book → TTS narration → mastering pipeline",
-    icon: Headphones,
+    icon: FileAudio,
     route: "/audiobook-factory",
-    color: "from-teal-500 to-cyan-600"
+    color: "from-indigo-500 to-violet-600"
   },
   {
     id: "dj-studio",

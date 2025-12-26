@@ -61,6 +61,9 @@ import AffiliateDashboard from "@/pages/AffiliateDashboard";
 import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import ModerationDashboard from "@/pages/ModerationDashboard";
+import PodcastStudioPage from "@/pages/PodcastStudioPage";
+import AvatarStudioPage from "@/pages/AvatarStudioPage";
+import TemplateMarketplacePage from "@/pages/TemplateMarketplacePage";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 import CreatorScribeWidget from "@/components/CreatorScribeWidget";
@@ -259,6 +262,21 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/stories/:slug" component={StoryView} />
+      <Route path="/podcast-studio">
+        <ProtectedRoute>
+          <PodcastStudioPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/avatar-studio">
+        <ProtectedRoute>
+          <AvatarStudioPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/templates">
+        <ProtectedRoute>
+          <TemplateMarketplacePage />
+        </ProtectedRoute>
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
