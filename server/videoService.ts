@@ -3,9 +3,362 @@
  * Creates movie scenes, music videos, and AI films
  * 
  * Uses: Google Veo, Grok Imagine, xAI
+ * Vertex AI Veo for high-quality video generation
  */
 
 const XAI_BASE_URL = 'https://api.x.ai/v1';
+const VERTEX_AI_LOCATION = "us-central1";
+const VEO_MODEL = "veo-001-preview";
+
+interface ServiceAccountCredentials {
+  type: string;
+  project_id: string;
+  private_key_id: string;
+  private_key: string;
+  client_email: string;
+  client_id: string;
+  auth_uri: string;
+  token_uri: string;
+  auth_provider_x509_cert_url: string;
+  client_x509_cert_url: string;
+}
+
+interface VeoGenerateResponse {
+  name: string; // Operation name for polling
+}
+
+interface VeoOperationResponse {
+  name: string;
+  done: boolean;
+  error?: {
+    code: number;
+    message: string;
+  };
+  response?: {
+    generatedSamples: Array<{
+      video: {
+        uri?: string;
+        bytesBase64Encoded?: string;
+      };
+    }>;
+  };
+}
+
+interface VideoGenerationResult {
+  success: boolean;
+  operationName?: string;
+  videoBase64?: string;
+  videoUri?: string;
+  status?: 'pending' | 'processing' | 'completed' | 'failed';
+  error?: string;
+}
+
+let cachedToken: { token: string; expiresAt: number } | null = null;
+
+async function createSignedJWT(credentials: ServiceAccountCredentials): Promise<string> {
+  const crypto = await import('crypto');
+  
+  const header = {
+    alg: 'RS256',
+    typ: 'JWT'
+  };
+  
+  const now = Math.floor(Date.now() / 1000);
+  const payload = {
+    iss: credentials.client_email,
+    sub: credentials.client_email,
+    aud: credentials.token_uri,
+    iat: now,
+    exp: now + 3600,
+    scope: 'https://www.googleapis.com/auth/cloud-platform'
+  };
+  
+  const base64Header = Buffer.from(JSON.stringify(header)).toString('base64url');
+  const base64Payload = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const signatureInput = `${base64Header}.${base64Payload}`;
+  
+  const sign = crypto.createSign('RSA-SHA256');
+  sign.update(signatureInput);
+  const signature = sign.sign(credentials.private_key, 'base64url');
+  
+  return `${signatureInput}.${signature}`;
+}
+
+async function getAccessToken(): Promise<string> {
+  if (cachedToken && cachedToken.expiresAt > Date.now() + 60000) {
+    return cachedToken.token;
+  }
+  
+  const serviceAccountKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+  if (!serviceAccountKey) {
+    throw new Error("GOOGLE_SERVICE_ACCOUNT_KEY environment variable not set");
+  }
+  
+  let credentials: ServiceAccountCredentials;
+  try {
+    credentials = JSON.parse(serviceAccountKey);
+  } catch (e) {
+    throw new Error("Invalid GOOGLE_SERVICE_ACCOUNT_KEY format - must be valid JSON");
+  }
+  
+  const jwt = await createSignedJWT(credentials);
+  
+  const response = await fetch(credentials.token_uri, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: jwt
+    })
+  });
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('OAuth token error:', errorText);
+    throw new Error(`Failed to get access token: ${response.status} - ${errorText}`);
+  }
+  
+  const tokenData = await response.json() as { access_token: string; expires_in: number };
+  
+  cachedToken = {
+    token: tokenData.access_token,
+    expiresAt: Date.now() + (tokenData.expires_in * 1000)
+  };
+  
+  return tokenData.access_token;
+}
+
+function getProjectId(): string | null {
+  let projectId = process.env.GOOGLE_CLOUD_PROJECT;
+  
+  if (!projectId) {
+    const serviceAccountKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+    if (serviceAccountKey) {
+      try {
+        const credentials = JSON.parse(serviceAccountKey);
+        projectId = credentials.project_id;
+      } catch (e) {
+        // Ignore
+      }
+    }
+  }
+  
+  return projectId || null;
+}
+
+/**
+ * Generate video using Vertex AI Veo
+ * Video generation is async - returns operation name for polling
+ */
+export async function generateVideo(
+  prompt: string,
+  duration: number = 5
+): Promise<VideoGenerationResult> {
+  const projectId = getProjectId();
+  
+  if (!projectId) {
+    return {
+      success: false,
+      error: "GOOGLE_CLOUD_PROJECT environment variable not set and not found in service account"
+    };
+  }
+  
+  let accessToken: string;
+  try {
+    accessToken = await getAccessToken();
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get access token'
+    };
+  }
+  
+  const endpoint = `https://${VERTEX_AI_LOCATION}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${VERTEX_AI_LOCATION}/publishers/google/models/${VEO_MODEL}:predictLongRunning`;
+  
+  const validDurations = [5, 6, 8];
+  const finalDuration = validDurations.includes(duration) ? duration : 5;
+  
+  const payload = {
+    instances: [{
+      prompt: prompt
+    }],
+    parameters: {
+      aspectRatio: "16:9",
+      sampleCount: 1,
+      durationSeconds: finalDuration,
+      personGeneration: "allow_adult",
+      enhancePrompt: true
+    }
+  };
+  
+  try {
+    console.log('Starting Veo video generation...');
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Veo API error:', errorText);
+      return {
+        success: false,
+        error: `Veo API error: ${response.status} - ${errorText}`
+      };
+    }
+    
+    const result = await response.json() as VeoGenerateResponse;
+    
+    return {
+      success: true,
+      operationName: result.name,
+      status: 'processing'
+    };
+  } catch (error) {
+    console.error('Error calling Veo API:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
+/**
+ * Check status of video generation operation
+ */
+export async function checkVideoGenerationStatus(
+  operationName: string
+): Promise<VideoGenerationResult> {
+  let accessToken: string;
+  try {
+    accessToken = await getAccessToken();
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get access token'
+    };
+  }
+  
+  const endpoint = `https://${VERTEX_AI_LOCATION}-aiplatform.googleapis.com/v1/${operationName}`;
+  
+  try {
+    const response = await fetch(endpoint, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Veo status check error:', errorText);
+      return {
+        success: false,
+        error: `Veo status check error: ${response.status} - ${errorText}`
+      };
+    }
+    
+    const result = await response.json() as VeoOperationResponse;
+    
+    if (result.error) {
+      return {
+        success: false,
+        status: 'failed',
+        error: result.error.message
+      };
+    }
+    
+    if (!result.done) {
+      return {
+        success: true,
+        operationName: result.name,
+        status: 'processing'
+      };
+    }
+    
+    if (result.response?.generatedSamples?.[0]?.video) {
+      const video = result.response.generatedSamples[0].video;
+      return {
+        success: true,
+        status: 'completed',
+        videoBase64: video.bytesBase64Encoded,
+        videoUri: video.uri
+      };
+    }
+    
+    return {
+      success: false,
+      status: 'failed',
+      error: 'No video generated in response'
+    };
+  } catch (error) {
+    console.error('Error checking Veo status:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
+/**
+ * Generate video and poll for completion
+ * Returns immediately with operation ID for client-side polling
+ * Or waits for completion if waitForCompletion is true
+ */
+export async function generateVideoWithPolling(
+  prompt: string,
+  duration: number = 5,
+  waitForCompletion: boolean = false,
+  maxWaitMs: number = 300000 // 5 minutes default
+): Promise<VideoGenerationResult> {
+  const startResult = await generateVideo(prompt, duration);
+  
+  if (!startResult.success || !startResult.operationName) {
+    return startResult;
+  }
+  
+  if (!waitForCompletion) {
+    return startResult;
+  }
+  
+  const startTime = Date.now();
+  const pollInterval = 5000; // 5 seconds
+  
+  while (Date.now() - startTime < maxWaitMs) {
+    await new Promise(resolve => setTimeout(resolve, pollInterval));
+    
+    const statusResult = await checkVideoGenerationStatus(startResult.operationName);
+    
+    if (statusResult.status === 'completed' || statusResult.status === 'failed') {
+      return statusResult;
+    }
+    
+    if (!statusResult.success) {
+      return statusResult;
+    }
+  }
+  
+  return {
+    success: false,
+    operationName: startResult.operationName,
+    status: 'processing',
+    error: 'Video generation timed out - operation still processing'
+  };
+}
+
+/**
+ * Check if Veo video generation is configured
+ */
+export function isVeoConfigured(): boolean {
+  return !!process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+}
 
 interface SceneRequest {
   prompt: string;

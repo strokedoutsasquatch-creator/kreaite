@@ -11,8 +11,9 @@ import { generateCoachResponse, getRandomQuote, generateStructuredContent, type 
 import { searchAmazonProducts, getAmazonProduct, isConfigured as isAmazonConfigured } from "./amazonService";
 import { generateInstrumental, buildMusicPrompt, isLyriaConfigured, estimateCost } from "./lyriaService";
 import { generateImageWithImagen, isImagenConfigured } from "./imagenService";
+import { analyzeImage, detectFaces, safeSearchCheck, isVisionConfigured } from "./visionService";
 import { synthesizeSpeech, createVoiceClone, synthesizeWithClone, listVoices, isVoiceServiceConfigured, getVoiceStyles, getCharacterPresets, getGoogleVoices } from "./voiceService";
-import { generateImage, generateMovieScript, generateStoryboard, isVideoServiceConfigured, getMovieStyles, movieStyles } from "./videoService";
+import { generateImage, generateMovieScript, generateStoryboard, isVideoServiceConfigured, getMovieStyles, movieStyles, generateVideo, checkVideoGenerationStatus, isVeoConfigured } from "./videoService";
 import { createGoogleDoc, getGoogleDoc, updateGoogleDoc, createGoogleSlides, createGoogleSheet, createGoogleForm, exportDocument, isGoogleWorkspaceConfigured, getWorkspaceStatus } from "./googleWorkspaceService";
 import { synthesizeSpeechTTS, synthesizeChapter, audiobookStyles, narratorVoices, estimateAudioDuration, estimateTTSCost, isTTSConfigured } from "./textToSpeechService";
 import { getAllPresets, getMusicalScales, getMusicalKeys, calculateSyncedDelay } from "./audioProcessingService";
@@ -2809,6 +2810,82 @@ ${aspectRatio === 'portrait' ? 'Vertical portrait orientation.' : aspectRatio ==
       console.error("Storyboard generation error:", error);
       res.status(500).json({ error: "Storyboard generation failed" });
     }
+  });
+
+  // Generate AI video using Vertex AI Veo
+  app.post('/api/video/generate-ai', isAuthenticated, async (req: any, res) => {
+    try {
+      const { prompt, duration } = req.body;
+      
+      if (!prompt) {
+        return res.status(400).json({ error: "Prompt is required" });
+      }
+
+      if (!isVeoConfigured()) {
+        return res.status(503).json({ 
+          error: "Veo video generation is not configured. GOOGLE_SERVICE_ACCOUNT_KEY is required." 
+        });
+      }
+
+      const result = await generateVideo(prompt, duration || 5);
+
+      if (result.success) {
+        res.json({ 
+          success: true, 
+          operationName: result.operationName,
+          status: result.status
+        });
+      } else {
+        res.status(500).json({ success: false, error: result.error });
+      }
+    } catch (error) {
+      console.error("AI video generation error:", error);
+      res.status(500).json({ error: "AI video generation failed" });
+    }
+  });
+
+  // Check AI video generation status
+  app.get('/api/video/generate-ai/status/:operationName', isAuthenticated, async (req: any, res) => {
+    try {
+      const { operationName } = req.params;
+      
+      if (!operationName) {
+        return res.status(400).json({ error: "Operation name is required" });
+      }
+
+      // Decode the operation name (it may be URL encoded)
+      const decodedOperationName = decodeURIComponent(operationName);
+      
+      const result = await checkVideoGenerationStatus(decodedOperationName);
+
+      if (result.success) {
+        res.json({ 
+          success: true, 
+          status: result.status,
+          videoBase64: result.videoBase64,
+          videoUri: result.videoUri,
+          operationName: result.operationName
+        });
+      } else {
+        res.status(500).json({ 
+          success: false, 
+          error: result.error,
+          status: result.status
+        });
+      }
+    } catch (error) {
+      console.error("Video status check error:", error);
+      res.status(500).json({ error: "Failed to check video generation status" });
+    }
+  });
+
+  // Check if Veo is configured
+  app.get('/api/video/veo-status', (req, res) => {
+    res.json({ 
+      configured: isVeoConfigured(),
+      model: 'veo-001-preview',
+      location: 'us-central1'
+    });
   });
 
   // ============ AUDIO PROCESSING ROUTES ============
@@ -6960,6 +7037,84 @@ Return the rhyming version only, no explanation.`;
     } catch (error: any) {
       console.error("Imagen generation error:", error);
       res.status(500).json({ message: error.message || "Failed to generate image" });
+    }
+  });
+
+  // Analyze image with Google Vision AI
+  app.post('/api/image/analyze', isAuthenticated, async (req: any, res) => {
+    try {
+      const { imageBase64 } = req.body;
+      
+      if (!imageBase64) {
+        return res.status(400).json({ message: "imageBase64 is required" });
+      }
+
+      if (!isVisionConfigured()) {
+        return res.status(500).json({ 
+          success: false,
+          message: "Vision API not configured. GOOGLE_SERVICE_ACCOUNT_KEY is required." 
+        });
+      }
+
+      const [analysisResult, faceResult] = await Promise.all([
+        analyzeImage(imageBase64),
+        detectFaces(imageBase64)
+      ]);
+      
+      if (analysisResult.success && faceResult.success) {
+        res.json({
+          success: true,
+          labels: analysisResult.data?.labels || [],
+          colors: analysisResult.data?.colors || [],
+          objects: analysisResult.data?.objects || [],
+          text: analysisResult.data?.text || [],
+          fullText: analysisResult.data?.fullTextAnnotation?.text || null,
+          faces: faceResult.data?.faces || []
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: analysisResult.error || faceResult.error
+        });
+      }
+    } catch (error: any) {
+      console.error("Vision analysis error:", error);
+      res.status(500).json({ message: error.message || "Failed to analyze image" });
+    }
+  });
+
+  // Check image content safety with Vision AI Safe Search
+  app.post('/api/image/safe-search', isAuthenticated, async (req: any, res) => {
+    try {
+      const { imageBase64 } = req.body;
+      
+      if (!imageBase64) {
+        return res.status(400).json({ message: "imageBase64 is required" });
+      }
+
+      if (!isVisionConfigured()) {
+        return res.status(500).json({ 
+          success: false,
+          message: "Vision API not configured. GOOGLE_SERVICE_ACCOUNT_KEY is required." 
+        });
+      }
+
+      const result = await safeSearchCheck(imageBase64);
+      
+      if (result.success) {
+        res.json({
+          success: true,
+          safeSearch: result.data?.safeSearch
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: result.error
+        });
+      }
+    } catch (error: any) {
+      console.error("Safe search check error:", error);
+      res.status(500).json({ message: error.message || "Failed to check content safety" });
     }
   });
 

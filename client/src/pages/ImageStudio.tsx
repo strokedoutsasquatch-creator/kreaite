@@ -78,6 +78,29 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+interface ImageAnalysisResult {
+  labels: Array<{ description: string; score: number }>;
+  colors: Array<{ color: { red: number; green: number; blue: number }; score: number; pixelFraction: number }>;
+  objects: Array<{ name: string; score: number }>;
+  text: Array<{ description: string }>;
+  fullText: string | null;
+  faces: Array<{
+    detectionConfidence?: number;
+    joyLikelihood?: string;
+    sorrowLikelihood?: string;
+    angerLikelihood?: string;
+    surpriseLikelihood?: string;
+  }>;
+}
+
+interface SafeSearchResult {
+  adult: string;
+  spoof: string;
+  medical: string;
+  violence: string;
+  racy: string;
+}
+
 interface UploadedImage {
   id: string;
   name: string;
@@ -173,6 +196,11 @@ export default function ImageStudio() {
 
   const [history, setHistory] = useState<any[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResults, setAnalysisResults] = useState<ImageAnalysisResult | null>(null);
+  const [safeSearchResults, setSafeSearchResults] = useState<SafeSearchResult | null>(null);
+  const [showAnalysisPanel, setShowAnalysisPanel] = useState(false);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -326,6 +354,67 @@ export default function ImageStudio() {
         description: `Resolution increased to ${selectedImage.width * 4}x${selectedImage.height * 4}`,
       });
     }, 500);
+  };
+
+  const handleAnalyzeImage = async () => {
+    if (!selectedImage) return;
+    setIsAnalyzing(true);
+    setProcessingMessage("Analyzing image with Google Vision AI...");
+    setProcessingProgress(0);
+    setAnalysisResults(null);
+    setSafeSearchResults(null);
+
+    const interval = setInterval(() => {
+      setProcessingProgress(prev => Math.min(prev + 5, 85));
+    }, 200);
+
+    try {
+      const [analyzeResponse, safeSearchResponse] = await Promise.all([
+        apiRequest("POST", "/api/image/analyze", {
+          imageBase64: selectedImage.url
+        }),
+        apiRequest("POST", "/api/image/safe-search", {
+          imageBase64: selectedImage.url
+        })
+      ]);
+
+      const analyzeData = await analyzeResponse.json();
+      const safeSearchData = await safeSearchResponse.json();
+
+      clearInterval(interval);
+      setProcessingProgress(100);
+
+      if (analyzeData.success) {
+        setAnalysisResults({
+          labels: analyzeData.labels || [],
+          colors: analyzeData.colors || [],
+          objects: analyzeData.objects || [],
+          text: analyzeData.text || [],
+          fullText: analyzeData.fullText || null,
+          faces: analyzeData.faces || []
+        });
+      }
+
+      if (safeSearchData.success) {
+        setSafeSearchResults(safeSearchData.safeSearch);
+      }
+
+      setShowAnalysisPanel(true);
+      toast({
+        title: "Analysis Complete",
+        description: "AI has analyzed your image for labels, objects, colors, text, and faces.",
+      });
+    } catch (error) {
+      clearInterval(interval);
+      toast({
+        title: "Analysis Failed",
+        description: error instanceof Error ? error.message : "Failed to analyze image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzing(false);
+      setProcessingProgress(0);
+    }
   };
 
   const handleGenerateImage = async () => {
@@ -718,7 +807,23 @@ export default function ImageStudio() {
                         <div className="text-xs text-gray-400">AI resolution boost</div>
                       </div>
                     </Button>
-                    {isProcessing && (
+                    <Button
+                      className="w-full justify-start gap-3 bg-orange-500/20 hover:bg-orange-500/30 text-white border border-orange-500/30"
+                      onClick={handleAnalyzeImage}
+                      disabled={!selectedImage || isProcessing || isAnalyzing}
+                      data-testid="button-analyze-ai"
+                    >
+                      {isAnalyzing ? (
+                        <Loader2 className="w-5 h-5 text-orange-500 animate-spin" />
+                      ) : (
+                        <Eye className="w-5 h-5 text-orange-500" />
+                      )}
+                      <div className="text-left">
+                        <div className="font-medium">Analyze with AI</div>
+                        <div className="text-xs text-gray-400">Labels, objects, text, faces</div>
+                      </div>
+                    </Button>
+                    {(isProcessing || isAnalyzing) && (
                       <div className="space-y-2 p-3 bg-gray-800 rounded-lg" data-testid="container-processing">
                         <div className="flex items-center gap-2 text-sm text-orange-500">
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -814,6 +919,129 @@ export default function ImageStudio() {
                           data-testid="slider-blur"
                         />
                       </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {showAnalysisPanel && analysisResults && (
+                  <Card className="bg-gray-900 border-gray-800" data-testid="card-analysis-results">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg text-white flex items-center gap-2">
+                          <Eye className="w-5 h-5 text-orange-500" />
+                          AI Analysis
+                        </CardTitle>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => setShowAnalysisPanel(false)}
+                          data-testid="button-close-analysis"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <ScrollArea className="h-[400px] pr-4">
+                        <div className="space-y-4">
+                          {analysisResults.labels.length > 0 && (
+                            <div data-testid="section-labels">
+                              <h4 className="text-sm font-medium text-orange-500 mb-2">Labels</h4>
+                              <div className="flex flex-wrap gap-1">
+                                {analysisResults.labels.slice(0, 10).map((label, i) => (
+                                  <Badge key={i} variant="outline" className="border-gray-700 text-gray-300 text-xs" data-testid={`badge-label-${i}`}>
+                                    {label.description} ({Math.round(label.score * 100)}%)
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {analysisResults.objects.length > 0 && (
+                            <div data-testid="section-objects">
+                              <h4 className="text-sm font-medium text-orange-500 mb-2">Objects Detected</h4>
+                              <div className="flex flex-wrap gap-1">
+                                {analysisResults.objects.slice(0, 10).map((obj, i) => (
+                                  <Badge key={i} variant="outline" className="border-orange-500/30 text-orange-300 text-xs" data-testid={`badge-object-${i}`}>
+                                    {obj.name} ({Math.round(obj.score * 100)}%)
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {analysisResults.colors.length > 0 && (
+                            <div data-testid="section-colors">
+                              <h4 className="text-sm font-medium text-orange-500 mb-2">Dominant Colors</h4>
+                              <div className="flex gap-2 flex-wrap">
+                                {analysisResults.colors.slice(0, 6).map((color, i) => (
+                                  <div key={i} className="flex items-center gap-2" data-testid={`color-swatch-${i}`}>
+                                    <div
+                                      className="w-6 h-6 rounded border border-gray-600"
+                                      style={{
+                                        backgroundColor: `rgb(${color.color.red}, ${color.color.green}, ${color.color.blue})`
+                                      }}
+                                    />
+                                    <span className="text-xs text-gray-400">
+                                      {Math.round(color.pixelFraction * 100)}%
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {analysisResults.faces.length > 0 && (
+                            <div data-testid="section-faces">
+                              <h4 className="text-sm font-medium text-orange-500 mb-2">Faces Detected</h4>
+                              <p className="text-sm text-gray-300">{analysisResults.faces.length} face(s) found</p>
+                              {analysisResults.faces.slice(0, 3).map((face, i) => (
+                                <div key={i} className="text-xs text-gray-400 mt-1" data-testid={`face-info-${i}`}>
+                                  Confidence: {Math.round((face.detectionConfidence || 0) * 100)}%
+                                  {face.joyLikelihood && face.joyLikelihood !== 'UNKNOWN' && ` • Joy: ${face.joyLikelihood}`}
+                                  {face.surpriseLikelihood && face.surpriseLikelihood !== 'UNKNOWN' && ` • Surprise: ${face.surpriseLikelihood}`}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {analysisResults.fullText && (
+                            <div data-testid="section-text">
+                              <h4 className="text-sm font-medium text-orange-500 mb-2">Text Detected</h4>
+                              <p className="text-xs text-gray-400 bg-gray-800 p-2 rounded max-h-24 overflow-y-auto">
+                                {analysisResults.fullText.slice(0, 500)}
+                                {analysisResults.fullText.length > 500 && '...'}
+                              </p>
+                            </div>
+                          )}
+
+                          {safeSearchResults && (
+                            <div data-testid="section-safesearch">
+                              <h4 className="text-sm font-medium text-orange-500 mb-2">Content Safety</h4>
+                              <div className="grid grid-cols-2 gap-2 text-xs">
+                                {Object.entries(safeSearchResults).map(([key, value]) => (
+                                  <div key={key} className="flex justify-between">
+                                    <span className="text-gray-400 capitalize">{key}:</span>
+                                    <Badge
+                                      variant="outline"
+                                      className={`text-xs ${
+                                        value === 'VERY_UNLIKELY' || value === 'UNLIKELY'
+                                          ? 'border-green-500/30 text-green-400'
+                                          : value === 'POSSIBLE'
+                                          ? 'border-yellow-500/30 text-yellow-400'
+                                          : 'border-red-500/30 text-red-400'
+                                      }`}
+                                      data-testid={`badge-safety-${key}`}
+                                    >
+                                      {value?.replace(/_/g, ' ') || 'Unknown'}
+                                    </Badge>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </ScrollArea>
                     </CardContent>
                   </Card>
                 )}
