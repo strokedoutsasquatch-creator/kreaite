@@ -9705,7 +9705,7 @@ Provide a JSON response with track suggestions for each chapter/section.`;
   // ============================================================================
 
   // GET /api/creator/:creatorId/tiers - Get subscription tiers for a creator
-  app.get('/api/creator/:creatorId/tiers', async (req: any, res) => {
+  app.get('/api/creator/:creatorId/tiers', isAuthenticated, async (req: any, res) => {
     try {
       const { creatorId } = req.params;
       
@@ -9774,9 +9774,13 @@ Provide a JSON response with track suggestions for each chapter/section.`;
   app.get('/api/community/channels/:id/messages', isAuthenticated, async (req: any, res) => {
     try {
       const { id } = req.params;
-      const { limit = 50, before } = req.query;
+      const { limit = 50 } = req.query;
 
-      // Placeholder for messages
+      // Placeholder for messages with proper validation
+      if (!id) {
+        return res.status(400).json({ message: "Channel ID required" });
+      }
+
       res.json({
         channelId: id,
         messages: [],
@@ -9795,12 +9799,19 @@ Provide a JSON response with track suggestions for each chapter/section.`;
       const { content } = req.body;
       const userId = req.user.claims.sub;
 
-      // Placeholder for message posting
+      if (!content || typeof content !== 'string' || content.trim().length === 0) {
+        return res.status(400).json({ message: "Message content required" });
+      }
+
+      if (content.length > 4000) {
+        return res.status(400).json({ message: "Message too long (max 4000 characters)" });
+      }
+
       res.json({
         id: Date.now().toString(),
         channelId: id,
         userId,
-        content,
+        content: content.trim(),
         createdAt: new Date().toISOString(),
       });
     } catch (error) {
@@ -9820,14 +9831,21 @@ Provide a JSON response with track suggestions for each chapter/section.`;
       const { email, role } = req.body;
       const userId = req.user.claims.sub;
 
+      if (!email || typeof email !== 'string' || !email.includes('@')) {
+        return res.status(400).json({ message: "Valid email address required" });
+      }
+
+      const validRoles = ['viewer', 'editor', 'admin'];
+      const normalizedRole = role && validRoles.includes(role) ? role : 'editor';
+
       // Placeholder for collaboration invite
       res.json({
         success: true,
         message: `Invitation sent to ${email}`,
         invite: {
           projectId,
-          email,
-          role: role || 'editor',
+          email: email.toLowerCase().trim(),
+          role: normalizedRole,
           invitedBy: userId,
           status: 'pending',
         },

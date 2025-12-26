@@ -148,16 +148,16 @@ export default function CreatorHub() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("studios");
 
-  const { data: workflowTemplates } = useQuery({
+  const { data: workflowTemplates } = useQuery<{ templates?: any[] }>({
     queryKey: ["/api/workflows/templates"],
     enabled: !!user
   });
 
-  const { data: voicesData } = useQuery({
+  const { data: voicesData } = useQuery<{ voices?: any[] }>({
     queryKey: ["/api/voices/public"]
   });
 
-  const { data: presetsData } = useQuery({
+  const { data: presetsData } = useQuery<{ presets?: any[] }>({
     queryKey: ["/api/dj/presets/public"]
   });
 
@@ -293,9 +293,9 @@ export default function CreatorHub() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {voicesData?.voices?.length > 0 ? (
+                {(voicesData?.voices?.length ?? 0) > 0 ? (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {voicesData.voices.slice(0, 4).map((voice: any) => (
+                    {voicesData?.voices?.slice(0, 4).map((voice: any) => (
                       <div key={voice.id} className="p-3 bg-zinc-800/50 rounded-lg">
                         <div className="flex items-center gap-2">
                           <Mic2 className="w-4 h-4 text-orange-400" />
