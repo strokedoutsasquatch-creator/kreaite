@@ -1,186 +1,158 @@
-# Stroke Recovery OS - Design Guidelines
-**"Rebuild Your Body, Brain, and Belief System — One Rep at a Time"**
+# KreAIte.xyz - Design Guidelines
+**"Your Creative Sanctuary — Where Art Meets Intelligence"**
 
 ---
 
 ## Design Approach
 
-**Selected Approach:** Reference-Based with Dark Premium Aesthetic
+**Selected Approach:** Reference-Based with Literary Premium Aesthetic
 
 **Primary References:**
-- **Linear:** Dark UI mastery, clean typography, purposeful spacing
-- **Stripe:** Professional dark theme with bold accent colors
-- **Peloton:** Premium fitness motivation and progress tracking
-- **Apple Fitness+:** Polished dark interface with vibrant accents
+- **Medium:** Editorial sophistication, typography mastery, reading-first design
+- **Notion:** Clean creative workspace, organized content hierarchy
+- **Behance:** Gallery-style project showcases, visual storytelling
+- **Squarespace:** Polished, refined interfaces with generous whitespace
+- **Canva:** Creator-focused tools with approachable elegance
 
-**Key Principle:** Bold, defiant dark theme that embodies military-grade precision and unstoppable determination. This is a command center for recovery, not a passive medical guide.
+**Key Principle:** A sophisticated digital atelier where creators feel inspired to craft their masterpieces. Every element should breathe creative possibility while maintaining premium polish.
 
 ---
 
 ## Core Design Elements
 
-### Color System (Dark Theme)
-- **Background:** Pure black (#000000) for main surfaces
-- **Surface/Cards:** Dark gray (#1A1A1A, #2A2A2A) with subtle elevation
-- **Primary Accent:** Vibrant orange (#FF6B35) for CTAs, highlights, progress indicators
-- **Text Primary:** White (#FFFFFF) for headlines and important content
-- **Text Secondary:** Light gray (#A0A0A0, #808080) for body text and metadata
-- **Text Tertiary:** Medium gray (#606060) for labels and subtle elements
-- **Success:** Green (#10B981) for achievements
-- **Warning:** Amber (#F59E0B) for alerts
+### Color System (Literary Dark)
+- **Background:** Pure black (#000000) - the canvas
+- **Surface/Cards:** #0F0F0F, #1A1A1A for elevated content blocks
+- **Primary Accent:** Orange (#FF6B35) for CTAs, active states, creative energy
+- **Text Primary:** White (#FFFFFF) for headlines, navigation
+- **Text Secondary:** #D0D0D0 for body text, descriptions
+- **Text Tertiary:** #808080 for metadata, subtle labels
+- **Borders:** #2A2A2A for card edges, dividers
+- **Success:** Mint green (#34D399) for published work
+- **Icons:** Lucide-react only, white with orange on hover/active
 
 ### Typography System
 
 **Font Families:**
-- **Primary:** 'Inter' - Bold, modern sans-serif for entire interface
-- **Accent (Stats/Impact):** 'Space Grotesk' or 'Archivo Black' - For large numerical displays and battle-cry headlines
+- **Primary:** 'Inter' - Clean, professional for UI and body text
+- **Display:** 'Playfair Display' or 'Literata' - Elegant serif for major headlines and creative section titles
 
 **Type Scale:**
-- **Hero Headlines:** text-6xl to text-8xl, font-black (900), uppercase, tracking-tight, text-white
-- **Section Headers:** text-4xl to text-5xl, font-bold (700), text-white
-- **Card Titles:** text-xl to text-2xl, font-semibold (600), text-white
-- **Body Text:** text-base to text-lg, font-normal (400), text-gray-300, leading-relaxed
-- **Labels:** text-sm, font-medium (500), uppercase, tracking-wide, text-gray-400
-- **Impact Numbers:** text-5xl to text-7xl, font-black (800), text-orange-500
+- **Hero Headlines:** text-6xl to text-7xl, font-serif, font-bold, tracking-tight, text-white
+- **Studio Titles:** text-4xl to text-5xl, font-serif, font-semibold, text-white
+- **Card Headers:** text-2xl, font-sans, font-semibold, text-white
+- **Body Text:** text-base to text-lg, font-sans, leading-relaxed, text-gray-300
+- **Labels:** text-sm, font-sans, font-medium, uppercase, tracking-wider, text-gray-400
+- **Creator Stats:** text-3xl to text-4xl, font-sans, font-bold, text-orange-500
 
 ### Layout System
 
-**Spacing Primitives:** Tailwind units of 4, 6, 8, 12, 16, 20, 24, 32
+**Spacing Primitives:** Tailwind units of 4, 6, 8, 12, 16, 24, 32
 
 **Grid Patterns:**
-- **Hero:** Full-width with max-w-7xl centered
-- **Academy/Exercise Grid:** grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8
-- **Builder Tools:** grid-cols-1 lg:grid-cols-2 gap-12
-- **Marketplace Products:** grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6
-- **Survival Grid:** Masonry-style grid with varying card heights
+- **Studios Grid:** grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8
+- **Marketplace:** grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6
+- **Gallery Showcase:** Masonry grid with staggered heights
+- **Feature Sections:** Two-column splits (60/40) for text-image pairings
 
 ---
 
 ## Component Library
 
 ### Navigation
-- **Top Nav:** Sticky black (bg-black) header with logo, main links (HOME, ACADEMY, BUILDER, COMMUNITY, MARKETPLACE, SURVIVAL GRID, ABOUT), orange "START RECOVERY" CTA, user avatar
-- **Mobile:** Slide-in dark panel with full navigation, orange accent on active state
+- Sticky header (bg-black/95 backdrop-blur-lg), centered max-w-7xl
+- Logo left, main links (STUDIOS, MARKETPLACE, SHOWCASE, PRICING), orange "START CREATING" CTA right, user avatar
+- Mobile: Full-screen overlay with elegant fade-in, centered menu items
 
-### Hero Section (HOME)
-- **Layout:** Full-screen (min-h-screen) with powerful transformation image showing recovery journey
-- **Image Treatment:** Dark gradient overlay (black to transparent top-to-bottom) ensuring text legibility
-- **Content Structure:**
-  - Logo: "STROKE RECOVERY OS" with "Sasquatch Survival System" tagline
-  - Massive headline: "REBUILD YOUR BODY, BRAIN, AND BELIEF SYSTEM — ONE REP AT A TIME"
-  - Subhead: "From 0% to 90% Function - Combat-Tested Recovery Protocols"
-  - Dual CTAs: Orange "ACCESS THE ARSENAL" (solid bg-orange-500, blurred backdrop) + Ghost "WATCH THE JOURNEY" (border-white/20, blurred backdrop)
-  - Trust bar: "50,000+ Warriors | 6 Years Proven | 90% Recovery Rate"
+### Hero Section
+- **Layout:** Full-screen (min-h-screen) with sophisticated creator workspace imagery
+- **Image:** Wide shot of elegant desk setup with creative tools, soft lighting, artistic workspace - dark gradient overlay ensuring text stands out
+- **Content:**
+  - Logo: "KreAIte" with refined typography
+  - Headline: "YOUR CREATIVE SANCTUARY" (serif, massive)
+  - Subhead: "Where Art Meets Intelligence — Six Studios, Infinite Possibilities"
+  - Dual CTAs: Orange "EXPLORE STUDIOS" (bg-orange-500/90 backdrop-blur-md) + Ghost "WATCH DEMO" (border-white/20 backdrop-blur-md)
+  - Trust bar: "10,000+ Creators | 50,000+ Works Published | Trusted by Artists Worldwide"
 
-### Content Cards (Dark Theme)
+### Studio Cards (Featured Grid)
+- Elevated dark cards (bg-gray-950 border border-gray-800)
+- Lucide icon (48px) in white, turns orange on card hover
+- Studio name (serif font, text-2xl)
+- Brief description (2 lines, gray-300)
+- "Open Studio" link (orange, underlined)
+- Subtle shadow (shadow-2xl) for depth
 
-**Academy Protocol Cards:**
-- Dark gray background (bg-gray-900)
-- Subtle border (border-gray-800)
-- Image/icon at top with orange accent overlay on hover
-- White title, gray description
-- Orange difficulty badge
-- Body area tags (border-gray-700)
-- Orange "START PROTOCOL" button
+### Marketplace Template Cards
+- Template preview image with dark overlay on hover
+- Creator attribution with small avatar
+- Template category badge (orange border)
+- Price in white (text-xl font-bold)
+- Rating stars (orange fill)
+- "PREVIEW" button (orange)
 
-**Builder Tool Cards:**
-- Elevated dark surface (bg-gray-900 with shadow-2xl)
-- Icon with orange accent
-- Drag-handle indicator (gray-600)
-- Tool name and description
-- Time estimate with orange clock icon
-
-**Marketplace Product Cards:**
-- Product image with dark vignette
-- Star rating in orange
-- Price in large white text
-- "BUY NOW" orange button
-- Equipment tags
-
-### Data Displays (Dark UI)
-
-**Progress Dashboard:**
-- **Stat Cards:** Black backgrounds with orange accent borders, massive white numbers, gray labels
-- **Charts:** Dark grid lines (gray-800), orange line/bars, white axis labels
-- **Streak Calendar:** Gray inactive days, orange active days, white current day
-- **Goal Progress:** Horizontal bars with orange fill on dark gray track
-
-### Buttons & CTAs
-
-**Primary (Orange):**
-- bg-orange-500, text-white, px-8 py-4, rounded-lg, font-semibold
-- On hero/images: Add backdrop-blur-md bg-orange-500/90
-
-**Secondary (Ghost):**
-- border-2 border-white/20, text-white, px-8 py-4, rounded-lg, font-semibold
-- On hero/images: Add backdrop-blur-md bg-white/5
-
-**Tertiary (Text):**
-- text-orange-500, font-semibold, underline decoration-orange-500/30
+### Creative Gallery (Showcase)
+- Masonry layout displaying user creations
+- Image/thumbnail with title overlay on hover
+- Creator name and publish date
+- Engagement metrics (views, likes in gray-400)
+- Orange bookmark icon for save
 
 ---
 
-## Landing Page Structure (HOME - 10 Sections)
+## Landing Page Structure (10 Comprehensive Sections)
 
-1. **Hero:** Full-screen with transformation image, massive headline, dual CTAs, trust indicators
-2. **Impact Metrics Bar:** Scrolling stats with orange numbers on black
-3. **About Nick/Sasquatch:** Two-column (image left, story right) - "From Wheelchair to Warrior" with orange accent line
-4. **The Arsenal:** 3-column grid showcasing Academy, Builder, Marketplace with icons and descriptions
-5. **Survival Grid Preview:** 4-column masonry grid of featured recovery techniques
-6. **Recovery Timeline:** Horizontal timeline visualization showing Day 1 → Year 6 progression with orange milestones
-7. **Community Transformations:** 3-column testimonials with before/after images on dark cards
-8. **Technology Overview:** Two-column split showcasing platform features with device mockups
-9. **Pricing/Access:** Centered pricing cards with orange "DEPLOY NOW" CTAs
-10. **FAQ:** Accordion with orange active states
-11. **Footer:** Comprehensive dark footer with newsletter (orange subscribe button), navigation columns, social links, trust badges, legal
+1. **Hero:** Full-screen with elegant workspace image, serif headline, dual CTAs, creator trust metrics
+2. **Six Studios Showcase:** 3x2 grid featuring Book, Music, Video, Course, Image, Doctrine studios with lucide icons and descriptions
+3. **Creative Workflow:** Two-column section (40/60) - "Ideate → Create → Publish" visualization with platform screenshots
+4. **Featured Creations Gallery:** 4-column masonry grid showcasing diverse creator works (books, music albums, courses, art)
+5. **AI-Powered Tools:** Three-column features (AI writing assistant, music generation, image creation) with icons
+6. **Marketplace Preview:** Scrollable horizontal showcase of premium templates with pricing
+7. **Creator Testimonials:** Two-column testimonials with creator headshots, quotes, and orange accent quotes
+8. **Platform Capabilities:** Two-column split - left (feature list with checkmarks), right (platform interface mockup)
+9. **Pricing Tiers:** Centered cards (Starter, Creator, Studio, Enterprise) with orange "START FREE" on primary tier
+10. **Creator Community:** Stats bar (creators, published works, downloads) + newsletter signup (orange subscribe)
 
-### Dashboard Layout
-- **Left Sidebar:** Vertical nav on black with orange active indicators
-- **Main Area:** Dynamic content on dark gray background
-- **Right Panel:** Daily missions, streak tracker, community feed
+**Footer:** Four-column (Studios, Resources, Company, Community) + newsletter ("Join 10,000+ Creators") + social links + legal
 
 ---
 
 ## Images Strategy
 
-**Critical Image Placements:**
+**Required Images:**
 
-1. **Hero:** Large, dramatic transformation image (Nick in recovery pose or before/after split) with dark gradient overlay
-2. **About Section:** Professional portrait of Nick with determined expression
-3. **Academy Cards:** Exercise demonstration photos with orange accent overlays
-4. **Marketplace:** Product photography on dark backgrounds
-5. **Timeline:** Progression imagery showing recovery milestones
-6. **Testimonials:** Community before/after photos in dark-bordered frames
-7. **Background Textures:** Subtle concrete or carbon fiber patterns on section backgrounds for depth
+1. **Hero Background:** Elegant creator workspace - warm desk lamp, notebook, coffee, window with soft light, artistic tools - treated with dark gradient overlay (black from bottom fading to transparent)
+2. **Workflow Section:** Clean interface screenshots showing studio workspaces on dark backgrounds
+3. **Gallery Showcase:** User-generated content samples - book covers, album art, course thumbnails, digital art
+4. **Testimonials:** Professional creator headshots (circle cropped) against dark backgrounds
+5. **Template Marketplace:** Template previews showing polished designs for various content types
+6. **Background Accents:** Subtle paper texture or canvas grain overlays on section backgrounds for tactile feel
 
-**Treatment:** High contrast, slightly desaturated except for orange accents, dark vignettes on all images
+**Treatment:** High contrast against black, slight warmth in lighting, sophisticated color grading, orange accent glows where appropriate
 
 ---
 
 ## Unique Visual Identity
 
-**"Sasquatch Command Center" Elements:**
-- Sasquatch icon in orange as power symbol
-- Military-grade UI with precision spacing
-- Orange "ALERT" style badges for achievements
-- Bold "MISSION COMPLETE" celebration states
-- Dark brutalist aesthetic with orange energy bursts
-- Gritty texture overlays on hero sections
+**Literary Atelier Elements:**
+- Serif typography for emotional headlines creating editorial gravitas
+- Gallery-style spacing with generous whitespace
+- Subtle paper/canvas textures on card surfaces
+- Orange as creative spark - used sparingly for maximum impact
+- Lucide icons in clean, minimal style
+- Refined hover states: gentle scale (1.02) and subtle orange glow
+- Published work badges styled like wax seals or premium labels
 
-**Battle-Ready Micro-Copy:**
-- "DEPLOY YOUR RECOVERY" not "Get Started"  
-- "ARSENAL" not "Library"
-- "MISSION BUILDER" not "Routine Planner"
-- "WARRIORS" not "Members"
-- "SURVIVAL GRID" not "Exercise Library"
+**Creator-First Language:**
+- "STUDIOS" not "Tools"
+- "SANCTUARY" not "Platform"
+- "PUBLISH" not "Export"
+- "GALLERY" not "Feed"
+- "ATELIER" not "Dashboard"
 
----
+**Micro-interactions:**
+- Studio cards lift slightly on hover with orange icon transition
+- Smooth fade transitions between sections
+- Progress indicators styled as elegant progress bars with orange fill
+- Success states celebrate with refined confetti in orange/white
 
-## Component Enrichment
-
-**Full-Featured Sections:**
-- **Headers:** Logo + full nav + progress ring (for logged users) + notification bell + orange CTA + user avatar
-- **Footers:** Newsletter ("Join The Regiment") + 4-column quick nav + social proof numbers + resources + legal + orange accent dividers
-- **Cards:** Icon/image + title + metadata badges + description + time estimate + difficulty indicator + equipment icons + dual CTAs
-
-This dark theme creates an unstoppable, premium platform matching the intensity of stroke recovery while maintaining professional credibility for healthcare providers.
+This design creates a premium creative environment that inspires while maintaining professional sophistication suitable for serious creators and artists.
