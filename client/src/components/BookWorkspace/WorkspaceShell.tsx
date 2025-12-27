@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useBookProject } from "@/lib/hooks/useBookProject";
 import { Button } from "@/components/ui/button";
 import { 
@@ -13,6 +13,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { 
   ChevronDown, 
   Plus, 
@@ -24,6 +30,8 @@ import {
   Maximize2,
   Minimize2,
   Loader2,
+  HelpCircle,
+  Keyboard,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ChapterSidebar from "./ChapterSidebar";
@@ -252,7 +260,7 @@ export default function WorkspaceShell({ onExport, onPublish }: WorkspaceShellPr
           </>
         )}
 
-        <ResizablePanel defaultSize={leftPanelCollapsed && rightPanelCollapsed ? 100 : 55}>
+        <ResizablePanel defaultSize={leftPanelCollapsed && rightPanelCollapsed ? 100 : 50}>
           <EditorPane
             content={editorContent}
             onChange={setEditorContent}
@@ -263,7 +271,7 @@ export default function WorkspaceShell({ onExport, onPublish }: WorkspaceShellPr
         {!rightPanelCollapsed && (
           <>
             <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={25} minSize={20} maxSize={40}>
+            <ResizablePanel defaultSize={30} minSize={25} maxSize={45}>
               <ToolPanel projectId={project?.id} onInsertContent={handleInsertContent} />
             </ResizablePanel>
           </>
