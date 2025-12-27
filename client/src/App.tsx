@@ -87,6 +87,7 @@ import NotFound from "@/pages/not-found";
 import CreatorScribeWidget from "@/components/CreatorScribeWidget";
 import { LocaleProvider } from "@/lib/hooks/useLocale";
 import { usePlatform } from "@/lib/hooks/usePlatform";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 function HomeLanding() {
   const platform = usePlatform();
@@ -378,6 +379,8 @@ function Router() {
 function App() {
   const { isComplete, markComplete } = useOnboardingComplete();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  
+  useAnalytics();
 
   useEffect(() => {
     if (isComplete === false) {
