@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import ImageEditorModal from "./ImageEditorModal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -963,6 +964,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
   const [isRemovingBg, setIsRemovingBg] = useState<string | null>(null);
   const [imagePlacementMode, setImagePlacementMode] = useState<"auto" | "manual" | "hybrid">("auto");
+  const [editingImage, setEditingImage] = useState<{ url: string; name: string } | null>(null);
 
   const [trimSize, setTrimSize] = useState("6x9");
   const [fontSize, setFontSize] = useState(11);
@@ -2145,7 +2147,11 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                       <h4 className="text-sm font-medium text-zinc-700">Your Images</h4>
                       {generatedImages.map((img) => (
                         <Card key={img.id} className="overflow-hidden bg-white">
-                          <div className="relative aspect-video bg-muted">
+                          <div 
+                            className="relative aspect-video bg-muted cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => setEditingImage({ url: img.url, name: img.prompt })}
+                            title="Click to edit in full editor"
+                          >
                             <img
                               src={img.url}
                               alt={img.analysis?.altText || img.prompt}
@@ -3189,6 +3195,21 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
           </ScrollArea>
         </TabsContent>
       </Tabs>
+
+      {/* Image Editor Modal */}
+      {editingImage && (
+        <ImageEditorModal
+          open={!!editingImage}
+          onOpenChange={(open) => !open && setEditingImage(null)}
+          imageUrl={editingImage.url}
+          imageName={editingImage.name}
+          onInsert={(html) => {
+            if (onInsertContent) {
+              onInsertContent(html);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
