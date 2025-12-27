@@ -81,6 +81,10 @@ import {
   File,
   Plus,
   QrCode,
+  FolderOpen,
+  HelpCircle,
+  BookText,
+  ClipboardList,
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -402,6 +406,133 @@ const bookElementTemplates = {
       <strong>App:</strong> Recommended application name
     </li>
   </ul>
+</div>`,
+  },
+};
+
+const appendixTemplates = {
+  glossary: {
+    icon: BookText,
+    label: "Glossary",
+    description: "Alphabetized definitions of key terms",
+    html: `<div class="appendix-glossary my-6">
+  <h2 class="text-2xl font-bold mb-6 text-foreground border-b pb-2">Glossary of Terms</h2>
+  <dl class="space-y-4">
+    <div class="glossary-entry">
+      <dt class="font-semibold text-primary">Term A</dt>
+      <dd class="pl-4 text-muted-foreground">Definition of Term A. Provide a clear, concise explanation of the term as used in your book.</dd>
+    </div>
+    <div class="glossary-entry">
+      <dt class="font-semibold text-primary">Term B</dt>
+      <dd class="pl-4 text-muted-foreground">Definition of Term B. Include any relevant context or examples.</dd>
+    </div>
+    <div class="glossary-entry">
+      <dt class="font-semibold text-primary">Term C</dt>
+      <dd class="pl-4 text-muted-foreground">Definition of Term C. Technical terms should be explained in accessible language.</dd>
+    </div>
+  </dl>
+</div>`,
+  },
+  resources: {
+    icon: FolderOpen,
+    label: "Resources",
+    description: "Helpful links, books, and tools",
+    html: `<div class="appendix-resources my-6">
+  <h2 class="text-2xl font-bold mb-6 text-foreground border-b pb-2">Additional Resources</h2>
+  
+  <h3 class="text-lg font-semibold mt-6 mb-3 text-foreground">Recommended Reading</h3>
+  <ul class="list-disc pl-6 space-y-2 text-foreground">
+    <li><em>Book Title</em> by Author Name - Brief description of why this resource is valuable.</li>
+    <li><em>Book Title</em> by Author Name - Brief description of why this resource is valuable.</li>
+  </ul>
+  
+  <h3 class="text-lg font-semibold mt-6 mb-3 text-foreground">Helpful Websites</h3>
+  <ul class="list-disc pl-6 space-y-2 text-foreground">
+    <li><strong>Website Name</strong> (www.example.com) - Description of the resource.</li>
+    <li><strong>Website Name</strong> (www.example.com) - Description of the resource.</li>
+  </ul>
+  
+  <h3 class="text-lg font-semibold mt-6 mb-3 text-foreground">Tools & Apps</h3>
+  <ul class="list-disc pl-6 space-y-2 text-foreground">
+    <li><strong>Tool Name</strong> - What it does and how it can help the reader.</li>
+    <li><strong>Tool Name</strong> - What it does and how it can help the reader.</li>
+  </ul>
+</div>`,
+  },
+  worksheet: {
+    icon: ClipboardList,
+    label: "Worksheet",
+    description: "Fillable exercise or planning template",
+    html: `<div class="appendix-worksheet my-6 p-6 border-2 border-dashed border-primary/30 rounded-lg">
+  <h2 class="text-2xl font-bold mb-2 text-foreground">Worksheet: [Title]</h2>
+  <p class="text-muted-foreground mb-6">Instructions: Complete the following sections to apply what you've learned.</p>
+  
+  <div class="worksheet-section mb-6">
+    <h3 class="font-semibold text-foreground mb-2">Section 1: Self-Assessment</h3>
+    <div class="space-y-3">
+      <div class="border-b border-border pb-2">
+        <p class="text-sm text-muted-foreground">Question 1:</p>
+        <p class="min-h-[2rem] text-foreground">_________________________________________________</p>
+      </div>
+      <div class="border-b border-border pb-2">
+        <p class="text-sm text-muted-foreground">Question 2:</p>
+        <p class="min-h-[2rem] text-foreground">_________________________________________________</p>
+      </div>
+    </div>
+  </div>
+  
+  <div class="worksheet-section mb-6">
+    <h3 class="font-semibold text-foreground mb-2">Section 2: Action Items</h3>
+    <ul class="space-y-2">
+      <li class="flex items-start gap-2">
+        <span class="text-muted-foreground">[ ]</span>
+        <span class="text-foreground">Action item 1: ____________________________</span>
+      </li>
+      <li class="flex items-start gap-2">
+        <span class="text-muted-foreground">[ ]</span>
+        <span class="text-foreground">Action item 2: ____________________________</span>
+      </li>
+      <li class="flex items-start gap-2">
+        <span class="text-muted-foreground">[ ]</span>
+        <span class="text-foreground">Action item 3: ____________________________</span>
+      </li>
+    </ul>
+  </div>
+  
+  <div class="worksheet-section">
+    <h3 class="font-semibold text-foreground mb-2">Notes</h3>
+    <div class="min-h-[4rem] border border-border rounded p-2 text-foreground">
+      (Space for reader notes)
+    </div>
+  </div>
+</div>`,
+  },
+  faq: {
+    icon: HelpCircle,
+    label: "FAQ",
+    description: "Frequently asked questions and answers",
+    html: `<div class="appendix-faq my-6">
+  <h2 class="text-2xl font-bold mb-6 text-foreground border-b pb-2">Frequently Asked Questions</h2>
+  
+  <div class="faq-item mb-6">
+    <h3 class="font-semibold text-primary mb-2">Q: First common question readers might ask?</h3>
+    <p class="text-foreground pl-4">A: Provide a clear, helpful answer to this question. Include any relevant details or examples that would help the reader understand.</p>
+  </div>
+  
+  <div class="faq-item mb-6">
+    <h3 class="font-semibold text-primary mb-2">Q: Second common question readers might ask?</h3>
+    <p class="text-foreground pl-4">A: Provide a clear, helpful answer to this question. Reference specific chapters or sections if applicable.</p>
+  </div>
+  
+  <div class="faq-item mb-6">
+    <h3 class="font-semibold text-primary mb-2">Q: Third common question readers might ask?</h3>
+    <p class="text-foreground pl-4">A: Provide a clear, helpful answer to this question. Address any common misconceptions.</p>
+  </div>
+  
+  <div class="faq-item mb-6">
+    <h3 class="font-semibold text-primary mb-2">Q: Fourth common question readers might ask?</h3>
+    <p class="text-foreground pl-4">A: Provide a clear, helpful answer to this question. Include next steps or resources if helpful.</p>
+  </div>
 </div>`,
   },
 };
@@ -1264,6 +1395,44 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                       </Button>
                     </div>
                   )}
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="appendix" className="border rounded-lg px-3">
+                <AccordionTrigger className="text-sm py-2">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4" />
+                    Appendix Templates
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="space-y-2 pb-3">
+                  <p className="text-xs text-muted-foreground mb-2">
+                    One-click starters for common appendix sections
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {Object.entries(appendixTemplates).map(([key, template]) => {
+                      const IconComponent = template.icon;
+                      return (
+                        <Tooltip key={key}>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full justify-start text-xs gap-2"
+                              onClick={() => handleInsertContent(template.html)}
+                              data-testid={`button-insert-appendix-${key}`}
+                            >
+                              <IconComponent className="w-3 h-3 shrink-0" />
+                              {template.label}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="left">
+                            <p>{template.description}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    })}
+                  </div>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
