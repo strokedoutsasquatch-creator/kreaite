@@ -1838,7 +1838,9 @@ DO NOT include any text - the title will be added separately.`;
         'currentStep', 'trimSize', 'fontSize', 'fontFamily',
         'marginInner', 'marginOuter', 'marginTop', 'marginBottom',
         'hasFrontMatter', 'hasBackMatter', 'readinessScore',
-        'coverImageUrl', 'spineWidth', 'status'
+        'coverImageUrl', 'spineWidth', 'status',
+        // AI Learning System fields
+        'chatHistory', 'aiKnowledge', 'conversationSummary', 'authorPreferences', 'knowledgeVersion'
       ];
 
       const updateData: any = { lastEditedAt: new Date() };
@@ -1882,6 +1884,175 @@ DO NOT include any text - the title will be added separately.`;
     } catch (error) {
       console.error("Error deleting book project:", error);
       res.status(500).json({ message: 'Failed to delete book project' });
+    }
+  });
+
+  // ============================================================================
+  // AI LEARNING SYSTEM - Extract knowledge from conversations
+  // ============================================================================
+
+  // Extract facts and update accumulated knowledge after each conversation
+  app.post('/api/book-projects/:id/learn', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const projectId = parseInt(req.params.id);
+      const { latestMessage, latestResponse, manuscriptExcerpt } = req.body;
+      
+      const [project] = await db.select()
+        .from(bookProjects)
+        .where(and(eq(bookProjects.id, projectId), eq(bookProjects.ownerId, userId)));
+
+      if (!project) {
+        return res.status(404).json({ message: 'Book project not found' });
+      }
+
+      // Get existing knowledge
+      const existingKnowledge = (project.aiKnowledge as any) || {
+        characters: [],
+        plotPoints: [],
+        themes: [],
+        issues: [],
+        goals: [],
+        keyFacts: []
+      };
+      
+      const existingSummary = project.conversationSummary || '';
+      const existingPreferences = (project.authorPreferences as any) || {
+        tone: '',
+        pacing: '',
+        avoidTopics: [],
+        writingHabits: []
+      };
+
+      // Use AI to extract new knowledge from the conversation
+      const extractionPrompt = `Analyze this book editing conversation and extract key facts.
+
+MANUSCRIPT CONTEXT: ${manuscriptExcerpt?.substring(0, 2000) || 'No manuscript excerpt provided'}
+
+USER MESSAGE: ${latestMessage}
+
+AI RESPONSE: ${latestResponse?.substring(0, 3000) || ''}
+
+EXISTING KNOWLEDGE:
+- Characters: ${existingKnowledge.characters.join(', ') || 'None yet'}
+- Themes: ${existingKnowledge.themes.join(', ') || 'None yet'}
+- Issues identified: ${existingKnowledge.issues.join(', ') || 'None yet'}
+- Author goals: ${existingKnowledge.goals.join(', ') || 'None yet'}
+
+Extract any NEW information in JSON format:
+{
+  "newCharacters": ["array of character names mentioned"],
+  "newThemes": ["array of themes discussed"],
+  "newIssues": ["array of writing issues identified"],
+  "newGoals": ["array of author goals/intentions mentioned"],
+  "newKeyFacts": ["important facts about the manuscript"],
+  "authorTone": "if author's preferred tone is mentioned, note it here",
+  "summaryUpdate": "1-2 sentence summary of what was discussed in this exchange"
+}
+
+Only include genuinely new information. Return empty arrays if nothing new was learned.`;
+
+      try {
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const result = await model.generateContent(extractionPrompt);
+        const responseText = result.response?.text() || '{}';
+        
+        // Parse the JSON response (handle markdown code blocks)
+        let extracted: any = {};
+        try {
+          const jsonMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)```/) || [null, responseText];
+          const cleanJson = (jsonMatch[1] || responseText).trim();
+          extracted = JSON.parse(cleanJson);
+        } catch (parseError) {
+          console.log("Failed to parse extraction JSON, skipping update");
+          return res.json({ success: true, updated: false });
+        }
+
+        // Merge new knowledge with existing
+        const updatedKnowledge = {
+          characters: [...new Set([...existingKnowledge.characters, ...(extracted.newCharacters || [])])].slice(-50),
+          plotPoints: [...new Set([...existingKnowledge.plotPoints, ...(extracted.newPlotPoints || [])])].slice(-30),
+          themes: [...new Set([...existingKnowledge.themes, ...(extracted.newThemes || [])])].slice(-20),
+          issues: [...new Set([...existingKnowledge.issues, ...(extracted.newIssues || [])])].slice(-20),
+          goals: [...new Set([...existingKnowledge.goals, ...(extracted.newGoals || [])])].slice(-15),
+          keyFacts: [...new Set([...existingKnowledge.keyFacts, ...(extracted.newKeyFacts || [])])].slice(-30)
+        };
+
+        // Update conversation summary (rolling window)
+        const summaryUpdate = extracted.summaryUpdate || '';
+        const updatedSummary = existingSummary
+          ? `${existingSummary} ${summaryUpdate}`.split('. ').slice(-10).join('. ')
+          : summaryUpdate;
+
+        // Update author preferences if mentioned
+        const updatedPreferences = {
+          ...existingPreferences,
+          tone: extracted.authorTone || existingPreferences.tone,
+        };
+
+        // Save updated knowledge
+        await db.update(bookProjects)
+          .set({
+            aiKnowledge: updatedKnowledge,
+            conversationSummary: updatedSummary,
+            authorPreferences: updatedPreferences,
+            knowledgeVersion: (project.knowledgeVersion || 0) + 1,
+            lastEditedAt: new Date()
+          })
+          .where(eq(bookProjects.id, projectId));
+
+        res.json({ 
+          success: true, 
+          updated: true,
+          knowledge: updatedKnowledge,
+          summary: updatedSummary
+        });
+      } catch (aiError) {
+        console.error("AI extraction failed:", aiError);
+        res.json({ success: true, updated: false });
+      }
+    } catch (error) {
+      console.error("Error in knowledge extraction:", error);
+      res.status(500).json({ message: 'Failed to extract knowledge' });
+    }
+  });
+
+  // Get accumulated knowledge for a project
+  app.get('/api/book-projects/:id/knowledge', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const projectId = parseInt(req.params.id);
+      
+      const [project] = await db.select({
+        aiKnowledge: bookProjects.aiKnowledge,
+        conversationSummary: bookProjects.conversationSummary,
+        authorPreferences: bookProjects.authorPreferences,
+        knowledgeVersion: bookProjects.knowledgeVersion
+      })
+        .from(bookProjects)
+        .where(and(eq(bookProjects.id, projectId), eq(bookProjects.ownerId, userId)));
+
+      if (!project) {
+        return res.status(404).json({ message: 'Book project not found' });
+      }
+
+      res.json({
+        aiKnowledge: project.aiKnowledge || {},
+        conversationSummary: project.conversationSummary || '',
+        authorPreferences: project.authorPreferences || {},
+        knowledgeVersion: project.knowledgeVersion || 0
+      });
+    } catch (error) {
+      console.error("Error fetching knowledge:", error);
+      res.status(500).json({ message: 'Failed to fetch knowledge' });
     }
   });
 
