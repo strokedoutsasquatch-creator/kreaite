@@ -265,7 +265,6 @@ const visualTemplates = {
     description: "Step-by-step guide with images",
     html: `<div class="visual-steps my-6">
   <p class="font-bold text-xl text-foreground mb-4">[VISUAL GUIDE] Process Name</p>
-  
   <div class="space-y-4">
     <div class="step-item flex gap-4 p-4 bg-card border rounded-lg">
       <div class="step-number w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold shrink-0">1</div>
@@ -277,7 +276,6 @@ const visualTemplates = {
         <p class="text-xs text-muted-foreground">[Image]</p>
       </div>
     </div>
-    
     <div class="step-item flex gap-4 p-4 bg-card border rounded-lg">
       <div class="step-number w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold shrink-0">2</div>
       <div class="flex-1">
@@ -288,7 +286,6 @@ const visualTemplates = {
         <p class="text-xs text-muted-foreground">[Image]</p>
       </div>
     </div>
-    
     <div class="step-item flex gap-4 p-4 bg-card border rounded-lg">
       <div class="step-number w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold shrink-0">3</div>
       <div class="flex-1">
@@ -308,7 +305,6 @@ const visualTemplates = {
     description: "Comparison view with images",
     html: `<div class="before-after my-6 p-5 border rounded-lg">
   <p class="font-bold text-lg text-foreground mb-4 text-center">[COMPARISON] Title</p>
-  
   <div class="grid grid-cols-2 gap-4">
     <div class="before-section">
       <div class="border-2 border-dashed border-red-500/50 rounded-lg p-4 h-40 flex items-center justify-center bg-red-500/5">
@@ -325,7 +321,6 @@ const visualTemplates = {
         </ul>
       </div>
     </div>
-    
     <div class="after-section">
       <div class="border-2 border-dashed border-green-500/50 rounded-lg p-4 h-40 flex items-center justify-center bg-green-500/5">
         <div class="text-center">
@@ -359,24 +354,20 @@ const visualTemplates = {
       <p class="text-sm text-muted-foreground">[Brief background: occupation, condition, etc.]</p>
     </div>
   </div>
-  
   <div class="mt-4 space-y-4">
     <div class="challenge p-3 bg-red-500/10 rounded">
       <p class="font-semibold text-red-600 dark:text-red-400 text-sm mb-1">The Challenge:</p>
       <p class="text-foreground text-sm">Describe the initial problem, symptoms, or situation...</p>
     </div>
-    
     <div class="approach p-3 bg-blue-500/10 rounded">
       <p class="font-semibold text-blue-600 dark:text-blue-400 text-sm mb-1">The Approach:</p>
       <p class="text-foreground text-sm">Describe the treatment plan, intervention, or solution...</p>
     </div>
-    
     <div class="outcome p-3 bg-green-500/10 rounded">
       <p class="font-semibold text-green-600 dark:text-green-400 text-sm mb-1">The Outcome:</p>
       <p class="text-foreground text-sm">Describe the results, improvements, or lessons learned...</p>
     </div>
   </div>
-  
   <div class="mt-4 p-3 border-l-4 border-primary bg-primary/5 rounded-r">
     <p class="text-sm italic text-foreground">"Quote from the patient or key takeaway from this case..."</p>
   </div>
@@ -516,15 +507,15 @@ const listTemplates = {
   <p class="font-bold text-lg mb-3 text-primary">[KEY TAKEAWAYS]</p>
   <ul class="list-none p-0 leading-loose text-foreground">
     <li class="pl-6 relative">
-      <span class="absolute left-0">→</span>
+      <span class="absolute left-0">-></span>
       First important point to remember
     </li>
     <li class="pl-6 relative">
-      <span class="absolute left-0">→</span>
+      <span class="absolute left-0">-></span>
       Second important point to remember
     </li>
     <li class="pl-6 relative">
-      <span class="absolute left-0">→</span>
+      <span class="absolute left-0">-></span>
       Third important point to remember
     </li>
   </ul>
@@ -549,7 +540,7 @@ const bookElementTemplates = {
     label: "Section Divider",
     description: "Visual break between sections",
     html: `<div class="section-divider text-center my-8 py-4">
-  <p class="text-2xl tracking-[1rem] text-muted-foreground/50">• • •</p>
+  <p class="text-2xl tracking-[1rem] text-muted-foreground/50">* * *</p>
 </div>`,
   },
   pullQuote: {
@@ -559,7 +550,7 @@ const bookElementTemplates = {
     html: `<blockquote class="pull-quote my-8 px-8 py-6 border-l-4 border-primary bg-primary/5 dark:bg-primary/10 text-xl italic leading-relaxed">
   <p class="mb-3 text-foreground">"Insert your compelling quote here. This should be a powerful statement that captures the essence of your message."</p>
   <footer class="text-sm not-italic text-muted-foreground">
-    — <cite class="font-semibold">Author Name</cite>, <span class="italic">Source Title</span>
+    -- <cite class="font-semibold">Author Name</cite>, <span class="italic">Source Title</span>
   </footer>
 </blockquote>`,
   },
@@ -572,7 +563,7 @@ const bookElementTemplates = {
     [SIDEBAR] Title
   </p>
   <p class="text-muted-foreground leading-relaxed">
-    This is supplementary information that provides additional context, background details, or interesting facts related to the main content. Use sidebars to enhance understanding without disrupting the main narrative flow.
+    This is supplementary information that provides additional context, background details, or interesting facts related to the main content.
   </p>
 </aside>`,
   },
@@ -585,7 +576,7 @@ const bookElementTemplates = {
     [PRO TIP]
   </p>
   <p class="text-foreground leading-relaxed">
-    Share expert advice, insider knowledge, or a professional recommendation that gives readers an edge. This is the kind of insight that comes from years of experience.
+    Share expert advice, insider knowledge, or a professional recommendation that gives readers an edge.
   </p>
 </aside>`,
   },
@@ -598,7 +589,7 @@ const bookElementTemplates = {
     [DID YOU KNOW?]
   </p>
   <p class="text-foreground leading-relaxed">
-    Share a surprising fact, interesting statistic, or piece of trivia that enhances the reader's understanding and keeps them engaged. Make it memorable!
+    Share a surprising fact, interesting statistic, or piece of trivia that enhances the reader's understanding.
   </p>
 </aside>`,
   },
@@ -611,7 +602,7 @@ const bookElementTemplates = {
     [QUICK TRICK]
   </p>
   <p class="text-foreground leading-relaxed mb-3">
-    A simple shortcut, hack, or workaround that saves time or makes something easier. Practical advice readers can apply immediately.
+    A simple shortcut, hack, or workaround that saves time or makes something easier.
   </p>
   <p class="text-sm text-muted-foreground italic">
     Time saved: approximately [X] minutes
@@ -627,7 +618,7 @@ const bookElementTemplates = {
     [KNOWLEDGE] Topic Title
   </p>
   <p class="text-foreground leading-relaxed mb-3">
-    Provide a deeper explanation of a concept, term, or process mentioned in the main text. This is where you can get more technical without overwhelming the main narrative.
+    Provide a deeper explanation of a concept, term, or process mentioned in the main text.
   </p>
   <div class="mt-3 pt-3 border-t border-blue-500/20">
     <p class="text-sm text-muted-foreground">
@@ -650,7 +641,7 @@ const bookElementTemplates = {
     [REAL TALK]
   </p>
   <p class="text-foreground leading-relaxed">
-    Be honest with your readers here. Share the hard truths, common mistakes to avoid, or the reality that many books gloss over. Readers appreciate authenticity.
+    Be honest with your readers here. Share the hard truths, common mistakes to avoid, or the reality that many books gloss over.
   </p>
 </aside>`,
   },
@@ -664,314 +655,141 @@ const bookElementTemplates = {
   </p>
   <ul class="list-none p-0 leading-loose text-foreground">
     <li class="pl-5 relative">
-      <span class="absolute left-0">&gt;</span>
+      <span class="absolute left-0">></span>
       <strong>Book Title</strong> by Author Name
     </li>
     <li class="pl-5 relative">
-      <span class="absolute left-0">&gt;</span>
+      <span class="absolute left-0">></span>
       <strong>Website:</strong> www.example.com
     </li>
     <li class="pl-5 relative">
-      <span class="absolute left-0">&gt;</span>
+      <span class="absolute left-0">></span>
       <strong>Video:</strong> Tutorial or documentary title
     </li>
-    <li class="pl-5 relative">
-      <span class="absolute left-0">&gt;</span>
-      <strong>App:</strong> Recommended application name
-    </li>
   </ul>
-</div>`,
-  },
-};
-
-const appendixTemplates = {
-  glossary: {
-    icon: BookText,
-    label: "Glossary",
-    description: "Alphabetized definitions of key terms",
-    html: `<div class="appendix-glossary my-6">
-  <h2 class="text-2xl font-bold mb-6 text-foreground border-b pb-2">Glossary of Terms</h2>
-  <dl class="space-y-4">
-    <div class="glossary-entry">
-      <dt class="font-semibold text-primary">Term A</dt>
-      <dd class="pl-4 text-muted-foreground">Definition of Term A. Provide a clear, concise explanation of the term as used in your book.</dd>
-    </div>
-    <div class="glossary-entry">
-      <dt class="font-semibold text-primary">Term B</dt>
-      <dd class="pl-4 text-muted-foreground">Definition of Term B. Include any relevant context or examples.</dd>
-    </div>
-    <div class="glossary-entry">
-      <dt class="font-semibold text-primary">Term C</dt>
-      <dd class="pl-4 text-muted-foreground">Definition of Term C. Technical terms should be explained in accessible language.</dd>
-    </div>
-  </dl>
-</div>`,
-  },
-  resources: {
-    icon: FolderOpen,
-    label: "Resources",
-    description: "Helpful links, books, and tools",
-    html: `<div class="appendix-resources my-6">
-  <h2 class="text-2xl font-bold mb-6 text-foreground border-b pb-2">Additional Resources</h2>
-  
-  <h3 class="text-lg font-semibold mt-6 mb-3 text-foreground">Recommended Reading</h3>
-  <ul class="list-disc pl-6 space-y-2 text-foreground">
-    <li><em>Book Title</em> by Author Name - Brief description of why this resource is valuable.</li>
-    <li><em>Book Title</em> by Author Name - Brief description of why this resource is valuable.</li>
-  </ul>
-  
-  <h3 class="text-lg font-semibold mt-6 mb-3 text-foreground">Helpful Websites</h3>
-  <ul class="list-disc pl-6 space-y-2 text-foreground">
-    <li><strong>Website Name</strong> (www.example.com) - Description of the resource.</li>
-    <li><strong>Website Name</strong> (www.example.com) - Description of the resource.</li>
-  </ul>
-  
-  <h3 class="text-lg font-semibold mt-6 mb-3 text-foreground">Tools & Apps</h3>
-  <ul class="list-disc pl-6 space-y-2 text-foreground">
-    <li><strong>Tool Name</strong> - What it does and how it can help the reader.</li>
-    <li><strong>Tool Name</strong> - What it does and how it can help the reader.</li>
-  </ul>
-</div>`,
-  },
-  worksheet: {
-    icon: ClipboardList,
-    label: "Worksheet",
-    description: "Fillable exercise or planning template",
-    html: `<div class="appendix-worksheet my-6 p-6 border-2 border-dashed border-primary/30 rounded-lg">
-  <h2 class="text-2xl font-bold mb-2 text-foreground">Worksheet: [Title]</h2>
-  <p class="text-muted-foreground mb-6">Instructions: Complete the following sections to apply what you've learned.</p>
-  
-  <div class="worksheet-section mb-6">
-    <h3 class="font-semibold text-foreground mb-2">Section 1: Self-Assessment</h3>
-    <div class="space-y-3">
-      <div class="border-b border-border pb-2">
-        <p class="text-sm text-muted-foreground">Question 1:</p>
-        <p class="min-h-[2rem] text-foreground">_________________________________________________</p>
-      </div>
-      <div class="border-b border-border pb-2">
-        <p class="text-sm text-muted-foreground">Question 2:</p>
-        <p class="min-h-[2rem] text-foreground">_________________________________________________</p>
-      </div>
-    </div>
-  </div>
-  
-  <div class="worksheet-section mb-6">
-    <h3 class="font-semibold text-foreground mb-2">Section 2: Action Items</h3>
-    <ul class="space-y-2">
-      <li class="flex items-start gap-2">
-        <span class="text-muted-foreground">[ ]</span>
-        <span class="text-foreground">Action item 1: ____________________________</span>
-      </li>
-      <li class="flex items-start gap-2">
-        <span class="text-muted-foreground">[ ]</span>
-        <span class="text-foreground">Action item 2: ____________________________</span>
-      </li>
-      <li class="flex items-start gap-2">
-        <span class="text-muted-foreground">[ ]</span>
-        <span class="text-foreground">Action item 3: ____________________________</span>
-      </li>
-    </ul>
-  </div>
-  
-  <div class="worksheet-section">
-    <h3 class="font-semibold text-foreground mb-2">Notes</h3>
-    <div class="min-h-[4rem] border border-border rounded p-2 text-foreground">
-      (Space for reader notes)
-    </div>
-  </div>
-</div>`,
-  },
-  faq: {
-    icon: HelpCircle,
-    label: "FAQ",
-    description: "Frequently asked questions and answers",
-    html: `<div class="appendix-faq my-6">
-  <h2 class="text-2xl font-bold mb-6 text-foreground border-b pb-2">Frequently Asked Questions</h2>
-  
-  <div class="faq-item mb-6">
-    <h3 class="font-semibold text-primary mb-2">Q: First common question readers might ask?</h3>
-    <p class="text-foreground pl-4">A: Provide a clear, helpful answer to this question. Include any relevant details or examples that would help the reader understand.</p>
-  </div>
-  
-  <div class="faq-item mb-6">
-    <h3 class="font-semibold text-primary mb-2">Q: Second common question readers might ask?</h3>
-    <p class="text-foreground pl-4">A: Provide a clear, helpful answer to this question. Reference specific chapters or sections if applicable.</p>
-  </div>
-  
-  <div class="faq-item mb-6">
-    <h3 class="font-semibold text-primary mb-2">Q: Third common question readers might ask?</h3>
-    <p class="text-foreground pl-4">A: Provide a clear, helpful answer to this question. Address any common misconceptions.</p>
-  </div>
-  
-  <div class="faq-item mb-6">
-    <h3 class="font-semibold text-primary mb-2">Q: Fourth common question readers might ask?</h3>
-    <p class="text-foreground pl-4">A: Provide a clear, helpful answer to this question. Include next steps or resources if helpful.</p>
-  </div>
 </div>`,
   },
 };
 
 const technicalTemplates = {
-  formula: {
-    icon: Sigma,
-    label: "Formula Box",
-    description: "Mathematical equation or formula display",
-    html: `<div class="formula-box my-6 p-5 bg-gradient-to-r from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20 border border-blue-500/30 rounded-lg">
-  <p class="text-xs uppercase tracking-wider text-muted-foreground mb-2">Formula</p>
-  <div class="text-center py-4">
-    <p class="text-xl font-mono text-foreground mb-2">BMI = Weight (kg) / Height (m)<sup>2</sup></p>
-    <p class="text-sm text-muted-foreground italic">or</p>
-    <p class="text-xl font-mono text-foreground mt-2">BMI = [Weight (lb) / Height (in)<sup>2</sup>] x 703</p>
+  equation: {
+    icon: Calculator,
+    label: "Equation Box",
+    description: "Mathematical formula or equation",
+    html: `<div class="equation-box my-6 p-5 bg-slate-500/10 border border-slate-500/30 rounded-lg text-center">
+  <p class="font-mono text-lg text-foreground mb-2">[EQUATION]</p>
+  <p class="font-mono text-xl text-primary">E = mc<sup>2</sup></p>
+  <p class="text-sm text-muted-foreground mt-3 italic">Where E is energy, m is mass, and c is the speed of light</p>
+</div>`,
+  },
+  codeBlock: {
+    icon: Code,
+    label: "Code Block",
+    description: "Code snippet with syntax highlighting",
+    html: `<div class="code-block my-6 rounded-lg overflow-hidden border border-slate-500/30">
+  <div class="bg-slate-800 text-slate-200 px-4 py-2 text-xs font-mono flex justify-between items-center">
+    <span>example.js</span>
+    <span class="text-slate-400">JavaScript</span>
   </div>
-  <div class="mt-4 pt-4 border-t border-border">
-    <p class="text-sm text-muted-foreground"><strong>Where:</strong></p>
-    <ul class="text-sm text-muted-foreground mt-1 space-y-1">
-      <li>Weight = body mass in kilograms or pounds</li>
-      <li>Height = height in meters or inches</li>
+  <pre class="bg-slate-900 text-slate-100 p-4 text-sm font-mono overflow-x-auto"><code>// Your code here
+function example() {
+  return "Hello, World!";
+}</code></pre>
+</div>`,
+  },
+  table: {
+    icon: LayoutGrid,
+    label: "Data Table",
+    description: "Structured data in table format",
+    html: `<div class="data-table my-6 overflow-x-auto">
+  <table class="w-full border-collapse">
+    <thead>
+      <tr class="bg-muted">
+        <th class="border border-border px-4 py-2 text-left font-semibold">Column 1</th>
+        <th class="border border-border px-4 py-2 text-left font-semibold">Column 2</th>
+        <th class="border border-border px-4 py-2 text-left font-semibold">Column 3</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="border border-border px-4 py-2">Data 1</td>
+        <td class="border border-border px-4 py-2">Data 2</td>
+        <td class="border border-border px-4 py-2">Data 3</td>
+      </tr>
+      <tr class="bg-muted/50">
+        <td class="border border-border px-4 py-2">Data 4</td>
+        <td class="border border-border px-4 py-2">Data 5</td>
+        <td class="border border-border px-4 py-2">Data 6</td>
+      </tr>
+    </tbody>
+  </table>
+</div>`,
+  },
+  formula: {
+    icon: FlaskConical,
+    label: "Formula Card",
+    description: "Scientific or technical formula",
+    html: `<div class="formula-card my-6 p-5 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-lg">
+  <p class="font-bold text-base mb-3 text-blue-600 dark:text-blue-400">[FORMULA] Name</p>
+  <div class="bg-white dark:bg-slate-800 rounded p-4 text-center font-mono text-lg mb-3">
+    A = &pi;r<sup>2</sup>
+  </div>
+  <div class="text-sm text-muted-foreground">
+    <p class="mb-1"><strong>Variables:</strong></p>
+    <ul class="list-disc pl-5">
+      <li>A = Area</li>
+      <li>&pi; = Pi (approximately 3.14159)</li>
+      <li>r = Radius</li>
     </ul>
   </div>
 </div>`,
   },
-  algorithm: {
-    icon: Binary,
-    label: "Algorithm",
-    description: "Step-by-step process or decision tree",
-    html: `<div class="algorithm-box my-6 p-5 bg-card border-2 border-primary/30 rounded-lg font-mono">
-  <p class="text-sm font-bold text-primary mb-4">[ALGORITHM] Decision Process Name</p>
-  <div class="space-y-2 text-sm text-foreground">
-    <p class="pl-0"><strong>INPUT:</strong> Patient symptoms, vital signs</p>
-    <p class="pl-0"><strong>OUTPUT:</strong> Recommended action</p>
-    <div class="my-4 border-t border-border"></div>
-    <p class="pl-0">1. <strong>IF</strong> condition A is true <strong>THEN</strong></p>
-    <p class="pl-6">1.1 Perform action X</p>
-    <p class="pl-6">1.2 Record result</p>
-    <p class="pl-0">2. <strong>ELSE IF</strong> condition B is true <strong>THEN</strong></p>
-    <p class="pl-6">2.1 Perform action Y</p>
-    <p class="pl-6">2.2 Reassess after 24 hours</p>
-    <p class="pl-0">3. <strong>ELSE</strong></p>
-    <p class="pl-6">3.1 Perform default action Z</p>
-    <p class="pl-6">3.2 Consult specialist</p>
-    <p class="pl-0">4. <strong>END</strong></p>
-  </div>
-</div>`,
-  },
-  calculator: {
-    icon: Calculator,
-    label: "Calculator",
-    description: "Interactive calculation template",
-    html: `<div class="calculator-box my-6 p-5 bg-green-500/5 dark:bg-green-500/10 border border-green-500/30 rounded-lg">
-  <p class="font-bold text-green-600 dark:text-green-400 mb-4">[CALCULATOR] Name Your Calculator</p>
-  
-  <div class="space-y-4">
-    <div class="calc-input">
-      <p class="text-sm font-medium text-foreground mb-1">Input 1: [Label]</p>
-      <p class="border border-border rounded p-2 bg-background text-muted-foreground">Enter value here: _______</p>
-    </div>
-    
-    <div class="calc-input">
-      <p class="text-sm font-medium text-foreground mb-1">Input 2: [Label]</p>
-      <p class="border border-border rounded p-2 bg-background text-muted-foreground">Enter value here: _______</p>
-    </div>
-    
-    <div class="calc-formula p-3 bg-muted/50 rounded text-center">
-      <p class="text-sm text-muted-foreground">Formula: (Input 1 x Input 2) / Constant</p>
-    </div>
-    
-    <div class="calc-result p-4 bg-green-500/20 rounded-lg text-center">
-      <p class="text-sm text-muted-foreground mb-1">Result:</p>
-      <p class="text-2xl font-bold text-green-600 dark:text-green-400">= _______</p>
-    </div>
-    
-    <div class="interpretation text-sm text-muted-foreground">
-      <p><strong>Interpretation:</strong></p>
-      <ul class="list-disc pl-5 mt-1">
-        <li>If result is less than X: interpretation A</li>
-        <li>If result is X to Y: interpretation B</li>
-        <li>If result is greater than Y: interpretation C</li>
-      </ul>
-    </div>
-  </div>
-</div>`,
-  },
-  selfAssessment: {
-    icon: FlaskConical,
-    label: "Self-Assessment",
-    description: "Scored questionnaire or evaluation",
-    html: `<div class="self-assessment my-6 p-5 bg-purple-500/5 dark:bg-purple-500/10 border border-purple-500/30 rounded-lg">
-  <p class="font-bold text-purple-600 dark:text-purple-400 mb-2">[SELF-ASSESSMENT] Assessment Title</p>
-  <p class="text-sm text-muted-foreground mb-4">Instructions: Rate each item from 1 (Strongly Disagree) to 5 (Strongly Agree)</p>
-  
-  <div class="space-y-4">
-    <div class="assessment-item p-3 bg-background rounded border border-border">
-      <p class="text-foreground mb-2">1. Statement or question to evaluate</p>
-      <p class="text-sm text-muted-foreground">Score: [ 1 ] [ 2 ] [ 3 ] [ 4 ] [ 5 ]</p>
-    </div>
-    
-    <div class="assessment-item p-3 bg-background rounded border border-border">
-      <p class="text-foreground mb-2">2. Second statement or question</p>
-      <p class="text-sm text-muted-foreground">Score: [ 1 ] [ 2 ] [ 3 ] [ 4 ] [ 5 ]</p>
-    </div>
-    
-    <div class="assessment-item p-3 bg-background rounded border border-border">
-      <p class="text-foreground mb-2">3. Third statement or question</p>
-      <p class="text-sm text-muted-foreground">Score: [ 1 ] [ 2 ] [ 3 ] [ 4 ] [ 5 ]</p>
-    </div>
-    
-    <div class="assessment-item p-3 bg-background rounded border border-border">
-      <p class="text-foreground mb-2">4. Fourth statement or question</p>
-      <p class="text-sm text-muted-foreground">Score: [ 1 ] [ 2 ] [ 3 ] [ 4 ] [ 5 ]</p>
-    </div>
-    
-    <div class="assessment-item p-3 bg-background rounded border border-border">
-      <p class="text-foreground mb-2">5. Fifth statement or question</p>
-      <p class="text-sm text-muted-foreground">Score: [ 1 ] [ 2 ] [ 3 ] [ 4 ] [ 5 ]</p>
-    </div>
-  </div>
-  
-  <div class="mt-4 p-4 bg-purple-500/20 rounded-lg">
-    <p class="font-medium text-foreground mb-2">Total Score: _____ / 25</p>
-    <div class="text-sm text-muted-foreground">
-      <p><strong>Score Interpretation:</strong></p>
-      <ul class="list-disc pl-5 mt-1">
-        <li>5-10: Level 1 - Description</li>
-        <li>11-17: Level 2 - Description</li>
-        <li>18-25: Level 3 - Description</li>
-      </ul>
-    </div>
-  </div>
+  definition: {
+    icon: BookText,
+    label: "Definition",
+    description: "Term definition with explanation",
+    html: `<div class="definition my-6 p-5 border-l-4 border-primary bg-primary/5 rounded-r-lg">
+  <p class="font-bold text-lg text-primary mb-1">[TERM]</p>
+  <p class="text-sm text-muted-foreground italic mb-3">/pronunciation/</p>
+  <p class="text-foreground leading-relaxed">
+    The definition of the term goes here. Provide a clear, concise explanation that helps readers understand the concept.
+  </p>
+  <p class="text-sm text-muted-foreground mt-3">
+    <strong>Example:</strong> "The term is used when..."
+  </p>
 </div>`,
   },
 };
 
 export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps) {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("ai");
+  const [activeTab, setActiveTab] = useState("create");
   
+  const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
       role: "assistant",
-      content: "I'm your AI writing assistant. Ask me anything about your book, or let me help you with research, outlines, character development, or writing blocks.",
+      content: "Hello! I'm your AI writing assistant. I can help you with writing, editing, brainstorming ideas, and improving your content. What would you like to work on?",
       timestamp: new Date(),
-    }
+    },
   ]);
-  const [chatInput, setChatInput] = useState("");
   const [isChatLoading, setIsChatLoading] = useState(false);
 
   const [imagePrompt, setImagePrompt] = useState("");
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
   const [isRemovingBg, setIsRemovingBg] = useState<string | null>(null);
-  const [imagePlacementMode, setImagePlacementMode] = useState<"auto" | "manual" | "hybrid">("auto");
+  const [imagePlacementMode, setImagePlacementMode] = useState<"auto" | "hybrid" | "manual">("hybrid");
   const [expandedImageId, setExpandedImageId] = useState<string | null>(null);
   const [imageSettings, setImageSettings] = useState<Record<string, { size: string; align: string; caption: string; altText: string }>>({});
 
   const [trimSize, setTrimSize] = useState("6x9");
-  const [fontSize, setFontSize] = useState(11);
-  const [fontFamily, setFontFamily] = useState("garamond");
-  const [lineSpacing, setLineSpacing] = useState(1.5);
   const [marginInside, setMarginInside] = useState(0.75);
   const [marginOutside, setMarginOutside] = useState(0.5);
+  const [fontFamily, setFontFamily] = useState("garamond");
+  const [fontSize, setFontSize] = useState(11);
+  const [lineSpacing, setLineSpacing] = useState(1.5);
   const [includePageNumbers, setIncludePageNumbers] = useState(true);
   const [includeHeaders, setIncludeHeaders] = useState(true);
   const [chapterBreakStyle, setChapterBreakStyle] = useState("new-page");
@@ -991,132 +809,8 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
     pageCountMet: false,
   });
 
-  const [chartType, setChartType] = useState<"bar" | "pie" | "line">("bar");
-  const [chartLabels, setChartLabels] = useState("Label 1, Label 2, Label 3");
-  const [chartValues, setChartValues] = useState("25, 50, 75");
-  const [chartTitle, setChartTitle] = useState("My Chart");
-
-  const [qrCodeText, setQrCodeText] = useState("");
-  const [qrCodeSize, setQrCodeSize] = useState<"100" | "150" | "200">("150");
-  const [showQrPreview, setShowQrPreview] = useState(false);
-
   const [sources, setSources] = useState<Source[]>([]);
   const [newSource, setNewSource] = useState<{ type: "book" | "website" | "article" | "journal"; title: string; author: string; url: string; year: string }>({ type: "book", title: "", author: "", url: "", year: "" });
-
-  const generateBarChart = (labels: string[], values: number[], title: string): string => {
-    if (values.length === 0 || labels.length === 0) return '';
-    const maxValue = Math.max(...values);
-    if (maxValue === 0) return '';
-    const barWidth = 40;
-    const gap = 20;
-    const height = 200;
-    const chartWidth = (barWidth + gap) * values.length;
-    
-    const bars = values.map((v, i) => {
-      const barHeight = (v / maxValue) * 150;
-      const x = i * (barWidth + gap) + 20;
-      const y = height - barHeight - 30;
-      return `<rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" fill="#FF6B35"/>
-              <text x="${x + barWidth/2}" y="${height - 10}" text-anchor="middle" font-size="10" fill="currentColor">${labels[i] || ''}</text>
-              <text x="${x + barWidth/2}" y="${y - 5}" text-anchor="middle" font-size="10" fill="currentColor">${v}</text>`;
-    }).join('');
-    
-    return `<svg viewBox="0 0 ${chartWidth + 40} ${height + 20}" class="w-full max-w-md mx-auto my-4">
-      <text x="${(chartWidth + 40)/2}" y="15" text-anchor="middle" font-weight="bold" fill="currentColor">${title}</text>
-      ${bars}
-    </svg>`;
-  };
-
-  const generatePieChart = (labels: string[], values: number[], title: string): string => {
-    if (values.length === 0 || labels.length === 0) return '';
-    const total = values.reduce((a, b) => a + b, 0);
-    if (total === 0) return '';
-    const size = 200;
-    const cx = size / 2;
-    const cy = size / 2 + 20;
-    const r = 70;
-    const colors = ['#FF6B35', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
-    
-    let currentAngle = -90;
-    const slices = values.map((v, i) => {
-      const angle = (v / total) * 360;
-      const startAngle = currentAngle;
-      const endAngle = currentAngle + angle;
-      currentAngle = endAngle;
-      
-      const startRad = (startAngle * Math.PI) / 180;
-      const endRad = (endAngle * Math.PI) / 180;
-      const x1 = cx + r * Math.cos(startRad);
-      const y1 = cy + r * Math.sin(startRad);
-      const x2 = cx + r * Math.cos(endRad);
-      const y2 = cy + r * Math.sin(endRad);
-      const largeArc = angle > 180 ? 1 : 0;
-      
-      const midAngle = ((startAngle + endAngle) / 2 * Math.PI) / 180;
-      const labelX = cx + (r + 20) * Math.cos(midAngle);
-      const labelY = cy + (r + 20) * Math.sin(midAngle);
-      
-      return `<path d="M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z" fill="${colors[i % colors.length]}"/>
-              <text x="${labelX}" y="${labelY}" text-anchor="middle" font-size="9" fill="currentColor">${labels[i] || ''} (${Math.round((v/total)*100)}%)</text>`;
-    }).join('');
-    
-    return `<svg viewBox="0 0 ${size} ${size + 40}" class="w-full max-w-xs mx-auto my-4">
-      <text x="${size/2}" y="15" text-anchor="middle" font-weight="bold" fill="currentColor">${title}</text>
-      ${slices}
-    </svg>`;
-  };
-
-  const generateLineChart = (labels: string[], values: number[], title: string): string => {
-    if (values.length === 0 || labels.length === 0) return '';
-    const maxValue = Math.max(...values);
-    if (maxValue === 0) return '';
-    const width = 300;
-    const height = 200;
-    const padding = 40;
-    const graphWidth = width - padding * 2;
-    const graphHeight = height - padding * 2;
-    
-    const points = values.map((v, i) => {
-      const x = padding + (i / (values.length - 1 || 1)) * graphWidth;
-      const y = height - padding - (v / maxValue) * graphHeight;
-      return `${x},${y}`;
-    }).join(' ');
-    
-    const circles = values.map((v, i) => {
-      const x = padding + (i / (values.length - 1 || 1)) * graphWidth;
-      const y = height - padding - (v / maxValue) * graphHeight;
-      return `<circle cx="${x}" cy="${y}" r="4" fill="#FF6B35"/>
-              <text x="${x}" y="${y - 10}" text-anchor="middle" font-size="9" fill="currentColor">${v}</text>`;
-    }).join('');
-    
-    const labelTexts = labels.map((label, i) => {
-      const x = padding + (i / (values.length - 1 || 1)) * graphWidth;
-      return `<text x="${x}" y="${height - 10}" text-anchor="middle" font-size="9" fill="currentColor">${label}</text>`;
-    }).join('');
-    
-    return `<svg viewBox="0 0 ${width} ${height + 20}" class="w-full max-w-md mx-auto my-4">
-      <text x="${width/2}" y="15" text-anchor="middle" font-weight="bold" fill="currentColor">${title}</text>
-      <line x1="${padding}" y1="${height - padding}" x2="${width - padding}" y2="${height - padding}" stroke="currentColor" stroke-opacity="0.3"/>
-      <line x1="${padding}" y1="${padding}" x2="${padding}" y2="${height - padding}" stroke="currentColor" stroke-opacity="0.3"/>
-      <polyline points="${points}" fill="none" stroke="#FF6B35" stroke-width="2"/>
-      ${circles}
-      ${labelTexts}
-    </svg>`;
-  };
-
-  const getChartPreview = (): string => {
-    const labels = chartLabels.split(',').map(l => l.trim()).filter(l => l);
-    const values = chartValues.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
-    
-    if (labels.length === 0 || values.length === 0) return '';
-    
-    switch (chartType) {
-      case 'bar': return generateBarChart(labels, values, chartTitle);
-      case 'pie': return generatePieChart(labels, values, chartTitle);
-      case 'line': return generateLineChart(labels, values, chartTitle);
-      default: return '';
-    }
-  };
 
   const handleInsertContent = (html: string) => {
     if (onInsertContent) {
@@ -1226,13 +920,11 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
   };
 
   const handleAnalyzeImage = async (imageId: string, imageUrl: string) => {
-    // Set analyzing state
     setGeneratedImages(prev => prev.map(img => 
       img.id === imageId ? { ...img, isAnalyzing: true } : img
     ));
 
     try {
-      // Convert blob URL to base64 if it's a local file
       let imageBase64 = undefined;
       if (imageUrl.startsWith('blob:')) {
         const response = await fetch(imageUrl);
@@ -1271,172 +963,397 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
   return (
     <div className="h-full flex flex-col bg-zinc-800">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
-        {/* Large visible tab bar */}
         <div className="border-b border-zinc-600 p-3 shrink-0 bg-zinc-700">
-          <div className="grid grid-cols-4 gap-2 mb-3">
-            <TabsList className="col-span-4 grid grid-cols-4 h-auto bg-zinc-600 p-1 rounded-lg">
-              <TabsTrigger 
-                value="ai" 
-                className="flex flex-col items-center gap-1 py-2 px-1 text-zinc-300 data-[state=active]:bg-primary data-[state=active]:text-white hover:text-white text-xs font-medium"
-              >
-                <MessageCircle className="w-5 h-5" />
-                AI
-              </TabsTrigger>
-              <TabsTrigger 
-                value="import" 
-                className="flex flex-col items-center gap-1 py-2 px-1 text-zinc-300 data-[state=active]:bg-primary data-[state=active]:text-white hover:text-white text-xs font-medium" 
-                data-testid="tab-import"
-              >
-                <FileUp className="w-5 h-5" />
-                Import
-              </TabsTrigger>
-              <TabsTrigger 
-                value="content" 
-                className="flex flex-col items-center gap-1 py-2 px-1 text-zinc-300 data-[state=active]:bg-primary data-[state=active]:text-white hover:text-white text-xs font-medium"
-              >
-                <LayoutGrid className="w-5 h-5" />
-                Content
-              </TabsTrigger>
-              <TabsTrigger 
-                value="images" 
-                className="flex flex-col items-center gap-1 py-2 px-1 text-zinc-300 data-[state=active]:bg-primary data-[state=active]:text-white hover:text-white text-xs font-medium"
-              >
-                <Image className="w-5 h-5" />
-                Images
-              </TabsTrigger>
-            </TabsList>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <TabsList className="col-span-3 grid grid-cols-3 h-auto bg-zinc-600 p-1 rounded-lg">
-              <TabsTrigger 
-                value="research" 
-                className="flex flex-col items-center gap-1 py-2 px-1 text-zinc-300 data-[state=active]:bg-primary data-[state=active]:text-white hover:text-white text-xs font-medium" 
-                data-testid="tab-research"
-              >
-                <BookMarked className="w-5 h-5" />
-                Research
-              </TabsTrigger>
-              <TabsTrigger 
-                value="format" 
-                className="flex flex-col items-center gap-1 py-2 px-1 text-zinc-300 data-[state=active]:bg-primary data-[state=active]:text-white hover:text-white text-xs font-medium"
-              >
-                <Settings className="w-5 h-5" />
-                Format
-              </TabsTrigger>
-              <TabsTrigger 
-                value="compliance" 
-                className="flex flex-col items-center gap-1 py-2 px-1 text-zinc-300 data-[state=active]:bg-primary data-[state=active]:text-white hover:text-white text-xs font-medium" 
-                data-testid="tab-compliance"
-              >
-                <Shield className="w-5 h-5" />
-                Compliance
-              </TabsTrigger>
-            </TabsList>
-          </div>
+          <TabsList className="grid grid-cols-3 h-auto bg-zinc-600 p-1 rounded-lg w-full">
+            <TabsTrigger 
+              value="create" 
+              className="flex items-center justify-center gap-2 py-3 px-2 text-zinc-300 data-[state=active]:bg-primary data-[state=active]:text-white hover:text-white text-sm font-medium"
+              data-testid="tab-create"
+            >
+              <Wand2 className="w-4 h-4" />
+              Create
+            </TabsTrigger>
+            <TabsTrigger 
+              value="library" 
+              className="flex items-center justify-center gap-2 py-3 px-2 text-zinc-300 data-[state=active]:bg-primary data-[state=active]:text-white hover:text-white text-sm font-medium"
+              data-testid="tab-library"
+            >
+              <FolderOpen className="w-4 h-4" />
+              Library
+            </TabsTrigger>
+            <TabsTrigger 
+              value="format" 
+              className="flex items-center justify-center gap-2 py-3 px-2 text-zinc-300 data-[state=active]:bg-primary data-[state=active]:text-white hover:text-white text-sm font-medium"
+              data-testid="tab-format"
+            >
+              <Settings className="w-4 h-4" />
+              Format
+            </TabsTrigger>
+          </TabsList>
         </div>
 
-        <TabsContent value="ai" className="flex-1 flex flex-col m-0 overflow-hidden bg-zinc-300">
-          <ResizablePanelGroup direction="vertical" className="flex-1">
-            <ResizablePanel defaultSize={75} minSize={40} maxSize={90}>
-              <ScrollArea className="h-full p-3">
-                <div className="space-y-4">
-                  {chatMessages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      {msg.role === 'assistant' && (
-                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                          <Bot className="w-3 h-3 text-primary" />
-                        </div>
-                      )}
-                      <div className="flex flex-col gap-1 max-w-[85%]">
-                        <div
-                          className={`rounded-lg px-3 py-2 text-sm ${
-                            msg.role === 'user'
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted'
-                          }`}
-                        >
-                          {msg.content}
-                        </div>
-                        {msg.role === 'assistant' && msg.id !== 'welcome' && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="self-start h-6 px-2 text-xs gap-1"
-                            onClick={() => {
-                              handleInsertContent(`<p>${msg.content}</p>`);
-                            }}
-                            data-testid={`button-insert-ai-response-${msg.id}`}
+        {/* CREATE TAB - AI, Images, Content, Import */}
+        <TabsContent value="create" className="flex-1 m-0 overflow-hidden bg-zinc-300">
+          <ScrollArea className="h-full">
+            <div className="p-3">
+              <Accordion type="multiple" defaultValue={["ai-chat", "images"]} className="space-y-2">
+                {/* AI Chat/Writing */}
+                <AccordionItem value="ai-chat" className="border rounded-lg bg-white overflow-hidden">
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <MessageCircle className="w-4 h-4 text-primary" />
+                      <span className="font-medium">AI Writing Assistant</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <div className="space-y-3">
+                      <div className="bg-zinc-100 rounded-lg p-3 max-h-48 overflow-y-auto">
+                        {chatMessages.map((msg) => (
+                          <div
+                            key={msg.id}
+                            className={`flex gap-2 mb-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                           >
-                            <Plus className="w-3 h-3" />
-                            Insert into Editor
-                          </Button>
+                            {msg.role === 'assistant' && (
+                              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                <Bot className="w-3 h-3 text-primary" />
+                              </div>
+                            )}
+                            <div className="flex flex-col gap-1 max-w-[85%]">
+                              <div
+                                className={`rounded-lg px-3 py-2 text-sm ${
+                                  msg.role === 'user'
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'bg-white border'
+                                }`}
+                              >
+                                {msg.content}
+                              </div>
+                              {msg.role === 'assistant' && msg.id !== 'welcome' && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="self-start h-6 px-2 text-xs gap-1"
+                                  onClick={() => handleInsertContent(`<p>${msg.content}</p>`)}
+                                  data-testid={`button-insert-ai-response-${msg.id}`}
+                                >
+                                  <Plus className="w-3 h-3" />
+                                  Insert
+                                </Button>
+                              )}
+                            </div>
+                            {msg.role === 'user' && (
+                              <div className="w-6 h-6 rounded-full bg-zinc-200 flex items-center justify-center shrink-0">
+                                <User className="w-3 h-3" />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                        {isChatLoading && (
+                          <div className="flex gap-2">
+                            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                              <Loader2 className="w-3 h-3 text-primary animate-spin" />
+                            </div>
+                            <div className="bg-white border rounded-lg px-3 py-2 text-sm">Thinking...</div>
+                          </div>
                         )}
                       </div>
-                      {msg.role === 'user' && (
-                        <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0">
-                          <User className="w-3 h-3" />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                  {isChatLoading && (
-                    <div className="flex gap-2">
-                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Loader2 className="w-3 h-3 text-primary animate-spin" />
+                      <div className="flex gap-2">
+                        <Input
+                          value={chatInput}
+                          onChange={(e) => setChatInput(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
+                          placeholder="Ask anything..."
+                          className="flex-1"
+                          data-testid="input-ai-chat"
+                        />
+                        <Button 
+                          size="icon" 
+                          onClick={handleSendMessage} 
+                          disabled={isChatLoading}
+                          data-testid="button-send-chat"
+                        >
+                          <Send className="w-4 h-4" />
+                        </Button>
                       </div>
-                      <div className="bg-muted rounded-lg px-3 py-2 text-sm">
-                        Thinking...
-                      </div>
                     </div>
-                  )}
-                </div>
-              </ScrollArea>
-            </ResizablePanel>
-            <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={25} minSize={10} maxSize={60}>
-              <div className="h-full p-3 border-t overflow-y-auto">
-                <div className="flex gap-2">
-                  <Input
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-                    placeholder="Ask anything..."
-                    className="flex-1"
-                    data-testid="input-ai-chat"
-                  />
-                  <Button 
-                    size="icon" 
-                    onClick={handleSendMessage} 
-                    disabled={isChatLoading}
-                    data-testid="button-send-chat"
-                  >
-                    <Send className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        </TabsContent>
+                  </AccordionContent>
+                </AccordionItem>
 
-        <TabsContent value="import" className="flex-1 flex flex-col m-0 overflow-hidden bg-zinc-300">
-          <ResizablePanelGroup direction="vertical" className="flex-1">
-            <ResizablePanel defaultSize={65} minSize={30} maxSize={85}>
-              <div className="h-full p-3 overflow-y-auto">
-                <Card className="bg-zinc-600 border-zinc-400">
-                  <CardHeader className="py-3 gap-1">
-                    <CardTitle className="text-sm flex items-center gap-2 text-white">
-                      <FileUp className="w-4 h-4" />
-                      Import Document
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <p className="text-xs text-muted-foreground">
-                      Import content from Word documents, PDFs, text files, or Markdown files directly into your manuscript.
+                {/* Image Generation & Upload */}
+                <AccordionItem value="images" className="border rounded-lg bg-white overflow-hidden">
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <Image className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Images</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <div className="space-y-4">
+                      {/* Upload */}
+                      <div>
+                        <Label className="text-xs font-medium text-zinc-600 mb-2 block">Upload Image</Label>
+                        <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-dashed border-zinc-300 rounded-lg cursor-pointer hover:bg-zinc-50 transition-colors">
+                          <div className="flex items-center gap-2">
+                            <Upload className="w-4 h-4 text-zinc-400" />
+                            <p className="text-xs text-zinc-500">Drop or click to upload</p>
+                          </div>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const url = URL.createObjectURL(file);
+                                const newImage: GeneratedImage = {
+                                  id: Date.now().toString(),
+                                  url,
+                                  prompt: file.name,
+                                  hasBackground: true,
+                                };
+                                setGeneratedImages(prev => [newImage, ...prev]);
+                                toast({ title: "Image Uploaded", description: file.name });
+                              }
+                            }}
+                            data-testid="input-upload-image"
+                          />
+                        </label>
+                      </div>
+                      
+                      {/* Generate */}
+                      <div>
+                        <Label className="text-xs font-medium text-zinc-600 mb-2 block">Generate with AI</Label>
+                        <Textarea
+                          value={imagePrompt}
+                          onChange={(e) => setImagePrompt(e.target.value)}
+                          placeholder="Describe the image..."
+                          className="min-h-[60px] text-sm mb-2"
+                          data-testid="textarea-image-prompt"
+                        />
+                        <Button
+                          onClick={handleGenerateImage}
+                          disabled={isGeneratingImage || !imagePrompt.trim()}
+                          className="w-full"
+                          size="sm"
+                          data-testid="button-generate-image"
+                        >
+                          {isGeneratingImage ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <Wand2 className="w-4 h-4 mr-2" />
+                          )}
+                          Generate
+                        </Button>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* Content Blocks */}
+                <AccordionItem value="content" className="border rounded-lg bg-white overflow-hidden">
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <LayoutGrid className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Content Blocks</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <Accordion type="multiple" className="space-y-2">
+                      {/* Callouts */}
+                      <AccordionItem value="callouts" className="border rounded px-2">
+                        <AccordionTrigger className="text-xs py-2">
+                          <div className="flex items-center gap-2">
+                            <Lightbulb className="w-3 h-3" />
+                            Callouts
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pb-2">
+                          <div className="grid grid-cols-2 gap-1">
+                            {Object.entries(calloutTemplates).map(([key, template]) => {
+                              const IconComponent = template.icon;
+                              return (
+                                <Button
+                                  key={key}
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full justify-start text-xs gap-1 h-8"
+                                  onClick={() => handleInsertContent(template.html)}
+                                  data-testid={`button-insert-callout-${key}`}
+                                >
+                                  <IconComponent className="w-3 h-3 shrink-0" />
+                                  {template.label}
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+
+                      {/* Charts */}
+                      <AccordionItem value="charts" className="border rounded px-2">
+                        <AccordionTrigger className="text-xs py-2">
+                          <div className="flex items-center gap-2">
+                            <BarChart3 className="w-3 h-3" />
+                            Charts
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pb-2">
+                          <div className="grid grid-cols-2 gap-1">
+                            {Object.entries(chartTemplates).map(([key, template]) => {
+                              const IconComponent = template.icon;
+                              return (
+                                <Button
+                                  key={key}
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full justify-start text-xs gap-1 h-8"
+                                  onClick={() => handleInsertContent(template.html)}
+                                  data-testid={`button-insert-chart-${key}`}
+                                >
+                                  <IconComponent className="w-3 h-3 shrink-0" />
+                                  {template.label}
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+
+                      {/* Lists */}
+                      <AccordionItem value="lists" className="border rounded px-2">
+                        <AccordionTrigger className="text-xs py-2">
+                          <div className="flex items-center gap-2">
+                            <ListOrdered className="w-3 h-3" />
+                            Lists & Timelines
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pb-2">
+                          <div className="grid grid-cols-2 gap-1">
+                            {Object.entries(listTemplates).map(([key, template]) => {
+                              const IconComponent = template.icon;
+                              return (
+                                <Button
+                                  key={key}
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full justify-start text-xs gap-1 h-8"
+                                  onClick={() => handleInsertContent(template.html)}
+                                  data-testid={`button-insert-list-${key}`}
+                                >
+                                  <IconComponent className="w-3 h-3 shrink-0" />
+                                  {template.label}
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+
+                      {/* Visual Templates */}
+                      <AccordionItem value="visual" className="border rounded px-2">
+                        <AccordionTrigger className="text-xs py-2">
+                          <div className="flex items-center gap-2">
+                            <Layers className="w-3 h-3" />
+                            Visual Templates
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pb-2">
+                          <div className="grid grid-cols-2 gap-1">
+                            {Object.entries(visualTemplates).map(([key, template]) => {
+                              const IconComponent = template.icon;
+                              return (
+                                <Button
+                                  key={key}
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full justify-start text-xs gap-1 h-8"
+                                  onClick={() => handleInsertContent(template.html)}
+                                  data-testid={`button-insert-visual-${key}`}
+                                >
+                                  <IconComponent className="w-3 h-3 shrink-0" />
+                                  {template.label}
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+
+                      {/* Book Elements */}
+                      <AccordionItem value="book-elements" className="border rounded px-2">
+                        <AccordionTrigger className="text-xs py-2">
+                          <div className="flex items-center gap-2">
+                            <BookMarked className="w-3 h-3" />
+                            Book Elements
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pb-2">
+                          <div className="grid grid-cols-2 gap-1">
+                            {Object.entries(bookElementTemplates).map(([key, template]) => {
+                              const IconComponent = template.icon;
+                              return (
+                                <Button
+                                  key={key}
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full justify-start text-xs gap-1 h-8"
+                                  onClick={() => handleInsertContent(template.html)}
+                                  data-testid={`button-insert-book-${key}`}
+                                >
+                                  <IconComponent className="w-3 h-3 shrink-0" />
+                                  {template.label}
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+
+                      {/* Technical */}
+                      <AccordionItem value="technical" className="border rounded px-2">
+                        <AccordionTrigger className="text-xs py-2">
+                          <div className="flex items-center gap-2">
+                            <Code className="w-3 h-3" />
+                            Technical
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pb-2">
+                          <div className="grid grid-cols-2 gap-1">
+                            {Object.entries(technicalTemplates).map(([key, template]) => {
+                              const IconComponent = template.icon;
+                              return (
+                                <Button
+                                  key={key}
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full justify-start text-xs gap-1 h-8"
+                                  onClick={() => handleInsertContent(template.html)}
+                                  data-testid={`button-insert-technical-${key}`}
+                                >
+                                  <IconComponent className="w-3 h-3 shrink-0" />
+                                  {template.label}
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* Import Document */}
+                <AccordionItem value="import" className="border rounded-lg bg-white overflow-hidden">
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <FileUp className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Import Document</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Import from Word, PDF, text, or Markdown files.
                     </p>
-                    
                     <div className="border-2 border-dashed rounded-lg p-4 text-center">
                       <input
                         type="file"
@@ -1508,1753 +1425,970 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                       
                       {isImporting ? (
                         <div className="space-y-2">
-                          <Loader2 className="w-8 h-8 mx-auto text-primary animate-spin" />
-                          <p className="text-sm text-muted-foreground">Parsing {importedFile?.name}...</p>
+                          <Loader2 className="w-6 h-6 mx-auto animate-spin text-primary" />
+                          <p className="text-xs text-muted-foreground">
+                            Importing {importedFile?.name}...
+                          </p>
                         </div>
                       ) : (
-                        <label htmlFor="document-import-input" className="cursor-pointer block">
-                          <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                          <p className="text-sm font-medium">Click to upload</p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            .docx, .pdf, .txt, .md
-                          </p>
+                        <label htmlFor="document-import-input" className="cursor-pointer">
+                          <FileUp className="w-8 h-8 mx-auto text-zinc-400 mb-2" />
+                          <p className="text-sm font-medium">Drop file or click to upload</p>
+                          <p className="text-xs text-muted-foreground">.docx, .pdf, .txt, .md</p>
                         </label>
                       )}
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </ResizablePanel>
-            <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={35} minSize={15} maxSize={70}>
-              <div className="h-full p-3 overflow-y-auto">
-                <Card className="bg-zinc-600 border-zinc-400">
-                  <CardHeader className="py-3 gap-1">
-                    <CardTitle className="text-sm flex items-center gap-2 text-white">
-                      <File className="w-4 h-4" />
-                      Supported Formats
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2 text-xs text-zinc-300">
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-2">
-                          <Badge variant="secondary">.docx</Badge>
-                          Microsoft Word
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-2">
-                          <Badge variant="secondary">.pdf</Badge>
-                          PDF Documents
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-2">
-                          <Badge variant="secondary">.txt</Badge>
-                          Plain Text
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-2">
-                          <Badge variant="secondary">.md</Badge>
-                          Markdown
-                        </span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        </TabsContent>
-
-        <TabsContent value="content" className="flex-1 m-0 overflow-y-auto bg-zinc-300">
-          <ScrollArea className="flex-1 p-3">
-            <Accordion type="multiple" defaultValue={["callouts", "charts", "lists", "book-elements"]} className="space-y-2">
-              <AccordionItem value="callouts" className="border rounded-lg px-3">
-                <AccordionTrigger className="text-sm py-2">
-                  <div className="flex items-center gap-2">
-                    <Lightbulb className="w-4 h-4" />
-                    Callout Boxes
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="space-y-2 pb-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    {Object.entries(calloutTemplates).map(([key, template]) => {
-                      const IconComponent = template.icon;
-                      return (
-                        <Tooltip key={key}>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full justify-start text-xs gap-2"
-                              onClick={() => handleInsertContent(template.html)}
-                              data-testid={`button-insert-${key}`}
-                            >
-                              <IconComponent className="w-3 h-3 shrink-0" />
-                              {template.label}
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent side="left">
-                            <p>{template.description}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      );
-                    })}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="charts" className="border rounded-lg px-3">
-                <AccordionTrigger className="text-sm py-2">
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="w-4 h-4" />
-                    Charts
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="space-y-2 pb-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    {Object.entries(chartTemplates).map(([key, template]) => {
-                      const IconComponent = template.icon;
-                      return (
-                        <Tooltip key={key}>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full justify-start text-xs gap-2"
-                              onClick={() => handleInsertContent(template.html)}
-                              data-testid={`button-insert-chart-${key}`}
-                            >
-                              <IconComponent className="w-3 h-3 shrink-0" />
-                              {template.label}
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent side="left">
-                            <p>{template.description}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      );
-                    })}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="chart-builder" className="border rounded-lg px-3">
-                <AccordionTrigger className="text-sm py-2">
-                  <div className="flex items-center gap-2">
-                    <Wand2 className="w-4 h-4" />
-                    Smart Chart Builder
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="space-y-4 pb-3">
-                  <div className="space-y-3">
-                    <div className="space-y-2">
-                      <Label className="text-xs">Chart Type</Label>
-                      <Select value={chartType} onValueChange={(v) => setChartType(v as "bar" | "pie" | "line")}>
-                        <SelectTrigger data-testid="chart-type-select">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="bar">
-                            <div className="flex items-center gap-2">
-                              <BarChart3 className="w-3 h-3" />
-                              Bar Chart
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="pie">
-                            <div className="flex items-center gap-2">
-                              <PieChart className="w-3 h-3" />
-                              Pie Chart
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="line">
-                            <div className="flex items-center gap-2">
-                              <LineChart className="w-3 h-3" />
-                              Line Chart
-                            </div>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs">Chart Title</Label>
-                      <Input
-                        value={chartTitle}
-                        onChange={(e) => setChartTitle(e.target.value)}
-                        placeholder="Enter chart title"
-                        data-testid="chart-title-input"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs">Labels (comma-separated)</Label>
-                      <Input
-                        value={chartLabels}
-                        onChange={(e) => setChartLabels(e.target.value)}
-                        placeholder="Label 1, Label 2, Label 3"
-                        data-testid="chart-labels-input"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs">Values (comma-separated)</Label>
-                      <Input
-                        value={chartValues}
-                        onChange={(e) => setChartValues(e.target.value)}
-                        placeholder="25, 50, 75"
-                        data-testid="chart-values-input"
-                      />
-                    </div>
-
-                    {getChartPreview() && (
-                      <div className="space-y-2">
-                        <Label className="text-xs">Preview</Label>
-                        <div 
-                          className="border rounded-lg p-4 bg-muted/50"
-                          dangerouslySetInnerHTML={{ __html: getChartPreview() }}
-                        />
-                      </div>
-                    )}
-
-                    <Button
-                      className="w-full"
-                      onClick={() => {
-                        const svg = getChartPreview();
-                        if (svg) {
-                          handleInsertContent(`<div class="chart-container my-4">${svg}</div>`);
-                        } else {
-                          toast({ 
-                            title: "Invalid Data", 
-                            description: "Please enter valid labels and values", 
-                            variant: "destructive" 
-                          });
-                        }
-                      }}
-                      disabled={!getChartPreview()}
-                      data-testid="button-insert-chart"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Insert Chart
-                    </Button>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="lists" className="border rounded-lg px-3">
-                <AccordionTrigger className="text-sm py-2">
-                  <div className="flex items-center gap-2">
-                    <ListOrdered className="w-4 h-4" />
-                    Lists & Structure
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="space-y-2 pb-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    {Object.entries(listTemplates).map(([key, template]) => {
-                      const IconComponent = template.icon;
-                      return (
-                        <Tooltip key={key}>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full justify-start text-xs gap-2"
-                              onClick={() => handleInsertContent(template.html)}
-                              data-testid={`button-insert-list-${key}`}
-                            >
-                              <IconComponent className="w-3 h-3 shrink-0" />
-                              {template.label}
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent side="left">
-                            <p>{template.description}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      );
-                    })}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="book-elements" className="border rounded-lg px-3">
-                <AccordionTrigger className="text-sm py-2">
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4" />
-                    Book Elements
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="space-y-2 pb-3">
-                  <div className="grid grid-cols-1 gap-2">
-                    {Object.entries(bookElementTemplates).map(([key, template]) => {
-                      const IconComponent = template.icon;
-                      return (
-                        <Tooltip key={key}>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full justify-start text-xs gap-2"
-                              onClick={() => handleInsertContent(template.html)}
-                              data-testid={`button-insert-book-${key}`}
-                            >
-                              <IconComponent className="w-3 h-3 shrink-0" />
-                              {template.label}
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent side="left">
-                            <p>{template.description}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      );
-                    })}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="qr-code" className="border rounded-lg px-3">
-                <AccordionTrigger className="text-sm py-2">
-                  <div className="flex items-center gap-2">
-                    <QrCode className="w-4 h-4" />
-                    QR Code Generator
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="space-y-4 pb-3">
-                  <div className="space-y-2">
-                    <Label className="text-xs">URL or Text</Label>
-                    <Input
-                      value={qrCodeText}
-                      onChange={(e) => {
-                        setQrCodeText(e.target.value);
-                        setShowQrPreview(false);
-                      }}
-                      placeholder="Enter URL or text to encode"
-                      data-testid="qr-url-input"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs">Size</Label>
-                    <Select value={qrCodeSize} onValueChange={(v) => {
-                      setQrCodeSize(v as "100" | "150" | "200");
-                      setShowQrPreview(false);
-                    }}>
-                      <SelectTrigger data-testid="qr-size-select">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="100">Small (100px)</SelectItem>
-                        <SelectItem value="150">Medium (150px)</SelectItem>
-                        <SelectItem value="200">Large (200px)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => setShowQrPreview(true)}
-                    disabled={!qrCodeText.trim()}
-                    data-testid="button-generate-qr"
-                  >
-                    <QrCode className="w-4 h-4 mr-2" />
-                    Generate QR Code
-                  </Button>
-
-                  {showQrPreview && qrCodeText.trim() && (
-                    <div className="space-y-3">
-                      <Label className="text-xs">Preview</Label>
-                      <div className="border rounded-lg p-4 bg-white flex justify-center">
-                        <img
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=${qrCodeSize}x${qrCodeSize}&data=${encodeURIComponent(qrCodeText)}`}
-                          alt="QR Code Preview"
-                          className="rounded"
-                          style={{ width: `${qrCodeSize}px`, height: `${qrCodeSize}px` }}
-                        />
-                      </div>
-                      <Button
-                        className="w-full"
-                        onClick={() => {
-                          const qrHtml = `<figure class="qr-code my-4 text-center">
-  <img src="https://api.qrserver.com/v1/create-qr-code/?size=${qrCodeSize}x${qrCodeSize}&data=${encodeURIComponent(qrCodeText)}" alt="QR Code" class="mx-auto rounded" />
-  <figcaption class="text-sm text-muted-foreground mt-2">Scan to visit: ${qrCodeText}</figcaption>
-</figure>`;
-                          handleInsertContent(qrHtml);
-                        }}
-                        data-testid="button-insert-qr"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Insert QR Code
-                      </Button>
-                    </div>
-                  )}
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="appendix" className="border rounded-lg px-3">
-                <AccordionTrigger className="text-sm py-2">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4" />
-                    Appendix Templates
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="space-y-2 pb-3">
-                  <p className="text-xs text-muted-foreground mb-2">
-                    One-click starters for common appendix sections
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {Object.entries(appendixTemplates).map(([key, template]) => {
-                      const IconComponent = template.icon;
-                      return (
-                        <Tooltip key={key}>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full justify-start text-xs gap-2"
-                              onClick={() => handleInsertContent(template.html)}
-                              data-testid={`button-insert-appendix-${key}`}
-                            >
-                              <IconComponent className="w-3 h-3 shrink-0" />
-                              {template.label}
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent side="left">
-                            <p>{template.description}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      );
-                    })}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="technical" className="border rounded-lg px-3">
-                <AccordionTrigger className="text-sm py-2">
-                  <div className="flex items-center gap-2">
-                    <Calculator className="w-4 h-4" />
-                    Technical Elements
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="space-y-2 pb-3">
-                  <p className="text-xs text-muted-foreground mb-2">
-                    Formulas, algorithms, calculators, and assessments
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {Object.entries(technicalTemplates).map(([key, template]) => {
-                      const IconComponent = template.icon;
-                      return (
-                        <Tooltip key={key}>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full justify-start text-xs gap-2"
-                              onClick={() => handleInsertContent(template.html)}
-                              data-testid={`button-insert-technical-${key}`}
-                            >
-                              <IconComponent className="w-3 h-3 shrink-0" />
-                              {template.label}
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent side="left">
-                            <p>{template.description}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      );
-                    })}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="visual" className="border rounded-lg px-3">
-                <AccordionTrigger className="text-sm py-2">
-                  <div className="flex items-center gap-2">
-                    <Image className="w-4 h-4" />
-                    Visual Templates
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="space-y-2 pb-3">
-                  <p className="text-xs text-muted-foreground mb-2">
-                    Exercises with images, before/after, case studies
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {Object.entries(visualTemplates).map(([key, template]) => {
-                      const IconComponent = template.icon;
-                      return (
-                        <Tooltip key={key}>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full justify-start text-xs gap-2"
-                              onClick={() => handleInsertContent(template.html)}
-                              data-testid={`button-insert-visual-${key}`}
-                            >
-                              <IconComponent className="w-3 h-3 shrink-0" />
-                              {template.label}
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent side="left">
-                            <p>{template.description}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      );
-                    })}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
           </ScrollArea>
         </TabsContent>
 
-        {/* Images Tab */}
-        <TabsContent value="images" className="flex-1 flex flex-col m-0 overflow-hidden bg-zinc-300">
-          <ResizablePanelGroup direction="vertical" className="flex-1">
-            <ResizablePanel defaultSize={55} minSize={30} maxSize={80}>
-              <div className="h-full p-3 overflow-y-auto">
-                <div className="space-y-3">
-                  {/* Upload Your Own */}
-                  <div className="bg-white rounded-lg border-2 border-zinc-400 shadow-lg overflow-hidden">
-                    <div className="py-2 px-4 bg-zinc-700">
-                      <h3 className="text-sm font-bold flex items-center gap-2 text-white">
-                        <Upload className="w-4 h-4 text-orange-400" />
-                        Upload Image
-                      </h3>
+        {/* LIBRARY TAB - Generated Images, Sources/Citations */}
+        <TabsContent value="library" className="flex-1 m-0 overflow-hidden bg-zinc-300">
+          <ScrollArea className="h-full">
+            <div className="p-3">
+              <Accordion type="multiple" defaultValue={["images-gallery", "sources"]} className="space-y-2">
+                {/* Images Gallery */}
+                <AccordionItem value="images-gallery" className="border rounded-lg bg-white overflow-hidden">
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <Image className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Images ({generatedImages.length})</span>
                     </div>
-                    <div className="p-3 bg-white">
-                      <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-zinc-300 rounded-lg cursor-pointer hover:bg-zinc-50 transition-colors">
-                        <div className="flex flex-col items-center justify-center">
-                          <Upload className="w-6 h-6 text-zinc-400 mb-1" />
-                          <p className="text-xs text-zinc-500">Drop image or click to upload</p>
-                          <p className="text-xs text-zinc-400">PNG, JPG up to 10MB</p>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    {generatedImages.length > 0 ? (
+                      <div className="space-y-3">
+                        {/* Placement Mode */}
+                        <div className="flex gap-1 p-2 bg-zinc-100 rounded-lg">
+                          <Button
+                            variant={imagePlacementMode === "auto" ? "default" : "ghost"}
+                            size="sm"
+                            onClick={() => setImagePlacementMode("auto")}
+                            className="flex-1 text-xs h-7"
+                            data-testid="button-placement-auto"
+                          >
+                            <Grid3X3 className="w-3 h-3 mr-1" />
+                            Auto
+                          </Button>
+                          <Button
+                            variant={imagePlacementMode === "hybrid" ? "default" : "ghost"}
+                            size="sm"
+                            onClick={() => setImagePlacementMode("hybrid")}
+                            className="flex-1 text-xs h-7"
+                            data-testid="button-placement-hybrid"
+                          >
+                            <Layers className="w-3 h-3 mr-1" />
+                            Hybrid
+                          </Button>
+                          <Button
+                            variant={imagePlacementMode === "manual" ? "default" : "ghost"}
+                            size="sm"
+                            onClick={() => setImagePlacementMode("manual")}
+                            className="flex-1 text-xs h-7"
+                            data-testid="button-placement-manual"
+                          >
+                            <Move className="w-3 h-3 mr-1" />
+                            Manual
+                          </Button>
                         </div>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const url = URL.createObjectURL(file);
-                              const newImage: GeneratedImage = {
-                                id: Date.now().toString(),
-                                url,
-                                prompt: file.name,
-                                hasBackground: true,
-                              };
-                              setGeneratedImages(prev => [newImage, ...prev]);
-                              toast({ title: "Image Uploaded", description: file.name });
-                            }
-                          }}
-                          data-testid="input-upload-image"
-                        />
-                      </label>
-                    </div>
-                  </div>
 
-                  {/* Generate with AI */}
-                  <div className="bg-white rounded-lg border-2 border-zinc-400 shadow-lg overflow-hidden">
-                    <div className="py-2 px-4 bg-zinc-700">
-                      <h3 className="text-sm font-bold flex items-center gap-2 text-white">
-                        <Wand2 className="w-4 h-4 text-orange-400" />
-                        Generate with AI
-                      </h3>
-                    </div>
-                    <div className="p-3 space-y-3 bg-white">
-                      <Textarea
-                        value={imagePrompt}
-                        onChange={(e) => setImagePrompt(e.target.value)}
-                        placeholder="Describe the image you want to create..."
-                        className="min-h-[80px] bg-zinc-100 border-2 border-zinc-400 text-black placeholder:text-zinc-500 text-sm"
-                        data-testid="textarea-image-prompt"
-                      />
-                      <Button
-                        onClick={handleGenerateImage}
-                        disabled={isGeneratingImage || !imagePrompt.trim()}
-                        className="w-full"
-                        size="sm"
-                        data-testid="button-generate-image"
-                      >
-                        {isGeneratingImage ? (
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        ) : (
-                          <Wand2 className="w-4 h-4 mr-2" />
-                        )}
-                        Generate
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </ResizablePanel>
-            <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={45} minSize={20} maxSize={70}>
-              <div className="h-full p-3 overflow-y-auto">
-                <div className="space-y-3">
-                  <div className="bg-white rounded-lg border-2 border-zinc-400 shadow-lg overflow-hidden">
-                    <div className="py-3 px-4 bg-zinc-700">
-                      <h3 className="text-base font-bold flex items-center gap-2 text-white">
-                        <Move className="w-4 h-4 text-orange-400" />
-                        Image Placement
-                      </h3>
-                    </div>
-                    <div className="p-4 space-y-3 bg-white">
-                      <div className="grid grid-cols-3 gap-2">
-                        <Button
-                          variant={imagePlacementMode === "auto" ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setImagePlacementMode("auto")}
-                          className="text-xs"
-                          data-testid="button-placement-auto"
-                        >
-                          <Grid3X3 className="w-3 h-3 mr-1" />
-                          Auto
-                        </Button>
-                        <Button
-                          variant={imagePlacementMode === "hybrid" ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setImagePlacementMode("hybrid")}
-                          className="text-xs"
-                          data-testid="button-placement-hybrid"
-                        >
-                          <Layers className="w-3 h-3 mr-1" />
-                          Hybrid
-                        </Button>
-                        <Button
-                          variant={imagePlacementMode === "manual" ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setImagePlacementMode("manual")}
-                          className="text-xs"
-                          data-testid="button-placement-manual"
-                        >
-                          <Move className="w-3 h-3 mr-1" />
-                          Manual
-                        </Button>
-                      </div>
-                      <p className="text-xs text-zinc-600">
-                        {imagePlacementMode === "auto" && "AI automatically places images at optimal positions"}
-                        {imagePlacementMode === "hybrid" && "AI suggests placements, you approve or adjust"}
-                        {imagePlacementMode === "manual" && "Full control over image positioning"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {generatedImages.length > 0 && (
-                    <div className="space-y-3">
-                      <h4 className="text-sm font-medium text-zinc-700">Your Images</h4>
-                      {generatedImages.map((img) => {
-                        const isExpanded = expandedImageId === img.id;
-                        const settings = imageSettings[img.id] || { size: "medium", align: "center", caption: "", altText: "" };
-                        
-                        return (
-                          <Card key={img.id} className="overflow-hidden bg-white">
-                            {/* Image Preview - Click to expand */}
-                            <div 
-                              className="relative aspect-video bg-muted cursor-pointer hover:opacity-90 transition-opacity"
-                              onClick={() => setExpandedImageId(isExpanded ? null : img.id)}
-                            >
-                              <img
-                                src={img.url}
-                                alt={img.analysis?.altText || img.prompt}
-                                className="w-full h-full object-cover"
-                              />
-                              <div className="absolute top-2 right-2 flex gap-1">
-                                {img.hasBackground && (
-                                  <Badge variant="secondary" className="text-xs">BG</Badge>
-                                )}
-                                {img.analysis && (
-                                  <Badge variant="default" className="bg-green-600 text-xs">
-                                    {img.analysis.printReadiness.score}/10
-                                  </Badge>
-                                )}
-                              </div>
-                              <div className="absolute bottom-2 left-2 right-2 bg-black/60 rounded px-2 py-1">
-                                <p className="text-xs text-white truncate">{isExpanded ? "Click to collapse" : "Click to edit"}</p>
-                              </div>
-                            </div>
-                            
-                            {/* Expanded Editor Section */}
-                            {isExpanded && (
-                              <CardContent className="p-3 space-y-3 border-t-2 border-orange-400">
-                                {/* Quick Actions Row */}
-                                <div className="flex gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleAnalyzeImage(img.id, img.url)}
-                                    disabled={img.isAnalyzing}
-                                    className="flex-1 text-xs"
-                                    data-testid={`button-analyze-${img.id}`}
-                                  >
-                                    {img.isAnalyzing ? (
-                                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                                    ) : (
-                                      <Wand2 className="w-3 h-3 mr-1" />
-                                    )}
-                                    Analyze
-                                  </Button>
+                        {generatedImages.map((img) => {
+                          const isExpanded = expandedImageId === img.id;
+                          const settings = imageSettings[img.id] || { size: "medium", align: "center", caption: "", altText: "" };
+                          
+                          return (
+                            <Card key={img.id} className="overflow-hidden">
+                              <div 
+                                className="relative aspect-video bg-muted cursor-pointer hover:opacity-90 transition-opacity"
+                                onClick={() => setExpandedImageId(isExpanded ? null : img.id)}
+                              >
+                                <img
+                                  src={img.url}
+                                  alt={img.analysis?.altText || img.prompt}
+                                  className="w-full h-full object-cover"
+                                />
+                                <div className="absolute top-2 right-2 flex gap-1">
                                   {img.hasBackground && (
+                                    <Badge variant="secondary" className="text-xs">BG</Badge>
+                                  )}
+                                  {img.analysis && (
+                                    <Badge variant="default" className="bg-green-600 text-xs">
+                                      {img.analysis.printReadiness.score}/10
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              {isExpanded && (
+                                <CardContent className="p-3 space-y-3 border-t-2 border-primary">
+                                  <div className="flex gap-2">
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => handleRemoveBackground(img.id, img.url)}
-                                      disabled={isRemovingBg === img.id}
+                                      onClick={() => handleAnalyzeImage(img.id, img.url)}
+                                      disabled={img.isAnalyzing}
                                       className="flex-1 text-xs"
-                                      data-testid={`button-remove-bg-${img.id}`}
+                                      data-testid={`button-analyze-${img.id}`}
                                     >
-                                      {isRemovingBg === img.id ? (
+                                      {img.isAnalyzing ? (
                                         <Loader2 className="w-3 h-3 mr-1 animate-spin" />
                                       ) : (
-                                        <Scissors className="w-3 h-3 mr-1" />
+                                        <Wand2 className="w-3 h-3 mr-1" />
                                       )}
-                                      Remove BG
+                                      Analyze
                                     </Button>
+                                    {img.hasBackground && (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleRemoveBackground(img.id, img.url)}
+                                        disabled={isRemovingBg === img.id}
+                                        className="flex-1 text-xs"
+                                        data-testid={`button-remove-bg-${img.id}`}
+                                      >
+                                        {isRemovingBg === img.id ? (
+                                          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                        ) : (
+                                          <Scissors className="w-3 h-3 mr-1" />
+                                        )}
+                                        Remove BG
+                                      </Button>
+                                    )}
+                                  </div>
+
+                                  {img.analysis && (
+                                    <div className="bg-orange-50 border border-orange-200 rounded p-2">
+                                      <p className="text-xs font-medium text-orange-800 flex items-center gap-1 mb-1">
+                                        <Lightbulb className="w-3 h-3" />
+                                        AI Recommendation
+                                      </p>
+                                      <p className="text-xs text-orange-700">{img.analysis.placement.recommendation}</p>
+                                    </div>
                                   )}
-                                </div>
 
-                                {/* AI Analysis Results */}
-                                {img.analysis && (
-                                  <div className="bg-orange-50 border border-orange-200 rounded p-2">
-                                    <p className="text-xs font-medium text-orange-800 flex items-center gap-1 mb-1">
-                                      <Lightbulb className="w-3 h-3" />
-                                      AI Recommendation
-                                    </p>
-                                    <p className="text-xs text-orange-700">{img.analysis.placement.recommendation}</p>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-zinc-600">Size</Label>
+                                      <Select 
+                                        value={settings.size} 
+                                        onValueChange={(v) => setImageSettings(prev => ({
+                                          ...prev,
+                                          [img.id]: { ...settings, size: v }
+                                        }))}
+                                      >
+                                        <SelectTrigger className="h-8 text-xs">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="small">Small</SelectItem>
+                                          <SelectItem value="medium">Medium</SelectItem>
+                                          <SelectItem value="large">Large</SelectItem>
+                                          <SelectItem value="full">Full Width</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-zinc-600">Align</Label>
+                                      <Select 
+                                        value={settings.align} 
+                                        onValueChange={(v) => setImageSettings(prev => ({
+                                          ...prev,
+                                          [img.id]: { ...settings, align: v }
+                                        }))}
+                                      >
+                                        <SelectTrigger className="h-8 text-xs">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="left">Left</SelectItem>
+                                          <SelectItem value="center">Center</SelectItem>
+                                          <SelectItem value="right">Right</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
                                   </div>
-                                )}
 
-                                {/* Size & Alignment */}
-                                <div className="grid grid-cols-2 gap-2">
                                   <div className="space-y-1">
-                                    <Label className="text-xs text-zinc-600">Size</Label>
-                                    <Select 
-                                      value={settings.size} 
-                                      onValueChange={(v) => setImageSettings(prev => ({
+                                    <Label className="text-xs text-zinc-600">Caption</Label>
+                                    <Input
+                                      value={settings.caption || img.analysis?.caption || ""}
+                                      onChange={(e) => setImageSettings(prev => ({
                                         ...prev,
-                                        [img.id]: { ...settings, size: v }
+                                        [img.id]: { ...settings, caption: e.target.value }
                                       }))}
-                                    >
-                                      <SelectTrigger className="h-8 text-xs">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="small">Small</SelectItem>
-                                        <SelectItem value="medium">Medium</SelectItem>
-                                        <SelectItem value="large">Large</SelectItem>
-                                        <SelectItem value="full">Full Width</SelectItem>
-                                      </SelectContent>
-                                    </Select>
+                                      placeholder="Add caption..."
+                                      className="h-8 text-xs"
+                                    />
                                   </div>
-                                  <div className="space-y-1">
-                                    <Label className="text-xs text-zinc-600">Align</Label>
-                                    <Select 
-                                      value={settings.align} 
-                                      onValueChange={(v) => setImageSettings(prev => ({
-                                        ...prev,
-                                        [img.id]: { ...settings, align: v }
-                                      }))}
+
+                                  <div className="flex gap-2 pt-2 border-t">
+                                    <Button
+                                      variant="default"
+                                      size="sm"
+                                      onClick={() => {
+                                        if (onInsertContent) {
+                                          const sizeStyles: Record<string, string> = {
+                                            small: "max-width: 200px;",
+                                            medium: "max-width: 400px;",
+                                            large: "max-width: 600px;",
+                                            full: "max-width: 100%;",
+                                          };
+                                          const alignStyles: Record<string, string> = {
+                                            left: "margin-right: auto;",
+                                            center: "margin-left: auto; margin-right: auto;",
+                                            right: "margin-left: auto;",
+                                          };
+                                          const altText = settings.altText || img.analysis?.altText || img.prompt;
+                                          const caption = settings.caption || img.analysis?.caption || "";
+                                          const html = caption
+                                            ? `<figure style="margin: 1.5rem 0; ${alignStyles[settings.align]}"><img src="${img.url}" alt="${altText}" style="${sizeStyles[settings.size]} height: auto; display: block; ${alignStyles[settings.align]}" /><figcaption style="text-align: ${settings.align}; font-size: 0.875rem; color: #666; margin-top: 0.5rem; font-style: italic;">${caption}</figcaption></figure>`
+                                            : `<img src="${img.url}" alt="${altText}" style="${sizeStyles[settings.size]} height: auto; display: block; margin: 1.5rem 0; ${alignStyles[settings.align]}" />`;
+                                          onInsertContent(html);
+                                          toast({ title: "Image Inserted", description: "Added to document" });
+                                          setExpandedImageId(null);
+                                        }
+                                      }}
+                                      className="flex-1 text-xs"
+                                      data-testid={`button-insert-image-${img.id}`}
                                     >
-                                      <SelectTrigger className="h-8 text-xs">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="left">Left</SelectItem>
-                                        <SelectItem value="center">Center</SelectItem>
-                                        <SelectItem value="right">Right</SelectItem>
-                                      </SelectContent>
-                                    </Select>
+                                      <Plus className="w-3 h-3 mr-1" />
+                                      Insert
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        handleDeleteImage(img.id);
+                                        setExpandedImageId(null);
+                                      }}
+                                      className="text-xs text-red-600 hover:text-red-700"
+                                      data-testid={`button-delete-image-${img.id}`}
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
                                   </div>
-                                </div>
+                                </CardContent>
+                              )}
 
-                                {/* Caption */}
-                                <div className="space-y-1">
-                                  <Label className="text-xs text-zinc-600">Caption</Label>
-                                  <Input
-                                    value={settings.caption || img.analysis?.caption || ""}
-                                    onChange={(e) => setImageSettings(prev => ({
-                                      ...prev,
-                                      [img.id]: { ...settings, caption: e.target.value }
-                                    }))}
-                                    placeholder="Add caption..."
-                                    className="h-8 text-xs"
-                                  />
-                                </div>
-
-                                {/* Alt Text */}
-                                <div className="space-y-1">
-                                  <Label className="text-xs text-zinc-600">Alt Text</Label>
-                                  <Input
-                                    value={settings.altText || img.analysis?.altText || ""}
-                                    onChange={(e) => setImageSettings(prev => ({
-                                      ...prev,
-                                      [img.id]: { ...settings, altText: e.target.value }
-                                    }))}
-                                    placeholder="Describe for accessibility..."
-                                    className="h-8 text-xs"
-                                  />
-                                </div>
-
-                                {/* Insert & Delete */}
-                                <div className="flex gap-2 pt-2 border-t">
+                              {!isExpanded && (
+                                <CardContent className="p-2">
                                   <Button
                                     variant="default"
                                     size="sm"
                                     onClick={() => {
                                       if (onInsertContent) {
-                                        const sizeStyles: Record<string, string> = {
-                                          small: "max-width: 200px;",
-                                          medium: "max-width: 400px;",
-                                          large: "max-width: 600px;",
-                                          full: "max-width: 100%;",
-                                        };
-                                        const alignStyles: Record<string, string> = {
-                                          left: "margin-right: auto;",
-                                          center: "margin-left: auto; margin-right: auto;",
-                                          right: "margin-left: auto;",
-                                        };
-                                        const altText = settings.altText || img.analysis?.altText || img.prompt;
-                                        const caption = settings.caption || img.analysis?.caption || "";
-                                        const html = caption
-                                          ? `<figure style="margin: 1.5rem 0; ${alignStyles[settings.align]}"><img src="${img.url}" alt="${altText}" style="${sizeStyles[settings.size]} height: auto; display: block; ${alignStyles[settings.align]}" /><figcaption style="text-align: ${settings.align}; font-size: 0.875rem; color: #666; margin-top: 0.5rem; font-style: italic;">${caption}</figcaption></figure>`
-                                          : `<img src="${img.url}" alt="${altText}" style="${sizeStyles[settings.size]} height: auto; display: block; margin: 1.5rem 0; ${alignStyles[settings.align]}" />`;
-                                        onInsertContent(html);
-                                        toast({ title: "Image Inserted", description: "Added to document with your settings" });
-                                        setExpandedImageId(null);
+                                        const altText = img.analysis?.altText || img.prompt;
+                                        onInsertContent(`<img src="${img.url}" alt="${altText}" style="max-width: 100%; height: auto; margin: 1rem 0;" />`);
+                                        toast({ title: "Image Inserted" });
                                       }
                                     }}
-                                    className="flex-1 text-xs"
-                                    data-testid={`button-insert-image-${img.id}`}
+                                    className="w-full text-xs"
+                                    data-testid={`button-quick-insert-${img.id}`}
                                   >
                                     <Plus className="w-3 h-3 mr-1" />
-                                    Insert to Document
+                                    Quick Insert
                                   </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                      handleDeleteImage(img.id);
-                                      setExpandedImageId(null);
-                                    }}
-                                    className="text-xs text-red-600 hover:text-red-700"
-                                    data-testid={`button-delete-image-${img.id}`}
-                                  >
-                                    <Trash2 className="w-3 h-3" />
-                                  </Button>
-                                </div>
-                              </CardContent>
-                            )}
-
-                            {/* Collapsed Quick Insert */}
-                            {!isExpanded && (
-                              <CardContent className="p-2">
-                                <Button
-                                  variant="default"
-                                  size="sm"
-                                  onClick={() => {
-                                    if (onInsertContent) {
-                                      const altText = img.analysis?.altText || img.prompt;
-                                      onInsertContent(`<img src="${img.url}" alt="${altText}" style="max-width: 100%; height: auto; margin: 1rem 0;" />`);
-                                      toast({ title: "Image Inserted", description: "Quick insert complete" });
-                                    }
-                                  }}
-                                  className="w-full text-xs"
-                                  data-testid={`button-quick-insert-${img.id}`}
-                                >
-                                  <Plus className="w-3 h-3 mr-1" />
-                                  Quick Insert
-                                </Button>
-                              </CardContent>
-                            )}
-                          </Card>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        </TabsContent>
-
-        <TabsContent value="research" className="flex-1 flex flex-col m-0 overflow-auto bg-zinc-300" data-testid="tab-content-research">
-          <ScrollArea className="flex-1 p-3">
-            <div className="space-y-4">
-              <Card className="bg-zinc-600 border-zinc-400">
-                <CardHeader className="py-3">
-                  <CardTitle className="text-sm flex items-center gap-2 text-white">
-                    <Plus className="w-4 h-4" />
-                    Add Source
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="space-y-2">
-                    <Label className="text-xs text-zinc-300">Source Type</Label>
-                    <Select 
-                      value={newSource.type} 
-                      onValueChange={(v) => setNewSource(prev => ({ ...prev, type: v as "book" | "website" | "article" | "journal" }))}
-                    >
-                      <SelectTrigger data-testid="select-source-type">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="book">Book</SelectItem>
-                        <SelectItem value="website">Website</SelectItem>
-                        <SelectItem value="article">Article</SelectItem>
-                        <SelectItem value="journal">Journal</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs text-zinc-300">Title</Label>
-                    <Input
-                      value={newSource.title}
-                      onChange={(e) => setNewSource(prev => ({ ...prev, title: e.target.value }))}
-                      placeholder="Enter source title"
-                      className="bg-zinc-500 border-zinc-400 text-white placeholder:text-zinc-200"
-                      data-testid="input-source-title"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs text-zinc-300">Author</Label>
-                    <Input
-                      value={newSource.author}
-                      onChange={(e) => setNewSource(prev => ({ ...prev, author: e.target.value }))}
-                      placeholder="Enter author name"
-                      className="bg-zinc-500 border-zinc-400 text-white placeholder:text-zinc-200"
-                      data-testid="input-source-author"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs text-zinc-300">URL (optional)</Label>
-                    <Input
-                      value={newSource.url}
-                      onChange={(e) => setNewSource(prev => ({ ...prev, url: e.target.value }))}
-                      placeholder="https://..."
-                      className="bg-zinc-500 border-zinc-400 text-white placeholder:text-zinc-200"
-                      data-testid="input-source-url"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs text-zinc-300">Year</Label>
-                    <Input
-                      value={newSource.year}
-                      onChange={(e) => setNewSource(prev => ({ ...prev, year: e.target.value }))}
-                      placeholder="2024"
-                      className="bg-zinc-500 border-zinc-400 text-white placeholder:text-zinc-200"
-                      data-testid="input-source-year"
-                    />
-                  </div>
-
-                  <Button
-                    onClick={() => {
-                      if (!newSource.title.trim() || !newSource.author.trim()) {
-                        toast({ title: "Missing Fields", description: "Title and Author are required", variant: "destructive" });
-                        return;
-                      }
-                      const source: Source = {
-                        id: Date.now().toString(),
-                        type: newSource.type,
-                        title: newSource.title.trim(),
-                        author: newSource.author.trim(),
-                        url: newSource.url.trim() || undefined,
-                        year: newSource.year.trim(),
-                      };
-                      setSources(prev => [...prev, source]);
-                      setNewSource({ type: "book", title: "", author: "", url: "", year: "" });
-                      toast({ title: "Source Added", description: "The source has been added to your list" });
-                    }}
-                    className="w-full"
-                    data-testid="button-add-source"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Source
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {sources.length > 0 && (
-                <Card className="bg-zinc-600 border-zinc-400">
-                  <CardHeader className="py-3">
-                    <CardTitle className="text-sm flex items-center gap-2 text-white">
-                      <Library className="w-4 h-4" />
-                      Sources ({sources.length})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {sources.map((source, index) => (
-                      <div 
-                        key={source.id} 
-                        className="p-3 border border-zinc-600 rounded-lg space-y-2 bg-zinc-700"
-                        data-testid={`source-item-${source.id}`}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate text-white" data-testid={`text-source-title-${source.id}`}>
-                              {source.title}
-                            </p>
-                            <p className="text-xs text-zinc-300" data-testid={`text-source-author-${source.id}`}>
-                              {source.author}
-                              {source.year && ` (${source.year})`}
-                            </p>
-                          </div>
-                          <Badge variant="secondary" className="shrink-0 text-xs" data-testid={`badge-source-type-${source.id}`}>
-                            {source.type}
-                          </Badge>
-                        </div>
-                        <div className="flex gap-1">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 text-xs"
-                            onClick={() => {
-                              const citationNumber = index + 1;
-                              const citationHtml = `<span class="citation text-primary cursor-pointer" data-source-id="${source.id}">[${citationNumber}]</span>`;
-                              handleInsertContent(citationHtml);
-                            }}
-                            data-testid={`button-insert-citation-${source.id}`}
-                          >
-                            Insert Citation
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSources(prev => prev.filter(s => s.id !== source.id));
-                              toast({ title: "Source Deleted", description: "The source has been removed" });
-                            }}
-                            data-testid={`button-delete-source-${source.id}`}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        </div>
+                                </CardContent>
+                              )}
+                            </Card>
+                          );
+                        })}
                       </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              )}
+                    ) : (
+                      <div className="text-center py-6 text-muted-foreground">
+                        <Image className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">No images yet</p>
+                        <p className="text-xs">Generate or upload images in the Create tab</p>
+                      </div>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
 
-              {sources.length > 0 && (
-                <Button
-                  onClick={() => {
-                    const formatSource = (source: Source, index: number): string => {
-                      const author = source.author;
-                      const year = source.year || "n.d.";
-                      const title = source.title;
-                      
-                      switch (source.type) {
-                        case "book":
-                          return `<li>${author} (${year}). <em>${title}</em>.</li>`;
-                        case "journal":
-                          return `<li>${author}. "${title}." <em>Journal</em>, ${year}.</li>`;
-                        case "article":
-                          return `<li>${author}. "${title}." ${year}.</li>`;
-                        case "website":
-                          return `<li>${author}. "${title}." ${source.url ? `<a href="${source.url}">${source.url}</a>. ` : ""}${year}.</li>`;
-                        default:
-                          return `<li>${author} (${year}). ${title}.</li>`;
-                      }
-                    };
+                {/* Sources & Citations */}
+                <AccordionItem value="sources" className="border rounded-lg bg-white overflow-hidden">
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <BookMarked className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Sources ({sources.length})</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <div className="space-y-3">
+                      {/* Add Source Form */}
+                      <div className="p-3 bg-zinc-100 rounded-lg space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <Select 
+                            value={newSource.type} 
+                            onValueChange={(v) => setNewSource(prev => ({ ...prev, type: v as "book" | "website" | "article" | "journal" }))}
+                          >
+                            <SelectTrigger className="h-8 text-xs" data-testid="select-source-type">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="book">Book</SelectItem>
+                              <SelectItem value="website">Website</SelectItem>
+                              <SelectItem value="article">Article</SelectItem>
+                              <SelectItem value="journal">Journal</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Input
+                            value={newSource.year}
+                            onChange={(e) => setNewSource(prev => ({ ...prev, year: e.target.value }))}
+                            placeholder="Year"
+                            className="h-8 text-xs"
+                            data-testid="input-source-year"
+                          />
+                        </div>
+                        <Input
+                          value={newSource.title}
+                          onChange={(e) => setNewSource(prev => ({ ...prev, title: e.target.value }))}
+                          placeholder="Title"
+                          className="h-8 text-xs"
+                          data-testid="input-source-title"
+                        />
+                        <Input
+                          value={newSource.author}
+                          onChange={(e) => setNewSource(prev => ({ ...prev, author: e.target.value }))}
+                          placeholder="Author"
+                          className="h-8 text-xs"
+                          data-testid="input-source-author"
+                        />
+                        <Input
+                          value={newSource.url}
+                          onChange={(e) => setNewSource(prev => ({ ...prev, url: e.target.value }))}
+                          placeholder="URL (optional)"
+                          className="h-8 text-xs"
+                          data-testid="input-source-url"
+                        />
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            if (!newSource.title.trim() || !newSource.author.trim()) {
+                              toast({ title: "Missing Fields", description: "Title and Author are required", variant: "destructive" });
+                              return;
+                            }
+                            const source: Source = {
+                              id: Date.now().toString(),
+                              type: newSource.type,
+                              title: newSource.title.trim(),
+                              author: newSource.author.trim(),
+                              url: newSource.url.trim() || undefined,
+                              year: newSource.year.trim(),
+                            };
+                            setSources(prev => [...prev, source]);
+                            setNewSource({ type: "book", title: "", author: "", url: "", year: "" });
+                            toast({ title: "Source Added" });
+                          }}
+                          className="w-full h-8 text-xs"
+                          data-testid="button-add-source"
+                        >
+                          <Plus className="w-3 h-3 mr-1" />
+                          Add Source
+                        </Button>
+                      </div>
 
-                    const bibliographyItems = sources.map((source, index) => formatSource(source, index)).join('\n      ');
-                    const bibliographyHtml = `<div class="bibliography my-6 p-4 border rounded">
+                      {/* Sources List */}
+                      {sources.length > 0 ? (
+                        <div className="space-y-2">
+                          {sources.map((source, index) => (
+                            <div 
+                              key={source.id} 
+                              className="p-2 border rounded bg-zinc-50"
+                              data-testid={`source-item-${source.id}`}
+                            >
+                              <div className="flex items-start justify-between gap-2 mb-2">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-medium truncate" data-testid={`text-source-title-${source.id}`}>
+                                    {source.title}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground" data-testid={`text-source-author-${source.id}`}>
+                                    {source.author}{source.year && ` (${source.year})`}
+                                  </p>
+                                </div>
+                                <Badge variant="secondary" className="text-xs shrink-0" data-testid={`badge-source-type-${source.id}`}>
+                                  {source.type}
+                                </Badge>
+                              </div>
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="flex-1 text-xs h-7"
+                                  onClick={() => {
+                                    const citationNumber = index + 1;
+                                    const citationHtml = `<span class="citation text-primary cursor-pointer" data-source-id="${source.id}">[${citationNumber}]</span>`;
+                                    handleInsertContent(citationHtml);
+                                  }}
+                                  data-testid={`button-insert-citation-${source.id}`}
+                                >
+                                  Insert Citation
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 px-2"
+                                  onClick={() => {
+                                    setSources(prev => prev.filter(s => s.id !== source.id));
+                                    toast({ title: "Source Deleted" });
+                                  }}
+                                  data-testid={`button-delete-source-${source.id}`}
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                          
+                          <Button
+                            onClick={() => {
+                              const formatSource = (source: Source): string => {
+                                const author = source.author;
+                                const year = source.year || "n.d.";
+                                const title = source.title;
+                                
+                                switch (source.type) {
+                                  case "book":
+                                    return `<li>${author} (${year}). <em>${title}</em>.</li>`;
+                                  case "journal":
+                                    return `<li>${author}. "${title}." <em>Journal</em>, ${year}.</li>`;
+                                  case "article":
+                                    return `<li>${author}. "${title}." ${year}.</li>`;
+                                  case "website":
+                                    return `<li>${author}. "${title}." ${source.url ? `<a href="${source.url}">${source.url}</a>. ` : ""}${year}.</li>`;
+                                  default:
+                                    return `<li>${author} (${year}). ${title}.</li>`;
+                                }
+                              };
+
+                              const bibliographyItems = sources.map((source) => formatSource(source)).join('\n      ');
+                              const bibliographyHtml = `<div class="bibliography my-6 p-4 border rounded">
   <h3 class="font-bold mb-4">References</h3>
   <ol class="list-decimal pl-6 space-y-2">
       ${bibliographyItems}
   </ol>
 </div>`;
-                    handleInsertContent(bibliographyHtml);
-                  }}
-                  className="w-full"
-                  data-testid="button-generate-bibliography"
-                >
-                  <BookCopy className="w-4 h-4 mr-2" />
-                  Generate Bibliography
-                </Button>
-              )}
-
-              {sources.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <BookMarked className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p className="text-sm">No sources added yet</p>
-                  <p className="text-xs mt-1">Add sources to manage citations</p>
-                </div>
-              )}
+                              handleInsertContent(bibliographyHtml);
+                            }}
+                            className="w-full"
+                            size="sm"
+                            data-testid="button-generate-bibliography"
+                          >
+                            <BookCopy className="w-4 h-4 mr-2" />
+                            Generate Bibliography
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-muted-foreground">
+                          <BookMarked className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                          <p className="text-xs">No sources added yet</p>
+                        </div>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </div>
           </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="format" className="flex-1 flex flex-col m-0 overflow-auto bg-zinc-300">
-          <ScrollArea className="flex-1 p-3">
-            <Accordion type="multiple" defaultValue={["page", "typography", "layout"]} className="space-y-2">
-              <AccordionItem value="page" className="border rounded-lg px-3">
-                <AccordionTrigger className="text-sm py-2">
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4" />
-                    Page Setup
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="space-y-4 pb-3">
-                  <div className="space-y-2">
-                    <Label className="text-xs">Trim Size</Label>
-                    <Select value={trimSize} onValueChange={setTrimSize}>
-                      <SelectTrigger data-testid="select-trim-size">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="5x8">5" x 8" (Pocket)</SelectItem>
-                        <SelectItem value="5.5x8.5">5.5" x 8.5" (Digest)</SelectItem>
-                        <SelectItem value="6x9">6" x 9" (Trade)</SelectItem>
-                        <SelectItem value="7x10">7" x 10" (Textbook)</SelectItem>
-                        <SelectItem value="8.5x11">8.5" x 11" (Letter)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+        {/* FORMAT TAB - KDP Settings, Compliance, Export */}
+        <TabsContent value="format" className="flex-1 m-0 overflow-hidden bg-zinc-300">
+          <ScrollArea className="h-full">
+            <div className="p-3">
+              <Accordion type="multiple" defaultValue={["page-setup", "front-matter"]} className="space-y-2">
+                {/* Page Setup / KDP Settings */}
+                <AccordionItem value="page-setup" className="border rounded-lg bg-white overflow-hidden">
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Page Setup</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs">Trim Size</Label>
+                        <Select value={trimSize} onValueChange={setTrimSize}>
+                          <SelectTrigger data-testid="select-trim-size">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="5x8">5" x 8" (Pocket)</SelectItem>
+                            <SelectItem value="5.5x8.5">5.5" x 8.5" (Digest)</SelectItem>
+                            <SelectItem value="6x9">6" x 9" (Trade)</SelectItem>
+                            <SelectItem value="7x10">7" x 10" (Textbook)</SelectItem>
+                            <SelectItem value="8.5x11">8.5" x 11" (Letter)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label className="text-xs">Inside Margin</Label>
-                      <div className="flex items-center gap-2">
-                        <Slider
-                          value={[marginInside]}
-                          onValueChange={([v]) => setMarginInside(v)}
-                          min={0.5}
-                          max={1.5}
-                          step={0.05}
-                          className="flex-1"
-                        />
-                        <span className="text-xs w-8">{marginInside}"</span>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <Label className="text-xs">Inside Margin</Label>
+                          <div className="flex items-center gap-2">
+                            <Slider
+                              value={[marginInside]}
+                              onValueChange={([v]) => setMarginInside(v)}
+                              min={0.5}
+                              max={1.5}
+                              step={0.05}
+                              className="flex-1"
+                            />
+                            <span className="text-xs w-8">{marginInside}"</span>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Outside Margin</Label>
+                          <div className="flex items-center gap-2">
+                            <Slider
+                              value={[marginOutside]}
+                              onValueChange={([v]) => setMarginOutside(v)}
+                              min={0.25}
+                              max={1}
+                              step={0.05}
+                              className="flex-1"
+                            />
+                            <span className="text-xs w-8">{marginOutside}"</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs">Outside Margin</Label>
-                      <div className="flex items-center gap-2">
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* Typography */}
+                <AccordionItem value="typography" className="border rounded-lg bg-white overflow-hidden">
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Typography</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs">Font Family</Label>
+                        <Select value={fontFamily} onValueChange={setFontFamily}>
+                          <SelectTrigger data-testid="select-font-family">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="garamond">Garamond (Classic)</SelectItem>
+                            <SelectItem value="georgia">Georgia (Modern)</SelectItem>
+                            <SelectItem value="palatino">Palatino (Elegant)</SelectItem>
+                            <SelectItem value="times">Times New Roman</SelectItem>
+                            <SelectItem value="baskerville">Baskerville</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-xs">Font Size: {fontSize}pt</Label>
                         <Slider
-                          value={[marginOutside]}
-                          onValueChange={([v]) => setMarginOutside(v)}
-                          min={0.25}
-                          max={1}
-                          step={0.05}
-                          className="flex-1"
+                          value={[fontSize]}
+                          onValueChange={([v]) => setFontSize(v)}
+                          min={9}
+                          max={14}
+                          step={0.5}
                         />
-                        <span className="text-xs w-8">{marginOutside}"</span>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-xs">Line Spacing: {lineSpacing}</Label>
+                        <Slider
+                          value={[lineSpacing]}
+                          onValueChange={([v]) => setLineSpacing(v)}
+                          min={1}
+                          max={2}
+                          step={0.1}
+                        />
                       </div>
                     </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
+                  </AccordionContent>
+                </AccordionItem>
 
-              <AccordionItem value="typography" className="border rounded-lg px-3">
-                <AccordionTrigger className="text-sm py-2">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4" />
-                    Typography
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="space-y-4 pb-3">
-                  <div className="space-y-2">
-                    <Label className="text-xs">Font Family</Label>
-                    <Select value={fontFamily} onValueChange={setFontFamily}>
-                      <SelectTrigger data-testid="select-font-family">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="garamond">Garamond (Classic)</SelectItem>
-                        <SelectItem value="georgia">Georgia (Modern)</SelectItem>
-                        <SelectItem value="palatino">Palatino (Elegant)</SelectItem>
-                        <SelectItem value="times">Times New Roman</SelectItem>
-                        <SelectItem value="baskerville">Baskerville</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                {/* Layout Options */}
+                <AccordionItem value="layout" className="border rounded-lg bg-white overflow-hidden">
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <Layers className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Layout Options</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs">Page Numbers</Label>
+                        <Switch
+                          checked={includePageNumbers}
+                          onCheckedChange={setIncludePageNumbers}
+                          data-testid="switch-page-numbers"
+                        />
+                      </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-xs">Font Size: {fontSize}pt</Label>
-                    <Slider
-                      value={[fontSize]}
-                      onValueChange={([v]) => setFontSize(v)}
-                      min={9}
-                      max={14}
-                      step={0.5}
-                    />
-                  </div>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs">Running Headers</Label>
+                        <Switch
+                          checked={includeHeaders}
+                          onCheckedChange={setIncludeHeaders}
+                          data-testid="switch-headers"
+                        />
+                      </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-xs">Line Spacing: {lineSpacing}</Label>
-                    <Slider
-                      value={[lineSpacing]}
-                      onValueChange={([v]) => setLineSpacing(v)}
-                      min={1}
-                      max={2}
-                      step={0.1}
-                    />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
+                      <div className="space-y-2">
+                        <Label className="text-xs">Chapter Breaks</Label>
+                        <Select value={chapterBreakStyle} onValueChange={setChapterBreakStyle}>
+                          <SelectTrigger data-testid="select-chapter-breaks">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="new-page">New Page</SelectItem>
+                            <SelectItem value="odd-page">Odd Page (Right)</SelectItem>
+                            <SelectItem value="continuous">Continuous</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
 
-              <AccordionItem value="layout" className="border rounded-lg px-3">
-                <AccordionTrigger className="text-sm py-2">
-                  <div className="flex items-center gap-2">
-                    <Layers className="w-4 h-4" />
-                    Layout Options
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="space-y-4 pb-3">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs">Page Numbers</Label>
-                    <Switch
-                      checked={includePageNumbers}
-                      onCheckedChange={setIncludePageNumbers}
-                      data-testid="switch-page-numbers"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs">Running Headers</Label>
-                    <Switch
-                      checked={includeHeaders}
-                      onCheckedChange={setIncludeHeaders}
-                      data-testid="switch-headers"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs">Chapter Breaks</Label>
-                    <Select value={chapterBreakStyle} onValueChange={setChapterBreakStyle}>
-                      <SelectTrigger data-testid="select-chapter-breaks">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="new-page">New Page</SelectItem>
-                        <SelectItem value="odd-page">Odd Page (Right)</SelectItem>
-                        <SelectItem value="continuous">Continuous</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </ScrollArea>
-        </TabsContent>
-
-        <TabsContent value="compliance" className="flex-1 flex flex-col m-0 overflow-auto bg-zinc-300" data-testid="tabcontent-compliance">
-          <ScrollArea className="flex-1 p-3">
-            <Accordion type="multiple" defaultValue={["front-matter", "back-matter", "isbn", "kdp-checklist"]} className="space-y-2">
-              <AccordionItem value="front-matter" className="border rounded-lg px-3" data-testid="accordion-front-matter">
-                <AccordionTrigger className="text-sm py-2">
-                  <div className="flex items-center gap-2">
-                    <ScrollText className="w-4 h-4" />
-                    Front Matter Templates
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="space-y-2 pb-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full justify-start text-xs gap-2"
-                          onClick={() => handleInsertContent(`<div class="title-page text-center break-after-page py-32 px-10">
+                {/* Front Matter Templates */}
+                <AccordionItem value="front-matter" className="border rounded-lg bg-white overflow-hidden" data-testid="accordion-front-matter">
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <ScrollText className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Front Matter</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs gap-2 h-8"
+                        onClick={() => handleInsertContent(`<div class="title-page text-center break-after-page py-32 px-10">
   <h1 class="text-4xl font-bold mb-4 text-foreground">[Book Title]</h1>
   <p class="text-lg text-muted-foreground mb-2">[Subtitle]</p>
   <p class="text-xl mt-12 text-foreground">By [Author Name]</p>
 </div>`)}
-                          data-testid="button-insert-title-page"
-                        >
-                          <FileSignature className="w-3 h-3 shrink-0" />
-                          Title Page
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="left">
-                        <p>Book title, subtitle, and author name</p>
-                      </TooltipContent>
-                    </Tooltip>
+                        data-testid="button-insert-title-page"
+                      >
+                        <FileSignature className="w-3 h-3 shrink-0" />
+                        Title Page
+                      </Button>
 
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full justify-start text-xs gap-2"
-                          onClick={() => handleInsertContent(`<div class="copyright-page text-xs leading-relaxed break-after-page py-16 px-10 text-foreground">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs gap-2 h-8"
+                        onClick={() => handleInsertContent(`<div class="copyright-page text-xs leading-relaxed break-after-page py-16 px-10 text-foreground">
   <p class="mb-4"><strong>[Book Title]</strong></p>
-  <p>Copyright © ${new Date().getFullYear()} [Author Name]</p>
+  <p>Copyright @ ${new Date().getFullYear()} [Author Name]</p>
   <p>All rights reserved.</p>
   <p class="mt-4">ISBN: [Enter ISBN]</p>
   <p class="mt-4">Published by [Publisher Name]</p>
-  <p class="mt-4">No part of this publication may be reproduced, distributed, or transmitted in any form or by any means, including photocopying, recording, or other electronic or mechanical methods, without the prior written permission of the publisher, except in the case of brief quotations embodied in critical reviews and certain other noncommercial uses permitted by copyright law.</p>
+  <p class="mt-4">No part of this publication may be reproduced without written permission.</p>
   <p class="mt-4">First Edition: ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
 </div>`)}
-                          data-testid="button-insert-copyright-page"
-                        >
-                          <FileText className="w-3 h-3 shrink-0" />
-                          Copyright Page
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="left">
-                        <p>Copyright, ISBN, publisher, rights statement</p>
-                      </TooltipContent>
-                    </Tooltip>
+                        data-testid="button-insert-copyright-page"
+                      >
+                        <FileText className="w-3 h-3 shrink-0" />
+                        Copyright
+                      </Button>
 
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full justify-start text-xs gap-2"
-                          onClick={() => handleInsertContent(`<div class="dedication-page text-center break-after-page py-32 px-16">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs gap-2 h-8"
+                        onClick={() => handleInsertContent(`<div class="dedication-page text-center break-after-page py-32 px-16">
   <p class="italic text-lg leading-relaxed text-foreground">
     For [Name or Group]<br/>
     [Personal dedication message]
   </p>
 </div>`)}
-                          data-testid="button-insert-dedication"
-                        >
-                          <Heart className="w-3 h-3 shrink-0" />
-                          Dedication
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="left">
-                        <p>Dedication page template</p>
-                      </TooltipContent>
-                    </Tooltip>
+                        data-testid="button-insert-dedication"
+                      >
+                        <Heart className="w-3 h-3 shrink-0" />
+                        Dedication
+                      </Button>
 
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full justify-start text-xs gap-2"
-                          onClick={() => handleInsertContent(`<div class="table-of-contents break-after-page p-10">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs gap-2 h-8"
+                        onClick={() => handleInsertContent(`<div class="table-of-contents break-after-page p-10">
   <h2 class="text-2xl font-bold mb-6 text-center text-foreground">Table of Contents</h2>
   <div class="leading-loose text-foreground">
     <p><strong>Chapter 1:</strong> [Title] ...................... 1</p>
     <p><strong>Chapter 2:</strong> [Title] ...................... 15</p>
     <p><strong>Chapter 3:</strong> [Title] ...................... 30</p>
-    <p><strong>Chapter 4:</strong> [Title] ...................... 45</p>
-    <p><strong>Chapter 5:</strong> [Title] ...................... 60</p>
   </div>
 </div>`)}
-                          data-testid="button-insert-toc-template"
-                        >
-                          <List className="w-3 h-3 shrink-0" />
-                          TOC Template
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="left">
-                        <p>Manual Table of Contents template</p>
-                      </TooltipContent>
-                    </Tooltip>
+                        data-testid="button-insert-toc-template"
+                      >
+                        <List className="w-3 h-3 shrink-0" />
+                        TOC Template
+                      </Button>
 
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full justify-start text-xs gap-2"
-                          onClick={() => handleInsertContent(`<div class="acknowledgments break-after-page p-10">
-  <h2 class="text-2xl font-bold mb-6 text-center text-foreground">Acknowledgments</h2>
-  <p class="leading-relaxed mb-4 text-foreground">
-    I would like to express my deepest gratitude to...
-  </p>
-  <p class="leading-relaxed mb-4 text-foreground">
-    Special thanks to [Name] for [contribution]...
-  </p>
-  <p class="leading-relaxed text-foreground">
-    Finally, I want to thank [family/friends] for their unwavering support throughout this journey.
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs gap-2 h-8"
+                        onClick={() => handleInsertContent(`<div class="acknowledgments break-after-page p-10">
+  <h2 class="text-2xl font-bold mb-6 text-foreground">Acknowledgments</h2>
+  <p class="text-foreground leading-relaxed">
+    I would like to express my sincere gratitude to [names and organizations]...
   </p>
 </div>`)}
-                          data-testid="button-insert-acknowledgments"
-                        >
-                          <Award className="w-3 h-3 shrink-0" />
-                          Acknowledgments
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="left">
-                        <p>Thank contributors and supporters</p>
-                      </TooltipContent>
-                    </Tooltip>
+                        data-testid="button-insert-acknowledgments"
+                      >
+                        <Award className="w-3 h-3 shrink-0" />
+                        Acknowledgments
+                      </Button>
 
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full justify-start text-xs gap-2"
-                          onClick={() => handleInsertContent(`<div class="foreword break-after-page p-10">
-  <h2 class="text-2xl font-bold mb-6 text-center text-foreground">Foreword</h2>
-  <p class="leading-relaxed mb-4 text-foreground">
-    [Opening paragraph introducing the book and its significance...]
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs gap-2 h-8"
+                        onClick={() => handleInsertContent(`<div class="foreword break-after-page p-10">
+  <h2 class="text-2xl font-bold mb-6 text-foreground">Foreword</h2>
+  <p class="text-foreground leading-relaxed mb-4">
+    [Foreword content written by a guest contributor...]
   </p>
-  <p class="leading-relaxed mb-4 text-foreground">
-    [Middle paragraphs about the author and their expertise...]
-  </p>
-  <p class="leading-relaxed mb-6 text-foreground">
-    [Closing paragraph with endorsement...]
-  </p>
-  <p class="text-right italic text-foreground">
-    — [Foreword Author Name]<br/>
-    [Title/Position]
+  <p class="text-foreground mt-6 italic">
+    -- [Foreword Author Name]<br/>
+    [Title/Credentials]
   </p>
 </div>`)}
-                          data-testid="button-insert-foreword"
-                        >
-                          <Feather className="w-3 h-3 shrink-0" />
-                          Foreword
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="left">
-                        <p>Written by someone other than the author</p>
-                      </TooltipContent>
-                    </Tooltip>
+                        data-testid="button-insert-foreword"
+                      >
+                        <Quote className="w-3 h-3 shrink-0" />
+                        Foreword
+                      </Button>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
 
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full justify-start text-xs gap-2 col-span-2"
-                          onClick={() => handleInsertContent(`<div class="preface break-after-page p-10">
-  <h2 class="text-2xl font-bold mb-6 text-center text-foreground">Preface</h2>
-  <p class="leading-relaxed mb-4 text-foreground">
-    [Explain why you wrote this book...]
-  </p>
-  <p class="leading-relaxed mb-4 text-foreground">
-    [Describe who this book is for and what readers will gain...]
-  </p>
-  <p class="leading-relaxed mb-4 text-foreground">
-    [Outline how the book is organized...]
-  </p>
-  <p class="leading-relaxed text-foreground">
-    [Any special notes or guidance for readers...]
-  </p>
-</div>`)}
-                          data-testid="button-insert-preface"
-                        >
-                          <BookOpen className="w-3 h-3 shrink-0" />
-                          Preface
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="left">
-                        <p>Author's introduction to the book</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="back-matter" className="border rounded-lg px-3" data-testid="accordion-back-matter">
-                <AccordionTrigger className="text-sm py-2">
-                  <div className="flex items-center gap-2">
-                    <Library className="w-4 h-4" />
-                    Back Matter Templates
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="space-y-2 pb-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full justify-start text-xs gap-2"
-                          onClick={() => handleInsertContent(`<div class="about-author break-before-page p-10">
-  <h2 class="text-2xl font-bold mb-6 text-center text-foreground">About the Author</h2>
-  <div class="text-center mb-6">
-    <div class="w-28 h-28 bg-muted rounded-full mx-auto flex items-center justify-center">
-      <span class="text-muted-foreground">[Photo]</span>
+                {/* Back Matter */}
+                <AccordionItem value="back-matter" className="border rounded-lg bg-white overflow-hidden">
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <BookCopy className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Back Matter</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs gap-2 h-8"
+                        onClick={() => handleInsertContent(`<div class="about-author break-after-page p-10">
+  <h2 class="text-2xl font-bold mb-6 text-foreground">About the Author</h2>
+  <div class="flex gap-6 items-start">
+    <div class="w-32 h-32 rounded-full bg-muted flex items-center justify-center shrink-0">
+      <p class="text-xs text-muted-foreground">[Photo]</p>
+    </div>
+    <div class="flex-1">
+      <p class="text-foreground leading-relaxed">
+        [Author Name] is a [profession/background]. With [X] years of experience...
+      </p>
+      <p class="text-foreground leading-relaxed mt-4">
+        Connect with [Author Name]:<br/>
+        Website: [URL]<br/>
+        Email: [Email]
+      </p>
     </div>
   </div>
-  <p class="leading-relaxed mb-4 text-foreground">
-    [Author Name] is a [profession/background]...
-  </p>
-  <p class="leading-relaxed mb-4 text-foreground">
-    [Career highlights, credentials, or relevant experience...]
-  </p>
-  <p class="leading-relaxed text-foreground">
-    [Personal details, location, interests, etc.]<br/>
-    Connect with the author at [website/social media].
-  </p>
 </div>`)}
-                          data-testid="button-insert-about-author"
-                        >
-                          <UserCircle className="w-3 h-3 shrink-0" />
-                          About Author
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="left">
-                        <p>Author biography section</p>
-                      </TooltipContent>
-                    </Tooltip>
+                        data-testid="button-insert-about-author"
+                      >
+                        <UserCircle className="w-3 h-3 shrink-0" />
+                        About Author
+                      </Button>
 
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full justify-start text-xs gap-2"
-                          onClick={() => handleInsertContent(`<div class="also-by-author break-before-page p-10">
-  <h2 class="text-2xl font-bold mb-6 text-center text-foreground">Also By This Author</h2>
-  <div class="leading-loose">
-    <p class="mb-4 text-foreground"><strong>[Book Title 1]</strong><br/>
-    <span class="text-muted-foreground text-sm">[Brief description or tagline]</span></p>
-    <p class="mb-4 text-foreground"><strong>[Book Title 2]</strong><br/>
-    <span class="text-muted-foreground text-sm">[Brief description or tagline]</span></p>
-    <p class="mb-4 text-foreground"><strong>[Book Title 3]</strong><br/>
-    <span class="text-muted-foreground text-sm">[Brief description or tagline]</span></p>
-  </div>
-  <p class="mt-6 text-center text-muted-foreground">
-    Available at major book retailers and online stores.
-  </p>
-</div>`)}
-                          data-testid="button-insert-also-by"
-                        >
-                          <BookCopy className="w-3 h-3 shrink-0" />
-                          Also By Author
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="left">
-                        <p>List of other books by the author</p>
-                      </TooltipContent>
-                    </Tooltip>
-
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full justify-start text-xs gap-2"
-                          onClick={() => handleInsertContent(`<div class="resources-references break-before-page p-10">
-  <h2 class="text-2xl font-bold mb-6 text-center text-foreground">Resources & References</h2>
-  <div class="leading-relaxed text-foreground">
-    <h3 class="text-base font-semibold mb-3 mt-5">Books</h3>
-    <ul class="list-disc pl-5 mb-4">
-      <li>[Author], <em>[Title]</em> (Publisher, Year)</li>
-      <li>[Author], <em>[Title]</em> (Publisher, Year)</li>
-    </ul>
-    <h3 class="text-base font-semibold mb-3">Websites</h3>
-    <ul class="list-disc pl-5 mb-4">
-      <li>[Website Name] - [URL]</li>
-      <li>[Website Name] - [URL]</li>
-    </ul>
-    <h3 class="text-base font-semibold mb-3">Organizations</h3>
-    <ul class="list-disc pl-5">
-      <li>[Organization Name] - [Description]</li>
-      <li>[Organization Name] - [Description]</li>
-    </ul>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs gap-2 h-8"
+                        onClick={() => handleInsertContent(`<div class="index break-after-page p-10">
+  <h2 class="text-2xl font-bold mb-6 text-foreground">Index</h2>
+  <div class="columns-2 gap-8 text-sm text-foreground">
+    <p class="mb-1"><strong>A</strong></p>
+    <p class="pl-4">Term 1, 12, 45, 78</p>
+    <p class="pl-4">Term 2, 23, 56</p>
+    <p class="mb-1 mt-3"><strong>B</strong></p>
+    <p class="pl-4">Term 3, 34, 67, 89</p>
   </div>
 </div>`)}
-                          data-testid="button-insert-resources"
-                        >
-                          <LinkIcon className="w-3 h-3 shrink-0" />
-                          Resources
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="left">
-                        <p>References and additional resources</p>
-                      </TooltipContent>
-                    </Tooltip>
+                        data-testid="button-insert-index"
+                      >
+                        <Hash className="w-3 h-3 shrink-0" />
+                        Index
+                      </Button>
 
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full justify-start text-xs gap-2"
-                          onClick={() => handleInsertContent(`<div class="index-placeholder break-before-page p-10">
-  <h2 class="text-2xl font-bold mb-6 text-center text-foreground">Index</h2>
-  <div class="columns-2 gap-8 text-xs leading-relaxed text-foreground">
-    <p><strong>A</strong></p>
-    <p class="pl-3">[Term], [page numbers]</p>
-    <p class="pl-3">[Term], [page numbers]</p>
-    <p class="mt-3"><strong>B</strong></p>
-    <p class="pl-3">[Term], [page numbers]</p>
-    <p class="pl-3">[Term], [page numbers]</p>
-    <p class="mt-3"><strong>C</strong></p>
-    <p class="pl-3">[Term], [page numbers]</p>
-    <p class="pl-3">[Term], [page numbers]</p>
-  </div>
-  <p class="mt-6 text-xs text-muted-foreground text-center">
-    [Generate index after finalizing page numbers]
-  </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs gap-2 h-8"
+                        onClick={() => handleInsertContent(`<div class="glossary break-after-page p-10">
+  <h2 class="text-2xl font-bold mb-6 text-foreground">Glossary</h2>
+  <dl class="space-y-4 text-foreground">
+    <div>
+      <dt class="font-semibold text-primary">Term 1</dt>
+      <dd class="pl-4 text-muted-foreground">Definition of term 1...</dd>
+    </div>
+    <div>
+      <dt class="font-semibold text-primary">Term 2</dt>
+      <dd class="pl-4 text-muted-foreground">Definition of term 2...</dd>
+    </div>
+  </dl>
 </div>`)}
-                          data-testid="button-insert-index"
-                        >
-                          <Hash className="w-3 h-3 shrink-0" />
-                          Index
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="left">
-                        <p>Index placeholder template</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
+                        data-testid="button-insert-glossary"
+                      >
+                        <BookText className="w-3 h-3 shrink-0" />
+                        Glossary
+                      </Button>
 
-              <AccordionItem value="isbn" className="border rounded-lg px-3" data-testid="accordion-isbn">
-                <AccordionTrigger className="text-sm py-2">
-                  <div className="flex items-center gap-2">
-                    <Hash className="w-4 h-4" />
-                    ISBN Helper
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="space-y-4 pb-3">
-                  <p className="text-xs text-muted-foreground">
-                    ISBNs (International Standard Book Numbers) are required for selling books through major retailers. Each format (paperback, hardcover, ebook) needs its own ISBN.
-                  </p>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full gap-2"
-                    onClick={() => window.open('https://www.myidentifiers.com/', '_blank')}
-                    data-testid="button-bowker-link"
-                  >
-                    <ExternalLink className="w-3 h-3" />
-                    Get ISBN from Bowker (US)
-                  </Button>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs">Enter ISBN (13 digits)</Label>
-                    <Input
-                      value={isbnInput}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/[^0-9-]/g, '');
-                        setIsbnInput(value);
-                        const digitsOnly = value.replace(/-/g, '');
-                        if (digitsOnly.length > 0 && digitsOnly.length !== 13) {
-                          setIsbnError('ISBN must be exactly 13 digits');
-                        } else {
-                          setIsbnError('');
-                        }
-                      }}
-                      placeholder="978-0-123456-78-9"
-                      className={isbnError ? 'border-destructive' : ''}
-                      data-testid="input-isbn"
-                    />
-                    {isbnError && (
-                      <p className="text-xs text-destructive">{isbnError}</p>
-                    )}
-                  </div>
-
-                  <Button
-                    variant="default"
-                    size="sm"
-                    className="w-full gap-2"
-                    disabled={!isbnInput || isbnError !== ''}
-                    onClick={() => {
-                      const digitsOnly = isbnInput.replace(/-/g, '');
-                      const formattedIsbn = digitsOnly.length === 13 
-                        ? `${digitsOnly.slice(0,3)}-${digitsOnly.slice(3,4)}-${digitsOnly.slice(4,10)}-${digitsOnly.slice(10,12)}-${digitsOnly.slice(12)}`
-                        : isbnInput;
-                      handleInsertContent(`<p><strong>ISBN:</strong> ${formattedIsbn}</p>`);
-                    }}
-                    data-testid="button-insert-isbn"
-                  >
-                    <FileSignature className="w-3 h-3" />
-                    Insert ISBN
-                  </Button>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="kdp-checklist" className="border rounded-lg px-3" data-testid="accordion-kdp-checklist">
-                <AccordionTrigger className="text-sm py-2">
-                  <div className="flex items-center gap-2">
-                    <ClipboardCheck className="w-4 h-4" />
-                    KDP Checklist
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="space-y-3 pb-3">
-                  <div className="space-y-2">
-                    {[
-                      { key: 'trimSizeSelected' as const, label: 'Trim size selected (6x9, 8.5x11, etc.)' },
-                      { key: 'marginsCompliant' as const, label: 'Margins meet KDP requirements' },
-                      { key: 'fontsEmbedded' as const, label: 'Fonts embedded properly' },
-                      { key: 'imagesHighRes' as const, label: 'Images at 300 DPI' },
-                      { key: 'noBleedIssues' as const, label: 'No bleed issues' },
-                      { key: 'tocLinksWorking' as const, label: 'TOC links working' },
-                      { key: 'copyrightComplete' as const, label: 'Copyright page complete' },
-                      { key: 'pageCountMet' as const, label: 'Page count meets minimum (24+)' },
-                    ].map((item) => (
-                      <div key={item.key} className="flex items-center gap-2">
-                        <Switch
-                          checked={kdpChecklist[item.key]}
-                          onCheckedChange={(checked) => setKdpChecklist(prev => ({ ...prev, [item.key]: checked }))}
-                          data-testid={`switch-checklist-${item.key}`}
-                        />
-                        <Label className={`text-xs ${kdpChecklist[item.key] ? 'text-foreground' : 'text-muted-foreground'}`}>
-                          {item.label}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <div className="pt-2 border-t">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">Progress:</span>
-                      <Badge variant={Object.values(kdpChecklist).every(Boolean) ? 'default' : 'secondary'}>
-                        {Object.values(kdpChecklist).filter(Boolean).length} / {Object.values(kdpChecklist).length}
-                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs gap-2 h-8"
+                        onClick={() => handleInsertContent(`<div class="resources break-after-page p-10">
+  <h2 class="text-2xl font-bold mb-6 text-foreground">Resources</h2>
+  <h3 class="text-lg font-semibold mt-6 mb-3 text-foreground">Recommended Reading</h3>
+  <ul class="list-disc pl-6 space-y-2 text-foreground">
+    <li><em>Book Title</em> by Author Name</li>
+  </ul>
+  <h3 class="text-lg font-semibold mt-6 mb-3 text-foreground">Helpful Websites</h3>
+  <ul class="list-disc pl-6 space-y-2 text-foreground">
+    <li><strong>Website Name</strong> - www.example.com</li>
+  </ul>
+</div>`)}
+                        data-testid="button-insert-resources"
+                      >
+                        <FolderOpen className="w-3 h-3 shrink-0" />
+                        Resources
+                      </Button>
                     </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
+                  </AccordionContent>
+                </AccordionItem>
 
-              <AccordionItem value="generate-toc" className="border rounded-lg px-3" data-testid="accordion-generate-toc">
-                <AccordionTrigger className="text-sm py-2">
-                  <div className="flex items-center gap-2">
-                    <List className="w-4 h-4" />
-                    Auto-Generate TOC
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="space-y-3 pb-3">
-                  <p className="text-xs text-muted-foreground">
-                    Generate a Table of Contents from all H1 and H2 headings in your document.
-                  </p>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    className="w-full gap-2"
-                    onClick={() => {
-                      toast({
-                        title: "Generate TOC",
-                        description: "Scanning document for headings...",
-                      });
-                      const tocHtml = `<div class="auto-generated-toc my-8 p-10" style="page-break-after: always;">
-  <h2 class="text-2xl font-bold mb-6 text-center text-foreground">Table of Contents</h2>
-  <p class="text-xs text-muted-foreground mb-4 text-center">[Auto-generated - Update page numbers after layout]</p>
-  <div class="leading-8">
-    <p class="text-foreground">Introduction ...................... 1</p>
-    <p class="pl-4 text-muted-foreground">Overview ...................... 3</p>
-    <p class="text-foreground">Chapter 1 ...................... 5</p>
-    <p class="pl-4 text-muted-foreground">Section 1.1 ...................... 7</p>
-    <p class="pl-4 text-muted-foreground">Section 1.2 ...................... 12</p>
-    <p class="text-foreground">Chapter 2 ...................... 20</p>
-    <p class="pl-4 text-muted-foreground">Section 2.1 ...................... 22</p>
+                {/* ISBN & Compliance */}
+                <AccordionItem value="isbn" className="border rounded-lg bg-white overflow-hidden">
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-primary" />
+                      <span className="font-medium">ISBN & Compliance</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs">ISBN Number</Label>
+                        <Input
+                          value={isbnInput}
+                          onChange={(e) => {
+                            setIsbnInput(e.target.value);
+                            const cleaned = e.target.value.replace(/[-\s]/g, '');
+                            if (cleaned.length > 0 && !/^\d{10}$|^\d{13}$/.test(cleaned)) {
+                              setIsbnError("ISBN must be 10 or 13 digits");
+                            } else {
+                              setIsbnError("");
+                            }
+                          }}
+                          placeholder="978-0-123456-78-9"
+                          className={isbnError ? "border-red-500" : ""}
+                          data-testid="input-isbn"
+                        />
+                        {isbnError && <p className="text-xs text-red-500">{isbnError}</p>}
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-xs"
+                        onClick={() => {
+                          if (isbnInput && !isbnError) {
+                            handleInsertContent(`<div class="qr-code my-4 text-center">
+  <p class="text-xs text-muted-foreground mb-2">Scan for more information</p>
+  <div class="inline-block p-4 bg-white border rounded">
+    <p class="text-sm font-mono">[QR Code: ${isbnInput}]</p>
   </div>
-</div>`;
-                      handleInsertContent(tocHtml);
-                    }}
-                    data-testid="button-generate-toc"
-                  >
-                    <Wand2 className="w-3 h-3" />
-                    Generate TOC from Headings
-                  </Button>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+</div>`);
+                          }
+                        }}
+                        disabled={!isbnInput || !!isbnError}
+                        data-testid="button-insert-qr"
+                      >
+                        <QrCode className="w-3 h-3 mr-2" />
+                        Insert QR Code
+                      </Button>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* KDP Checklist */}
+                <AccordionItem value="kdp-checklist" className="border rounded-lg bg-white overflow-hidden">
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <ClipboardCheck className="w-4 h-4 text-primary" />
+                      <span className="font-medium">KDP Checklist</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <div className="space-y-2">
+                      {Object.entries(kdpChecklist).map(([key, value]) => {
+                        const labels: Record<string, string> = {
+                          trimSizeSelected: "Trim size selected",
+                          marginsCompliant: "Margins KDP compliant",
+                          fontsEmbedded: "Fonts embedded",
+                          imagesHighRes: "Images 300+ DPI",
+                          noBleedIssues: "No bleed issues",
+                          tocLinksWorking: "TOC links working",
+                          copyrightComplete: "Copyright page complete",
+                          pageCountMet: "Page count requirements met",
+                        };
+                        return (
+                          <div key={key} className="flex items-center justify-between py-1">
+                            <Label className="text-xs">{labels[key]}</Label>
+                            <Switch
+                              checked={value}
+                              onCheckedChange={(checked) => 
+                                setKdpChecklist(prev => ({ ...prev, [key]: checked }))
+                              }
+                              data-testid={`switch-kdp-${key}`}
+                            />
+                          </div>
+                        );
+                      })}
+                      <div className="pt-3 border-t mt-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">Completion</span>
+                          <span className="text-sm font-medium text-primary">
+                            {Math.round((Object.values(kdpChecklist).filter(Boolean).length / Object.keys(kdpChecklist).length) * 100)}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-muted h-2 rounded-full mt-2 overflow-hidden">
+                          <div 
+                            className="bg-primary h-full transition-all"
+                            style={{ 
+                              width: `${(Object.values(kdpChecklist).filter(Boolean).length / Object.keys(kdpChecklist).length) * 100}%` 
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
           </ScrollArea>
         </TabsContent>
       </Tabs>
-
     </div>
   );
 }
