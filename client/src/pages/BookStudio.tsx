@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import ChildrensBookMode from "@/components/ChildrensBookMode";
 import ProfessionalEditor from "@/components/ProfessionalEditor";
 import CoverDesigner from "@/components/CoverDesigner";
+import SEO, { studioSchemas } from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Button } from "@/components/ui/button";
@@ -1734,6 +1735,11 @@ Your journey to healing starts here.`);
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Book Studio - AI Book Writing"
+        description="Create professional books with AI-powered writing assistance. Features AI ghostwriting, professional WYSIWYG editor, and direct publishing to Amazon KDP and Lulu print-on-demand."
+        schema={studioSchemas.bookStudio}
+      />
       <CreatorHeader />
       
       <main className="py-8 px-4 sm:px-6 lg:px-8">

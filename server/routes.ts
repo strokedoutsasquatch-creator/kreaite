@@ -232,6 +232,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Serve stock images from attached_assets
   app.use('/stock_images', express.static(path.join(process.cwd(), 'attached_assets', 'stock_images')));
+
+  // SEO: Dynamic Sitemap.xml
+  app.get('/sitemap.xml', async (req, res) => {
+    const baseUrl = 'https://kreaite.xyz';
+    const routes = [
+      { path: '/', priority: '1.0', changefreq: 'weekly' },
+      { path: '/marketplace', priority: '0.9', changefreq: 'daily' },
+      { path: '/book-studio', priority: '0.9', changefreq: 'weekly' },
+      { path: '/music-studio', priority: '0.9', changefreq: 'weekly' },
+      { path: '/video-studio', priority: '0.9', changefreq: 'weekly' },
+      { path: '/course-studio', priority: '0.9', changefreq: 'weekly' },
+      { path: '/image-studio', priority: '0.9', changefreq: 'weekly' },
+      { path: '/pricing', priority: '0.8', changefreq: 'monthly' },
+      { path: '/about', priority: '0.7', changefreq: 'monthly' },
+      { path: '/about-us', priority: '0.7', changefreq: 'monthly' },
+      { path: '/community', priority: '0.8', changefreq: 'daily' },
+      { path: '/stories', priority: '0.8', changefreq: 'daily' },
+      { path: '/publishing', priority: '0.7', changefreq: 'monthly' },
+      { path: '/quick-create', priority: '0.8', changefreq: 'weekly' },
+      { path: '/media-studio', priority: '0.8', changefreq: 'weekly' },
+      { path: '/podcast-studio', priority: '0.8', changefreq: 'weekly' },
+      { path: '/production-dashboard', priority: '0.8', changefreq: 'weekly' },
+      { path: '/music-sandbox', priority: '0.8', changefreq: 'weekly' },
+      { path: '/script-studio', priority: '0.8', changefreq: 'weekly' },
+      { path: '/life-story', priority: '0.8', changefreq: 'weekly' },
+      { path: '/ai-consultant', priority: '0.7', changefreq: 'weekly' },
+      { path: '/terms', priority: '0.3', changefreq: 'yearly' },
+      { path: '/privacy', priority: '0.3', changefreq: 'yearly' },
+    ];
+
+    try {
+      const listings = await storage.getMarketplaceListings?.() || [];
+      const dynamicUrls = listings.slice(0, 100).map((l: any) => ({
+        path: `/listing/${l.id}`,
+        priority: '0.6',
+        changefreq: 'weekly'
+      }));
+
+      const allRoutes = [...routes, ...dynamicUrls];
+      const today = new Date().toISOString().split('T')[0];
+      
+      const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${allRoutes.map(r => `  <url>
+    <loc>${baseUrl}${r.path}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>${r.changefreq}</changefreq>
+    <priority>${r.priority}</priority>
+  </url>`).join('\n')}
+</urlset>`;
+
+      res.set('Content-Type', 'application/xml');
+      res.send(sitemap);
+    } catch (error) {
+      console.error('Sitemap generation error:', error);
+      res.status(500).send('Error generating sitemap');
+    }
+  });
+
+  // SEO: Robots.txt
+  app.get('/robots.txt', (req, res) => {
+    const robotsTxt = `User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /creator-settings
+Disallow: /admin
+Disallow: /moderation
+
+Sitemap: https://kreaite.xyz/sitemap.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
+
+# AI Training Bots
+User-agent: GPTBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+User-agent: Google-Extended
+Allow: /
+User-agent: Anthropic-AI
+Allow: /
+User-agent: CCBot
+Allow: /
+`;
+    res.set('Content-Type', 'text/plain');
+    res.send(robotsTxt);
+  });
   
   // Setup authentication
   await setupAuth(app);

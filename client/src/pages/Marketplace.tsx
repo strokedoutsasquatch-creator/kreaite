@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import CreatorHeader from "@/components/CreatorHeader";
 import Footer from "@/components/Footer";
+import SEO, { createProductSchema } from "@/components/SEO";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -865,6 +866,24 @@ export default function Marketplace() {
 
   return (
     <div className={`min-h-screen bg-background ${currentTrack ? 'pb-24' : ''}`}>
+      <SEO
+        title="Marketplace - Creator Content"
+        description="Discover and purchase books, courses, music, and videos from independent creators. Stream, buy, and support creators while they keep 85% of every sale."
+        schema={{
+          "@type": "WebPage",
+          name: "KreAIte Marketplace",
+          description: "Discover books, courses, music, and videos from independent creators",
+          mainEntity: {
+            "@type": "ItemList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Books" },
+              { "@type": "ListItem", position: 2, name: "Courses" },
+              { "@type": "ListItem", position: 3, name: "Music" },
+              { "@type": "ListItem", position: 4, name: "Videos" },
+            ],
+          },
+        }}
+      />
       <CreatorHeader />
       
       <main className="container mx-auto px-4 py-8">
