@@ -3581,3 +3581,228 @@ export const insertMagicLinkTokenSchema = createInsertSchema(magicLinkTokens).om
 
 export type MagicLinkToken = typeof magicLinkTokens.$inferSelect;
 export type InsertMagicLinkToken = z.infer<typeof insertMagicLinkTokenSchema>;
+
+// ============================================================================
+// CREATOR PRODUCTION ENGINE - VAULTS
+// ============================================================================
+
+export const vaultEntries = pgTable("vault_entries", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  category: text("category").notNull(), // lyric, manuscript, doctrine, idea, research, beat, melody, screenplay, jingle
+  title: text("title").notNull(),
+  content: text("content"),
+  contentJson: jsonb("content_json"), // structured content
+  summary: text("summary"),
+  tags: text("tags").array(),
+  linkedProjectId: integer("linked_project_id"),
+  linkedAssetIds: text("linked_asset_ids").array(),
+  inspirationScore: real("inspiration_score"),
+  status: text("status").notNull().default("active"), // active, archived, draft
+  version: integer("version").notNull().default(1),
+  parentId: integer("parent_id"), // for versioning
+  metadata: jsonb("metadata"), // flexible storage for category-specific data
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const vaultFolders = pgTable("vault_folders", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  parentId: integer("parent_id"),
+  category: text("category"), // optional category filter
+  color: text("color"),
+  icon: text("icon"),
+  order: integer("order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const vaultEntryFolders = pgTable("vault_entry_folders", {
+  id: serial("id").primaryKey(),
+  entryId: integer("entry_id").notNull().references(() => vaultEntries.id, { onDelete: "cascade" }),
+  folderId: integer("folder_id").notNull().references(() => vaultFolders.id, { onDelete: "cascade" }),
+});
+
+// ============================================================================
+// CREATOR PRODUCTION ENGINE - RESEARCH HUB
+// ============================================================================
+
+export const researchQueries = pgTable("research_queries", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  query: text("query").notNull(),
+  market: text("market").default("us"),
+  serpResult: jsonb("serp_result"),
+  insights: jsonb("insights"), // AI-extracted insights
+  insightScore: real("insight_score"),
+  creditCost: integer("credit_cost").default(1),
+  savedToVault: boolean("saved_to_vault").default(false),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const trendingTopics = pgTable("trending_topics", {
+  id: serial("id").primaryKey(),
+  category: text("category").notNull(), // books, music, courses, movies
+  topic: text("topic").notNull(),
+  searchVolume: integer("search_volume"),
+  trend: text("trend"), // rising, stable, declining
+  relatedKeywords: text("related_keywords").array(),
+  source: text("source").default("serp"),
+  fetchedAt: timestamp("fetched_at").notNull().defaultNow(),
+  expiresAt: timestamp("expires_at"),
+});
+
+// ============================================================================
+// CREATOR PRODUCTION ENGINE - BATCH PRODUCTION
+// ============================================================================
+
+export const productionBatches = pgTable("production_batches", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  batchType: text("batch_type").notNull(), // book, screenplay, course, song, jingle
+  targetFormat: text("target_format"), // pdf, epub, mp3, mp4
+  config: jsonb("config"), // generation settings
+  totalItems: integer("total_items").notNull().default(0),
+  completedItems: integer("completed_items").notNull().default(0),
+  failedItems: integer("failed_items").notNull().default(0),
+  creditCost: integer("credit_cost").notNull().default(0),
+  status: text("status").notNull().default("pending"), // pending, processing, completed, failed, cancelled
+  jobId: text("job_id"),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const batchItems = pgTable("batch_items", {
+  id: serial("id").primaryKey(),
+  batchId: integer("batch_id").notNull().references(() => productionBatches.id, { onDelete: "cascade" }),
+  sourceVaultEntryId: integer("source_vault_entry_id").references(() => vaultEntries.id, { onDelete: "set null" }),
+  title: text("title").notNull(),
+  promptConfig: jsonb("prompt_config"),
+  outputType: text("output_type").notNull(),
+  aiModel: text("ai_model"),
+  creditCost: integer("credit_cost").notNull().default(0),
+  status: text("status").notNull().default("pending"), // pending, processing, completed, failed
+  result: jsonb("result"),
+  outputUrl: text("output_url"),
+  error: text("error"),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ============================================================================
+// CREATOR PRODUCTION ENGINE - CROSS-FORMAT IDEATION
+// ============================================================================
+
+export const ideationLinks = pgTable("ideation_links", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  sourceEntryId: integer("source_entry_id").notNull().references(() => vaultEntries.id, { onDelete: "cascade" }),
+  targetEntryId: integer("target_entry_id").notNull().references(() => vaultEntries.id, { onDelete: "cascade" }),
+  relationship: text("relationship").notNull(), // inspired, adapted, expanded, remixed
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ============================================================================
+// CREATOR PRODUCTION ENGINE - LIFE STORY ENGINE
+// ============================================================================
+
+export const lifeStories = pgTable("life_stories", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  subtitle: text("subtitle"),
+  timeline: jsonb("timeline"), // birth, milestones, key events
+  milestones: jsonb("milestones"), // array of life events
+  themes: text("themes").array(), // triumph, love, loss, growth
+  chapters: jsonb("chapters"), // generated chapter outlines
+  attachments: jsonb("attachments"), // photos, documents
+  generatedContent: text("generated_content"),
+  status: text("status").notNull().default("draft"),
+  linkedBookProjectId: integer("linked_book_project_id"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// ============================================================================
+// CREATOR PRODUCTION ENGINE - SCREENPLAY/SCRIPT STUDIO
+// ============================================================================
+
+export const screenplayProjects = pgTable("screenplay_projects", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  logline: text("logline"),
+  genre: text("genre"),
+  format: text("format").default("feature"), // feature, short, series, pilot
+  beats: jsonb("beats"), // story beats
+  scenes: jsonb("scenes"), // scene list
+  characters: jsonb("characters"), // character profiles
+  dialogue: jsonb("dialogue"), // dialogue snippets
+  fullScript: text("full_script"),
+  status: text("status").notNull().default("draft"),
+  linkedVaultEntryId: integer("linked_vault_entry_id"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// ============================================================================
+// CREATOR PRODUCTION ENGINE - MUSIC SANDBOX
+// ============================================================================
+
+export const musicSandboxProjects = pgTable("music_sandbox_projects", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  projectType: text("project_type").notNull(), // beat, melody, soundtrack, jingle, song
+  genre: text("genre"),
+  tempo: integer("tempo"),
+  key: text("key"),
+  timeSignature: text("time_signature").default("4/4"),
+  lyrics: text("lyrics"),
+  structure: jsonb("structure"), // verse, chorus, bridge layout
+  tracks: jsonb("tracks"), // multi-track data
+  patterns: jsonb("patterns"), // beat patterns, melodies
+  mixSettings: jsonb("mix_settings"),
+  audioUrl: text("audio_url"),
+  stemUrls: jsonb("stem_urls"), // individual track exports
+  linkedVaultEntryId: integer("linked_vault_entry_id"),
+  status: text("status").notNull().default("draft"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Insert schemas
+export const insertVaultEntrySchema = createInsertSchema(vaultEntries).omit({ id: true, createdAt: true, updatedAt: true, version: true });
+export const insertVaultFolderSchema = createInsertSchema(vaultFolders).omit({ id: true, createdAt: true });
+export const insertResearchQuerySchema = createInsertSchema(researchQueries).omit({ id: true, createdAt: true });
+export const insertProductionBatchSchema = createInsertSchema(productionBatches).omit({ id: true, createdAt: true, completedItems: true, failedItems: true });
+export const insertBatchItemSchema = createInsertSchema(batchItems).omit({ id: true, createdAt: true });
+export const insertLifeStorySchema = createInsertSchema(lifeStories).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertScreenplayProjectSchema = createInsertSchema(screenplayProjects).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertMusicSandboxProjectSchema = createInsertSchema(musicSandboxProjects).omit({ id: true, createdAt: true, updatedAt: true });
+
+// Types
+export type VaultEntry = typeof vaultEntries.$inferSelect;
+export type InsertVaultEntry = z.infer<typeof insertVaultEntrySchema>;
+export type VaultFolder = typeof vaultFolders.$inferSelect;
+export type InsertVaultFolder = z.infer<typeof insertVaultFolderSchema>;
+export type ResearchQuery = typeof researchQueries.$inferSelect;
+export type InsertResearchQuery = z.infer<typeof insertResearchQuerySchema>;
+export type TrendingTopic = typeof trendingTopics.$inferSelect;
+export type ProductionBatch = typeof productionBatches.$inferSelect;
+export type InsertProductionBatch = z.infer<typeof insertProductionBatchSchema>;
+export type BatchItem = typeof batchItems.$inferSelect;
+export type InsertBatchItem = z.infer<typeof insertBatchItemSchema>;
+export type IdeationLink = typeof ideationLinks.$inferSelect;
+export type LifeStory = typeof lifeStories.$inferSelect;
+export type InsertLifeStory = z.infer<typeof insertLifeStorySchema>;
+export type ScreenplayProject = typeof screenplayProjects.$inferSelect;
+export type InsertScreenplayProject = z.infer<typeof insertScreenplayProjectSchema>;
+export type MusicSandboxProject = typeof musicSandboxProjects.$inferSelect;
+export type InsertMusicSandboxProject = z.infer<typeof insertMusicSandboxProjectSchema>;
