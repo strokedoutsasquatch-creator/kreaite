@@ -110,9 +110,16 @@ import {
   insertLifeStorySchema,
   insertScreenplayProjectSchema,
   insertMusicSandboxProjectSchema,
+  workflowCategories,
+  workflowTemplates,
+  workflowPurchases,
+  workflowReviews,
+  userWorkflows,
+  insertWorkflowTemplateSchema,
+  insertWorkflowReviewSchema,
 } from "../shared/schema";
 import { db } from "./db";
-import { eq, and, gte, desc, ilike, or, sql } from "drizzle-orm";
+import { eq, and, gte, lte, desc, asc, ilike, or, sql, count } from "drizzle-orm";
 import { 
   generateCompleteScript, 
   generateSceneStoryboard, 

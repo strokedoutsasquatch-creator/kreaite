@@ -2094,6 +2094,144 @@ export type AiProviderUsage = typeof aiProviderUsage.$inferSelect;
 export type InsertAiProviderUsage = z.infer<typeof insertAiProviderUsageSchema>;
 
 // ============================================================================
+// WORKFLOW MARKETPLACE - Sellable automation templates with smart search
+// ============================================================================
+
+// Workflow categories for marketplace organization
+export const workflowCategories = pgTable("workflow_categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  description: text("description"),
+  icon: text("icon"), // Lucide icon name
+  parentId: integer("parent_id"), // For nested categories
+  displayOrder: integer("display_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Workflow templates - the sellable automation recipes
+export const workflowTemplates = pgTable("workflow_templates", {
+  id: serial("id").primaryKey(),
+  creatorId: varchar("creator_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  categoryId: integer("category_id").references(() => workflowCategories.id, { onDelete: "set null" }),
+  
+  // Basic info
+  title: text("title").notNull(),
+  slug: text("slug").notNull().unique(),
+  shortDescription: text("short_description").notNull(), // For search results
+  fullDescription: text("full_description").notNull(), // Rich markdown
+  thumbnailUrl: text("thumbnail_url"),
+  previewVideoUrl: text("preview_video_url"),
+  
+  // Workflow definition
+  steps: jsonb("steps").notNull(), // Array of workflow steps with prompts, actions, conditions
+  estimatedDuration: integer("estimated_duration"), // Minutes to complete
+  difficulty: text("difficulty").notNull().default("beginner"), // beginner, intermediate, advanced
+  studioType: text("studio_type").notNull(), // book, music, video, course, image, doctrine
+  
+  // Smart search fields
+  searchKeywords: text("search_keywords").array(), // Manually curated keywords
+  aiGeneratedTags: text("ai_generated_tags").array(), // AI-extracted tags
+  targetAudience: text("target_audience").array(), // Who is this for
+  useCases: text("use_cases").array(), // What problems it solves
+  outputTypes: text("output_types").array(), // What it produces (ebook, audiobook, etc)
+  
+  // Pricing & licensing
+  price: integer("price").notNull().default(0), // In cents (0 = free)
+  currency: text("currency").notNull().default("USD"),
+  kreaiteCanUse: boolean("kreaite_can_use").notNull().default(true), // KreAIte gets perpetual license
+  kreaiteFeatureLevel: text("kreaite_feature_level").default("standard"), // standard, featured, premium
+  
+  // Stats
+  totalSales: integer("total_sales").notNull().default(0),
+  totalRevenue: integer("total_revenue").notNull().default(0),
+  totalUsage: integer("total_usage").notNull().default(0), // Times used (incl free)
+  averageRating: integer("average_rating"), // 1-50 (x10 for precision)
+  reviewCount: integer("review_count").notNull().default(0),
+  
+  // Status
+  status: text("status").notNull().default("draft"), // draft, pending_review, published, suspended
+  isFeatured: boolean("is_featured").notNull().default(false),
+  isKreaiteOfficial: boolean("is_kreaite_official").notNull().default(false), // KreAIte's own workflows
+  publishedAt: timestamp("published_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Workflow purchases
+export const workflowPurchases = pgTable("workflow_purchases", {
+  id: serial("id").primaryKey(),
+  workflowId: integer("workflow_id").notNull().references(() => workflowTemplates.id, { onDelete: "cascade" }),
+  buyerId: varchar("buyer_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  price: integer("price").notNull(),
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  status: text("status").notNull().default("completed"), // pending, completed, refunded
+  purchasedAt: timestamp("purchased_at").notNull().defaultNow(),
+});
+
+// Workflow reviews
+export const workflowReviews = pgTable("workflow_reviews", {
+  id: serial("id").primaryKey(),
+  workflowId: integer("workflow_id").notNull().references(() => workflowTemplates.id, { onDelete: "cascade" }),
+  reviewerId: varchar("reviewer_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  rating: integer("rating").notNull(), // 1-5
+  title: text("title"),
+  content: text("content"),
+  helpfulCount: integer("helpful_count").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// User's saved/owned workflows
+export const userWorkflows = pgTable("user_workflows", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  workflowId: integer("workflow_id").notNull().references(() => workflowTemplates.id, { onDelete: "cascade" }),
+  purchaseId: integer("purchase_id").references(() => workflowPurchases.id, { onDelete: "set null" }),
+  customizations: jsonb("customizations"), // User's modifications to the workflow
+  timesUsed: integer("times_used").notNull().default(0),
+  lastUsedAt: timestamp("last_used_at"),
+  addedAt: timestamp("added_at").notNull().defaultNow(),
+});
+
+// Workflow step schema for validation
+export const workflowStepSchema = z.object({
+  id: z.string(),
+  order: z.number(),
+  title: z.string(),
+  description: z.string(),
+  type: z.enum(["ai_prompt", "user_input", "file_upload", "api_call", "conditional", "loop", "delay"]),
+  config: z.object({
+    prompt: z.string().optional(), // For AI steps
+    inputFields: z.array(z.object({ name: z.string(), type: z.string(), required: z.boolean() })).optional(),
+    conditions: z.any().optional(), // For conditional steps
+    apiEndpoint: z.string().optional(), // For API steps
+  }),
+  nextStepId: z.string().optional(), // For branching
+  estimatedDuration: z.number().optional(), // Minutes
+});
+
+export type WorkflowStep = z.infer<typeof workflowStepSchema>;
+
+export const insertWorkflowCategorySchema = createInsertSchema(workflowCategories).omit({ id: true, createdAt: true });
+export const insertWorkflowTemplateSchema = createInsertSchema(workflowTemplates).omit({ id: true, createdAt: true, updatedAt: true, totalSales: true, totalRevenue: true, totalUsage: true, reviewCount: true });
+export const insertWorkflowPurchaseSchema = createInsertSchema(workflowPurchases).omit({ id: true, purchasedAt: true });
+export const insertWorkflowReviewSchema = createInsertSchema(workflowReviews).omit({ id: true, createdAt: true, updatedAt: true, helpfulCount: true });
+export const insertUserWorkflowSchema = createInsertSchema(userWorkflows).omit({ id: true, addedAt: true, timesUsed: true });
+
+export type WorkflowCategory = typeof workflowCategories.$inferSelect;
+export type InsertWorkflowCategory = z.infer<typeof insertWorkflowCategorySchema>;
+export type WorkflowTemplate = typeof workflowTemplates.$inferSelect;
+export type InsertWorkflowTemplate = z.infer<typeof insertWorkflowTemplateSchema>;
+export type WorkflowPurchase = typeof workflowPurchases.$inferSelect;
+export type InsertWorkflowPurchase = z.infer<typeof insertWorkflowPurchaseSchema>;
+export type WorkflowReview = typeof workflowReviews.$inferSelect;
+export type InsertWorkflowReview = z.infer<typeof insertWorkflowReviewSchema>;
+export type UserWorkflow = typeof userWorkflows.$inferSelect;
+export type InsertUserWorkflow = z.infer<typeof insertUserWorkflowSchema>;
+
+// ============================================================================
 // CHILDREN'S BOOK CREATION SYSTEM
 // ============================================================================
 
