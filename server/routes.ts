@@ -2970,6 +2970,34 @@ Only include genuinely new information. Return empty arrays if nothing new was l
     }
   });
 
+  // ============ DOCUMENT IMPORT/PARSE ============
+  
+  // Parse uploaded document for Book Studio import
+  app.post('/api/documents/parse', isAuthenticated, async (req: any, res) => {
+    try {
+      const { content, filename, mimeType } = req.body;
+      
+      if (!content || !filename) {
+        return res.status(400).json({ message: "Content and filename are required" });
+      }
+
+      const { parseDocument, detectMimeType } = await import('./documentService');
+      const buffer = Buffer.from(content, 'base64');
+      const detectedMime = mimeType || detectMimeType(filename);
+      
+      const parsed = await parseDocument(buffer, detectedMime, filename);
+      
+      res.json({
+        success: true,
+        content: parsed.content,
+        metadata: parsed.metadata,
+      });
+    } catch (error) {
+      console.error("Document parsing error:", error);
+      res.status(500).json({ message: "Failed to parse document" });
+    }
+  });
+
   // ============ CONTENT FACTORY - KEYWORD RESEARCH & RAPID GENERATION ============
   
   // Keyword research using SERP API (market intelligence)

@@ -30,8 +30,15 @@ import ChapterSidebar from "./ChapterSidebar";
 import ToolPanel from "./ToolPanel";
 import EditorPane from "./EditorPane";
 
+interface ExportData {
+  format: string;
+  content: string;
+  title: string;
+  author?: string;
+}
+
 interface WorkspaceShellProps {
-  onExport?: (format: string) => void;
+  onExport?: (data: ExportData) => void;
   onPublish?: () => void;
 }
 
@@ -53,6 +60,11 @@ export default function WorkspaceShell({ onExport, onPublish }: WorkspaceShellPr
   const [distractionFree, setDistractionFree] = useState(false);
   const [activeChapterId, setActiveChapterId] = useState<string | null>(null);
   const [editorContent, setEditorContent] = useState("");
+
+  const handleInsertContent = useCallback((html: string) => {
+    setEditorContent(prev => prev + html);
+    toast({ title: "Content Inserted", description: "Content added to your manuscript" });
+  }, [toast]);
 
   const handleProjectSelect = (projectId: number) => {
     loadProject(projectId);
@@ -182,28 +194,28 @@ export default function WorkspaceShell({ onExport, onPublish }: WorkspaceShellPr
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onExport?.("kdp-pdf")} data-testid="menu-item-export-kdp">
+              <DropdownMenuItem onClick={() => onExport?.({ format: "kdp-pdf", content: editorContent, title: project?.title || "Untitled Book" })} data-testid="menu-item-export-kdp">
                 Amazon KDP (PDF)
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onExport?.("kindle")} data-testid="menu-item-export-kindle">
+              <DropdownMenuItem onClick={() => onExport?.({ format: "kindle", content: editorContent, title: project?.title || "Untitled Book" })} data-testid="menu-item-export-kindle">
                 Kindle (EPUB/MOBI)
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onExport?.("apple")} data-testid="menu-item-export-apple">
+              <DropdownMenuItem onClick={() => onExport?.({ format: "apple", content: editorContent, title: project?.title || "Untitled Book" })} data-testid="menu-item-export-apple">
                 Apple Books (EPUB)
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onExport?.("ingram")} data-testid="menu-item-export-ingram">
+              <DropdownMenuItem onClick={() => onExport?.({ format: "ingram", content: editorContent, title: project?.title || "Untitled Book" })} data-testid="menu-item-export-ingram">
                 IngramSpark (PDF)
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onExport?.("bn")} data-testid="menu-item-export-bn">
+              <DropdownMenuItem onClick={() => onExport?.({ format: "bn", content: editorContent, title: project?.title || "Untitled Book" })} data-testid="menu-item-export-bn">
                 Barnes & Noble
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onExport?.("kobo")} data-testid="menu-item-export-kobo">
+              <DropdownMenuItem onClick={() => onExport?.({ format: "kobo", content: editorContent, title: project?.title || "Untitled Book" })} data-testid="menu-item-export-kobo">
                 Kobo Writing Life
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onExport?.("google")} data-testid="menu-item-export-google">
+              <DropdownMenuItem onClick={() => onExport?.({ format: "google", content: editorContent, title: project?.title || "Untitled Book" })} data-testid="menu-item-export-google">
                 Google Play Books
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onExport?.("d2d")} data-testid="menu-item-export-d2d">
+              <DropdownMenuItem onClick={() => onExport?.({ format: "d2d", content: editorContent, title: project?.title || "Untitled Book" })} data-testid="menu-item-export-d2d">
                 Draft2Digital
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -251,7 +263,7 @@ export default function WorkspaceShell({ onExport, onPublish }: WorkspaceShellPr
           <>
             <ResizableHandle withHandle />
             <ResizablePanel defaultSize={25} minSize={20} maxSize={40}>
-              <ToolPanel projectId={project?.id} />
+              <ToolPanel projectId={project?.id} onInsertContent={handleInsertContent} />
             </ResizablePanel>
           </>
         )}
