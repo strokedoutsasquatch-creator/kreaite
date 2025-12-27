@@ -121,6 +121,13 @@ export default function CreatorScribeWidget() {
     }
   }, [isOpen]);
 
+  // Only show the widget on the homepage - other studios have built-in AI panels
+  const isHomepage = location === "/" || location === "";
+  
+  if (!isHomepage) {
+    return null;
+  }
+
   if (!isAuthenticated && !isOpen) {
     return null;
   }
