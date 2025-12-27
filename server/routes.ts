@@ -8060,6 +8060,82 @@ Respond in JSON format:
     }
   });
 
+  // AI Quick Actions for Editor (expand, rewrite, continue)
+  app.post('/api/ai/quick-action', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { action, text, projectId } = req.body;
+
+      if (!action || !text) {
+        return res.status(400).json({ message: "action and text are required" });
+      }
+
+      let prompt = "";
+      switch (action) {
+        case "expand":
+          prompt = `Expand the following text with more detail, examples, and depth while maintaining the same voice and style. Keep the expansion natural and flowing:\n\n"${text}"\n\nExpanded version:`;
+          break;
+        case "rewrite":
+          prompt = `Rewrite the following text to improve clarity, flow, and engagement while preserving the core meaning:\n\n"${text}"\n\nRewritten version:`;
+          break;
+        case "continue":
+          prompt = `Continue writing naturally from where this text ends. Match the style, tone, and voice. Write 2-3 paragraphs:\n\n"${text}"\n\nContinuation:`;
+          break;
+        default:
+          return res.status(400).json({ message: "Invalid action. Must be 'expand', 'rewrite', or 'continue'" });
+      }
+
+      const result = await generate({
+        prompt,
+        userId,
+        taskType: action === 'expand' ? 'expand' : action === 'rewrite' ? 'refine' : 'draft',
+        maxTokens: 1000,
+      });
+
+      res.json({ result: result.content });
+    } catch (error: any) {
+      console.error("Error in AI quick action:", error);
+      res.status(500).json({ message: error.message || "Failed to perform AI action" });
+    }
+  });
+
+  // AI Chat for Book Writing
+  app.post('/api/ai/chat', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { message, projectId, context } = req.body;
+
+      if (!message) {
+        return res.status(400).json({ message: "message is required" });
+      }
+
+      const systemPrompt = `You are an expert book writing assistant. Help the author with:
+- Story development and plot structure
+- Character creation and arcs
+- Research and fact-checking
+- Writing style and voice
+- Overcoming writer's block
+- Chapter outlines and organization
+- Dialogue improvement
+- Pacing and tension
+
+Be encouraging, specific, and actionable in your advice.`;
+
+      const result = await generate({
+        prompt: message,
+        systemPrompt,
+        userId,
+        taskType: 'chat',
+        maxTokens: 1500,
+      });
+
+      res.json({ response: result.content });
+    } catch (error: any) {
+      console.error("Error in AI chat:", error);
+      res.status(500).json({ message: error.message || "Failed to get AI response" });
+    }
+  });
+
 
   // ============================================================================
   // CHILDREN'S BOOK CREATION ROUTES
