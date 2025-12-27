@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import ImageEditorModal from "./ImageEditorModal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -964,7 +963,8 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
   const [isRemovingBg, setIsRemovingBg] = useState<string | null>(null);
   const [imagePlacementMode, setImagePlacementMode] = useState<"auto" | "manual" | "hybrid">("auto");
-  const [editingImage, setEditingImage] = useState<{ url: string; name: string } | null>(null);
+  const [expandedImageId, setExpandedImageId] = useState<string | null>(null);
+  const [imageSettings, setImageSettings] = useState<Record<string, { size: string; align: string; caption: string; altText: string }>>({});
 
   const [trimSize, setTrimSize] = useState("6x9");
   const [fontSize, setFontSize] = useState(11);
@@ -2145,173 +2145,232 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                   {generatedImages.length > 0 && (
                     <div className="space-y-3">
                       <h4 className="text-sm font-medium text-zinc-700">Your Images</h4>
-                      {generatedImages.map((img) => (
-                        <Card key={img.id} className="overflow-hidden bg-white">
-                          <div 
-                            className="relative aspect-video bg-muted cursor-pointer hover:opacity-90 transition-opacity"
-                            onClick={() => setEditingImage({ url: img.url, name: img.prompt })}
-                            title="Click to edit in full editor"
-                          >
-                            <img
-                              src={img.url}
-                              alt={img.analysis?.altText || img.prompt}
-                              className="w-full h-full object-cover"
-                            />
-                            <div className="absolute top-2 right-2 flex gap-1">
-                              {img.hasBackground && (
-                                <Badge variant="secondary">Has BG</Badge>
-                              )}
-                              {img.analysis && (
-                                <Badge variant="default" className="bg-green-600">
-                                  {img.analysis.printReadiness.score}/10
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                          <CardContent className="p-2 space-y-2">
-                            <p className="text-xs text-zinc-600 line-clamp-1">{img.prompt}</p>
-                            
-                            {/* AI Analysis Results */}
-                            {img.analysis ? (
-                              <div className="space-y-2">
-                                {/* Placement Recommendation */}
-                                <div className="bg-orange-50 border border-orange-200 rounded p-2">
-                                  <p className="text-xs font-medium text-orange-800 flex items-center gap-1 mb-1">
-                                    <Lightbulb className="w-3 h-3" />
-                                    Placement
-                                  </p>
-                                  <p className="text-xs text-orange-700">
-                                    {img.analysis.placement.recommendation}
-                                  </p>
-                                  <p className="text-xs text-orange-600 mt-1">
-                                    Chapter: {img.analysis.placement.suggestedChapter}
-                                  </p>
-                                </div>
-                                
-                                {/* Caption */}
-                                <div className="bg-blue-50 border border-blue-200 rounded p-2">
-                                  <p className="text-xs font-medium text-blue-800 flex items-center gap-1 mb-1">
-                                    <FileText className="w-3 h-3" />
-                                    Caption
-                                  </p>
-                                  <p className="text-xs text-blue-700 italic">
-                                    {img.analysis.caption}
-                                  </p>
-                                </div>
-                                
-                                {/* Alt Text */}
-                                <div className="bg-zinc-100 border border-zinc-300 rounded p-2">
-                                  <p className="text-xs font-medium text-zinc-700 flex items-center gap-1 mb-1">
-                                    <Info className="w-3 h-3" />
-                                    Alt Text
-                                  </p>
-                                  <p className="text-xs text-zinc-600">
-                                    {img.analysis.altText}
-                                  </p>
-                                </div>
-                                
-                                {/* Style & Print */}
-                                <div className="grid grid-cols-2 gap-2">
-                                  <div className="bg-purple-50 border border-purple-200 rounded p-2">
-                                    <p className="text-xs font-medium text-purple-800">Style</p>
-                                    <p className="text-xs text-purple-700">
-                                      {img.analysis.style.isConsistent ? "Consistent" : "Review needed"}
-                                    </p>
-                                  </div>
-                                  <div className="bg-green-50 border border-green-200 rounded p-2">
-                                    <p className="text-xs font-medium text-green-800">Print Ready</p>
-                                    <p className="text-xs text-green-700">
-                                      Score: {img.analysis.printReadiness.score}/10
-                                    </p>
-                                  </div>
-                                </div>
-                                
-                                {img.analysis.printReadiness.suggestions.length > 0 && (
-                                  <div className="bg-yellow-50 border border-yellow-200 rounded p-2">
-                                    <p className="text-xs font-medium text-yellow-800 flex items-center gap-1 mb-1">
-                                      <AlertTriangle className="w-3 h-3" />
-                                      Suggestions
-                                    </p>
-                                    <ul className="text-xs text-yellow-700 list-disc list-inside">
-                                      {img.analysis.printReadiness.suggestions.map((s, i) => (
-                                        <li key={i}>{s}</li>
-                                      ))}
-                                    </ul>
-                                  </div>
+                      {generatedImages.map((img) => {
+                        const isExpanded = expandedImageId === img.id;
+                        const settings = imageSettings[img.id] || { size: "medium", align: "center", caption: "", altText: "" };
+                        
+                        return (
+                          <Card key={img.id} className="overflow-hidden bg-white">
+                            {/* Image Preview - Click to expand */}
+                            <div 
+                              className="relative aspect-video bg-muted cursor-pointer hover:opacity-90 transition-opacity"
+                              onClick={() => setExpandedImageId(isExpanded ? null : img.id)}
+                            >
+                              <img
+                                src={img.url}
+                                alt={img.analysis?.altText || img.prompt}
+                                className="w-full h-full object-cover"
+                              />
+                              <div className="absolute top-2 right-2 flex gap-1">
+                                {img.hasBackground && (
+                                  <Badge variant="secondary" className="text-xs">BG</Badge>
+                                )}
+                                {img.analysis && (
+                                  <Badge variant="default" className="bg-green-600 text-xs">
+                                    {img.analysis.printReadiness.score}/10
+                                  </Badge>
                                 )}
                               </div>
-                            ) : (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleAnalyzeImage(img.id, img.url)}
-                                disabled={img.isAnalyzing}
-                                className="w-full text-xs"
-                                data-testid={`button-analyze-image-${img.id}`}
-                              >
-                                {img.isAnalyzing ? (
-                                  <>
-                                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                                    Analyzing...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Wand2 className="w-3 h-3 mr-1" />
-                                    Analyze with AI
-                                  </>
-                                )}
-                              </Button>
-                            )}
-                            
-                            <div className="flex gap-1 flex-wrap">
-                              <Button
-                                variant="default"
-                                size="sm"
-                                onClick={() => {
-                                  if (onInsertContent) {
-                                    const altText = img.analysis?.altText || img.prompt;
-                                    const caption = img.analysis?.caption || "";
-                                    const html = caption 
-                                      ? `<figure style="margin: 1rem 0;"><img src="${img.url}" alt="${altText}" style="max-width: 100%; height: auto;" /><figcaption style="text-align: center; font-size: 0.875rem; color: #666; margin-top: 0.5rem;">${caption}</figcaption></figure>`
-                                      : `<img src="${img.url}" alt="${altText}" style="max-width: 100%; height: auto; margin: 1rem 0;" />`;
-                                    onInsertContent(html);
-                                    toast({ title: "Image Inserted", description: "Image added to your document" });
-                                  }
-                                }}
-                                className="flex-1 text-xs"
-                                data-testid={`button-insert-image-${img.id}`}
-                              >
-                                <Plus className="w-3 h-3 mr-1" />
-                                Insert
-                              </Button>
-                              {img.hasBackground && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleRemoveBackground(img.id, img.url)}
-                                  disabled={isRemovingBg === img.id}
-                                  className="text-xs"
-                                  data-testid={`button-remove-bg-${img.id}`}
-                                >
-                                  {isRemovingBg === img.id ? (
-                                    <Loader2 className="w-3 h-3 animate-spin" />
-                                  ) : (
-                                    <Scissors className="w-3 h-3" />
-                                  )}
-                                </Button>
-                              )}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDeleteImage(img.id)}
-                                data-testid={`button-delete-image-${img.id}`}
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
+                              <div className="absolute bottom-2 left-2 right-2 bg-black/60 rounded px-2 py-1">
+                                <p className="text-xs text-white truncate">{isExpanded ? "Click to collapse" : "Click to edit"}</p>
+                              </div>
                             </div>
-                          </CardContent>
-                        </Card>
-                      ))}
+                            
+                            {/* Expanded Editor Section */}
+                            {isExpanded && (
+                              <CardContent className="p-3 space-y-3 border-t-2 border-orange-400">
+                                {/* Quick Actions Row */}
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleAnalyzeImage(img.id, img.url)}
+                                    disabled={img.isAnalyzing}
+                                    className="flex-1 text-xs"
+                                    data-testid={`button-analyze-${img.id}`}
+                                  >
+                                    {img.isAnalyzing ? (
+                                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                    ) : (
+                                      <Wand2 className="w-3 h-3 mr-1" />
+                                    )}
+                                    Analyze
+                                  </Button>
+                                  {img.hasBackground && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleRemoveBackground(img.id, img.url)}
+                                      disabled={isRemovingBg === img.id}
+                                      className="flex-1 text-xs"
+                                      data-testid={`button-remove-bg-${img.id}`}
+                                    >
+                                      {isRemovingBg === img.id ? (
+                                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                      ) : (
+                                        <Scissors className="w-3 h-3 mr-1" />
+                                      )}
+                                      Remove BG
+                                    </Button>
+                                  )}
+                                </div>
+
+                                {/* AI Analysis Results */}
+                                {img.analysis && (
+                                  <div className="bg-orange-50 border border-orange-200 rounded p-2">
+                                    <p className="text-xs font-medium text-orange-800 flex items-center gap-1 mb-1">
+                                      <Lightbulb className="w-3 h-3" />
+                                      AI Recommendation
+                                    </p>
+                                    <p className="text-xs text-orange-700">{img.analysis.placement.recommendation}</p>
+                                  </div>
+                                )}
+
+                                {/* Size & Alignment */}
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-zinc-600">Size</Label>
+                                    <Select 
+                                      value={settings.size} 
+                                      onValueChange={(v) => setImageSettings(prev => ({
+                                        ...prev,
+                                        [img.id]: { ...settings, size: v }
+                                      }))}
+                                    >
+                                      <SelectTrigger className="h-8 text-xs">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="small">Small</SelectItem>
+                                        <SelectItem value="medium">Medium</SelectItem>
+                                        <SelectItem value="large">Large</SelectItem>
+                                        <SelectItem value="full">Full Width</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-zinc-600">Align</Label>
+                                    <Select 
+                                      value={settings.align} 
+                                      onValueChange={(v) => setImageSettings(prev => ({
+                                        ...prev,
+                                        [img.id]: { ...settings, align: v }
+                                      }))}
+                                    >
+                                      <SelectTrigger className="h-8 text-xs">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="left">Left</SelectItem>
+                                        <SelectItem value="center">Center</SelectItem>
+                                        <SelectItem value="right">Right</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                </div>
+
+                                {/* Caption */}
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-zinc-600">Caption</Label>
+                                  <Input
+                                    value={settings.caption || img.analysis?.caption || ""}
+                                    onChange={(e) => setImageSettings(prev => ({
+                                      ...prev,
+                                      [img.id]: { ...settings, caption: e.target.value }
+                                    }))}
+                                    placeholder="Add caption..."
+                                    className="h-8 text-xs"
+                                  />
+                                </div>
+
+                                {/* Alt Text */}
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-zinc-600">Alt Text</Label>
+                                  <Input
+                                    value={settings.altText || img.analysis?.altText || ""}
+                                    onChange={(e) => setImageSettings(prev => ({
+                                      ...prev,
+                                      [img.id]: { ...settings, altText: e.target.value }
+                                    }))}
+                                    placeholder="Describe for accessibility..."
+                                    className="h-8 text-xs"
+                                  />
+                                </div>
+
+                                {/* Insert & Delete */}
+                                <div className="flex gap-2 pt-2 border-t">
+                                  <Button
+                                    variant="default"
+                                    size="sm"
+                                    onClick={() => {
+                                      if (onInsertContent) {
+                                        const sizeStyles: Record<string, string> = {
+                                          small: "max-width: 200px;",
+                                          medium: "max-width: 400px;",
+                                          large: "max-width: 600px;",
+                                          full: "max-width: 100%;",
+                                        };
+                                        const alignStyles: Record<string, string> = {
+                                          left: "margin-right: auto;",
+                                          center: "margin-left: auto; margin-right: auto;",
+                                          right: "margin-left: auto;",
+                                        };
+                                        const altText = settings.altText || img.analysis?.altText || img.prompt;
+                                        const caption = settings.caption || img.analysis?.caption || "";
+                                        const html = caption
+                                          ? `<figure style="margin: 1.5rem 0; ${alignStyles[settings.align]}"><img src="${img.url}" alt="${altText}" style="${sizeStyles[settings.size]} height: auto; display: block; ${alignStyles[settings.align]}" /><figcaption style="text-align: ${settings.align}; font-size: 0.875rem; color: #666; margin-top: 0.5rem; font-style: italic;">${caption}</figcaption></figure>`
+                                          : `<img src="${img.url}" alt="${altText}" style="${sizeStyles[settings.size]} height: auto; display: block; margin: 1.5rem 0; ${alignStyles[settings.align]}" />`;
+                                        onInsertContent(html);
+                                        toast({ title: "Image Inserted", description: "Added to document with your settings" });
+                                        setExpandedImageId(null);
+                                      }
+                                    }}
+                                    className="flex-1 text-xs"
+                                    data-testid={`button-insert-image-${img.id}`}
+                                  >
+                                    <Plus className="w-3 h-3 mr-1" />
+                                    Insert to Document
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      handleDeleteImage(img.id);
+                                      setExpandedImageId(null);
+                                    }}
+                                    className="text-xs text-red-600 hover:text-red-700"
+                                    data-testid={`button-delete-image-${img.id}`}
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              </CardContent>
+                            )}
+
+                            {/* Collapsed Quick Insert */}
+                            {!isExpanded && (
+                              <CardContent className="p-2">
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={() => {
+                                    if (onInsertContent) {
+                                      const altText = img.analysis?.altText || img.prompt;
+                                      onInsertContent(`<img src="${img.url}" alt="${altText}" style="max-width: 100%; height: auto; margin: 1rem 0;" />`);
+                                      toast({ title: "Image Inserted", description: "Quick insert complete" });
+                                    }
+                                  }}
+                                  className="w-full text-xs"
+                                  data-testid={`button-quick-insert-${img.id}`}
+                                >
+                                  <Plus className="w-3 h-3 mr-1" />
+                                  Quick Insert
+                                </Button>
+                              </CardContent>
+                            )}
+                          </Card>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -3196,20 +3255,6 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
         </TabsContent>
       </Tabs>
 
-      {/* Image Editor Modal */}
-      {editingImage && (
-        <ImageEditorModal
-          open={!!editingImage}
-          onOpenChange={(open) => !open && setEditingImage(null)}
-          imageUrl={editingImage.url}
-          imageName={editingImage.name}
-          onInsert={(html) => {
-            if (onInsertContent) {
-              onInsertContent(html);
-            }
-          }}
-        />
-      )}
     </div>
   );
 }
