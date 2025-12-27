@@ -1299,10 +1299,18 @@ Include recovery metaphors and triumphant imagery.`;
     try {
       const { 
         message, content, fileName, bookTitle, genre, targetAudience, 
-        chatHistory, isInitialAnalysis, isAddingMoreFiles, totalFiles, totalWords, isMultiFile 
+        chatHistory, isInitialAnalysis, isAddingMoreFiles, totalFiles, totalWords, isMultiFile,
+        knowledgeContext // Accumulated learning about this book project
       } = req.body;
       
-      let systemPrompt = `You are an expert book editor and publishing consultant - the "AI Writing Partner" for professional manuscript review. 
+      // Include accumulated knowledge in system prompt if available
+      const knowledgeSection = knowledgeContext ? `
+
+${knowledgeContext}
+Use this accumulated knowledge to provide more personalized, contextual responses. Reference previous discussions and known facts when relevant.
+` : '';
+      
+      let systemPrompt = `You are an expert book editor and publishing consultant - the "AI Writing Partner" for professional manuscript review.${knowledgeSection} 
 You help authors analyze and improve their manuscripts with the same expertise as a senior acquisitions editor at a major publishing house.
 You provide actionable, encouraging feedback while maintaining high editorial standards.
 Keep responses conversational but substantive. Use markdown formatting for clarity.

@@ -1118,6 +1118,16 @@ export default function BookStudio() {
     setChatInput("");
     setIsChatLoading(true);
     
+    // Build knowledge context from accumulated learning
+    const knowledgeContext = project?.aiKnowledge ? `
+ACCUMULATED KNOWLEDGE ABOUT THIS BOOK:
+${project.aiKnowledge.characters?.length ? `- Characters: ${project.aiKnowledge.characters.join(', ')}` : ''}
+${project.aiKnowledge.themes?.length ? `- Themes: ${project.aiKnowledge.themes.join(', ')}` : ''}
+${project.aiKnowledge.issues?.length ? `- Issues identified: ${project.aiKnowledge.issues.join(', ')}` : ''}
+${project.aiKnowledge.goals?.length ? `- Author goals: ${project.aiKnowledge.goals.join(', ')}` : ''}
+${project.conversationSummary ? `- Previous discussion summary: ${project.conversationSummary}` : ''}
+` : '';
+    
     try {
       const response = await apiRequest("POST", "/api/book/chat-analyze", {
         message: chatInput,
@@ -1126,6 +1136,7 @@ export default function BookStudio() {
         genre: selectedGenre,
         targetAudience,
         chatHistory: chatMessages.slice(-6).map(m => ({ role: m.role, content: m.content })),
+        knowledgeContext, // Include accumulated knowledge
       });
       const data = await response.json();
       
@@ -1136,6 +1147,15 @@ export default function BookStudio() {
         timestamp: new Date(),
       };
       setChatMessages(prev => [...prev, assistantMessage]);
+      
+      // Trigger background learning - extract new knowledge from this exchange
+      if (project?.id) {
+        apiRequest("POST", `/api/book-projects/${project.id}/learn`, {
+          latestMessage: chatInput,
+          latestResponse: data.response,
+          manuscriptExcerpt: uploadedContent?.substring(0, 2000),
+        }).catch(err => console.log("Background learning:", err));
+      }
     } catch (error) {
       console.error("Chat error:", error);
       const assistantMessage: ChatMessage = {
