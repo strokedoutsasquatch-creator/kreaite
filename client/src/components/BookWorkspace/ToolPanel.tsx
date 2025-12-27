@@ -85,6 +85,10 @@ import {
   HelpCircle,
   BookText,
   ClipboardList,
+  Calculator,
+  FlaskConical,
+  Binary,
+  Sigma,
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -184,6 +188,170 @@ const calloutTemplates = {
     <li>Step 2...</li>
     <li>Step 3...</li>
   </ol>
+</div>`,
+  },
+};
+
+const visualTemplates = {
+  exerciseWithImage: {
+    icon: Dumbbell,
+    label: "Exercise + Image",
+    description: "Exercise with visual demonstration",
+    html: `<div class="exercise-visual my-6 p-5 bg-primary/5 dark:bg-primary/10 border border-primary/30 rounded-lg">
+  <div class="flex flex-col md:flex-row gap-4">
+    <div class="flex-1">
+      <p class="font-bold text-primary text-lg mb-3">[EXERCISE] Exercise Name</p>
+      <div class="space-y-2 text-foreground">
+        <p><strong>Target Area:</strong> [Muscle group or body part]</p>
+        <p><strong>Difficulty:</strong> Beginner / Intermediate / Advanced</p>
+        <p><strong>Duration:</strong> [Time] | <strong>Reps:</strong> [Number]</p>
+      </div>
+      <div class="mt-4">
+        <p class="font-semibold text-foreground mb-2">Instructions:</p>
+        <ol class="list-decimal pl-5 text-foreground space-y-1">
+          <li>Starting position: Describe the initial posture...</li>
+          <li>Movement: Describe the action to perform...</li>
+          <li>Hold or repeat: Duration or repetitions...</li>
+          <li>Return: How to complete the movement...</li>
+        </ol>
+      </div>
+      <div class="mt-4 p-3 bg-yellow-500/10 rounded text-sm">
+        <p class="font-semibold text-yellow-600 dark:text-yellow-400">[CAUTION]</p>
+        <p class="text-muted-foreground">Stop if you feel pain. Consult your therapist before attempting.</p>
+      </div>
+    </div>
+    <div class="w-full md:w-48 flex-shrink-0">
+      <div class="border-2 border-dashed border-primary/50 rounded-lg p-4 text-center bg-background h-48 flex items-center justify-center">
+        <div>
+          <p class="text-primary font-medium">[IMAGE]</p>
+          <p class="text-xs text-muted-foreground mt-1">Exercise demonstration</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>`,
+  },
+  stepByStepVisual: {
+    icon: LayoutGrid,
+    label: "Visual Steps",
+    description: "Step-by-step guide with images",
+    html: `<div class="visual-steps my-6">
+  <p class="font-bold text-xl text-foreground mb-4">[VISUAL GUIDE] Process Name</p>
+  
+  <div class="space-y-4">
+    <div class="step-item flex gap-4 p-4 bg-card border rounded-lg">
+      <div class="step-number w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold shrink-0">1</div>
+      <div class="flex-1">
+        <p class="font-semibold text-foreground mb-1">Step 1: Title</p>
+        <p class="text-muted-foreground text-sm">Description of what to do in this step...</p>
+      </div>
+      <div class="w-24 h-24 border-2 border-dashed border-muted rounded flex items-center justify-center shrink-0">
+        <p class="text-xs text-muted-foreground">[Image]</p>
+      </div>
+    </div>
+    
+    <div class="step-item flex gap-4 p-4 bg-card border rounded-lg">
+      <div class="step-number w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold shrink-0">2</div>
+      <div class="flex-1">
+        <p class="font-semibold text-foreground mb-1">Step 2: Title</p>
+        <p class="text-muted-foreground text-sm">Description of what to do in this step...</p>
+      </div>
+      <div class="w-24 h-24 border-2 border-dashed border-muted rounded flex items-center justify-center shrink-0">
+        <p class="text-xs text-muted-foreground">[Image]</p>
+      </div>
+    </div>
+    
+    <div class="step-item flex gap-4 p-4 bg-card border rounded-lg">
+      <div class="step-number w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold shrink-0">3</div>
+      <div class="flex-1">
+        <p class="font-semibold text-foreground mb-1">Step 3: Title</p>
+        <p class="text-muted-foreground text-sm">Description of what to do in this step...</p>
+      </div>
+      <div class="w-24 h-24 border-2 border-dashed border-muted rounded flex items-center justify-center shrink-0">
+        <p class="text-xs text-muted-foreground">[Image]</p>
+      </div>
+    </div>
+  </div>
+</div>`,
+  },
+  beforeAfter: {
+    icon: Layers,
+    label: "Before/After",
+    description: "Comparison view with images",
+    html: `<div class="before-after my-6 p-5 border rounded-lg">
+  <p class="font-bold text-lg text-foreground mb-4 text-center">[COMPARISON] Title</p>
+  
+  <div class="grid grid-cols-2 gap-4">
+    <div class="before-section">
+      <div class="border-2 border-dashed border-red-500/50 rounded-lg p-4 h-40 flex items-center justify-center bg-red-500/5">
+        <div class="text-center">
+          <p class="text-red-500 font-medium">[BEFORE]</p>
+          <p class="text-xs text-muted-foreground mt-1">Image placeholder</p>
+        </div>
+      </div>
+      <div class="mt-3 p-3 bg-red-500/10 rounded">
+        <p class="font-semibold text-red-600 dark:text-red-400 text-sm">Before:</p>
+        <ul class="text-sm text-muted-foreground mt-1 space-y-1">
+          <li>- Point about initial state</li>
+          <li>- Another observation</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="after-section">
+      <div class="border-2 border-dashed border-green-500/50 rounded-lg p-4 h-40 flex items-center justify-center bg-green-500/5">
+        <div class="text-center">
+          <p class="text-green-500 font-medium">[AFTER]</p>
+          <p class="text-xs text-muted-foreground mt-1">Image placeholder</p>
+        </div>
+      </div>
+      <div class="mt-3 p-3 bg-green-500/10 rounded">
+        <p class="font-semibold text-green-600 dark:text-green-400 text-sm">After:</p>
+        <ul class="text-sm text-muted-foreground mt-1 space-y-1">
+          <li>- Improvement or change</li>
+          <li>- Another result</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>`,
+  },
+  caseStudy: {
+    icon: UserCircle,
+    label: "Case Study",
+    description: "Real-world example with story",
+    html: `<div class="case-study my-6 p-5 bg-gradient-to-br from-blue-500/10 to-green-500/10 border border-blue-500/30 rounded-lg">
+  <div class="flex items-start gap-4">
+    <div class="w-16 h-16 rounded-full border-2 border-dashed border-blue-500/50 flex items-center justify-center bg-background shrink-0">
+      <p class="text-xs text-muted-foreground">[Photo]</p>
+    </div>
+    <div class="flex-1">
+      <p class="text-xs uppercase tracking-wider text-blue-500 mb-1">Case Study</p>
+      <p class="font-bold text-lg text-foreground">[Patient/Client Name], Age [X]</p>
+      <p class="text-sm text-muted-foreground">[Brief background: occupation, condition, etc.]</p>
+    </div>
+  </div>
+  
+  <div class="mt-4 space-y-4">
+    <div class="challenge p-3 bg-red-500/10 rounded">
+      <p class="font-semibold text-red-600 dark:text-red-400 text-sm mb-1">The Challenge:</p>
+      <p class="text-foreground text-sm">Describe the initial problem, symptoms, or situation...</p>
+    </div>
+    
+    <div class="approach p-3 bg-blue-500/10 rounded">
+      <p class="font-semibold text-blue-600 dark:text-blue-400 text-sm mb-1">The Approach:</p>
+      <p class="text-foreground text-sm">Describe the treatment plan, intervention, or solution...</p>
+    </div>
+    
+    <div class="outcome p-3 bg-green-500/10 rounded">
+      <p class="font-semibold text-green-600 dark:text-green-400 text-sm mb-1">The Outcome:</p>
+      <p class="text-foreground text-sm">Describe the results, improvements, or lessons learned...</p>
+    </div>
+  </div>
+  
+  <div class="mt-4 p-3 border-l-4 border-primary bg-primary/5 rounded-r">
+    <p class="text-sm italic text-foreground">"Quote from the patient or key takeaway from this case..."</p>
+  </div>
 </div>`,
   },
 };
@@ -532,6 +700,138 @@ const appendixTemplates = {
   <div class="faq-item mb-6">
     <h3 class="font-semibold text-primary mb-2">Q: Fourth common question readers might ask?</h3>
     <p class="text-foreground pl-4">A: Provide a clear, helpful answer to this question. Include next steps or resources if helpful.</p>
+  </div>
+</div>`,
+  },
+};
+
+const technicalTemplates = {
+  formula: {
+    icon: Sigma,
+    label: "Formula Box",
+    description: "Mathematical equation or formula display",
+    html: `<div class="formula-box my-6 p-5 bg-gradient-to-r from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20 border border-blue-500/30 rounded-lg">
+  <p class="text-xs uppercase tracking-wider text-muted-foreground mb-2">Formula</p>
+  <div class="text-center py-4">
+    <p class="text-xl font-mono text-foreground mb-2">BMI = Weight (kg) / Height (m)<sup>2</sup></p>
+    <p class="text-sm text-muted-foreground italic">or</p>
+    <p class="text-xl font-mono text-foreground mt-2">BMI = [Weight (lb) / Height (in)<sup>2</sup>] x 703</p>
+  </div>
+  <div class="mt-4 pt-4 border-t border-border">
+    <p class="text-sm text-muted-foreground"><strong>Where:</strong></p>
+    <ul class="text-sm text-muted-foreground mt-1 space-y-1">
+      <li>Weight = body mass in kilograms or pounds</li>
+      <li>Height = height in meters or inches</li>
+    </ul>
+  </div>
+</div>`,
+  },
+  algorithm: {
+    icon: Binary,
+    label: "Algorithm",
+    description: "Step-by-step process or decision tree",
+    html: `<div class="algorithm-box my-6 p-5 bg-card border-2 border-primary/30 rounded-lg font-mono">
+  <p class="text-sm font-bold text-primary mb-4">[ALGORITHM] Decision Process Name</p>
+  <div class="space-y-2 text-sm text-foreground">
+    <p class="pl-0"><strong>INPUT:</strong> Patient symptoms, vital signs</p>
+    <p class="pl-0"><strong>OUTPUT:</strong> Recommended action</p>
+    <div class="my-4 border-t border-border"></div>
+    <p class="pl-0">1. <strong>IF</strong> condition A is true <strong>THEN</strong></p>
+    <p class="pl-6">1.1 Perform action X</p>
+    <p class="pl-6">1.2 Record result</p>
+    <p class="pl-0">2. <strong>ELSE IF</strong> condition B is true <strong>THEN</strong></p>
+    <p class="pl-6">2.1 Perform action Y</p>
+    <p class="pl-6">2.2 Reassess after 24 hours</p>
+    <p class="pl-0">3. <strong>ELSE</strong></p>
+    <p class="pl-6">3.1 Perform default action Z</p>
+    <p class="pl-6">3.2 Consult specialist</p>
+    <p class="pl-0">4. <strong>END</strong></p>
+  </div>
+</div>`,
+  },
+  calculator: {
+    icon: Calculator,
+    label: "Calculator",
+    description: "Interactive calculation template",
+    html: `<div class="calculator-box my-6 p-5 bg-green-500/5 dark:bg-green-500/10 border border-green-500/30 rounded-lg">
+  <p class="font-bold text-green-600 dark:text-green-400 mb-4">[CALCULATOR] Name Your Calculator</p>
+  
+  <div class="space-y-4">
+    <div class="calc-input">
+      <p class="text-sm font-medium text-foreground mb-1">Input 1: [Label]</p>
+      <p class="border border-border rounded p-2 bg-background text-muted-foreground">Enter value here: _______</p>
+    </div>
+    
+    <div class="calc-input">
+      <p class="text-sm font-medium text-foreground mb-1">Input 2: [Label]</p>
+      <p class="border border-border rounded p-2 bg-background text-muted-foreground">Enter value here: _______</p>
+    </div>
+    
+    <div class="calc-formula p-3 bg-muted/50 rounded text-center">
+      <p class="text-sm text-muted-foreground">Formula: (Input 1 x Input 2) / Constant</p>
+    </div>
+    
+    <div class="calc-result p-4 bg-green-500/20 rounded-lg text-center">
+      <p class="text-sm text-muted-foreground mb-1">Result:</p>
+      <p class="text-2xl font-bold text-green-600 dark:text-green-400">= _______</p>
+    </div>
+    
+    <div class="interpretation text-sm text-muted-foreground">
+      <p><strong>Interpretation:</strong></p>
+      <ul class="list-disc pl-5 mt-1">
+        <li>If result is less than X: interpretation A</li>
+        <li>If result is X to Y: interpretation B</li>
+        <li>If result is greater than Y: interpretation C</li>
+      </ul>
+    </div>
+  </div>
+</div>`,
+  },
+  selfAssessment: {
+    icon: FlaskConical,
+    label: "Self-Assessment",
+    description: "Scored questionnaire or evaluation",
+    html: `<div class="self-assessment my-6 p-5 bg-purple-500/5 dark:bg-purple-500/10 border border-purple-500/30 rounded-lg">
+  <p class="font-bold text-purple-600 dark:text-purple-400 mb-2">[SELF-ASSESSMENT] Assessment Title</p>
+  <p class="text-sm text-muted-foreground mb-4">Instructions: Rate each item from 1 (Strongly Disagree) to 5 (Strongly Agree)</p>
+  
+  <div class="space-y-4">
+    <div class="assessment-item p-3 bg-background rounded border border-border">
+      <p class="text-foreground mb-2">1. Statement or question to evaluate</p>
+      <p class="text-sm text-muted-foreground">Score: [ 1 ] [ 2 ] [ 3 ] [ 4 ] [ 5 ]</p>
+    </div>
+    
+    <div class="assessment-item p-3 bg-background rounded border border-border">
+      <p class="text-foreground mb-2">2. Second statement or question</p>
+      <p class="text-sm text-muted-foreground">Score: [ 1 ] [ 2 ] [ 3 ] [ 4 ] [ 5 ]</p>
+    </div>
+    
+    <div class="assessment-item p-3 bg-background rounded border border-border">
+      <p class="text-foreground mb-2">3. Third statement or question</p>
+      <p class="text-sm text-muted-foreground">Score: [ 1 ] [ 2 ] [ 3 ] [ 4 ] [ 5 ]</p>
+    </div>
+    
+    <div class="assessment-item p-3 bg-background rounded border border-border">
+      <p class="text-foreground mb-2">4. Fourth statement or question</p>
+      <p class="text-sm text-muted-foreground">Score: [ 1 ] [ 2 ] [ 3 ] [ 4 ] [ 5 ]</p>
+    </div>
+    
+    <div class="assessment-item p-3 bg-background rounded border border-border">
+      <p class="text-foreground mb-2">5. Fifth statement or question</p>
+      <p class="text-sm text-muted-foreground">Score: [ 1 ] [ 2 ] [ 3 ] [ 4 ] [ 5 ]</p>
+    </div>
+  </div>
+  
+  <div class="mt-4 p-4 bg-purple-500/20 rounded-lg">
+    <p class="font-medium text-foreground mb-2">Total Score: _____ / 25</p>
+    <div class="text-sm text-muted-foreground">
+      <p><strong>Score Interpretation:</strong></p>
+      <ul class="list-disc pl-5 mt-1">
+        <li>5-10: Level 1 - Description</li>
+        <li>11-17: Level 2 - Description</li>
+        <li>18-25: Level 3 - Description</li>
+      </ul>
+    </div>
   </div>
 </div>`,
   },
@@ -1421,6 +1721,82 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                               className="w-full justify-start text-xs gap-2"
                               onClick={() => handleInsertContent(template.html)}
                               data-testid={`button-insert-appendix-${key}`}
+                            >
+                              <IconComponent className="w-3 h-3 shrink-0" />
+                              {template.label}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="left">
+                            <p>{template.description}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    })}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="technical" className="border rounded-lg px-3">
+                <AccordionTrigger className="text-sm py-2">
+                  <div className="flex items-center gap-2">
+                    <Calculator className="w-4 h-4" />
+                    Technical Elements
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="space-y-2 pb-3">
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Formulas, algorithms, calculators, and assessments
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {Object.entries(technicalTemplates).map(([key, template]) => {
+                      const IconComponent = template.icon;
+                      return (
+                        <Tooltip key={key}>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full justify-start text-xs gap-2"
+                              onClick={() => handleInsertContent(template.html)}
+                              data-testid={`button-insert-technical-${key}`}
+                            >
+                              <IconComponent className="w-3 h-3 shrink-0" />
+                              {template.label}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="left">
+                            <p>{template.description}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    })}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="visual" className="border rounded-lg px-3">
+                <AccordionTrigger className="text-sm py-2">
+                  <div className="flex items-center gap-2">
+                    <Image className="w-4 h-4" />
+                    Visual Templates
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="space-y-2 pb-3">
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Exercises with images, before/after, case studies
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {Object.entries(visualTemplates).map(([key, template]) => {
+                      const IconComponent = template.icon;
+                      return (
+                        <Tooltip key={key}>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full justify-start text-xs gap-2"
+                              onClick={() => handleInsertContent(template.html)}
+                              data-testid={`button-insert-visual-${key}`}
                             >
                               <IconComponent className="w-3 h-3 shrink-0" />
                               {template.label}
