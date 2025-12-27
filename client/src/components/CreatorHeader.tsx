@@ -28,6 +28,10 @@ import {
   User,
   Coins,
   Bot,
+  LayoutDashboard,
+  Mic2,
+  Film,
+  History,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -47,6 +51,13 @@ const studios = [
 const quickActions = [
   { href: "/quick-create", label: "Quick Create", icon: Zap, description: "1-click magic tools" },
   { href: "/ai-consultant", label: "AI Consultant", icon: Bot, description: "Train AI on your content" },
+];
+
+const productionTools = [
+  { href: "/production-dashboard", label: "Production Dashboard", icon: LayoutDashboard, description: "Unified creator hub" },
+  { href: "/music-sandbox", label: "Music Sandbox", icon: Mic2, description: "Create beats & melodies" },
+  { href: "/script-studio", label: "Script Studio", icon: Film, description: "Write screenplays with AI" },
+  { href: "/life-story", label: "Life Story Engine", icon: History, description: "Build your autobiography" },
 ];
 
 const navLinks = [
@@ -110,6 +121,23 @@ export default function CreatorHeader() {
                             )}
                           </div>
                           <div className="text-xs text-muted-foreground">{studio.description}</div>
+                        </div>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator className="bg-orange-500/20" />
+                <div className="px-2 py-1.5">
+                  <span className="text-[10px] font-semibold text-orange-500 uppercase tracking-wider">Production Engine</span>
+                </div>
+                {productionTools.map((tool) => (
+                  <DropdownMenuItem key={tool.href} asChild>
+                    <Link href={tool.href}>
+                      <div className="flex items-start gap-3 py-1 cursor-pointer w-full" data-testid={`link-${tool.label.toLowerCase().replace(/\s+/g, "-")}`}>
+                        <tool.icon className="w-5 h-5 text-orange-500 mt-0.5" />
+                        <div>
+                          <div className="font-medium text-white">{tool.label}</div>
+                          <div className="text-xs text-muted-foreground">{tool.description}</div>
                         </div>
                       </div>
                     </Link>
@@ -282,6 +310,24 @@ export default function CreatorHeader() {
                 >
                   <studio.icon className="w-5 h-5 text-orange-500" />
                   {studio.label}
+                </Button>
+              </Link>
+            ))}
+            
+            <div className="border-t border-orange-500/20 my-2" />
+            <div className="text-xs font-semibold text-orange-500 uppercase tracking-wider px-3 py-2">
+              Production Engine
+            </div>
+            {productionTools.map((tool) => (
+              <Link key={tool.href} href={tool.href}>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-white gap-3"
+                  onClick={() => setMobileMenuOpen(false)}
+                  data-testid={`mobile-link-${tool.label.toLowerCase().replace(/\s+/g, "-")}`}
+                >
+                  <tool.icon className="w-5 h-5 text-orange-500" />
+                  {tool.label}
                 </Button>
               </Link>
             ))}
