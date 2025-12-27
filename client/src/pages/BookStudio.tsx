@@ -24,7 +24,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useBookProject, BookProject } from "@/lib/hooks/useBookProject";
+import { useBookProject, BookProject, StoredChatMessage } from "@/lib/hooks/useBookProject";
 import {
   Select,
   SelectContent,
@@ -576,8 +576,51 @@ export default function BookStudio() {
       if (project.fontSize) setFontSize(project.fontSize);
       if (project.fontFamily) setSelectedFont(project.fontFamily);
       if (project.authorName) setAuthorName(project.authorName);
+      // Restore chat history if available
+      if (project.chatHistory && Array.isArray(project.chatHistory) && project.chatHistory.length > 0) {
+        const restoredMessages = project.chatHistory.map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp),
+        }));
+        setChatMessages(restoredMessages);
+      }
     }
   }, [project?.id]);
+  
+  // Save chat history when messages change (debounced)
+  const chatHistoryTimerRef = useRef<NodeJS.Timeout | null>(null);
+  useEffect(() => {
+    if (!project || chatMessages.length <= 1) return;
+    
+    // Clear previous timer
+    if (chatHistoryTimerRef.current) {
+      clearTimeout(chatHistoryTimerRef.current);
+    }
+    
+    // Debounce save to avoid too many API calls
+    chatHistoryTimerRef.current = setTimeout(() => {
+      // Save last 20 messages (excluding welcome if more messages exist)
+      const messagesToSave = chatMessages
+        .filter(m => m.id !== 'welcome' || chatMessages.length <= 1)
+        .slice(-20)
+        .map(m => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+          timestamp: m.timestamp instanceof Date ? m.timestamp.toISOString() : m.timestamp,
+          hasAttachment: m.hasAttachment,
+          attachmentName: m.attachmentName,
+        }));
+      
+      updateProject({ chatHistory: messagesToSave as any });
+    }, 3000); // 3 second debounce
+    
+    return () => {
+      if (chatHistoryTimerRef.current) {
+        clearTimeout(chatHistoryTimerRef.current);
+      }
+    };
+  }, [chatMessages, project, updateProject]);
   
   // Debounced autosave for manuscript content changes
   const debouncedAutosave = useCallback((content: string) => {

@@ -2624,6 +2624,12 @@ export const bookProjects = pgTable("book_projects", {
   coverImageUrl: text("cover_image_url"),
   spineWidth: real("spine_width"), // Calculated from page count
   status: text("status").notNull().default("draft"), // draft, in_progress, ready, published
+  chatHistory: jsonb("chat_history"), // Last 20 AI chat messages for session continuity
+  // AI Learning System - Gets smarter with every conversation
+  aiKnowledge: jsonb("ai_knowledge"), // Extracted facts: {characters: [], plotPoints: [], themes: [], issues: [], goals: []}
+  conversationSummary: text("conversation_summary"), // Rolling summary of all past AI conversations
+  authorPreferences: jsonb("author_preferences"), // Learned author style: {tone, pacing, avoidTopics, writingHabits}
+  knowledgeVersion: integer("knowledge_version").default(0), // Tracks when knowledge was last updated
   lastEditedAt: timestamp("last_edited_at").notNull().defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

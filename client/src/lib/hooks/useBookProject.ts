@@ -2,6 +2,16 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 
+// Chat message stored in database as JSON (timestamps serialized as ISO strings)
+export interface StoredChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string; // ISO string for JSON storage
+  hasAttachment?: boolean;
+  attachmentName?: string;
+}
+
 export interface BookProject {
   id: number;
   ownerId: string;
@@ -29,6 +39,24 @@ export interface BookProject {
   coverImageUrl?: string;
   spineWidth?: number;
   status?: string;
+  chatHistory?: StoredChatMessage[];
+  // AI Learning System
+  aiKnowledge?: {
+    characters?: string[];
+    plotPoints?: string[];
+    themes?: string[];
+    issues?: string[];
+    goals?: string[];
+    keyFacts?: string[];
+  };
+  conversationSummary?: string;
+  authorPreferences?: {
+    tone?: string;
+    pacing?: string;
+    avoidTopics?: string[];
+    writingHabits?: string[];
+  };
+  knowledgeVersion?: number;
   lastEditedAt: string;
   createdAt: string;
 }
