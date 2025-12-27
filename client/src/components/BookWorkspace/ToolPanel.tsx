@@ -548,6 +548,84 @@ const bookElementTemplates = {
   </p>
 </aside>`,
   },
+  proTip: {
+    icon: Star,
+    label: "Pro Tip",
+    description: "Expert advice and insider tips",
+    html: `<aside class="pro-tip my-6 p-5 bg-gradient-to-r from-primary/10 to-yellow-500/10 border-l-4 border-primary rounded-r-lg">
+  <p class="font-bold text-base mb-2 text-primary flex items-center gap-2">
+    [PRO TIP]
+  </p>
+  <p class="text-foreground leading-relaxed">
+    Share expert advice, insider knowledge, or a professional recommendation that gives readers an edge. This is the kind of insight that comes from years of experience.
+  </p>
+</aside>`,
+  },
+  didYouKnow: {
+    icon: Lightbulb,
+    label: "Did You Know",
+    description: "Interesting facts and trivia",
+    html: `<aside class="did-you-know my-6 p-5 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+  <p class="font-bold text-base mb-2 text-purple-600 dark:text-purple-400 flex items-center gap-2">
+    [DID YOU KNOW?]
+  </p>
+  <p class="text-foreground leading-relaxed">
+    Share a surprising fact, interesting statistic, or piece of trivia that enhances the reader's understanding and keeps them engaged. Make it memorable!
+  </p>
+</aside>`,
+  },
+  quickTrick: {
+    icon: Feather,
+    label: "Quick Trick",
+    description: "Shortcuts and hacks",
+    html: `<aside class="quick-trick my-6 p-5 bg-green-500/10 border border-green-500/30 rounded-lg">
+  <p class="font-bold text-base mb-2 text-green-600 dark:text-green-400 flex items-center gap-2">
+    [QUICK TRICK]
+  </p>
+  <p class="text-foreground leading-relaxed mb-3">
+    A simple shortcut, hack, or workaround that saves time or makes something easier. Practical advice readers can apply immediately.
+  </p>
+  <p class="text-sm text-muted-foreground italic">
+    Time saved: approximately [X] minutes
+  </p>
+</aside>`,
+  },
+  knowledgeBox: {
+    icon: BookOpen,
+    label: "Knowledge Box",
+    description: "Deep dive into a concept",
+    html: `<aside class="knowledge-box my-6 p-5 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+  <p class="font-bold text-base mb-3 text-blue-600 dark:text-blue-400 flex items-center gap-2">
+    [KNOWLEDGE] Topic Title
+  </p>
+  <p class="text-foreground leading-relaxed mb-3">
+    Provide a deeper explanation of a concept, term, or process mentioned in the main text. This is where you can get more technical without overwhelming the main narrative.
+  </p>
+  <div class="mt-3 pt-3 border-t border-blue-500/20">
+    <p class="text-sm text-muted-foreground">
+      <strong>Key Points:</strong>
+    </p>
+    <ul class="text-sm text-muted-foreground mt-1 list-disc pl-5">
+      <li>First important point</li>
+      <li>Second important point</li>
+      <li>Third important point</li>
+    </ul>
+  </div>
+</aside>`,
+  },
+  realTalk: {
+    icon: Heart,
+    label: "Real Talk",
+    description: "Honest advice and truth bombs",
+    html: `<aside class="real-talk my-6 p-5 bg-red-500/10 border-l-4 border-red-500 rounded-r-lg">
+  <p class="font-bold text-base mb-2 text-red-600 dark:text-red-400 flex items-center gap-2">
+    [REAL TALK]
+  </p>
+  <p class="text-foreground leading-relaxed">
+    Be honest with your readers here. Share the hard truths, common mistakes to avoid, or the reality that many books gloss over. Readers appreciate authenticity.
+  </p>
+</aside>`,
+  },
   resources: {
     icon: LinkIcon,
     label: "Resources Box",
