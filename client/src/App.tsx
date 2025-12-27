@@ -21,6 +21,7 @@ import StoryEditor from "@/pages/StoryEditor";
 import MyStories from "@/pages/MyStories";
 import Pricing from "@/pages/Pricing";
 import MusicStudio from "@/pages/MusicStudio";
+import MusicSandbox from "@/pages/MusicSandbox";
 import BookStudio from "@/pages/BookStudio";
 import VideoStudio from "@/pages/VideoStudio";
 import CourseStudio from "@/pages/CourseStudio";
@@ -57,6 +58,9 @@ import MagicLinkLogin, { MagicLinkVerify } from "@/pages/MagicLinkLogin";
 import AuthorProfile from "@/pages/AuthorProfile";
 import AuthorStorefront from "@/pages/AuthorStorefront";
 import CreatorProductDashboard from "@/pages/CreatorProductDashboard";
+import ProductionDashboard from "@/pages/ProductionDashboard";
+import ScriptStudio from "@/pages/ScriptStudio";
+import LifeStoryEngine from "@/pages/LifeStoryEngine";
 
 // Stroke Recovery Platform Pages (under /recovery/*)
 import StrokeRecoveryLanding from "@/pages/Landing";
@@ -143,6 +147,11 @@ function Router() {
       
       {/* Creator Studios */}
       <Route path="/music-studio" component={MusicStudio} />
+      <Route path="/music-sandbox">
+        <ProtectedRoute>
+          <MusicSandbox />
+        </ProtectedRoute>
+      </Route>
       <Route path="/book-studio" component={BookStudio} />
       <Route path="/creator-store" component={CreatorStore} />
       <Route path="/video-studio" component={VideoStudio} />
@@ -186,6 +195,21 @@ function Router() {
       <Route path="/creator-products">
         <ProtectedRoute>
           <CreatorProductDashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/production-dashboard">
+        <ProtectedRoute>
+          <ProductionDashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/script-studio">
+        <ProtectedRoute>
+          <ScriptStudio />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/life-story">
+        <ProtectedRoute>
+          <LifeStoryEngine />
         </ProtectedRoute>
       </Route>
       <Route path="/analytics">

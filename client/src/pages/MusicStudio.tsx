@@ -568,7 +568,7 @@ export default function MusicStudio() {
           try {
             const response = await apiRequest("POST", "/api/voice/clone", {
               audioBase64: base64,
-              name: `${user?.name || 'User'}'s Voice`,
+              name: `${user?.firstName || 'User'}'s Voice`,
             });
             const data = await response.json();
             if (data.success) {

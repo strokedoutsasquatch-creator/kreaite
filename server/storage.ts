@@ -2357,7 +2357,7 @@ export class DatabaseStorage implements IStorage {
 
   async deletePodcast(id: number): Promise<boolean> {
     const result = await db.delete(podcasts).where(eq(podcasts.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async getPodcastEpisodes(podcastId: number): Promise<PodcastEpisode[]> {
@@ -2403,7 +2403,7 @@ export class DatabaseStorage implements IStorage {
         .where(eq(podcasts.id, episode.podcastId));
     }
     const result = await db.delete(podcastEpisodes).where(eq(podcastEpisodes.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 }
 
