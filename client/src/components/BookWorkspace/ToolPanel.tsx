@@ -1924,7 +1924,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
           </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="images" className="flex-1 flex flex-col m-0 overflow-auto bg-zinc-300 p-4">
+        <TabsContent value="images" className="flex-1 m-0 overflow-y-auto bg-zinc-300 p-4">
           <div className="space-y-4">
             <div className="bg-white rounded-lg border-2 border-zinc-400 shadow-lg overflow-hidden">
               <div className="py-3 px-4 bg-zinc-700">
