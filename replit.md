@@ -40,6 +40,15 @@ KreAIte.xyz is an ultra-premium AI-powered creator platform with 6 professional 
 - **Image Placement** - Auto/manual/hybrid modes for positioning images within manuscripts
 - **Author Storefronts** - KDP Author Central-style profiles with public storefront, social links, achievements
 
+### Creator Production Engine (NEW):
+- **Content Vaults** - 9 categories: lyrical, manuscript, doctrine, idea, research, beat, melody, screenplay, jingle
+- **SERP Research Hub** - SERP API-powered trending topics, keyword research, market gap analysis with 24-hour caching (1 credit per fresh query)
+- **Batch Production System** - Process multiple content pieces at once with progress tracking
+- **Music Sandbox** - Create beats, melodies, and jingles with AI assistance (/music-sandbox)
+- **Script Studio** - Screenplay writing with AI scene generation, dialogue, and outline creation (/script-studio)
+- **Life Story Engine** - Autobiography generation with timeline visualization, chapter extraction (/life-story)
+- **Production Dashboard** - Unified hub with Overview, Research Lab, Creator Vault, Batch Studio, Cross-Format tabs (/production-dashboard)
+
 ### Platform Model:
 - **Centralized at KreAIte.xyz** - Single platform with creator tools
 - **Creator Earnings** - 85/15 revenue split (creators keep 85%)
@@ -226,6 +235,13 @@ Icons: lucide-react only (no emoji)
 - `server/i18nService.ts` - Internationalization with 20 languages
 - `server/jobQueueService.ts` - Background job processing with SSE
 - `shared/schema.ts` - Database schema (includes conversationSessions, assetRegistry, studioPipelines, creditWallets, creditLedger, usageEvents)
+- `client/src/pages/ProductionDashboard.tsx` - Creator Production Engine unified dashboard
+- `client/src/pages/MusicSandbox.tsx` - AI-powered beats, melodies, jingles creation
+- `client/src/pages/ScriptStudio.tsx` - Screenplay/script writing with AI
+- `client/src/pages/LifeStoryEngine.tsx` - Autobiography generation with timeline
+- `client/src/components/CreatorVault.tsx` - Content vault with 9 categories
+- `client/src/components/ResearchHub.tsx` - SERP-powered research with AI insights
+- `server/serpService.ts` - SERP API integration with 24-hour caching
 - `client/index.html` - SEO/AEO meta tags and structured data
 
 ## Technical Notes
