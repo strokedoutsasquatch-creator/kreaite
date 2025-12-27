@@ -1924,87 +1924,86 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
           </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="images" className="flex-1 flex flex-col m-0 overflow-auto bg-zinc-300">
-          <ScrollArea className="flex-1 p-4">
-            <div className="space-y-4">
-              <Card className="bg-white border-2 border-zinc-400 shadow-lg">
-                <CardHeader className="py-3 bg-zinc-700 rounded-t-lg">
-                  <CardTitle className="text-base flex items-center gap-2 text-white font-bold">
-                    <Wand2 className="w-5 h-5 text-orange-400" />
-                    Generate Image
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 pt-4 bg-white">
-                  <Textarea
-                    value={imagePrompt}
-                    onChange={(e) => setImagePrompt(e.target.value)}
-                    placeholder="Describe the image you want to create..."
-                    className="min-h-[120px] bg-zinc-100 border-2 border-zinc-400 text-black placeholder:text-zinc-500 text-base"
-                    data-testid="textarea-image-prompt"
-                  />
-                  <Button
-                    onClick={handleGenerateImage}
-                    disabled={isGeneratingImage || !imagePrompt.trim()}
-                    className="w-full"
-                    data-testid="button-generate-image"
-                  >
-                    {isGeneratingImage ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Wand2 className="w-4 h-4 mr-2" />
-                    )}
-                    Generate
-                  </Button>
-                </CardContent>
-              </Card>
+        <TabsContent value="images" className="flex-1 flex flex-col m-0 overflow-auto bg-zinc-300 p-4">
+          <div className="space-y-4">
+            <div className="bg-white rounded-lg border-2 border-zinc-400 shadow-lg overflow-hidden">
+              <div className="py-3 px-4 bg-zinc-700">
+                <h3 className="text-base font-bold flex items-center gap-2 text-white">
+                  <Wand2 className="w-5 h-5 text-orange-400" />
+                  Generate Image
+                </h3>
+              </div>
+              <div className="p-4 space-y-4 bg-white">
+                <Textarea
+                  value={imagePrompt}
+                  onChange={(e) => setImagePrompt(e.target.value)}
+                  placeholder="Describe the image you want to create..."
+                  className="min-h-[120px] bg-zinc-100 border-2 border-zinc-400 text-black placeholder:text-zinc-500 text-base"
+                  data-testid="textarea-image-prompt"
+                />
+                <Button
+                  onClick={handleGenerateImage}
+                  disabled={isGeneratingImage || !imagePrompt.trim()}
+                  className="w-full"
+                  data-testid="button-generate-image"
+                >
+                  {isGeneratingImage ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Wand2 className="w-4 h-4 mr-2" />
+                  )}
+                  Generate
+                </Button>
+              </div>
+            </div>
 
-              <Card className="bg-white border-2 border-zinc-400 shadow-lg">
-                <CardHeader className="py-3 bg-zinc-700 rounded-t-lg">
-                  <CardTitle className="text-base flex items-center gap-2 text-white font-bold">
-                    <Move className="w-4 h-4 text-orange-400" />
-                    Image Placement
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="grid grid-cols-3 gap-2">
-                    <Button
-                      variant={imagePlacementMode === "auto" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setImagePlacementMode("auto")}
-                      className="text-xs"
-                      data-testid="button-placement-auto"
-                    >
-                      <Grid3X3 className="w-3 h-3 mr-1" />
-                      Auto
-                    </Button>
-                    <Button
-                      variant={imagePlacementMode === "hybrid" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setImagePlacementMode("hybrid")}
-                      className="text-xs"
-                      data-testid="button-placement-hybrid"
-                    >
-                      <Layers className="w-3 h-3 mr-1" />
-                      Hybrid
-                    </Button>
-                    <Button
-                      variant={imagePlacementMode === "manual" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setImagePlacementMode("manual")}
-                      className="text-xs"
-                      data-testid="button-placement-manual"
-                    >
-                      <Move className="w-3 h-3 mr-1" />
-                      Manual
-                    </Button>
-                  </div>
-                  <p className="text-xs text-zinc-300">
-                    {imagePlacementMode === "auto" && "AI automatically places images at optimal positions"}
-                    {imagePlacementMode === "hybrid" && "AI suggests placements, you approve or adjust"}
-                    {imagePlacementMode === "manual" && "Full control over image positioning"}
-                  </p>
-                </CardContent>
-              </Card>
+            <div className="bg-white rounded-lg border-2 border-zinc-400 shadow-lg overflow-hidden">
+              <div className="py-3 px-4 bg-zinc-700">
+                <h3 className="text-base font-bold flex items-center gap-2 text-white">
+                  <Move className="w-4 h-4 text-orange-400" />
+                  Image Placement
+                </h3>
+              </div>
+              <div className="p-4 space-y-3 bg-white">
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    variant={imagePlacementMode === "auto" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setImagePlacementMode("auto")}
+                    className="text-xs"
+                    data-testid="button-placement-auto"
+                  >
+                    <Grid3X3 className="w-3 h-3 mr-1" />
+                    Auto
+                  </Button>
+                  <Button
+                    variant={imagePlacementMode === "hybrid" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setImagePlacementMode("hybrid")}
+                    className="text-xs"
+                    data-testid="button-placement-hybrid"
+                  >
+                    <Layers className="w-3 h-3 mr-1" />
+                    Hybrid
+                  </Button>
+                  <Button
+                    variant={imagePlacementMode === "manual" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setImagePlacementMode("manual")}
+                    className="text-xs"
+                    data-testid="button-placement-manual"
+                  >
+                    <Move className="w-3 h-3 mr-1" />
+                    Manual
+                  </Button>
+                </div>
+                <p className="text-xs text-zinc-600">
+                  {imagePlacementMode === "auto" && "AI automatically places images at optimal positions"}
+                  {imagePlacementMode === "hybrid" && "AI suggests placements, you approve or adjust"}
+                  {imagePlacementMode === "manual" && "Full control over image positioning"}
+                </p>
+              </div>
+            </div>
 
               {generatedImages.length > 0 && (
                 <div className="space-y-3">
@@ -2057,8 +2056,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                   ))}
                 </div>
               )}
-            </div>
-          </ScrollArea>
+          </div>
         </TabsContent>
 
         <TabsContent value="research" className="flex-1 flex flex-col m-0 overflow-auto bg-zinc-300" data-testid="tab-content-research">
