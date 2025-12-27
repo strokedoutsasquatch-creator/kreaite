@@ -28,7 +28,7 @@ import {
   getUserTopTracks 
 } from "./spotifyService";
 import { seedRecoveryData } from "./seedRecoveryData";
-import { seedCreatorToolCategories } from "./seedCreatorTools";
+import { seedCreatorToolCategories, seedWorkflowCategories } from "./seedCreatorTools";
 import { generate, generateStream, bookGenerator, marketingGenerator, screenplayGenerator, courseGenerator, researchGenerator, getUsageStats } from "./aiOrchestrator";
 import { 
   generateChildStoryRequestSchema,
@@ -337,6 +337,9 @@ Allow: /
 
   // Seed creator tool categories
   await seedCreatorToolCategories();
+  
+  // Seed workflow categories
+  await seedWorkflowCategories();
 
   // Auth routes
   app.get('/api/auth/user', async (req: any, res) => {
@@ -2068,6 +2071,227 @@ Only include genuinely new information. Return empty arrays if nothing new was l
     } catch (error) {
       console.error("Error fetching knowledge:", error);
       res.status(500).json({ message: 'Failed to fetch knowledge' });
+    }
+  });
+
+  // ============================================================================
+  // WORKFLOW MARKETPLACE API - Sellable automation templates with smart search
+  // ============================================================================
+
+  // Get all workflow categories
+  app.get('/api/workflows/categories', async (req, res) => {
+    try {
+      const categories = await db.select()
+        .from(workflowCategories)
+        .where(eq(workflowCategories.isActive, true))
+        .orderBy(workflowCategories.displayOrder);
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching workflow categories:", error);
+      res.status(500).json({ message: 'Failed to fetch categories' });
+    }
+  });
+
+  // Smart search for workflows
+  app.get('/api/workflows', async (req, res) => {
+    try {
+      const { 
+        query, category, studioType, difficulty, 
+        priceMin, priceMax, sortBy = 'popularity',
+        includeKreaiteOfficial = 'true',
+        page = '1', limit = '20'
+      } = req.query as Record<string, string>;
+
+      const pageNum = parseInt(page) || 1;
+      const limitNum = Math.min(parseInt(limit) || 20, 50);
+      const offset = (pageNum - 1) * limitNum;
+
+      // Build conditions
+      const conditions: any[] = [eq(workflowTemplates.status, 'published')];
+
+      // Category filter
+      if (category) {
+        const [cat] = await db.select().from(workflowCategories)
+          .where(eq(workflowCategories.slug, category));
+        if (cat) conditions.push(eq(workflowTemplates.categoryId, cat.id));
+      }
+
+      // Studio type filter
+      if (studioType) {
+        conditions.push(eq(workflowTemplates.studioType, studioType));
+      }
+
+      // Difficulty filter
+      if (difficulty) {
+        conditions.push(eq(workflowTemplates.difficulty, difficulty));
+      }
+
+      // Price range filter
+      if (priceMin) {
+        conditions.push(gte(workflowTemplates.price, parseInt(priceMin)));
+      }
+      if (priceMax) {
+        conditions.push(lte(workflowTemplates.price, parseInt(priceMax)));
+      }
+
+      // Add text search condition if query provided
+      if (query) {
+        const searchPattern = `%${query}%`;
+        conditions.push(
+          or(
+            ilike(workflowTemplates.title, searchPattern),
+            ilike(workflowTemplates.shortDescription, searchPattern)
+          )
+        );
+      }
+
+      // Get workflows with all conditions combined
+      const workflowsQuery = db.select({
+        id: workflowTemplates.id,
+        title: workflowTemplates.title,
+        slug: workflowTemplates.slug,
+        shortDescription: workflowTemplates.shortDescription,
+        thumbnailUrl: workflowTemplates.thumbnailUrl,
+        studioType: workflowTemplates.studioType,
+        difficulty: workflowTemplates.difficulty,
+        estimatedDuration: workflowTemplates.estimatedDuration,
+        price: workflowTemplates.price,
+        totalSales: workflowTemplates.totalSales,
+        totalUsage: workflowTemplates.totalUsage,
+        averageRating: workflowTemplates.averageRating,
+        reviewCount: workflowTemplates.reviewCount,
+        isFeatured: workflowTemplates.isFeatured,
+        isKreaiteOfficial: workflowTemplates.isKreaiteOfficial,
+        creatorId: workflowTemplates.creatorId,
+      })
+        .from(workflowTemplates)
+        .where(and(...conditions));
+
+      // Sorting
+      let orderByClause;
+      switch (sortBy) {
+        case 'newest':
+          orderByClause = desc(workflowTemplates.createdAt);
+          break;
+        case 'rating':
+          orderByClause = desc(workflowTemplates.averageRating);
+          break;
+        case 'price_low':
+          orderByClause = asc(workflowTemplates.price);
+          break;
+        case 'price_high':
+          orderByClause = desc(workflowTemplates.price);
+          break;
+        case 'popularity':
+        default:
+          orderByClause = desc(workflowTemplates.totalUsage);
+      }
+
+      const workflows = await workflowsQuery
+        .orderBy(orderByClause)
+        .limit(limitNum)
+        .offset(offset);
+
+      // Get total count
+      const [countResult] = await db.select({ count: sql<number>`count(*)` })
+        .from(workflowTemplates)
+        .where(and(...conditions));
+
+      res.json({
+        workflows,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total: Number(countResult?.count || 0),
+          totalPages: Math.ceil(Number(countResult?.count || 0) / limitNum)
+        }
+      });
+    } catch (error) {
+      console.error("Error searching workflows:", error);
+      res.status(500).json({ message: 'Failed to search workflows' });
+    }
+  });
+
+  // Get single workflow by slug
+  app.get('/api/workflows/:slug', async (req, res) => {
+    try {
+      const { slug } = req.params;
+      
+      const [workflow] = await db.select()
+        .from(workflowTemplates)
+        .where(eq(workflowTemplates.slug, slug));
+
+      if (!workflow) {
+        return res.status(404).json({ message: 'Workflow not found' });
+      }
+
+      // Get creator info
+      const [creator] = await db.select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        profileImageUrl: users.profileImageUrl,
+      }).from(users).where(eq(users.id, workflow.creatorId));
+
+      // Get reviews
+      const reviews = await db.select()
+        .from(workflowReviews)
+        .where(eq(workflowReviews.workflowId, workflow.id))
+        .orderBy(desc(workflowReviews.createdAt))
+        .limit(10);
+
+      res.json({ ...workflow, creator, reviews });
+    } catch (error) {
+      console.error("Error fetching workflow:", error);
+      res.status(500).json({ message: 'Failed to fetch workflow' });
+    }
+  });
+
+  // Create new workflow (authenticated)
+  app.post('/api/workflows', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+      const slug = req.body.title.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '') + '-' + Date.now();
+
+      const [workflow] = await db.insert(workflowTemplates).values({
+        ...req.body,
+        creatorId: userId,
+        slug,
+        status: 'draft',
+      }).returning();
+
+      res.status(201).json(workflow);
+    } catch (error) {
+      console.error("Error creating workflow:", error);
+      res.status(500).json({ message: 'Failed to create workflow' });
+    }
+  });
+
+  // Get user's owned/purchased workflows
+  app.get('/api/workflows/my-workflows', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+      // Get user's owned workflows
+      const owned = await db.select()
+        .from(userWorkflows)
+        .leftJoin(workflowTemplates, eq(userWorkflows.workflowId, workflowTemplates.id))
+        .where(eq(userWorkflows.userId, userId));
+
+      // Get user's created workflows
+      const created = await db.select()
+        .from(workflowTemplates)
+        .where(eq(workflowTemplates.creatorId, userId));
+
+      res.json({ owned, created });
+    } catch (error) {
+      console.error("Error fetching user workflows:", error);
+      res.status(500).json({ message: 'Failed to fetch workflows' });
     }
   });
 
