@@ -278,6 +278,7 @@ interface ChatMessage {
   timestamp: Date;
   hasAttachment?: boolean;
   attachmentName?: string;
+  attachmentContent?: string;
 }
 
 export default function BookStudio() {
@@ -893,10 +894,11 @@ export default function BookStudio() {
     
     if (validFiles.length === 0) return;
     
-    // Add user message with attachments
+    // Add user message with attachments (will update with content preview after parsing)
     const fileNames = validFiles.map(f => f.name).join(", ");
+    const uploadMessageId = Date.now().toString();
     const userMessage: ChatMessage = {
-      id: Date.now().toString(),
+      id: uploadMessageId,
       role: "user",
       content: validFiles.length === 1 
         ? `I've uploaded: "${validFiles[0].name}"` 
@@ -983,6 +985,22 @@ export default function BookStudio() {
         .map(para => `<p>${para.replace(/\n/g, '<br/>')}</p>`)
         .join('');
       setManuscriptEditorContent(htmlContent);
+      
+      // Update user message with content preview
+      const contentPreview = combinedContent.substring(0, 1500).trim();
+      const previewLines = contentPreview.split('\n').slice(0, 20).join('\n');
+      const updatedUserMessage: ChatMessage = {
+        id: uploadMessageId,
+        role: "user",
+        content: validFiles.length === 1 
+          ? `I've uploaded: "${validFiles[0].name}"\n\n**Content Preview:**\n\`\`\`\n${previewLines}${combinedContent.length > 1500 ? '\n...(truncated)' : ''}\n\`\`\`` 
+          : `I've uploaded ${validFiles.length} files: ${fileNames}\n\n**Content Preview:**\n\`\`\`\n${previewLines}${combinedContent.length > 1500 ? '\n...(truncated)' : ''}\n\`\`\``,
+        timestamp: new Date(),
+        hasAttachment: true,
+        attachmentName: fileNames,
+        attachmentContent: combinedContent,
+      };
+      setChatMessages(prev => prev.map(m => m.id === uploadMessageId ? updatedUserMessage : m));
       
       toast({ 
         title: "Files Uploaded", 
