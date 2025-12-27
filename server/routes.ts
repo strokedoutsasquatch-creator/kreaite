@@ -95,6 +95,21 @@ import {
   insertBookProjectSchema,
   insertBookProjectSectionSchema,
   insertBookImagePlacementSchema,
+  vaultEntries,
+  vaultFolders,
+  vaultEntryFolders,
+  productionBatches,
+  batchItems,
+  insertVaultEntrySchema,
+  insertVaultFolderSchema,
+  insertProductionBatchSchema,
+  insertBatchItemSchema,
+  lifeStories,
+  screenplayProjects,
+  musicSandboxProjects,
+  insertLifeStorySchema,
+  insertScreenplayProjectSchema,
+  insertMusicSandboxProjectSchema,
 } from "../shared/schema";
 import { db } from "./db";
 import { eq, and, gte, desc, ilike, or, sql } from "drizzle-orm";
@@ -142,6 +157,14 @@ import {
   deleteTalk,
   getCreditsBalance,
 } from './avatarService';
+import {
+  isConfigured as isSerpConfigured,
+  searchGoogle,
+  getTrendingTopics,
+  analyzeSearchResults,
+  getResearchHistory,
+  saveInsightsToQuery,
+} from './serpService';
 
 async function initStripe() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -3221,7 +3244,7 @@ Provide specific, actionable feedback with examples.`;
       const creditCost = 10;
       
       // Check and deduct credits
-      const hasCredits = await creditService.checkCredits(req.user.id, creditCost);
+      const hasCredits = await creditService.hasEnoughCredits(req.user.id, creditCost);
       if (!hasCredits) {
         return res.status(402).json({ message: "Insufficient credits", required: creditCost });
       }
@@ -3259,7 +3282,7 @@ Provide your feedback as JSON:
 }`;
 
       const result = await generateCoachResponse(prompt, []);
-      await creditService.deductCredits(req.user.id, creditCost, 'developmental_edit', { contentLength: content.length });
+      await creditService.deductCredits(req.user.id, creditCost, 'Developmental edit', 'developmental_edit', { contentLength: content.length });
       
       try {
         const jsonMatch = result.response.match(/\{[\s\S]*\}/);
@@ -3283,7 +3306,7 @@ Provide your feedback as JSON:
       const { content, style } = req.body;
       const creditCost = 7;
       
-      const hasCredits = await creditService.checkCredits(req.user.id, creditCost);
+      const hasCredits = await creditService.hasEnoughCredits(req.user.id, creditCost);
       if (!hasCredits) {
         return res.status(402).json({ message: "Insufficient credits", required: creditCost });
       }
@@ -3314,7 +3337,7 @@ Respond with JSON:
 }`;
 
       const result = await generateCoachResponse(prompt, []);
-      await creditService.deductCredits(req.user.id, creditCost, 'line_edit', { contentLength: content.length });
+      await creditService.deductCredits(req.user.id, creditCost, 'Line edit', 'line_edit', { contentLength: content.length });
       
       try {
         const jsonMatch = result.response.match(/\{[\s\S]*\}/);
@@ -3338,7 +3361,7 @@ Respond with JSON:
       const { content, styleGuide } = req.body;
       const creditCost = 5;
       
-      const hasCredits = await creditService.checkCredits(req.user.id, creditCost);
+      const hasCredits = await creditService.hasEnoughCredits(req.user.id, creditCost);
       if (!hasCredits) {
         return res.status(402).json({ message: "Insufficient credits", required: creditCost });
       }
@@ -3370,7 +3393,7 @@ Respond with JSON:
 }`;
 
       const result = await generateCoachResponse(prompt, []);
-      await creditService.deductCredits(req.user.id, creditCost, 'copy_edit', { contentLength: content.length });
+      await creditService.deductCredits(req.user.id, creditCost, 'Copy edit', 'copy_edit', { contentLength: content.length });
       
       try {
         const jsonMatch = result.response.match(/\{[\s\S]*\}/);
@@ -3394,7 +3417,7 @@ Respond with JSON:
       const { content } = req.body;
       const creditCost = 3;
       
-      const hasCredits = await creditService.checkCredits(req.user.id, creditCost);
+      const hasCredits = await creditService.hasEnoughCredits(req.user.id, creditCost);
       if (!hasCredits) {
         return res.status(402).json({ message: "Insufficient credits", required: creditCost });
       }
@@ -3420,7 +3443,7 @@ Respond with JSON:
 }`;
 
       const result = await generateCoachResponse(prompt, []);
-      await creditService.deductCredits(req.user.id, creditCost, 'proofread', { contentLength: content.length });
+      await creditService.deductCredits(req.user.id, creditCost, 'Proofreading', 'proofread', { contentLength: content.length });
       
       try {
         const jsonMatch = result.response.match(/\{[\s\S]*\}/);
@@ -3448,7 +3471,7 @@ Respond with JSON:
       const { topic, depth, focusAreas } = req.body;
       const creditCost = depth === 'deep' ? 15 : 7;
       
-      const hasCredits = await creditService.checkCredits(req.user.id, creditCost);
+      const hasCredits = await creditService.hasEnoughCredits(req.user.id, creditCost);
       if (!hasCredits) {
         return res.status(402).json({ message: "Insufficient credits", required: creditCost });
       }
@@ -3479,7 +3502,7 @@ Respond with JSON:
 }`;
 
       const result = await generateCoachResponse(prompt, []);
-      await creditService.deductCredits(req.user.id, creditCost, 'research', { topic, depth });
+      await creditService.deductCredits(req.user.id, creditCost, 'Research assistant', 'research', { topic, depth });
       
       try {
         const jsonMatch = result.response.match(/\{[\s\S]*\}/);
@@ -3503,7 +3526,7 @@ Respond with JSON:
       const { sources, style } = req.body;
       const creditCost = 5;
       
-      const hasCredits = await creditService.checkCredits(req.user.id, creditCost);
+      const hasCredits = await creditService.hasEnoughCredits(req.user.id, creditCost);
       if (!hasCredits) {
         return res.status(402).json({ message: "Insufficient credits", required: creditCost });
       }
@@ -3530,7 +3553,7 @@ Respond with JSON:
 }`;
 
       const result = await generateCoachResponse(prompt, []);
-      await creditService.deductCredits(req.user.id, creditCost, 'citations', { style: citationStyle, sourceCount: sources.length });
+      await creditService.deductCredits(req.user.id, creditCost, 'Citation generation', 'citations', { style: citationStyle, sourceCount: sources.length });
       
       try {
         const jsonMatch = result.response.match(/\{[\s\S]*\}/);
@@ -3554,7 +3577,7 @@ Respond with JSON:
       const { content, genre, focusAreas } = req.body;
       const creditCost = 3;
       
-      const hasCredits = await creditService.checkCredits(req.user.id, creditCost);
+      const hasCredits = await creditService.hasEnoughCredits(req.user.id, creditCost);
       if (!hasCredits) {
         return res.status(402).json({ message: "Insufficient credits", required: creditCost });
       }
@@ -3586,7 +3609,7 @@ Provide suggestions as JSON:
 }`;
 
       const result = await generateCoachResponse(prompt, []);
-      await creditService.deductCredits(req.user.id, creditCost, 'writing_coach', { contentLength: content.length });
+      await creditService.deductCredits(req.user.id, creditCost, 'Writing coach feedback', 'writing_coach', { contentLength: content.length });
       
       try {
         const jsonMatch = result.response.match(/\{[\s\S]*\}/);
@@ -12691,6 +12714,1224 @@ Provide a JSON response with track suggestions for each chapter/section.`;
     } catch (error) {
       console.error("Error publishing episode:", error);
       res.status(500).json({ message: "Failed to publish episode" });
+    }
+  });
+
+  // ============================================================================
+  // SERP RESEARCH ROUTES
+  // ============================================================================
+
+  // GET /api/research/status - Check if SERP API is configured
+  app.get('/api/research/status', isAuthenticated, async (req: any, res) => {
+    try {
+      res.json({ 
+        configured: isSerpConfigured(),
+        features: {
+          search: isSerpConfigured(),
+          trending: isSerpConfigured(),
+          insights: true,
+        }
+      });
+    } catch (error) {
+      console.error("Error checking SERP status:", error);
+      res.status(500).json({ message: "Failed to check SERP status" });
+    }
+  });
+
+  // GET /api/research/query - Search with caching (1 credit per fresh query)
+  app.get('/api/research/query', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { q, market, num, skipCache } = req.query;
+
+      if (!q || typeof q !== 'string') {
+        return res.status(400).json({ message: "Query parameter 'q' is required" });
+      }
+
+      if (!isSerpConfigured()) {
+        return res.status(503).json({ message: "SERP API is not configured" });
+      }
+
+      const { result, fromCache, creditCharged } = await searchGoogle(q, userId, {
+        market: market as string,
+        num: num ? parseInt(num as string) : undefined,
+        skipCache: skipCache === 'true',
+      });
+
+      if (creditCharged) {
+        const deductResult = await creditService.deductCredits(
+          userId,
+          1,
+          `SERP search: ${q}`,
+          'serp_search',
+          { query: q, market }
+        );
+
+        if (!deductResult.success) {
+          return res.status(402).json({ 
+            message: "Insufficient credits",
+            creditsRequired: 1,
+            currentBalance: deductResult.newBalance
+          });
+        }
+
+        await creditService.recordUsageEvent(
+          userId,
+          'serp_search',
+          'research',
+          1,
+          undefined,
+          undefined,
+          undefined,
+          { query: q, market, resultsCount: result.results.length }
+        );
+      }
+
+      res.json({
+        ...result,
+        creditCharged,
+        fromCache,
+      });
+    } catch (error: any) {
+      console.error("Error performing SERP search:", error);
+      res.status(500).json({ message: error.message || "Failed to perform search" });
+    }
+  });
+
+  // GET /api/research/trending/:category - Get trending topics (cached, free)
+  app.get('/api/research/trending/:category', isAuthenticated, async (req: any, res) => {
+    try {
+      const { category } = req.params;
+      const { skipCache } = req.query;
+
+      const validCategories = ['books', 'music', 'courses', 'movies'];
+      if (!validCategories.includes(category.toLowerCase())) {
+        return res.status(400).json({ 
+          message: "Invalid category",
+          validCategories 
+        });
+      }
+
+      if (!isSerpConfigured()) {
+        return res.status(503).json({ message: "SERP API is not configured" });
+      }
+
+      const results = await getTrendingTopics(category.toLowerCase(), {
+        skipCache: skipCache === 'true',
+      });
+
+      res.json({
+        category,
+        topics: results,
+        count: results.length,
+      });
+    } catch (error: any) {
+      console.error("Error fetching trending topics:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch trending topics" });
+    }
+  });
+
+  // POST /api/research/insights - AI-analyze search results (1 credit)
+  app.post('/api/research/insights', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { results, query, context, queryId } = req.body;
+
+      if (!results || !Array.isArray(results) || results.length === 0) {
+        return res.status(400).json({ message: "Search results array is required" });
+      }
+
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ message: "Query string is required" });
+      }
+
+      const deductResult = await creditService.deductCredits(
+        userId,
+        1,
+        `AI insights analysis: ${query}`,
+        'serp_insights',
+        { query, resultsCount: results.length }
+      );
+
+      if (!deductResult.success) {
+        return res.status(402).json({ 
+          message: "Insufficient credits",
+          creditsRequired: 1,
+          currentBalance: deductResult.newBalance
+        });
+      }
+
+      const insights = await analyzeSearchResults(results, query, context);
+
+      if (queryId) {
+        await saveInsightsToQuery(parseInt(queryId), insights);
+      }
+
+      await creditService.recordUsageEvent(
+        userId,
+        'serp_insights',
+        'research',
+        1,
+        undefined,
+        undefined,
+        undefined,
+        { query, resultsCount: results.length, confidenceScore: insights.confidenceScore }
+      );
+
+      res.json({
+        insights,
+        creditCharged: true,
+        newBalance: deductResult.newBalance,
+      });
+    } catch (error: any) {
+      console.error("Error analyzing search results:", error);
+      res.status(500).json({ message: error.message || "Failed to analyze results" });
+    }
+  });
+
+  // GET /api/research/history - Get user's research history (free)
+  app.get('/api/research/history', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { limit } = req.query;
+
+      const history = await getResearchHistory(
+        userId,
+        limit ? parseInt(limit as string) : 50
+      );
+
+      res.json({
+        history,
+        count: history.length,
+      });
+    } catch (error: any) {
+      console.error("Error fetching research history:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch history" });
+    }
+  });
+
+  // ============================================================================
+  // VAULT ENDPOINTS
+  // ============================================================================
+
+  // GET /api/vault/entries - List entries with category/tag filters
+  app.get('/api/vault/entries', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { category, tag, status, limit: limitParam, offset: offsetParam } = req.query;
+
+      let query = db.select().from(vaultEntries).where(eq(vaultEntries.userId, userId));
+
+      const conditions: any[] = [eq(vaultEntries.userId, userId)];
+      
+      if (category) {
+        conditions.push(eq(vaultEntries.category, category as string));
+      }
+      
+      if (status) {
+        conditions.push(eq(vaultEntries.status, status as string));
+      }
+
+      const entries = await db.select()
+        .from(vaultEntries)
+        .where(and(...conditions))
+        .orderBy(desc(vaultEntries.updatedAt))
+        .limit(limitParam ? parseInt(limitParam as string) : 50)
+        .offset(offsetParam ? parseInt(offsetParam as string) : 0);
+
+      let filteredEntries = entries;
+      if (tag) {
+        filteredEntries = entries.filter((entry: any) => 
+          entry.tags && entry.tags.includes(tag as string)
+        );
+      }
+
+      res.json({
+        entries: filteredEntries,
+        count: filteredEntries.length,
+      });
+    } catch (error: any) {
+      console.error("Error fetching vault entries:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch vault entries" });
+    }
+  });
+
+  // POST /api/vault/entries - Create entry
+  app.post('/api/vault/entries', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validationResult = insertVaultEntrySchema.safeParse({ ...req.body, userId });
+
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid input",
+          errors: validationResult.error.errors 
+        });
+      }
+
+      const [entry] = await db.insert(vaultEntries)
+        .values(validationResult.data)
+        .returning();
+
+      res.status(201).json(entry);
+    } catch (error: any) {
+      console.error("Error creating vault entry:", error);
+      res.status(500).json({ message: error.message || "Failed to create vault entry" });
+    }
+  });
+
+  // GET /api/vault/entries/:id - Get single entry
+  app.get('/api/vault/entries/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const entryId = parseInt(req.params.id);
+
+      const [entry] = await db.select()
+        .from(vaultEntries)
+        .where(and(eq(vaultEntries.id, entryId), eq(vaultEntries.userId, userId)));
+
+      if (!entry) {
+        return res.status(404).json({ message: "Vault entry not found" });
+      }
+
+      res.json(entry);
+    } catch (error: any) {
+      console.error("Error fetching vault entry:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch vault entry" });
+    }
+  });
+
+  // PATCH /api/vault/entries/:id - Update entry
+  app.patch('/api/vault/entries/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const entryId = parseInt(req.params.id);
+
+      const [existing] = await db.select()
+        .from(vaultEntries)
+        .where(and(eq(vaultEntries.id, entryId), eq(vaultEntries.userId, userId)));
+
+      if (!existing) {
+        return res.status(404).json({ message: "Vault entry not found" });
+      }
+
+      const updateSchema = insertVaultEntrySchema.partial();
+      const validationResult = updateSchema.safeParse(req.body);
+
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid input",
+          errors: validationResult.error.errors 
+        });
+      }
+
+      const [updated] = await db.update(vaultEntries)
+        .set({ 
+          ...validationResult.data, 
+          version: existing.version + 1,
+          updatedAt: new Date() 
+        })
+        .where(and(eq(vaultEntries.id, entryId), eq(vaultEntries.userId, userId)))
+        .returning();
+
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating vault entry:", error);
+      res.status(500).json({ message: error.message || "Failed to update vault entry" });
+    }
+  });
+
+  // DELETE /api/vault/entries/:id - Delete entry
+  app.delete('/api/vault/entries/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const entryId = parseInt(req.params.id);
+
+      const [existing] = await db.select()
+        .from(vaultEntries)
+        .where(and(eq(vaultEntries.id, entryId), eq(vaultEntries.userId, userId)));
+
+      if (!existing) {
+        return res.status(404).json({ message: "Vault entry not found" });
+      }
+
+      await db.delete(vaultEntries)
+        .where(and(eq(vaultEntries.id, entryId), eq(vaultEntries.userId, userId)));
+
+      res.json({ message: "Vault entry deleted successfully" });
+    } catch (error: any) {
+      console.error("Error deleting vault entry:", error);
+      res.status(500).json({ message: error.message || "Failed to delete vault entry" });
+    }
+  });
+
+  // GET /api/vault/folders - List folders
+  app.get('/api/vault/folders', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { parentId, category } = req.query;
+
+      const conditions: any[] = [eq(vaultFolders.userId, userId)];
+      
+      if (parentId) {
+        conditions.push(eq(vaultFolders.parentId, parseInt(parentId as string)));
+      }
+      
+      if (category) {
+        conditions.push(eq(vaultFolders.category, category as string));
+      }
+
+      const folders = await db.select()
+        .from(vaultFolders)
+        .where(and(...conditions))
+        .orderBy(vaultFolders.order);
+
+      res.json({
+        folders,
+        count: folders.length,
+      });
+    } catch (error: any) {
+      console.error("Error fetching vault folders:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch vault folders" });
+    }
+  });
+
+  // POST /api/vault/folders - Create folder
+  app.post('/api/vault/folders', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validationResult = insertVaultFolderSchema.safeParse({ ...req.body, userId });
+
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid input",
+          errors: validationResult.error.errors 
+        });
+      }
+
+      const [folder] = await db.insert(vaultFolders)
+        .values(validationResult.data)
+        .returning();
+
+      res.status(201).json(folder);
+    } catch (error: any) {
+      console.error("Error creating vault folder:", error);
+      res.status(500).json({ message: error.message || "Failed to create vault folder" });
+    }
+  });
+
+  // PATCH /api/vault/folders/:id - Update folder
+  app.patch('/api/vault/folders/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const folderId = parseInt(req.params.id);
+
+      const [existing] = await db.select()
+        .from(vaultFolders)
+        .where(and(eq(vaultFolders.id, folderId), eq(vaultFolders.userId, userId)));
+
+      if (!existing) {
+        return res.status(404).json({ message: "Vault folder not found" });
+      }
+
+      const updateSchema = insertVaultFolderSchema.partial();
+      const validationResult = updateSchema.safeParse(req.body);
+
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid input",
+          errors: validationResult.error.errors 
+        });
+      }
+
+      const [updated] = await db.update(vaultFolders)
+        .set(validationResult.data)
+        .where(and(eq(vaultFolders.id, folderId), eq(vaultFolders.userId, userId)))
+        .returning();
+
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating vault folder:", error);
+      res.status(500).json({ message: error.message || "Failed to update vault folder" });
+    }
+  });
+
+  // DELETE /api/vault/folders/:id - Delete folder
+  app.delete('/api/vault/folders/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const folderId = parseInt(req.params.id);
+
+      const [existing] = await db.select()
+        .from(vaultFolders)
+        .where(and(eq(vaultFolders.id, folderId), eq(vaultFolders.userId, userId)));
+
+      if (!existing) {
+        return res.status(404).json({ message: "Vault folder not found" });
+      }
+
+      await db.delete(vaultFolders)
+        .where(and(eq(vaultFolders.id, folderId), eq(vaultFolders.userId, userId)));
+
+      res.json({ message: "Vault folder deleted successfully" });
+    } catch (error: any) {
+      console.error("Error deleting vault folder:", error);
+      res.status(500).json({ message: error.message || "Failed to delete vault folder" });
+    }
+  });
+
+  // POST /api/vault/entries/:id/save-to-folder - Add entry to folder
+  app.post('/api/vault/entries/:id/save-to-folder', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const entryId = parseInt(req.params.id);
+      const { folderId } = req.body;
+
+      if (!folderId) {
+        return res.status(400).json({ message: "folderId is required" });
+      }
+
+      const [entry] = await db.select()
+        .from(vaultEntries)
+        .where(and(eq(vaultEntries.id, entryId), eq(vaultEntries.userId, userId)));
+
+      if (!entry) {
+        return res.status(404).json({ message: "Vault entry not found" });
+      }
+
+      const [folder] = await db.select()
+        .from(vaultFolders)
+        .where(and(eq(vaultFolders.id, folderId), eq(vaultFolders.userId, userId)));
+
+      if (!folder) {
+        return res.status(404).json({ message: "Vault folder not found" });
+      }
+
+      const [existingLink] = await db.select()
+        .from(vaultEntryFolders)
+        .where(and(
+          eq(vaultEntryFolders.entryId, entryId),
+          eq(vaultEntryFolders.folderId, folderId)
+        ));
+
+      if (existingLink) {
+        return res.status(409).json({ message: "Entry already in this folder" });
+      }
+
+      const [link] = await db.insert(vaultEntryFolders)
+        .values({ entryId, folderId })
+        .returning();
+
+      res.status(201).json({ message: "Entry added to folder", link });
+    } catch (error: any) {
+      console.error("Error saving entry to folder:", error);
+      res.status(500).json({ message: error.message || "Failed to save entry to folder" });
+    }
+  });
+
+  // ============================================================================
+  // BATCH PRODUCTION ENDPOINTS
+  // ============================================================================
+
+  // POST /api/production/batches - Create batch job (check credits first)
+  app.post('/api/production/batches', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validationResult = insertProductionBatchSchema.safeParse({ ...req.body, userId });
+
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid input",
+          errors: validationResult.error.errors 
+        });
+      }
+
+      const creditCost = validationResult.data.creditCost || 0;
+      
+      if (creditCost > 0) {
+        const hasCredits = await creditService.hasEnoughCredits(userId, creditCost);
+        if (!hasCredits) {
+          const balance = await creditService.getBalance(userId);
+          return res.status(402).json({ 
+            message: "Insufficient credits",
+            creditsRequired: creditCost,
+            currentBalance: balance.total
+          });
+        }
+      }
+
+      const [batch] = await db.insert(productionBatches)
+        .values({
+          ...validationResult.data,
+          status: 'pending',
+        })
+        .returning();
+
+      if (creditCost > 0) {
+        await creditService.deductCredits(
+          userId,
+          creditCost,
+          `Batch production: ${batch.title}`,
+          'batch_production',
+          { batchId: batch.id, batchType: batch.batchType }
+        );
+      }
+
+      res.status(201).json(batch);
+    } catch (error: any) {
+      console.error("Error creating production batch:", error);
+      res.status(500).json({ message: error.message || "Failed to create production batch" });
+    }
+  });
+
+  // GET /api/production/batches - List user's batches
+  app.get('/api/production/batches', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { status, batchType, limit: limitParam, offset: offsetParam } = req.query;
+
+      const conditions: any[] = [eq(productionBatches.userId, userId)];
+      
+      if (status) {
+        conditions.push(eq(productionBatches.status, status as string));
+      }
+      
+      if (batchType) {
+        conditions.push(eq(productionBatches.batchType, batchType as string));
+      }
+
+      const batches = await db.select()
+        .from(productionBatches)
+        .where(and(...conditions))
+        .orderBy(desc(productionBatches.createdAt))
+        .limit(limitParam ? parseInt(limitParam as string) : 50)
+        .offset(offsetParam ? parseInt(offsetParam as string) : 0);
+
+      res.json({
+        batches,
+        count: batches.length,
+      });
+    } catch (error: any) {
+      console.error("Error fetching production batches:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch production batches" });
+    }
+  });
+
+  // GET /api/production/batches/:id - Get batch with items
+  app.get('/api/production/batches/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const batchId = parseInt(req.params.id);
+
+      const [batch] = await db.select()
+        .from(productionBatches)
+        .where(and(eq(productionBatches.id, batchId), eq(productionBatches.userId, userId)));
+
+      if (!batch) {
+        return res.status(404).json({ message: "Production batch not found" });
+      }
+
+      const items = await db.select()
+        .from(batchItems)
+        .where(eq(batchItems.batchId, batchId))
+        .orderBy(batchItems.id);
+
+      res.json({
+        ...batch,
+        items,
+      });
+    } catch (error: any) {
+      console.error("Error fetching production batch:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch production batch" });
+    }
+  });
+
+  // POST /api/production/batches/:id/cancel - Cancel batch
+  app.post('/api/production/batches/:id/cancel', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const batchId = parseInt(req.params.id);
+
+      const [batch] = await db.select()
+        .from(productionBatches)
+        .where(and(eq(productionBatches.id, batchId), eq(productionBatches.userId, userId)));
+
+      if (!batch) {
+        return res.status(404).json({ message: "Production batch not found" });
+      }
+
+      if (batch.status === 'completed' || batch.status === 'cancelled') {
+        return res.status(400).json({ message: `Cannot cancel batch with status: ${batch.status}` });
+      }
+
+      const [updated] = await db.update(productionBatches)
+        .set({ status: 'cancelled' })
+        .where(and(eq(productionBatches.id, batchId), eq(productionBatches.userId, userId)))
+        .returning();
+
+      await db.update(batchItems)
+        .set({ status: 'failed', error: 'Batch cancelled by user' })
+        .where(and(
+          eq(batchItems.batchId, batchId),
+          eq(batchItems.status, 'pending')
+        ));
+
+      res.json({ message: "Batch cancelled successfully", batch: updated });
+    } catch (error: any) {
+      console.error("Error cancelling production batch:", error);
+      res.status(500).json({ message: error.message || "Failed to cancel production batch" });
+    }
+  });
+
+  // GET /api/production/batches/:id/download - Download all outputs
+  app.get('/api/production/batches/:id/download', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const batchId = parseInt(req.params.id);
+
+      const [batch] = await db.select()
+        .from(productionBatches)
+        .where(and(eq(productionBatches.id, batchId), eq(productionBatches.userId, userId)));
+
+      if (!batch) {
+        return res.status(404).json({ message: "Production batch not found" });
+      }
+
+      const items = await db.select()
+        .from(batchItems)
+        .where(and(
+          eq(batchItems.batchId, batchId),
+          eq(batchItems.status, 'completed')
+        ));
+
+      const downloads = items
+        .filter((item: any) => item.outputUrl)
+        .map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          outputType: item.outputType,
+          outputUrl: item.outputUrl,
+        }));
+
+      res.json({
+        batchId,
+        batchTitle: batch.title,
+        totalItems: items.length,
+        downloads,
+      });
+    } catch (error: any) {
+      console.error("Error preparing batch download:", error);
+      res.status(500).json({ message: error.message || "Failed to prepare batch download" });
+    }
+  });
+
+  // ============================================================================
+  // LIFE STORY ENGINE API
+  // ============================================================================
+
+  // GET /api/life-story - Get user's life stories
+  app.get('/api/life-story', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const stories = await db.select()
+        .from(lifeStories)
+        .where(eq(lifeStories.userId, userId))
+        .orderBy(desc(lifeStories.updatedAt));
+      res.json(stories);
+    } catch (error: any) {
+      console.error("Error fetching life stories:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch life stories" });
+    }
+  });
+
+  // POST /api/life-story - Create new life story
+  app.post('/api/life-story', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validatedData = insertLifeStorySchema.parse({ ...req.body, userId });
+      const [story] = await db.insert(lifeStories).values(validatedData).returning();
+      res.status(201).json(story);
+    } catch (error: any) {
+      console.error("Error creating life story:", error);
+      res.status(500).json({ message: error.message || "Failed to create life story" });
+    }
+  });
+
+  // GET /api/life-story/:id - Get specific story
+  app.get('/api/life-story/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const storyId = parseInt(req.params.id);
+      const [story] = await db.select()
+        .from(lifeStories)
+        .where(and(eq(lifeStories.id, storyId), eq(lifeStories.userId, userId)));
+      if (!story) {
+        return res.status(404).json({ message: "Life story not found" });
+      }
+      res.json(story);
+    } catch (error: any) {
+      console.error("Error fetching life story:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch life story" });
+    }
+  });
+
+  // PATCH /api/life-story/:id - Update story
+  app.patch('/api/life-story/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const storyId = parseInt(req.params.id);
+      const [existing] = await db.select()
+        .from(lifeStories)
+        .where(and(eq(lifeStories.id, storyId), eq(lifeStories.userId, userId)));
+      if (!existing) {
+        return res.status(404).json({ message: "Life story not found" });
+      }
+      const [updated] = await db.update(lifeStories)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(and(eq(lifeStories.id, storyId), eq(lifeStories.userId, userId)))
+        .returning();
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating life story:", error);
+      res.status(500).json({ message: error.message || "Failed to update life story" });
+    }
+  });
+
+  // POST /api/life-story/:id/milestones - Add milestone
+  app.post('/api/life-story/:id/milestones', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const storyId = parseInt(req.params.id);
+      const { milestone } = req.body;
+      if (!milestone) {
+        return res.status(400).json({ message: "Milestone data is required" });
+      }
+      const [existing] = await db.select()
+        .from(lifeStories)
+        .where(and(eq(lifeStories.id, storyId), eq(lifeStories.userId, userId)));
+      if (!existing) {
+        return res.status(404).json({ message: "Life story not found" });
+      }
+      const currentMilestones = (existing.milestones as any[]) || [];
+      const updatedMilestones = [...currentMilestones, { ...milestone, id: Date.now() }];
+      const [updated] = await db.update(lifeStories)
+        .set({ milestones: updatedMilestones, updatedAt: new Date() })
+        .where(and(eq(lifeStories.id, storyId), eq(lifeStories.userId, userId)))
+        .returning();
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error adding milestone:", error);
+      res.status(500).json({ message: error.message || "Failed to add milestone" });
+    }
+  });
+
+  // POST /api/life-story/:id/generate-chapter - AI generate chapter
+  app.post('/api/life-story/:id/generate-chapter', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const storyId = parseInt(req.params.id);
+      const { chapterTitle, chapterContext } = req.body;
+      const [story] = await db.select()
+        .from(lifeStories)
+        .where(and(eq(lifeStories.id, storyId), eq(lifeStories.userId, userId)));
+      if (!story) {
+        return res.status(404).json({ message: "Life story not found" });
+      }
+      const prompt = `You are helping write a life story memoir. Generate a compelling chapter based on:
+Title: ${story.title}
+Themes: ${(story.themes || []).join(', ')}
+Chapter Title: ${chapterTitle || 'Untitled Chapter'}
+Context: ${chapterContext || 'A meaningful chapter of this life story'}
+Milestones: ${JSON.stringify(story.milestones || [])}
+
+Write an engaging, emotionally resonant chapter of about 1000 words that captures the essence of this person's journey.`;
+      const result = await generateCoachResponse(prompt, [], 'creative_writing');
+      const generatedContent = result.response;
+      const currentChapters = (story.chapters as any[]) || [];
+      const newChapter = { id: Date.now(), title: chapterTitle || 'Untitled Chapter', content: generatedContent };
+      const [updated] = await db.update(lifeStories)
+        .set({ chapters: [...currentChapters, newChapter], updatedAt: new Date() })
+        .where(and(eq(lifeStories.id, storyId), eq(lifeStories.userId, userId)))
+        .returning();
+      res.json({ chapter: newChapter, story: updated });
+    } catch (error: any) {
+      console.error("Error generating chapter:", error);
+      res.status(500).json({ message: error.message || "Failed to generate chapter" });
+    }
+  });
+
+  // ============================================================================
+  // SCREENPLAY STUDIO API
+  // ============================================================================
+
+  // GET /api/screenplay - List projects
+  app.get('/api/screenplay', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const projects = await db.select()
+        .from(screenplayProjects)
+        .where(eq(screenplayProjects.userId, userId))
+        .orderBy(desc(screenplayProjects.updatedAt));
+      res.json(projects);
+    } catch (error: any) {
+      console.error("Error fetching screenplay projects:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch screenplay projects" });
+    }
+  });
+
+  // POST /api/screenplay - Create project
+  app.post('/api/screenplay', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validatedData = insertScreenplayProjectSchema.parse({ ...req.body, userId });
+      const [project] = await db.insert(screenplayProjects).values(validatedData).returning();
+      res.status(201).json(project);
+    } catch (error: any) {
+      console.error("Error creating screenplay project:", error);
+      res.status(500).json({ message: error.message || "Failed to create screenplay project" });
+    }
+  });
+
+  // GET /api/screenplay/:id - Get project
+  app.get('/api/screenplay/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const projectId = parseInt(req.params.id);
+      const [project] = await db.select()
+        .from(screenplayProjects)
+        .where(and(eq(screenplayProjects.id, projectId), eq(screenplayProjects.userId, userId)));
+      if (!project) {
+        return res.status(404).json({ message: "Screenplay project not found" });
+      }
+      res.json(project);
+    } catch (error: any) {
+      console.error("Error fetching screenplay project:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch screenplay project" });
+    }
+  });
+
+  // PATCH /api/screenplay/:id - Update project
+  app.patch('/api/screenplay/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const projectId = parseInt(req.params.id);
+      const [existing] = await db.select()
+        .from(screenplayProjects)
+        .where(and(eq(screenplayProjects.id, projectId), eq(screenplayProjects.userId, userId)));
+      if (!existing) {
+        return res.status(404).json({ message: "Screenplay project not found" });
+      }
+      const [updated] = await db.update(screenplayProjects)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(and(eq(screenplayProjects.id, projectId), eq(screenplayProjects.userId, userId)))
+        .returning();
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating screenplay project:", error);
+      res.status(500).json({ message: error.message || "Failed to update screenplay project" });
+    }
+  });
+
+  // POST /api/screenplay/:id/generate-logline - AI logline
+  app.post('/api/screenplay/:id/generate-logline', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const projectId = parseInt(req.params.id);
+      const [project] = await db.select()
+        .from(screenplayProjects)
+        .where(and(eq(screenplayProjects.id, projectId), eq(screenplayProjects.userId, userId)));
+      if (!project) {
+        return res.status(404).json({ message: "Screenplay project not found" });
+      }
+      const { premise } = req.body;
+      const prompt = `You are a Hollywood screenwriting expert. Generate a compelling logline for a ${project.format || 'feature'} ${project.genre || 'drama'}.
+Title: ${project.title}
+Premise: ${premise || 'An original story'}
+
+Create a single-sentence logline (25-40 words) that captures the protagonist, conflict, and stakes. Make it intriguing and marketable.`;
+      const loglineResult = await generateCoachResponse(prompt, [], 'screenplay');
+      const logline = loglineResult.response;
+      const [updated] = await db.update(screenplayProjects)
+        .set({ logline, updatedAt: new Date() })
+        .where(and(eq(screenplayProjects.id, projectId), eq(screenplayProjects.userId, userId)))
+        .returning();
+      res.json({ logline, project: updated });
+    } catch (error: any) {
+      console.error("Error generating logline:", error);
+      res.status(500).json({ message: error.message || "Failed to generate logline" });
+    }
+  });
+
+  // POST /api/screenplay/:id/generate-beats - AI beat sheet
+  app.post('/api/screenplay/:id/generate-beats', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const projectId = parseInt(req.params.id);
+      const [project] = await db.select()
+        .from(screenplayProjects)
+        .where(and(eq(screenplayProjects.id, projectId), eq(screenplayProjects.userId, userId)));
+      if (!project) {
+        return res.status(404).json({ message: "Screenplay project not found" });
+      }
+      const prompt = `You are a Hollywood screenwriting expert. Create a beat sheet for this ${project.format || 'feature'} screenplay.
+Title: ${project.title}
+Genre: ${project.genre || 'drama'}
+Logline: ${project.logline || 'Not yet defined'}
+
+Generate a structured beat sheet with the following beats (return as JSON array):
+1. Opening Image
+2. Theme Stated
+3. Setup
+4. Catalyst
+5. Debate
+6. Break into Two
+7. B Story
+8. Fun and Games
+9. Midpoint
+10. Bad Guys Close In
+11. All Is Lost
+12. Dark Night of the Soul
+13. Break into Three
+14. Finale
+15. Final Image
+
+For each beat, provide: {"beat": "name", "description": "what happens", "timing": "page range"}`;
+      const beatsResult = await generateCoachResponse(prompt, [], 'screenplay');
+      const beatsContent = beatsResult.response;
+      let beats;
+      try {
+        const jsonMatch = beatsContent.match(/\[[\s\S]*\]/);
+        beats = jsonMatch ? JSON.parse(jsonMatch[0]) : [{ beat: "Generated", description: beatsContent }];
+      } catch {
+        beats = [{ beat: "Story Beats", description: beatsContent }];
+      }
+      const [updated] = await db.update(screenplayProjects)
+        .set({ beats, updatedAt: new Date() })
+        .where(and(eq(screenplayProjects.id, projectId), eq(screenplayProjects.userId, userId)))
+        .returning();
+      res.json({ beats, project: updated });
+    } catch (error: any) {
+      console.error("Error generating beats:", error);
+      res.status(500).json({ message: error.message || "Failed to generate beats" });
+    }
+  });
+
+  // POST /api/screenplay/:id/generate-dialogue - AI dialogue
+  app.post('/api/screenplay/:id/generate-dialogue', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const projectId = parseInt(req.params.id);
+      const { sceneDescription, characters: sceneCharacters } = req.body;
+      const [project] = await db.select()
+        .from(screenplayProjects)
+        .where(and(eq(screenplayProjects.id, projectId), eq(screenplayProjects.userId, userId)));
+      if (!project) {
+        return res.status(404).json({ message: "Screenplay project not found" });
+      }
+      const prompt = `You are a Hollywood screenwriting expert. Write dialogue for this scene in proper screenplay format.
+Title: ${project.title}
+Genre: ${project.genre || 'drama'}
+Scene: ${sceneDescription || 'A pivotal moment in the story'}
+Characters: ${JSON.stringify(sceneCharacters || project.characters || [])}
+
+Write compelling, subtext-rich dialogue. Use proper screenplay format with character names in caps, parentheticals where needed, and natural speech patterns. Generate 1-2 pages of dialogue.`;
+      const dialogueResult = await generateCoachResponse(prompt, [], 'screenplay');
+      const dialogue = dialogueResult.response;
+      const currentDialogue = (project.dialogue as any[]) || [];
+      const newDialogueEntry = { id: Date.now(), scene: sceneDescription, content: dialogue };
+      const [updated] = await db.update(screenplayProjects)
+        .set({ dialogue: [...currentDialogue, newDialogueEntry], updatedAt: new Date() })
+        .where(and(eq(screenplayProjects.id, projectId), eq(screenplayProjects.userId, userId)))
+        .returning();
+      res.json({ dialogue: newDialogueEntry, project: updated });
+    } catch (error: any) {
+      console.error("Error generating dialogue:", error);
+      res.status(500).json({ message: error.message || "Failed to generate dialogue" });
+    }
+  });
+
+  // ============================================================================
+  // MUSIC SANDBOX API
+  // ============================================================================
+
+  // GET /api/music-sandbox - List projects
+  app.get('/api/music-sandbox', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const projects = await db.select()
+        .from(musicSandboxProjects)
+        .where(eq(musicSandboxProjects.userId, userId))
+        .orderBy(desc(musicSandboxProjects.updatedAt));
+      res.json(projects);
+    } catch (error: any) {
+      console.error("Error fetching music sandbox projects:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch music sandbox projects" });
+    }
+  });
+
+  // POST /api/music-sandbox - Create project
+  app.post('/api/music-sandbox', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validatedData = insertMusicSandboxProjectSchema.parse({ ...req.body, userId });
+      const [project] = await db.insert(musicSandboxProjects).values(validatedData).returning();
+      res.status(201).json(project);
+    } catch (error: any) {
+      console.error("Error creating music sandbox project:", error);
+      res.status(500).json({ message: error.message || "Failed to create music sandbox project" });
+    }
+  });
+
+  // GET /api/music-sandbox/:id - Get project
+  app.get('/api/music-sandbox/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const projectId = parseInt(req.params.id);
+      const [project] = await db.select()
+        .from(musicSandboxProjects)
+        .where(and(eq(musicSandboxProjects.id, projectId), eq(musicSandboxProjects.userId, userId)));
+      if (!project) {
+        return res.status(404).json({ message: "Music sandbox project not found" });
+      }
+      res.json(project);
+    } catch (error: any) {
+      console.error("Error fetching music sandbox project:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch music sandbox project" });
+    }
+  });
+
+  // PATCH /api/music-sandbox/:id - Update project
+  app.patch('/api/music-sandbox/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const projectId = parseInt(req.params.id);
+      const [existing] = await db.select()
+        .from(musicSandboxProjects)
+        .where(and(eq(musicSandboxProjects.id, projectId), eq(musicSandboxProjects.userId, userId)));
+      if (!existing) {
+        return res.status(404).json({ message: "Music sandbox project not found" });
+      }
+      const [updated] = await db.update(musicSandboxProjects)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(and(eq(musicSandboxProjects.id, projectId), eq(musicSandboxProjects.userId, userId)))
+        .returning();
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating music sandbox project:", error);
+      res.status(500).json({ message: error.message || "Failed to update music sandbox project" });
+    }
+  });
+
+  // POST /api/music-sandbox/generate-beat - AI beat generator
+  app.post('/api/music-sandbox/generate-beat', isAuthenticated, async (req: any, res) => {
+    try {
+      const { genre, tempo, mood, style } = req.body;
+      const prompt = `You are a professional music producer. Generate a detailed beat pattern description for:
+Genre: ${genre || 'hip-hop'}
+Tempo: ${tempo || 90} BPM
+Mood: ${mood || 'energetic'}
+Style: ${style || 'modern'}
+
+Provide a detailed beat pattern specification including:
+1. Drum pattern (kick, snare, hi-hat patterns in musical notation or step sequencer format)
+2. Suggested bass line pattern
+3. Recommended instruments/sounds
+4. Structure suggestions (intro, verse, chorus patterns)
+5. Production tips for achieving the desired sound
+
+Format the response as JSON with these sections.`;
+      const beatResult = await generateCoachResponse(prompt, [], 'music_production');
+      const beatDescription = beatResult.response;
+      let beatPattern;
+      try {
+        const jsonMatch = beatDescription.match(/\{[\s\S]*\}/);
+        beatPattern = jsonMatch ? JSON.parse(jsonMatch[0]) : { description: beatDescription };
+      } catch {
+        beatPattern = { description: beatDescription };
+      }
+      res.json({ beat: beatPattern, rawDescription: beatDescription });
+    } catch (error: any) {
+      console.error("Error generating beat:", error);
+      res.status(500).json({ message: error.message || "Failed to generate beat" });
+    }
+  });
+
+  // POST /api/music-sandbox/generate-melody - AI melody
+  app.post('/api/music-sandbox/generate-melody', isAuthenticated, async (req: any, res) => {
+    try {
+      const { key, scale, mood, genre, measures } = req.body;
+      const prompt = `You are a professional composer. Generate a melody for:
+Key: ${key || 'C'}
+Scale: ${scale || 'major'}
+Mood: ${mood || 'uplifting'}
+Genre: ${genre || 'pop'}
+Length: ${measures || 8} measures
+
+Provide the melody in multiple formats:
+1. Note sequence (e.g., C4, D4, E4, etc. with durations)
+2. MIDI-compatible format (note, velocity, duration in beats)
+3. Sheet music notation description
+4. Chord suggestions that complement the melody
+5. Arrangement ideas
+
+Format the response as structured JSON.`;
+      const melodyResult = await generateCoachResponse(prompt, [], 'music_production');
+      const melodyDescription = melodyResult.response;
+      let melody;
+      try {
+        const jsonMatch = melodyDescription.match(/\{[\s\S]*\}/);
+        melody = jsonMatch ? JSON.parse(jsonMatch[0]) : { description: melodyDescription };
+      } catch {
+        melody = { description: melodyDescription };
+      }
+      res.json({ melody, rawDescription: melodyDescription });
+    } catch (error: any) {
+      console.error("Error generating melody:", error);
+      res.status(500).json({ message: error.message || "Failed to generate melody" });
+    }
+  });
+
+  // POST /api/music-sandbox/lyrics-to-music - Convert lyrics
+  app.post('/api/music-sandbox/lyrics-to-music', isAuthenticated, async (req: any, res) => {
+    try {
+      const { lyrics, genre, mood, tempo } = req.body;
+      if (!lyrics) {
+        return res.status(400).json({ message: "Lyrics are required" });
+      }
+      const prompt = `You are a professional songwriter and composer. Convert these lyrics into a complete song structure:
+
+LYRICS:
+${lyrics}
+
+PREFERENCES:
+Genre: ${genre || 'pop'}
+Mood: ${mood || 'emotional'}
+Tempo: ${tempo || 'medium'}
+
+Provide a comprehensive song structure including:
+1. Song structure (verse/chorus/bridge breakdown)
+2. Chord progressions for each section
+3. Suggested key and scale
+4. Melody contour suggestions for each section
+5. Rhythm and groove recommendations
+6. Instrumental arrangement ideas
+7. Production notes
+8. Suggested tempo in BPM
+
+Format as structured JSON with clear sections.`;
+      const songResult = await generateCoachResponse(prompt, [], 'music_production');
+      const songStructure = songResult.response;
+      let musicPlan;
+      try {
+        const jsonMatch = songStructure.match(/\{[\s\S]*\}/);
+        musicPlan = jsonMatch ? JSON.parse(jsonMatch[0]) : { description: songStructure };
+      } catch {
+        musicPlan = { description: songStructure };
+      }
+      res.json({ musicPlan, rawDescription: songStructure, originalLyrics: lyrics });
+    } catch (error: any) {
+      console.error("Error converting lyrics to music:", error);
+      res.status(500).json({ message: error.message || "Failed to convert lyrics to music" });
     }
   });
 
