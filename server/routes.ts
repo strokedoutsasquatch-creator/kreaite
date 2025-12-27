@@ -1957,9 +1957,8 @@ Extract any NEW information in JSON format:
 Only include genuinely new information. Return empty arrays if nothing new was learned.`;
 
       try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-        const result = await model.generateContent(extractionPrompt);
-        const responseText = result.response?.text() || '{}';
+        const result = await generateCoachResponse(extractionPrompt, []);
+        const responseText = result.response || '{}';
         
         // Parse the JSON response (handle markdown code blocks)
         let extracted: any = {};
@@ -1972,14 +1971,15 @@ Only include genuinely new information. Return empty arrays if nothing new was l
           return res.json({ success: true, updated: false });
         }
 
-        // Merge new knowledge with existing
+        // Merge new knowledge with existing (using Array.from for Set compatibility)
+        const mergeUnique = (arr1: any[], arr2: any[]) => Array.from(new Set([...arr1, ...arr2]));
         const updatedKnowledge = {
-          characters: [...new Set([...existingKnowledge.characters, ...(extracted.newCharacters || [])])].slice(-50),
-          plotPoints: [...new Set([...existingKnowledge.plotPoints, ...(extracted.newPlotPoints || [])])].slice(-30),
-          themes: [...new Set([...existingKnowledge.themes, ...(extracted.newThemes || [])])].slice(-20),
-          issues: [...new Set([...existingKnowledge.issues, ...(extracted.newIssues || [])])].slice(-20),
-          goals: [...new Set([...existingKnowledge.goals, ...(extracted.newGoals || [])])].slice(-15),
-          keyFacts: [...new Set([...existingKnowledge.keyFacts, ...(extracted.newKeyFacts || [])])].slice(-30)
+          characters: mergeUnique(existingKnowledge.characters, extracted.newCharacters || []).slice(-50),
+          plotPoints: mergeUnique(existingKnowledge.plotPoints, extracted.newPlotPoints || []).slice(-30),
+          themes: mergeUnique(existingKnowledge.themes, extracted.newThemes || []).slice(-20),
+          issues: mergeUnique(existingKnowledge.issues, extracted.newIssues || []).slice(-20),
+          goals: mergeUnique(existingKnowledge.goals, extracted.newGoals || []).slice(-15),
+          keyFacts: mergeUnique(existingKnowledge.keyFacts, extracted.newKeyFacts || []).slice(-30)
         };
 
         // Update conversation summary (rolling window)
