@@ -7,6 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
@@ -105,11 +110,34 @@ interface ChatMessage {
   timestamp: Date;
 }
 
+interface ImageAnalysis {
+  description: string;
+  altText: string;
+  caption: string;
+  placement: {
+    recommendation: string;
+    suggestedChapter: string;
+    position: string;
+  };
+  style: {
+    description: string;
+    isConsistent: boolean;
+    notes: string;
+  };
+  printReadiness: {
+    score: number;
+    issues: string[];
+    suggestions: string[];
+  };
+}
+
 interface GeneratedImage {
   id: string;
   url: string;
   prompt: string;
   hasBackground: boolean;
+  analysis?: ImageAnalysis;
+  isAnalyzing?: boolean;
 }
 
 interface Source {
@@ -1195,6 +1223,49 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
     setGeneratedImages(prev => prev.filter(img => img.id !== imageId));
   };
 
+  const handleAnalyzeImage = async (imageId: string, imageUrl: string) => {
+    // Set analyzing state
+    setGeneratedImages(prev => prev.map(img => 
+      img.id === imageId ? { ...img, isAnalyzing: true } : img
+    ));
+
+    try {
+      // Convert blob URL to base64 if it's a local file
+      let imageBase64 = undefined;
+      if (imageUrl.startsWith('blob:')) {
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        imageBase64 = await new Promise<string>((resolve) => {
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
+      }
+
+      const res = await apiRequest('POST', '/api/ai/analyze-image', {
+        imageUrl: imageUrl.startsWith('blob:') ? undefined : imageUrl,
+        imageBase64,
+        bookContext: "Professional book publication",
+        chapterTitles: ["Introduction", "Chapter 1", "Chapter 2", "Chapter 3", "Conclusion"],
+      });
+      const data = await res.json();
+
+      if (data.analysis) {
+        setGeneratedImages(prev => prev.map(img => 
+          img.id === imageId 
+            ? { ...img, analysis: data.analysis, isAnalyzing: false }
+            : img
+        ));
+        toast({ title: "Analysis Complete", description: "AI recommendations ready" });
+      }
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to analyze image", variant: "destructive" });
+      setGeneratedImages(prev => prev.map(img => 
+        img.id === imageId ? { ...img, isAnalyzing: false } : img
+      ));
+    }
+  };
+
   return (
     <div className="h-full flex flex-col bg-zinc-800">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
@@ -1262,228 +1333,241 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
           </div>
         </div>
 
-        <TabsContent value="ai" className="flex-1 flex flex-col m-0 overflow-auto bg-zinc-300">
-          <ScrollArea className="flex-1 p-3">
-            <div className="space-y-4">
-              {chatMessages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  {msg.role === 'assistant' && (
-                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                      <Bot className="w-3 h-3 text-primary" />
-                    </div>
-                  )}
-                  <div className="flex flex-col gap-1 max-w-[85%]">
+        <TabsContent value="ai" className="flex-1 flex flex-col m-0 overflow-hidden bg-zinc-300">
+          <ResizablePanelGroup direction="vertical" className="flex-1">
+            <ResizablePanel defaultSize={75} minSize={40} maxSize={90}>
+              <ScrollArea className="h-full p-3">
+                <div className="space-y-4">
+                  {chatMessages.map((msg) => (
                     <div
-                      className={`rounded-lg px-3 py-2 text-sm ${
-                        msg.role === 'user'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted'
-                      }`}
+                      key={msg.id}
+                      className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
-                      {msg.content}
+                      {msg.role === 'assistant' && (
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <Bot className="w-3 h-3 text-primary" />
+                        </div>
+                      )}
+                      <div className="flex flex-col gap-1 max-w-[85%]">
+                        <div
+                          className={`rounded-lg px-3 py-2 text-sm ${
+                            msg.role === 'user'
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted'
+                          }`}
+                        >
+                          {msg.content}
+                        </div>
+                        {msg.role === 'assistant' && msg.id !== 'welcome' && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="self-start h-6 px-2 text-xs gap-1"
+                            onClick={() => {
+                              handleInsertContent(`<p>${msg.content}</p>`);
+                            }}
+                            data-testid={`button-insert-ai-response-${msg.id}`}
+                          >
+                            <Plus className="w-3 h-3" />
+                            Insert into Editor
+                          </Button>
+                        )}
+                      </div>
+                      {msg.role === 'user' && (
+                        <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0">
+                          <User className="w-3 h-3" />
+                        </div>
+                      )}
                     </div>
-                    {msg.role === 'assistant' && msg.id !== 'welcome' && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="self-start h-6 px-2 text-xs gap-1"
-                        onClick={() => {
-                          handleInsertContent(`<p>${msg.content}</p>`);
-                        }}
-                        data-testid={`button-insert-ai-response-${msg.id}`}
-                      >
-                        <Plus className="w-3 h-3" />
-                        Insert into Editor
-                      </Button>
-                    )}
-                  </div>
-                  {msg.role === 'user' && (
-                    <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0">
-                      <User className="w-3 h-3" />
+                  ))}
+                  {isChatLoading && (
+                    <div className="flex gap-2">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Loader2 className="w-3 h-3 text-primary animate-spin" />
+                      </div>
+                      <div className="bg-muted rounded-lg px-3 py-2 text-sm">
+                        Thinking...
+                      </div>
                     </div>
                   )}
                 </div>
-              ))}
-              {isChatLoading && (
+              </ScrollArea>
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={25} minSize={10} maxSize={60}>
+              <div className="h-full p-3 border-t overflow-y-auto">
                 <div className="flex gap-2">
-                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Loader2 className="w-3 h-3 text-primary animate-spin" />
-                  </div>
-                  <div className="bg-muted rounded-lg px-3 py-2 text-sm">
-                    Thinking...
-                  </div>
+                  <Input
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
+                    placeholder="Ask anything..."
+                    className="flex-1"
+                    data-testid="input-ai-chat"
+                  />
+                  <Button 
+                    size="icon" 
+                    onClick={handleSendMessage} 
+                    disabled={isChatLoading}
+                    data-testid="button-send-chat"
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
                 </div>
-              )}
-            </div>
-          </ScrollArea>
-          <div className="p-3 border-t shrink-0">
-            <div className="flex gap-2">
-              <Input
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-                placeholder="Ask anything..."
-                className="flex-1"
-                data-testid="input-ai-chat"
-              />
-              <Button 
-                size="icon" 
-                onClick={handleSendMessage} 
-                disabled={isChatLoading}
-                data-testid="button-send-chat"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
         </TabsContent>
 
-        <TabsContent value="import" className="flex-1 flex flex-col m-0 overflow-auto bg-zinc-300">
-          <ScrollArea className="flex-1 p-3">
-            <div className="space-y-4">
-              <Card className="bg-zinc-600 border-zinc-400">
-                <CardHeader className="py-3 gap-1">
-                  <CardTitle className="text-sm flex items-center gap-2 text-white">
-                    <FileUp className="w-4 h-4" />
-                    Import Document
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <p className="text-xs text-muted-foreground">
-                    Import content from Word documents, PDFs, text files, or Markdown files directly into your manuscript.
-                  </p>
-                  
-                  <div className="border-2 border-dashed rounded-lg p-4 text-center">
-                    <input
-                      type="file"
-                      accept=".docx,.pdf,.txt,.md"
-                      className="hidden"
-                      id="document-import-input"
-                      data-testid="input-document-import"
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        
-                        setIsImporting(true);
-                        setImportedFile({ name: file.name, size: file.size });
-                        
-                        try {
-                          const reader = new FileReader();
-                          reader.onload = async () => {
-                            try {
-                              const base64 = (reader.result as string).split(',')[1];
-                              const res = await apiRequest('POST', '/api/documents/parse', {
-                                content: base64,
-                                filename: file.name,
-                                mimeType: file.type,
-                              });
-                              const data = await res.json();
-                              
-                              if (data.success && data.content) {
-                                const htmlContent = data.content
-                                  .split('\n\n')
-                                  .map((p: string) => `<p>${p.trim()}</p>`)
-                                  .join('\n');
-                                
-                                if (onInsertContent) {
-                                  onInsertContent(htmlContent);
-                                }
-                                
-                                toast({
-                                  title: "Document Imported",
-                                  description: `Imported ${data.metadata?.wordCount || 0} words from ${file.name}`,
-                                });
-                              } else {
-                                throw new Error(data.message || 'Failed to parse document');
-                              }
-                            } catch (error) {
-                              toast({
-                                title: "Import Failed",
-                                description: error instanceof Error ? error.message : "Could not parse document",
-                                variant: "destructive",
-                              });
-                            } finally {
-                              setIsImporting(false);
-                              setImportedFile(null);
-                            }
-                          };
-                          reader.readAsDataURL(file);
-                        } catch (error) {
-                          toast({
-                            title: "Import Failed",
-                            description: "Could not read file",
-                            variant: "destructive",
-                          });
-                          setIsImporting(false);
-                          setImportedFile(null);
-                        }
-                        
-                        e.target.value = '';
-                      }}
-                    />
+        <TabsContent value="import" className="flex-1 flex flex-col m-0 overflow-hidden bg-zinc-300">
+          <ResizablePanelGroup direction="vertical" className="flex-1">
+            <ResizablePanel defaultSize={65} minSize={30} maxSize={85}>
+              <div className="h-full p-3 overflow-y-auto">
+                <Card className="bg-zinc-600 border-zinc-400">
+                  <CardHeader className="py-3 gap-1">
+                    <CardTitle className="text-sm flex items-center gap-2 text-white">
+                      <FileUp className="w-4 h-4" />
+                      Import Document
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <p className="text-xs text-muted-foreground">
+                      Import content from Word documents, PDFs, text files, or Markdown files directly into your manuscript.
+                    </p>
                     
-                    {isImporting ? (
-                      <div className="space-y-2">
-                        <Loader2 className="w-8 h-8 mx-auto text-primary animate-spin" />
-                        <p className="text-sm text-muted-foreground">Parsing {importedFile?.name}...</p>
+                    <div className="border-2 border-dashed rounded-lg p-4 text-center">
+                      <input
+                        type="file"
+                        accept=".docx,.pdf,.txt,.md"
+                        className="hidden"
+                        id="document-import-input"
+                        data-testid="input-document-import"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          
+                          setIsImporting(true);
+                          setImportedFile({ name: file.name, size: file.size });
+                          
+                          try {
+                            const reader = new FileReader();
+                            reader.onload = async () => {
+                              try {
+                                const base64 = (reader.result as string).split(',')[1];
+                                const res = await apiRequest('POST', '/api/documents/parse', {
+                                  content: base64,
+                                  filename: file.name,
+                                  mimeType: file.type,
+                                });
+                                const data = await res.json();
+                                
+                                if (data.success && data.content) {
+                                  const htmlContent = data.content
+                                    .split('\n\n')
+                                    .map((p: string) => `<p>${p.trim()}</p>`)
+                                    .join('\n');
+                                  
+                                  if (onInsertContent) {
+                                    onInsertContent(htmlContent);
+                                  }
+                                  
+                                  toast({
+                                    title: "Document Imported",
+                                    description: `Imported ${data.metadata?.wordCount || 0} words from ${file.name}`,
+                                  });
+                                } else {
+                                  throw new Error(data.message || 'Failed to parse document');
+                                }
+                              } catch (error) {
+                                toast({
+                                  title: "Import Failed",
+                                  description: error instanceof Error ? error.message : "Could not parse document",
+                                  variant: "destructive",
+                                });
+                              } finally {
+                                setIsImporting(false);
+                                setImportedFile(null);
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          } catch (error) {
+                            toast({
+                              title: "Import Failed",
+                              description: "Could not read file",
+                              variant: "destructive",
+                            });
+                            setIsImporting(false);
+                            setImportedFile(null);
+                          }
+                          
+                          e.target.value = '';
+                        }}
+                      />
+                      
+                      {isImporting ? (
+                        <div className="space-y-2">
+                          <Loader2 className="w-8 h-8 mx-auto text-primary animate-spin" />
+                          <p className="text-sm text-muted-foreground">Parsing {importedFile?.name}...</p>
+                        </div>
+                      ) : (
+                        <label htmlFor="document-import-input" className="cursor-pointer block">
+                          <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                          <p className="text-sm font-medium">Click to upload</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            .docx, .pdf, .txt, .md
+                          </p>
+                        </label>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={35} minSize={15} maxSize={70}>
+              <div className="h-full p-3 overflow-y-auto">
+                <Card className="bg-zinc-600 border-zinc-400">
+                  <CardHeader className="py-3 gap-1">
+                    <CardTitle className="text-sm flex items-center gap-2 text-white">
+                      <File className="w-4 h-4" />
+                      Supported Formats
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 text-xs text-zinc-300">
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <Badge variant="secondary">.docx</Badge>
+                          Microsoft Word
+                        </span>
                       </div>
-                    ) : (
-                      <label htmlFor="document-import-input" className="cursor-pointer block">
-                        <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                        <p className="text-sm font-medium">Click to upload</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          .docx, .pdf, .txt, .md
-                        </p>
-                      </label>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card className="bg-zinc-600 border-zinc-400">
-                <CardHeader className="py-3 gap-1">
-                  <CardTitle className="text-sm flex items-center gap-2 text-white">
-                    <File className="w-4 h-4" />
-                    Supported Formats
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-xs text-zinc-300">
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-2">
-                        <Badge variant="secondary">.docx</Badge>
-                        Microsoft Word
-                      </span>
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <Badge variant="secondary">.pdf</Badge>
+                          PDF Documents
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <Badge variant="secondary">.txt</Badge>
+                          Plain Text
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <Badge variant="secondary">.md</Badge>
+                          Markdown
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-2">
-                        <Badge variant="secondary">.pdf</Badge>
-                        PDF Documents
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-2">
-                        <Badge variant="secondary">.txt</Badge>
-                        Plain Text
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-2">
-                        <Badge variant="secondary">.md</Badge>
-                        Markdown
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </ScrollArea>
+                  </CardContent>
+                </Card>
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
         </TabsContent>
 
-        <TabsContent value="content" className="flex-1 flex flex-col m-0 overflow-auto bg-zinc-300">
+        <TabsContent value="content" className="flex-1 m-0 overflow-y-auto bg-zinc-300">
           <ScrollArea className="flex-1 p-3">
             <Accordion type="multiple" defaultValue={["callouts", "charts", "lists", "book-elements"]} className="space-y-2">
               <AccordionItem value="callouts" className="border rounded-lg px-3">
@@ -1924,139 +2008,310 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
           </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="images" className="flex-1 m-0 overflow-y-auto bg-zinc-300 p-4">
-          <div className="space-y-4">
-            <div className="bg-white rounded-lg border-2 border-zinc-400 shadow-lg overflow-hidden">
-              <div className="py-3 px-4 bg-zinc-700">
-                <h3 className="text-base font-bold flex items-center gap-2 text-white">
-                  <Wand2 className="w-5 h-5 text-orange-400" />
-                  Generate Image
-                </h3>
-              </div>
-              <div className="p-4 space-y-4 bg-white">
-                <Textarea
-                  value={imagePrompt}
-                  onChange={(e) => setImagePrompt(e.target.value)}
-                  placeholder="Describe the image you want to create..."
-                  className="min-h-[120px] bg-zinc-100 border-2 border-zinc-400 text-black placeholder:text-zinc-500 text-base"
-                  data-testid="textarea-image-prompt"
-                />
-                <Button
-                  onClick={handleGenerateImage}
-                  disabled={isGeneratingImage || !imagePrompt.trim()}
-                  className="w-full"
-                  data-testid="button-generate-image"
-                >
-                  {isGeneratingImage ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Wand2 className="w-4 h-4 mr-2" />
-                  )}
-                  Generate
-                </Button>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg border-2 border-zinc-400 shadow-lg overflow-hidden">
-              <div className="py-3 px-4 bg-zinc-700">
-                <h3 className="text-base font-bold flex items-center gap-2 text-white">
-                  <Move className="w-4 h-4 text-orange-400" />
-                  Image Placement
-                </h3>
-              </div>
-              <div className="p-4 space-y-3 bg-white">
-                <div className="grid grid-cols-3 gap-2">
-                  <Button
-                    variant={imagePlacementMode === "auto" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setImagePlacementMode("auto")}
-                    className="text-xs"
-                    data-testid="button-placement-auto"
-                  >
-                    <Grid3X3 className="w-3 h-3 mr-1" />
-                    Auto
-                  </Button>
-                  <Button
-                    variant={imagePlacementMode === "hybrid" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setImagePlacementMode("hybrid")}
-                    className="text-xs"
-                    data-testid="button-placement-hybrid"
-                  >
-                    <Layers className="w-3 h-3 mr-1" />
-                    Hybrid
-                  </Button>
-                  <Button
-                    variant={imagePlacementMode === "manual" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setImagePlacementMode("manual")}
-                    className="text-xs"
-                    data-testid="button-placement-manual"
-                  >
-                    <Move className="w-3 h-3 mr-1" />
-                    Manual
-                  </Button>
-                </div>
-                <p className="text-xs text-zinc-600">
-                  {imagePlacementMode === "auto" && "AI automatically places images at optimal positions"}
-                  {imagePlacementMode === "hybrid" && "AI suggests placements, you approve or adjust"}
-                  {imagePlacementMode === "manual" && "Full control over image positioning"}
-                </p>
-              </div>
-            </div>
-
-              {generatedImages.length > 0 && (
+        {/* Images Tab */}
+        <TabsContent value="images" className="flex-1 flex flex-col m-0 overflow-hidden bg-zinc-300">
+          <ResizablePanelGroup direction="vertical" className="flex-1">
+            <ResizablePanel defaultSize={55} minSize={30} maxSize={80}>
+              <div className="h-full p-3 overflow-y-auto">
                 <div className="space-y-3">
-                  <h4 className="text-sm font-medium">Generated Images</h4>
-                  {generatedImages.map((img) => (
-                    <Card key={img.id} className="overflow-hidden">
-                      <div className="relative aspect-square bg-muted">
-                        <img
-                          src={img.url}
-                          alt={img.prompt}
-                          className="w-full h-full object-cover"
-                        />
-                        {img.hasBackground && (
-                          <Badge className="absolute top-2 right-2" variant="secondary">
-                            Has BG
-                          </Badge>
-                        )}
-                      </div>
-                      <CardContent className="p-2 space-y-2">
-                        <p className="text-xs text-muted-foreground line-clamp-2">{img.prompt}</p>
-                        <div className="flex gap-1">
-                          {img.hasBackground && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleRemoveBackground(img.id, img.url)}
-                              disabled={isRemovingBg === img.id}
-                              className="flex-1 text-xs"
-                              data-testid={`button-remove-bg-${img.id}`}
-                            >
-                              {isRemovingBg === img.id ? (
-                                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                              ) : (
-                                <Scissors className="w-3 h-3 mr-1" />
-                              )}
-                              Remove BG
-                            </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteImage(img.id)}
-                            data-testid={`button-delete-image-${img.id}`}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
+                  {/* Upload Your Own */}
+                  <div className="bg-white rounded-lg border-2 border-zinc-400 shadow-lg overflow-hidden">
+                    <div className="py-2 px-4 bg-zinc-700">
+                      <h3 className="text-sm font-bold flex items-center gap-2 text-white">
+                        <Upload className="w-4 h-4 text-orange-400" />
+                        Upload Image
+                      </h3>
+                    </div>
+                    <div className="p-3 bg-white">
+                      <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-zinc-300 rounded-lg cursor-pointer hover:bg-zinc-50 transition-colors">
+                        <div className="flex flex-col items-center justify-center">
+                          <Upload className="w-6 h-6 text-zinc-400 mb-1" />
+                          <p className="text-xs text-zinc-500">Drop image or click to upload</p>
+                          <p className="text-xs text-zinc-400">PNG, JPG up to 10MB</p>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const url = URL.createObjectURL(file);
+                              const newImage: GeneratedImage = {
+                                id: Date.now().toString(),
+                                url,
+                                prompt: file.name,
+                                hasBackground: true,
+                              };
+                              setGeneratedImages(prev => [newImage, ...prev]);
+                              toast({ title: "Image Uploaded", description: file.name });
+                            }
+                          }}
+                          data-testid="input-upload-image"
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Generate with AI */}
+                  <div className="bg-white rounded-lg border-2 border-zinc-400 shadow-lg overflow-hidden">
+                    <div className="py-2 px-4 bg-zinc-700">
+                      <h3 className="text-sm font-bold flex items-center gap-2 text-white">
+                        <Wand2 className="w-4 h-4 text-orange-400" />
+                        Generate with AI
+                      </h3>
+                    </div>
+                    <div className="p-3 space-y-3 bg-white">
+                      <Textarea
+                        value={imagePrompt}
+                        onChange={(e) => setImagePrompt(e.target.value)}
+                        placeholder="Describe the image you want to create..."
+                        className="min-h-[80px] bg-zinc-100 border-2 border-zinc-400 text-black placeholder:text-zinc-500 text-sm"
+                        data-testid="textarea-image-prompt"
+                      />
+                      <Button
+                        onClick={handleGenerateImage}
+                        disabled={isGeneratingImage || !imagePrompt.trim()}
+                        className="w-full"
+                        size="sm"
+                        data-testid="button-generate-image"
+                      >
+                        {isGeneratingImage ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Wand2 className="w-4 h-4 mr-2" />
+                        )}
+                        Generate
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              )}
-          </div>
+              </div>
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={45} minSize={20} maxSize={70}>
+              <div className="h-full p-3 overflow-y-auto">
+                <div className="space-y-3">
+                  <div className="bg-white rounded-lg border-2 border-zinc-400 shadow-lg overflow-hidden">
+                    <div className="py-3 px-4 bg-zinc-700">
+                      <h3 className="text-base font-bold flex items-center gap-2 text-white">
+                        <Move className="w-4 h-4 text-orange-400" />
+                        Image Placement
+                      </h3>
+                    </div>
+                    <div className="p-4 space-y-3 bg-white">
+                      <div className="grid grid-cols-3 gap-2">
+                        <Button
+                          variant={imagePlacementMode === "auto" ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setImagePlacementMode("auto")}
+                          className="text-xs"
+                          data-testid="button-placement-auto"
+                        >
+                          <Grid3X3 className="w-3 h-3 mr-1" />
+                          Auto
+                        </Button>
+                        <Button
+                          variant={imagePlacementMode === "hybrid" ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setImagePlacementMode("hybrid")}
+                          className="text-xs"
+                          data-testid="button-placement-hybrid"
+                        >
+                          <Layers className="w-3 h-3 mr-1" />
+                          Hybrid
+                        </Button>
+                        <Button
+                          variant={imagePlacementMode === "manual" ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setImagePlacementMode("manual")}
+                          className="text-xs"
+                          data-testid="button-placement-manual"
+                        >
+                          <Move className="w-3 h-3 mr-1" />
+                          Manual
+                        </Button>
+                      </div>
+                      <p className="text-xs text-zinc-600">
+                        {imagePlacementMode === "auto" && "AI automatically places images at optimal positions"}
+                        {imagePlacementMode === "hybrid" && "AI suggests placements, you approve or adjust"}
+                        {imagePlacementMode === "manual" && "Full control over image positioning"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {generatedImages.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-medium text-zinc-700">Your Images</h4>
+                      {generatedImages.map((img) => (
+                        <Card key={img.id} className="overflow-hidden bg-white">
+                          <div className="relative aspect-video bg-muted">
+                            <img
+                              src={img.url}
+                              alt={img.analysis?.altText || img.prompt}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute top-2 right-2 flex gap-1">
+                              {img.hasBackground && (
+                                <Badge variant="secondary">Has BG</Badge>
+                              )}
+                              {img.analysis && (
+                                <Badge variant="default" className="bg-green-600">
+                                  {img.analysis.printReadiness.score}/10
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          <CardContent className="p-2 space-y-2">
+                            <p className="text-xs text-zinc-600 line-clamp-1">{img.prompt}</p>
+                            
+                            {/* AI Analysis Results */}
+                            {img.analysis ? (
+                              <div className="space-y-2">
+                                {/* Placement Recommendation */}
+                                <div className="bg-orange-50 border border-orange-200 rounded p-2">
+                                  <p className="text-xs font-medium text-orange-800 flex items-center gap-1 mb-1">
+                                    <Lightbulb className="w-3 h-3" />
+                                    Placement
+                                  </p>
+                                  <p className="text-xs text-orange-700">
+                                    {img.analysis.placement.recommendation}
+                                  </p>
+                                  <p className="text-xs text-orange-600 mt-1">
+                                    Chapter: {img.analysis.placement.suggestedChapter}
+                                  </p>
+                                </div>
+                                
+                                {/* Caption */}
+                                <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                                  <p className="text-xs font-medium text-blue-800 flex items-center gap-1 mb-1">
+                                    <FileText className="w-3 h-3" />
+                                    Caption
+                                  </p>
+                                  <p className="text-xs text-blue-700 italic">
+                                    {img.analysis.caption}
+                                  </p>
+                                </div>
+                                
+                                {/* Alt Text */}
+                                <div className="bg-zinc-100 border border-zinc-300 rounded p-2">
+                                  <p className="text-xs font-medium text-zinc-700 flex items-center gap-1 mb-1">
+                                    <Info className="w-3 h-3" />
+                                    Alt Text
+                                  </p>
+                                  <p className="text-xs text-zinc-600">
+                                    {img.analysis.altText}
+                                  </p>
+                                </div>
+                                
+                                {/* Style & Print */}
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="bg-purple-50 border border-purple-200 rounded p-2">
+                                    <p className="text-xs font-medium text-purple-800">Style</p>
+                                    <p className="text-xs text-purple-700">
+                                      {img.analysis.style.isConsistent ? "Consistent" : "Review needed"}
+                                    </p>
+                                  </div>
+                                  <div className="bg-green-50 border border-green-200 rounded p-2">
+                                    <p className="text-xs font-medium text-green-800">Print Ready</p>
+                                    <p className="text-xs text-green-700">
+                                      Score: {img.analysis.printReadiness.score}/10
+                                    </p>
+                                  </div>
+                                </div>
+                                
+                                {img.analysis.printReadiness.suggestions.length > 0 && (
+                                  <div className="bg-yellow-50 border border-yellow-200 rounded p-2">
+                                    <p className="text-xs font-medium text-yellow-800 flex items-center gap-1 mb-1">
+                                      <AlertTriangle className="w-3 h-3" />
+                                      Suggestions
+                                    </p>
+                                    <ul className="text-xs text-yellow-700 list-disc list-inside">
+                                      {img.analysis.printReadiness.suggestions.map((s, i) => (
+                                        <li key={i}>{s}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleAnalyzeImage(img.id, img.url)}
+                                disabled={img.isAnalyzing}
+                                className="w-full text-xs"
+                                data-testid={`button-analyze-image-${img.id}`}
+                              >
+                                {img.isAnalyzing ? (
+                                  <>
+                                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                    Analyzing...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Wand2 className="w-3 h-3 mr-1" />
+                                    Analyze with AI
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                            
+                            <div className="flex gap-1 flex-wrap">
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => {
+                                  if (onInsertContent) {
+                                    const altText = img.analysis?.altText || img.prompt;
+                                    const caption = img.analysis?.caption || "";
+                                    const html = caption 
+                                      ? `<figure style="margin: 1rem 0;"><img src="${img.url}" alt="${altText}" style="max-width: 100%; height: auto;" /><figcaption style="text-align: center; font-size: 0.875rem; color: #666; margin-top: 0.5rem;">${caption}</figcaption></figure>`
+                                      : `<img src="${img.url}" alt="${altText}" style="max-width: 100%; height: auto; margin: 1rem 0;" />`;
+                                    onInsertContent(html);
+                                    toast({ title: "Image Inserted", description: "Image added to your document" });
+                                  }
+                                }}
+                                className="flex-1 text-xs"
+                                data-testid={`button-insert-image-${img.id}`}
+                              >
+                                <Plus className="w-3 h-3 mr-1" />
+                                Insert
+                              </Button>
+                              {img.hasBackground && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleRemoveBackground(img.id, img.url)}
+                                  disabled={isRemovingBg === img.id}
+                                  className="text-xs"
+                                  data-testid={`button-remove-bg-${img.id}`}
+                                >
+                                  {isRemovingBg === img.id ? (
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                  ) : (
+                                    <Scissors className="w-3 h-3" />
+                                  )}
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteImage(img.id)}
+                                data-testid={`button-delete-image-${img.id}`}
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
         </TabsContent>
 
         <TabsContent value="research" className="flex-1 flex flex-col m-0 overflow-auto bg-zinc-300" data-testid="tab-content-research">
