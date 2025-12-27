@@ -1002,7 +1002,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <MessageCircle className="w-4 h-4 text-primary" />
-                      <span className="font-medium">AI Writing Assistant</span>
+                      <span className="font-medium text-zinc-900">AI Writing Assistant</span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
@@ -1084,14 +1084,14 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <Image className="w-4 h-4 text-primary" />
-                      <span className="font-medium">Images</span>
+                      <span className="font-medium text-zinc-900">Images</span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
                     <div className="space-y-4">
                       {/* Upload */}
                       <div>
-                        <Label className="text-xs font-medium text-zinc-600 mb-2 block">Upload Image</Label>
+                        <Label className="text-xs font-medium text-zinc-800 mb-2 block">Upload Image</Label>
                         <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-dashed border-zinc-300 rounded-lg cursor-pointer hover:bg-zinc-50 transition-colors">
                           <div className="flex items-center gap-2">
                             <Upload className="w-4 h-4 text-zinc-400" />
@@ -1122,7 +1122,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                       
                       {/* Generate */}
                       <div>
-                        <Label className="text-xs font-medium text-zinc-600 mb-2 block">Generate with AI</Label>
+                        <Label className="text-xs font-medium text-zinc-800 mb-2 block">Generate with AI</Label>
                         <Textarea
                           value={imagePrompt}
                           onChange={(e) => setImagePrompt(e.target.value)}
@@ -1154,7 +1154,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <LayoutGrid className="w-4 h-4 text-primary" />
-                      <span className="font-medium">Content Blocks</span>
+                      <span className="font-medium text-zinc-900">Content Blocks</span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
@@ -1347,7 +1347,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <FileUp className="w-4 h-4 text-primary" />
-                      <span className="font-medium">Import Document</span>
+                      <span className="font-medium text-zinc-900">Import Document</span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
@@ -1455,7 +1455,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <Image className="w-4 h-4 text-primary" />
-                      <span className="font-medium">Images ({generatedImages.length})</span>
+                      <span className="font-medium text-zinc-900">Images ({generatedImages.length})</span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
@@ -1571,7 +1571,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
 
                                   <div className="grid grid-cols-2 gap-2">
                                     <div className="space-y-1">
-                                      <Label className="text-xs text-zinc-600">Size</Label>
+                                      <Label className="text-xs text-zinc-800">Size</Label>
                                       <Select 
                                         value={settings.size} 
                                         onValueChange={(v) => setImageSettings(prev => ({
@@ -1591,7 +1591,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                                       </Select>
                                     </div>
                                     <div className="space-y-1">
-                                      <Label className="text-xs text-zinc-600">Align</Label>
+                                      <Label className="text-xs text-zinc-800">Align</Label>
                                       <Select 
                                         value={settings.align} 
                                         onValueChange={(v) => setImageSettings(prev => ({
@@ -1612,7 +1612,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                                   </div>
 
                                   <div className="space-y-1">
-                                    <Label className="text-xs text-zinc-600">Caption</Label>
+                                    <Label className="text-xs text-zinc-800">Caption</Label>
                                     <Input
                                       value={settings.caption || img.analysis?.caption || ""}
                                       onChange={(e) => setImageSettings(prev => ({
@@ -1712,7 +1712,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <BookMarked className="w-4 h-4 text-primary" />
-                      <span className="font-medium">Sources ({sources.length})</span>
+                      <span className="font-medium text-zinc-900">Sources ({sources.length})</span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
@@ -1904,7 +1904,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <BookOpen className="w-4 h-4 text-primary" />
-                      <span className="font-medium">Page Setup</span>
+                      <span className="font-medium text-zinc-900">Page Setup</span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
@@ -1964,7 +1964,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <FileText className="w-4 h-4 text-primary" />
-                      <span className="font-medium">Typography</span>
+                      <span className="font-medium text-zinc-900">Typography</span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
@@ -2015,7 +2015,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <Layers className="w-4 h-4 text-primary" />
-                      <span className="font-medium">Layout Options</span>
+                      <span className="font-medium text-zinc-900">Layout Options</span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
@@ -2060,7 +2060,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <ScrollText className="w-4 h-4 text-primary" />
-                      <span className="font-medium">Front Matter</span>
+                      <span className="font-medium text-zinc-900">Front Matter</span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
@@ -2177,7 +2177,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <BookCopy className="w-4 h-4 text-primary" />
-                      <span className="font-medium">Back Matter</span>
+                      <span className="font-medium text-zinc-900">Back Matter</span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
@@ -2282,7 +2282,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4 text-primary" />
-                      <span className="font-medium">ISBN & Compliance</span>
+                      <span className="font-medium text-zinc-900">ISBN & Compliance</span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
@@ -2336,7 +2336,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <ClipboardCheck className="w-4 h-4 text-primary" />
-                      <span className="font-medium">KDP Checklist</span>
+                      <span className="font-medium text-zinc-900">KDP Checklist</span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
