@@ -68,6 +68,21 @@ export default function WorkspaceShell({ onExport, onPublish }: WorkspaceShellPr
   const [distractionFree, setDistractionFree] = useState(false);
   const [activeChapterId, setActiveChapterId] = useState<string | null>(null);
   const [editorContent, setEditorContent] = useState("");
+  const [showShortcuts, setShowShortcuts] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === '?' && !e.ctrlKey && !e.metaKey) {
+        const target = e.target as HTMLElement;
+        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && !target.isContentEditable) {
+          e.preventDefault();
+          setShowShortcuts(true);
+        }
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleInsertContent = useCallback((html: string) => {
     setEditorContent(prev => prev + html);
@@ -189,6 +204,16 @@ export default function WorkspaceShell({ onExport, onPublish }: WorkspaceShellPr
           <Button 
             variant="ghost" 
             size="icon" 
+            onClick={() => setShowShortcuts(true)}
+            title="Keyboard Shortcuts (?)"
+            data-testid="button-keyboard-shortcuts"
+          >
+            <Keyboard className="w-4 h-4" />
+          </Button>
+
+          <Button 
+            variant="ghost" 
+            size="icon" 
             onClick={() => setDistractionFree(true)}
             data-testid="button-distraction-free"
           >
@@ -260,7 +285,7 @@ export default function WorkspaceShell({ onExport, onPublish }: WorkspaceShellPr
           </>
         )}
 
-        <ResizablePanel defaultSize={leftPanelCollapsed && rightPanelCollapsed ? 100 : 50}>
+        <ResizablePanel defaultSize={leftPanelCollapsed && rightPanelCollapsed ? 100 : 40}>
           <EditorPane
             content={editorContent}
             onChange={setEditorContent}
@@ -271,12 +296,76 @@ export default function WorkspaceShell({ onExport, onPublish }: WorkspaceShellPr
         {!rightPanelCollapsed && (
           <>
             <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={30} minSize={25} maxSize={45}>
+            <ResizablePanel defaultSize={40} minSize={30} maxSize={50}>
               <ToolPanel projectId={project?.id} onInsertContent={handleInsertContent} />
             </ResizablePanel>
           </>
         )}
       </ResizablePanelGroup>
+
+      <Dialog open={showShortcuts} onOpenChange={setShowShortcuts}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Keyboard className="w-5 h-5" />
+              Keyboard Shortcuts
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            <div>
+              <h4 className="text-sm font-semibold text-muted-foreground mb-3">AI Actions</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Expand selected text</span>
+                  <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">Ctrl+E</kbd>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Rewrite selected text</span>
+                  <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">Ctrl+Shift+R</kbd>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Continue writing</span>
+                  <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">Ctrl+/</kbd>
+                </div>
+              </div>
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold text-muted-foreground mb-3">Editing</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Save document</span>
+                  <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">Ctrl+S</kbd>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Bold text</span>
+                  <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">Ctrl+B</kbd>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Italic text</span>
+                  <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">Ctrl+I</kbd>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Underline text</span>
+                  <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">Ctrl+U</kbd>
+                </div>
+              </div>
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold text-muted-foreground mb-3">Navigation</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Show this help</span>
+                  <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">?</kbd>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Exit distraction-free mode</span>
+                  <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">Esc</kbd>
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

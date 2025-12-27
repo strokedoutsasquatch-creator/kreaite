@@ -1196,12 +1196,12 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
   };
 
   return (
-    <div className="h-full flex flex-col bg-zinc-900">
+    <div className="h-full flex flex-col bg-zinc-800">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
         {/* Large visible tab bar */}
-        <div className="border-b border-zinc-700 p-3 shrink-0 bg-zinc-800">
+        <div className="border-b border-zinc-600 p-3 shrink-0 bg-zinc-700">
           <div className="grid grid-cols-4 gap-2 mb-3">
-            <TabsList className="col-span-4 grid grid-cols-4 h-auto bg-zinc-700/50 p-1 rounded-lg">
+            <TabsList className="col-span-4 grid grid-cols-4 h-auto bg-zinc-600 p-1 rounded-lg">
               <TabsTrigger 
                 value="ai" 
                 className="flex flex-col items-center gap-1 py-2 px-1 text-zinc-300 data-[state=active]:bg-primary data-[state=active]:text-white hover:text-white text-xs font-medium"
@@ -1234,7 +1234,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
             </TabsList>
           </div>
           <div className="grid grid-cols-3 gap-2">
-            <TabsList className="col-span-3 grid grid-cols-3 h-auto bg-zinc-700/50 p-1 rounded-lg">
+            <TabsList className="col-span-3 grid grid-cols-3 h-auto bg-zinc-600 p-1 rounded-lg">
               <TabsTrigger 
                 value="research" 
                 className="flex flex-col items-center gap-1 py-2 px-1 text-zinc-300 data-[state=active]:bg-primary data-[state=active]:text-white hover:text-white text-xs font-medium" 
@@ -1262,7 +1262,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
           </div>
         </div>
 
-        <TabsContent value="ai" className="flex-1 flex flex-col m-0 overflow-hidden">
+        <TabsContent value="ai" className="flex-1 flex flex-col m-0 overflow-auto bg-zinc-300">
           <ScrollArea className="flex-1 p-3">
             <div className="space-y-4">
               {chatMessages.map((msg) => (
@@ -1341,10 +1341,10 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
           </div>
         </TabsContent>
 
-        <TabsContent value="import" className="flex-1 flex flex-col m-0 overflow-hidden">
+        <TabsContent value="import" className="flex-1 flex flex-col m-0 overflow-auto bg-zinc-300">
           <ScrollArea className="flex-1 p-3">
             <div className="space-y-4">
-              <Card className="bg-zinc-800 border-zinc-600">
+              <Card className="bg-zinc-600 border-zinc-400">
                 <CardHeader className="py-3 gap-1">
                   <CardTitle className="text-sm flex items-center gap-2 text-white">
                     <FileUp className="w-4 h-4" />
@@ -1443,7 +1443,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                 </CardContent>
               </Card>
               
-              <Card className="bg-zinc-800 border-zinc-600">
+              <Card className="bg-zinc-600 border-zinc-400">
                 <CardHeader className="py-3 gap-1">
                   <CardTitle className="text-sm flex items-center gap-2 text-white">
                     <File className="w-4 h-4" />
@@ -1483,7 +1483,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
           </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="content" className="flex-1 flex flex-col m-0 overflow-hidden">
+        <TabsContent value="content" className="flex-1 flex flex-col m-0 overflow-auto bg-zinc-300">
           <ScrollArea className="flex-1 p-3">
             <Accordion type="multiple" defaultValue={["callouts", "charts", "lists", "book-elements"]} className="space-y-2">
               <AccordionItem value="callouts" className="border rounded-lg px-3">
@@ -1924,22 +1924,22 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
           </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="images" className="flex-1 flex flex-col m-0 overflow-hidden">
-          <ScrollArea className="flex-1 p-3">
+        <TabsContent value="images" className="flex-1 flex flex-col m-0 overflow-auto bg-zinc-300">
+          <ScrollArea className="flex-1 p-4">
             <div className="space-y-4">
-              <Card className="bg-zinc-800 border-zinc-600">
-                <CardHeader className="py-3">
-                  <CardTitle className="text-sm flex items-center gap-2 text-white">
-                    <Wand2 className="w-4 h-4" />
+              <Card className="bg-white border-2 border-zinc-400 shadow-lg">
+                <CardHeader className="py-3 bg-zinc-700 rounded-t-lg">
+                  <CardTitle className="text-base flex items-center gap-2 text-white font-bold">
+                    <Wand2 className="w-5 h-5 text-orange-400" />
                     Generate Image
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-4 pt-4 bg-white">
                   <Textarea
                     value={imagePrompt}
                     onChange={(e) => setImagePrompt(e.target.value)}
                     placeholder="Describe the image you want to create..."
-                    className="min-h-[80px] bg-zinc-700 border-zinc-600 text-white placeholder:text-zinc-400"
+                    className="min-h-[120px] bg-zinc-100 border-2 border-zinc-400 text-black placeholder:text-zinc-500 text-base"
                     data-testid="textarea-image-prompt"
                   />
                   <Button
@@ -1958,10 +1958,10 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                 </CardContent>
               </Card>
 
-              <Card className="bg-zinc-800 border-zinc-600">
-                <CardHeader className="py-3">
-                  <CardTitle className="text-sm flex items-center gap-2 text-white">
-                    <Move className="w-4 h-4" />
+              <Card className="bg-white border-2 border-zinc-400 shadow-lg">
+                <CardHeader className="py-3 bg-zinc-700 rounded-t-lg">
+                  <CardTitle className="text-base flex items-center gap-2 text-white font-bold">
+                    <Move className="w-4 h-4 text-orange-400" />
                     Image Placement
                   </CardTitle>
                 </CardHeader>
@@ -1998,7 +1998,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                       Manual
                     </Button>
                   </div>
-                  <p className="text-xs text-zinc-400">
+                  <p className="text-xs text-zinc-300">
                     {imagePlacementMode === "auto" && "AI automatically places images at optimal positions"}
                     {imagePlacementMode === "hybrid" && "AI suggests placements, you approve or adjust"}
                     {imagePlacementMode === "manual" && "Full control over image positioning"}
@@ -2061,10 +2061,10 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
           </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="research" className="flex-1 flex flex-col m-0 overflow-hidden" data-testid="tab-content-research">
+        <TabsContent value="research" className="flex-1 flex flex-col m-0 overflow-auto bg-zinc-300" data-testid="tab-content-research">
           <ScrollArea className="flex-1 p-3">
             <div className="space-y-4">
-              <Card className="bg-zinc-800 border-zinc-600">
+              <Card className="bg-zinc-600 border-zinc-400">
                 <CardHeader className="py-3">
                   <CardTitle className="text-sm flex items-center gap-2 text-white">
                     <Plus className="w-4 h-4" />
@@ -2096,7 +2096,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                       value={newSource.title}
                       onChange={(e) => setNewSource(prev => ({ ...prev, title: e.target.value }))}
                       placeholder="Enter source title"
-                      className="bg-zinc-700 border-zinc-600 text-white placeholder:text-zinc-400"
+                      className="bg-zinc-500 border-zinc-400 text-white placeholder:text-zinc-200"
                       data-testid="input-source-title"
                     />
                   </div>
@@ -2107,7 +2107,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                       value={newSource.author}
                       onChange={(e) => setNewSource(prev => ({ ...prev, author: e.target.value }))}
                       placeholder="Enter author name"
-                      className="bg-zinc-700 border-zinc-600 text-white placeholder:text-zinc-400"
+                      className="bg-zinc-500 border-zinc-400 text-white placeholder:text-zinc-200"
                       data-testid="input-source-author"
                     />
                   </div>
@@ -2118,7 +2118,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                       value={newSource.url}
                       onChange={(e) => setNewSource(prev => ({ ...prev, url: e.target.value }))}
                       placeholder="https://..."
-                      className="bg-zinc-700 border-zinc-600 text-white placeholder:text-zinc-400"
+                      className="bg-zinc-500 border-zinc-400 text-white placeholder:text-zinc-200"
                       data-testid="input-source-url"
                     />
                   </div>
@@ -2129,7 +2129,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                       value={newSource.year}
                       onChange={(e) => setNewSource(prev => ({ ...prev, year: e.target.value }))}
                       placeholder="2024"
-                      className="bg-zinc-700 border-zinc-600 text-white placeholder:text-zinc-400"
+                      className="bg-zinc-500 border-zinc-400 text-white placeholder:text-zinc-200"
                       data-testid="input-source-year"
                     />
                   </div>
@@ -2162,7 +2162,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
               </Card>
 
               {sources.length > 0 && (
-                <Card className="bg-zinc-800 border-zinc-600">
+                <Card className="bg-zinc-600 border-zinc-400">
                   <CardHeader className="py-3">
                     <CardTitle className="text-sm flex items-center gap-2 text-white">
                       <Library className="w-4 h-4" />
@@ -2181,7 +2181,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                             <p className="text-sm font-medium truncate text-white" data-testid={`text-source-title-${source.id}`}>
                               {source.title}
                             </p>
-                            <p className="text-xs text-zinc-400" data-testid={`text-source-author-${source.id}`}>
+                            <p className="text-xs text-zinc-300" data-testid={`text-source-author-${source.id}`}>
                               {source.author}
                               {source.year && ` (${source.year})`}
                             </p>
@@ -2272,7 +2272,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
           </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="format" className="flex-1 flex flex-col m-0 overflow-hidden">
+        <TabsContent value="format" className="flex-1 flex flex-col m-0 overflow-auto bg-zinc-300">
           <ScrollArea className="flex-1 p-3">
             <Accordion type="multiple" defaultValue={["page", "typography", "layout"]} className="space-y-2">
               <AccordionItem value="page" className="border rounded-lg px-3">
@@ -2425,7 +2425,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
           </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="compliance" className="flex-1 flex flex-col m-0 overflow-hidden" data-testid="tabcontent-compliance">
+        <TabsContent value="compliance" className="flex-1 flex flex-col m-0 overflow-auto bg-zinc-300" data-testid="tabcontent-compliance">
           <ScrollArea className="flex-1 p-3">
             <Accordion type="multiple" defaultValue={["front-matter", "back-matter", "isbn", "kdp-checklist"]} className="space-y-2">
               <AccordionItem value="front-matter" className="border rounded-lg px-3" data-testid="accordion-front-matter">

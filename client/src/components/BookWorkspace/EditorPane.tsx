@@ -17,6 +17,10 @@ import {
   Loader2,
   Palette,
   ChevronDown,
+  Timer,
+  Play,
+  Pause,
+  Square,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -53,8 +57,16 @@ export default function EditorPane({
   const [wordGoal, setWordGoal] = useState<WordGoal>({ daily: 1000, session: 500 });
   const [sessionStartWords, setSessionStartWords] = useState(0);
   const editorRef = useRef<any>(null);
+  
+  const [sprintActive, setSprintActive] = useState(false);
+  const [sprintDuration, setSprintDuration] = useState(25);
+  const [sprintTimeLeft, setSprintTimeLeft] = useState(0);
+  const [sprintStartWords, setSprintStartWords] = useState(0);
+  const sprintIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const wordCountRef = useRef(0);
 
   const wordCount = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().split(/\s+/).filter(Boolean).length;
+  wordCountRef.current = wordCount;
   const sessionWords = wordCount - sessionStartWords;
   const dailyProgress = Math.min((wordCount / wordGoal.daily) * 100, 100);
   const sessionProgress = Math.min((sessionWords / wordGoal.session) * 100, 100);
@@ -62,6 +74,51 @@ export default function EditorPane({
   useEffect(() => {
     setSessionStartWords(wordCount);
   }, [projectId]);
+
+  const startSprint = (minutes: number) => {
+    setSprintDuration(minutes);
+    setSprintTimeLeft(minutes * 60);
+    setSprintStartWords(wordCount);
+    setSprintActive(true);
+  };
+
+  const stopSprint = () => {
+    if (sprintIntervalRef.current) {
+      clearInterval(sprintIntervalRef.current);
+      sprintIntervalRef.current = null;
+    }
+    const wordsWritten = wordCountRef.current - sprintStartWords;
+    setSprintActive(false);
+    toast({ 
+      title: "Sprint Complete!", 
+      description: `You wrote ${wordsWritten.toLocaleString()} words in this sprint` 
+    });
+  };
+
+  useEffect(() => {
+    if (sprintActive && sprintTimeLeft > 0) {
+      sprintIntervalRef.current = setInterval(() => {
+        setSprintTimeLeft(prev => {
+          if (prev <= 1) {
+            stopSprint();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (sprintIntervalRef.current) {
+        clearInterval(sprintIntervalRef.current);
+      }
+    };
+  }, [sprintActive]);
+
+  const formatSprintTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const handleTextSelection = useCallback(() => {
     const selection = window.getSelection();
@@ -191,6 +248,64 @@ export default function EditorPane({
         </div>
 
         <div className="flex items-center gap-4">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant={sprintActive ? "default" : "ghost"} 
+                size="sm" 
+                className={`gap-2 ${sprintActive ? 'animate-pulse' : ''}`}
+                data-testid="button-sprint-timer"
+              >
+                <Timer className="w-4 h-4" />
+                {sprintActive ? formatSprintTime(sprintTimeLeft) : "Sprint"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72" align="end">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold">Writing Sprint</span>
+                  {sprintActive && (
+                    <Badge variant="secondary">
+                      +{(wordCount - sprintStartWords).toLocaleString()} words
+                    </Badge>
+                  )}
+                </div>
+                
+                {!sprintActive ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button size="sm" variant="outline" onClick={() => startSprint(15)} data-testid="button-sprint-15">
+                      <Play className="w-3 h-3 mr-1" /> 15 min
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => startSprint(25)} data-testid="button-sprint-25">
+                      <Play className="w-3 h-3 mr-1" /> 25 min
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => startSprint(45)} data-testid="button-sprint-45">
+                      <Play className="w-3 h-3 mr-1" /> 45 min
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => startSprint(60)} data-testid="button-sprint-60">
+                      <Play className="w-3 h-3 mr-1" /> 60 min
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="text-center">
+                      <div className="text-3xl font-mono font-bold">{formatSprintTime(sprintTimeLeft)}</div>
+                      <div className="text-sm text-muted-foreground">remaining</div>
+                    </div>
+                    <Progress value={((sprintDuration * 60 - sprintTimeLeft) / (sprintDuration * 60)) * 100} className="h-2" />
+                    <Button size="sm" variant="destructive" className="w-full" onClick={stopSprint} data-testid="button-stop-sprint">
+                      <Square className="w-3 h-3 mr-1" /> End Sprint
+                    </Button>
+                  </div>
+                )}
+                
+                <p className="text-xs text-muted-foreground">
+                  Focus on writing without distractions. Your progress will be tracked!
+                </p>
+              </div>
+            </PopoverContent>
+          </Popover>
+
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="sm" className="gap-2" data-testid="button-word-goals">
