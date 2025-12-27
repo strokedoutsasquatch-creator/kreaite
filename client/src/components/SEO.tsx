@@ -144,18 +144,27 @@ export function createAuthorSchema(author: {
   url?: string;
   image?: string;
   sameAs?: string[];
+  genres?: string[];
+  achievements?: string[];
 }) {
+  const authorUrl = author.url?.startsWith("http") 
+    ? author.url 
+    : `${BASE_URL}${author.url?.startsWith("/") ? author.url : `/author/${encodeURIComponent(author.name.toLowerCase().replace(/\s+/g, "-"))}`}`;
+  
   return {
     "@type": "Person",
     name: author.name,
     description: author.bio,
-    url: author.url || `${BASE_URL}/author/${encodeURIComponent(author.name.toLowerCase().replace(/\s+/g, "-"))}`,
+    url: authorUrl,
     image: author.image,
-    sameAs: author.sameAs || [],
-    jobTitle: "Content Creator",
-    worksFor: {
+    sameAs: author.sameAs?.filter(Boolean) || [],
+    jobTitle: "Author & Content Creator",
+    knowsAbout: author.genres || ["Content Creation", "Digital Publishing"],
+    award: author.achievements,
+    memberOf: {
       "@type": "Organization",
       name: "KreAIte.xyz",
+      url: BASE_URL,
     },
   };
 }
@@ -211,6 +220,24 @@ export function createProductSchema(product: {
     author: product.author
       ? { "@type": "Person", name: product.author }
       : undefined,
+  };
+}
+
+export function createItemListSchema(items: Array<{
+  name: string;
+  url: string;
+  image?: string;
+  position?: number;
+}>) {
+  return {
+    "@type": "ItemList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: item.position || index + 1,
+      name: item.name,
+      url: item.url.startsWith("http") ? item.url : `${BASE_URL}${item.url}`,
+      image: item.image,
+    })),
   };
 }
 
