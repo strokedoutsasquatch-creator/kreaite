@@ -80,6 +80,7 @@ import {
   FileUp,
   File,
   Plus,
+  QrCode,
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -101,6 +102,15 @@ interface GeneratedImage {
   url: string;
   prompt: string;
   hasBackground: boolean;
+}
+
+interface Source {
+  id: string;
+  type: "book" | "website" | "article" | "journal";
+  title: string;
+  author: string;
+  url?: string;
+  year: string;
 }
 
 const calloutTemplates = {
@@ -442,6 +452,133 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
     pageCountMet: false,
   });
 
+  const [chartType, setChartType] = useState<"bar" | "pie" | "line">("bar");
+  const [chartLabels, setChartLabels] = useState("Label 1, Label 2, Label 3");
+  const [chartValues, setChartValues] = useState("25, 50, 75");
+  const [chartTitle, setChartTitle] = useState("My Chart");
+
+  const [qrCodeText, setQrCodeText] = useState("");
+  const [qrCodeSize, setQrCodeSize] = useState<"100" | "150" | "200">("150");
+  const [showQrPreview, setShowQrPreview] = useState(false);
+
+  const [sources, setSources] = useState<Source[]>([]);
+  const [newSource, setNewSource] = useState<{ type: "book" | "website" | "article" | "journal"; title: string; author: string; url: string; year: string }>({ type: "book", title: "", author: "", url: "", year: "" });
+
+  const generateBarChart = (labels: string[], values: number[], title: string): string => {
+    if (values.length === 0 || labels.length === 0) return '';
+    const maxValue = Math.max(...values);
+    if (maxValue === 0) return '';
+    const barWidth = 40;
+    const gap = 20;
+    const height = 200;
+    const chartWidth = (barWidth + gap) * values.length;
+    
+    const bars = values.map((v, i) => {
+      const barHeight = (v / maxValue) * 150;
+      const x = i * (barWidth + gap) + 20;
+      const y = height - barHeight - 30;
+      return `<rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" fill="#FF6B35"/>
+              <text x="${x + barWidth/2}" y="${height - 10}" text-anchor="middle" font-size="10" fill="currentColor">${labels[i] || ''}</text>
+              <text x="${x + barWidth/2}" y="${y - 5}" text-anchor="middle" font-size="10" fill="currentColor">${v}</text>`;
+    }).join('');
+    
+    return `<svg viewBox="0 0 ${chartWidth + 40} ${height + 20}" class="w-full max-w-md mx-auto my-4">
+      <text x="${(chartWidth + 40)/2}" y="15" text-anchor="middle" font-weight="bold" fill="currentColor">${title}</text>
+      ${bars}
+    </svg>`;
+  };
+
+  const generatePieChart = (labels: string[], values: number[], title: string): string => {
+    if (values.length === 0 || labels.length === 0) return '';
+    const total = values.reduce((a, b) => a + b, 0);
+    if (total === 0) return '';
+    const size = 200;
+    const cx = size / 2;
+    const cy = size / 2 + 20;
+    const r = 70;
+    const colors = ['#FF6B35', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
+    
+    let currentAngle = -90;
+    const slices = values.map((v, i) => {
+      const angle = (v / total) * 360;
+      const startAngle = currentAngle;
+      const endAngle = currentAngle + angle;
+      currentAngle = endAngle;
+      
+      const startRad = (startAngle * Math.PI) / 180;
+      const endRad = (endAngle * Math.PI) / 180;
+      const x1 = cx + r * Math.cos(startRad);
+      const y1 = cy + r * Math.sin(startRad);
+      const x2 = cx + r * Math.cos(endRad);
+      const y2 = cy + r * Math.sin(endRad);
+      const largeArc = angle > 180 ? 1 : 0;
+      
+      const midAngle = ((startAngle + endAngle) / 2 * Math.PI) / 180;
+      const labelX = cx + (r + 20) * Math.cos(midAngle);
+      const labelY = cy + (r + 20) * Math.sin(midAngle);
+      
+      return `<path d="M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z" fill="${colors[i % colors.length]}"/>
+              <text x="${labelX}" y="${labelY}" text-anchor="middle" font-size="9" fill="currentColor">${labels[i] || ''} (${Math.round((v/total)*100)}%)</text>`;
+    }).join('');
+    
+    return `<svg viewBox="0 0 ${size} ${size + 40}" class="w-full max-w-xs mx-auto my-4">
+      <text x="${size/2}" y="15" text-anchor="middle" font-weight="bold" fill="currentColor">${title}</text>
+      ${slices}
+    </svg>`;
+  };
+
+  const generateLineChart = (labels: string[], values: number[], title: string): string => {
+    if (values.length === 0 || labels.length === 0) return '';
+    const maxValue = Math.max(...values);
+    if (maxValue === 0) return '';
+    const width = 300;
+    const height = 200;
+    const padding = 40;
+    const graphWidth = width - padding * 2;
+    const graphHeight = height - padding * 2;
+    
+    const points = values.map((v, i) => {
+      const x = padding + (i / (values.length - 1 || 1)) * graphWidth;
+      const y = height - padding - (v / maxValue) * graphHeight;
+      return `${x},${y}`;
+    }).join(' ');
+    
+    const circles = values.map((v, i) => {
+      const x = padding + (i / (values.length - 1 || 1)) * graphWidth;
+      const y = height - padding - (v / maxValue) * graphHeight;
+      return `<circle cx="${x}" cy="${y}" r="4" fill="#FF6B35"/>
+              <text x="${x}" y="${y - 10}" text-anchor="middle" font-size="9" fill="currentColor">${v}</text>`;
+    }).join('');
+    
+    const labelTexts = labels.map((label, i) => {
+      const x = padding + (i / (values.length - 1 || 1)) * graphWidth;
+      return `<text x="${x}" y="${height - 10}" text-anchor="middle" font-size="9" fill="currentColor">${label}</text>`;
+    }).join('');
+    
+    return `<svg viewBox="0 0 ${width} ${height + 20}" class="w-full max-w-md mx-auto my-4">
+      <text x="${width/2}" y="15" text-anchor="middle" font-weight="bold" fill="currentColor">${title}</text>
+      <line x1="${padding}" y1="${height - padding}" x2="${width - padding}" y2="${height - padding}" stroke="currentColor" stroke-opacity="0.3"/>
+      <line x1="${padding}" y1="${padding}" x2="${padding}" y2="${height - padding}" stroke="currentColor" stroke-opacity="0.3"/>
+      <polyline points="${points}" fill="none" stroke="#FF6B35" stroke-width="2"/>
+      ${circles}
+      ${labelTexts}
+    </svg>`;
+  };
+
+  const getChartPreview = (): string => {
+    const labels = chartLabels.split(',').map(l => l.trim()).filter(l => l);
+    const values = chartValues.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
+    
+    if (labels.length === 0 || values.length === 0) return '';
+    
+    switch (chartType) {
+      case 'bar': return generateBarChart(labels, values, chartTitle);
+      case 'pie': return generatePieChart(labels, values, chartTitle);
+      case 'line': return generateLineChart(labels, values, chartTitle);
+      default: return '';
+    }
+  };
+
   const handleInsertContent = (html: string) => {
     if (onInsertContent) {
       onInsertContent(html);
@@ -569,6 +706,10 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
             <TabsTrigger value="images" className="gap-1 data-[state=active]:bg-sidebar-accent">
               <Image className="w-4 h-4" />
               Images
+            </TabsTrigger>
+            <TabsTrigger value="research" className="gap-1 data-[state=active]:bg-sidebar-accent" data-testid="tab-research">
+              <BookMarked className="w-4 h-4" />
+              Research
             </TabsTrigger>
             <TabsTrigger value="format" className="gap-1 data-[state=active]:bg-sidebar-accent">
               <Settings className="w-4 h-4" />
@@ -875,6 +1016,108 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                 </AccordionContent>
               </AccordionItem>
 
+              <AccordionItem value="chart-builder" className="border rounded-lg px-3">
+                <AccordionTrigger className="text-sm py-2">
+                  <div className="flex items-center gap-2">
+                    <Wand2 className="w-4 h-4" />
+                    Smart Chart Builder
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="space-y-4 pb-3">
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label className="text-xs">Chart Type</Label>
+                      <Select value={chartType} onValueChange={(v) => setChartType(v as "bar" | "pie" | "line")}>
+                        <SelectTrigger data-testid="chart-type-select">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="bar">
+                            <div className="flex items-center gap-2">
+                              <BarChart3 className="w-3 h-3" />
+                              Bar Chart
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="pie">
+                            <div className="flex items-center gap-2">
+                              <PieChart className="w-3 h-3" />
+                              Pie Chart
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="line">
+                            <div className="flex items-center gap-2">
+                              <LineChart className="w-3 h-3" />
+                              Line Chart
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs">Chart Title</Label>
+                      <Input
+                        value={chartTitle}
+                        onChange={(e) => setChartTitle(e.target.value)}
+                        placeholder="Enter chart title"
+                        data-testid="chart-title-input"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs">Labels (comma-separated)</Label>
+                      <Input
+                        value={chartLabels}
+                        onChange={(e) => setChartLabels(e.target.value)}
+                        placeholder="Label 1, Label 2, Label 3"
+                        data-testid="chart-labels-input"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs">Values (comma-separated)</Label>
+                      <Input
+                        value={chartValues}
+                        onChange={(e) => setChartValues(e.target.value)}
+                        placeholder="25, 50, 75"
+                        data-testid="chart-values-input"
+                      />
+                    </div>
+
+                    {getChartPreview() && (
+                      <div className="space-y-2">
+                        <Label className="text-xs">Preview</Label>
+                        <div 
+                          className="border rounded-lg p-4 bg-muted/50"
+                          dangerouslySetInnerHTML={{ __html: getChartPreview() }}
+                        />
+                      </div>
+                    )}
+
+                    <Button
+                      className="w-full"
+                      onClick={() => {
+                        const svg = getChartPreview();
+                        if (svg) {
+                          handleInsertContent(`<div class="chart-container my-4">${svg}</div>`);
+                        } else {
+                          toast({ 
+                            title: "Invalid Data", 
+                            description: "Please enter valid labels and values", 
+                            variant: "destructive" 
+                          });
+                        }
+                      }}
+                      disabled={!getChartPreview()}
+                      data-testid="button-insert-chart"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Insert Chart
+                    </Button>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
               <AccordionItem value="lists" className="border rounded-lg px-3">
                 <AccordionTrigger className="text-sm py-2">
                   <div className="flex items-center gap-2">
@@ -942,6 +1185,85 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                       );
                     })}
                   </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="qr-code" className="border rounded-lg px-3">
+                <AccordionTrigger className="text-sm py-2">
+                  <div className="flex items-center gap-2">
+                    <QrCode className="w-4 h-4" />
+                    QR Code Generator
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="space-y-4 pb-3">
+                  <div className="space-y-2">
+                    <Label className="text-xs">URL or Text</Label>
+                    <Input
+                      value={qrCodeText}
+                      onChange={(e) => {
+                        setQrCodeText(e.target.value);
+                        setShowQrPreview(false);
+                      }}
+                      placeholder="Enter URL or text to encode"
+                      data-testid="qr-url-input"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs">Size</Label>
+                    <Select value={qrCodeSize} onValueChange={(v) => {
+                      setQrCodeSize(v as "100" | "150" | "200");
+                      setShowQrPreview(false);
+                    }}>
+                      <SelectTrigger data-testid="qr-size-select">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="100">Small (100px)</SelectItem>
+                        <SelectItem value="150">Medium (150px)</SelectItem>
+                        <SelectItem value="200">Large (200px)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setShowQrPreview(true)}
+                    disabled={!qrCodeText.trim()}
+                    data-testid="button-generate-qr"
+                  >
+                    <QrCode className="w-4 h-4 mr-2" />
+                    Generate QR Code
+                  </Button>
+
+                  {showQrPreview && qrCodeText.trim() && (
+                    <div className="space-y-3">
+                      <Label className="text-xs">Preview</Label>
+                      <div className="border rounded-lg p-4 bg-white flex justify-center">
+                        <img
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=${qrCodeSize}x${qrCodeSize}&data=${encodeURIComponent(qrCodeText)}`}
+                          alt="QR Code Preview"
+                          className="rounded"
+                          style={{ width: `${qrCodeSize}px`, height: `${qrCodeSize}px` }}
+                        />
+                      </div>
+                      <Button
+                        className="w-full"
+                        onClick={() => {
+                          const qrHtml = `<figure class="qr-code my-4 text-center">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=${qrCodeSize}x${qrCodeSize}&data=${encodeURIComponent(qrCodeText)}" alt="QR Code" class="mx-auto rounded" />
+  <figcaption class="text-sm text-muted-foreground mt-2">Scan to visit: ${qrCodeText}</figcaption>
+</figure>`;
+                          handleInsertContent(qrHtml);
+                        }}
+                        data-testid="button-insert-qr"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Insert QR Code
+                      </Button>
+                    </div>
+                  )}
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
@@ -1079,6 +1401,213 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                       </CardContent>
                     </Card>
                   ))}
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </TabsContent>
+
+        <TabsContent value="research" className="flex-1 flex flex-col m-0 overflow-hidden" data-testid="tab-content-research">
+          <ScrollArea className="flex-1 p-3">
+            <div className="space-y-4">
+              <Card>
+                <CardHeader className="py-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add Source
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="space-y-2">
+                    <Label className="text-xs">Source Type</Label>
+                    <Select 
+                      value={newSource.type} 
+                      onValueChange={(v) => setNewSource(prev => ({ ...prev, type: v as "book" | "website" | "article" | "journal" }))}
+                    >
+                      <SelectTrigger data-testid="select-source-type">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="book">Book</SelectItem>
+                        <SelectItem value="website">Website</SelectItem>
+                        <SelectItem value="article">Article</SelectItem>
+                        <SelectItem value="journal">Journal</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs">Title</Label>
+                    <Input
+                      value={newSource.title}
+                      onChange={(e) => setNewSource(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder="Enter source title"
+                      data-testid="input-source-title"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs">Author</Label>
+                    <Input
+                      value={newSource.author}
+                      onChange={(e) => setNewSource(prev => ({ ...prev, author: e.target.value }))}
+                      placeholder="Enter author name"
+                      data-testid="input-source-author"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs">URL (optional)</Label>
+                    <Input
+                      value={newSource.url}
+                      onChange={(e) => setNewSource(prev => ({ ...prev, url: e.target.value }))}
+                      placeholder="https://..."
+                      data-testid="input-source-url"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs">Year</Label>
+                    <Input
+                      value={newSource.year}
+                      onChange={(e) => setNewSource(prev => ({ ...prev, year: e.target.value }))}
+                      placeholder="2024"
+                      data-testid="input-source-year"
+                    />
+                  </div>
+
+                  <Button
+                    onClick={() => {
+                      if (!newSource.title.trim() || !newSource.author.trim()) {
+                        toast({ title: "Missing Fields", description: "Title and Author are required", variant: "destructive" });
+                        return;
+                      }
+                      const source: Source = {
+                        id: Date.now().toString(),
+                        type: newSource.type,
+                        title: newSource.title.trim(),
+                        author: newSource.author.trim(),
+                        url: newSource.url.trim() || undefined,
+                        year: newSource.year.trim(),
+                      };
+                      setSources(prev => [...prev, source]);
+                      setNewSource({ type: "book", title: "", author: "", url: "", year: "" });
+                      toast({ title: "Source Added", description: "The source has been added to your list" });
+                    }}
+                    className="w-full"
+                    data-testid="button-add-source"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Source
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {sources.length > 0 && (
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Library className="w-4 h-4" />
+                      Sources ({sources.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {sources.map((source, index) => (
+                      <div 
+                        key={source.id} 
+                        className="p-3 border rounded-lg space-y-2"
+                        data-testid={`source-item-${source.id}`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate" data-testid={`text-source-title-${source.id}`}>
+                              {source.title}
+                            </p>
+                            <p className="text-xs text-muted-foreground" data-testid={`text-source-author-${source.id}`}>
+                              {source.author}
+                              {source.year && ` (${source.year})`}
+                            </p>
+                          </div>
+                          <Badge variant="secondary" className="shrink-0 text-xs" data-testid={`badge-source-type-${source.id}`}>
+                            {source.type}
+                          </Badge>
+                        </div>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 text-xs"
+                            onClick={() => {
+                              const citationNumber = index + 1;
+                              const citationHtml = `<span class="citation text-primary cursor-pointer" data-source-id="${source.id}">[${citationNumber}]</span>`;
+                              handleInsertContent(citationHtml);
+                            }}
+                            data-testid={`button-insert-citation-${source.id}`}
+                          >
+                            Insert Citation
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSources(prev => prev.filter(s => s.id !== source.id));
+                              toast({ title: "Source Deleted", description: "The source has been removed" });
+                            }}
+                            data-testid={`button-delete-source-${source.id}`}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              {sources.length > 0 && (
+                <Button
+                  onClick={() => {
+                    const formatSource = (source: Source, index: number): string => {
+                      const author = source.author;
+                      const year = source.year || "n.d.";
+                      const title = source.title;
+                      
+                      switch (source.type) {
+                        case "book":
+                          return `<li>${author} (${year}). <em>${title}</em>.</li>`;
+                        case "journal":
+                          return `<li>${author}. "${title}." <em>Journal</em>, ${year}.</li>`;
+                        case "article":
+                          return `<li>${author}. "${title}." ${year}.</li>`;
+                        case "website":
+                          return `<li>${author}. "${title}." ${source.url ? `<a href="${source.url}">${source.url}</a>. ` : ""}${year}.</li>`;
+                        default:
+                          return `<li>${author} (${year}). ${title}.</li>`;
+                      }
+                    };
+
+                    const bibliographyItems = sources.map((source, index) => formatSource(source, index)).join('\n      ');
+                    const bibliographyHtml = `<div class="bibliography my-6 p-4 border rounded">
+  <h3 class="font-bold mb-4">References</h3>
+  <ol class="list-decimal pl-6 space-y-2">
+      ${bibliographyItems}
+  </ol>
+</div>`;
+                    handleInsertContent(bibliographyHtml);
+                  }}
+                  className="w-full"
+                  data-testid="button-generate-bibliography"
+                >
+                  <BookCopy className="w-4 h-4 mr-2" />
+                  Generate Bibliography
+                </Button>
+              )}
+
+              {sources.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <BookMarked className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p className="text-sm">No sources added yet</p>
+                  <p className="text-xs mt-1">Add sources to manage citations</p>
                 </div>
               )}
             </div>
