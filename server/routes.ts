@@ -8127,6 +8127,45 @@ Respond in JSON format:
     }
   });
 
+  // AI Tone Revision - rewrite text in a specific tone/style
+  app.post('/api/ai/tone-rewrite', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { text, tone } = req.body;
+
+      if (!text || !tone) {
+        return res.status(400).json({ message: "text and tone are required" });
+      }
+
+      const validTones = ['professional', 'conversational', 'academic', 'friendly', 'simplified'];
+      if (!validTones.includes(tone)) {
+        return res.status(400).json({ message: `Invalid tone. Must be one of: ${validTones.join(', ')}` });
+      }
+
+      const toneDescriptions: Record<string, string> = {
+        professional: "formal, polished, and authoritative business tone",
+        conversational: "casual, engaging, and approachable like talking to a friend",
+        academic: "scholarly, precise, and well-researched with proper terminology",
+        friendly: "warm, encouraging, and supportive tone that puts readers at ease",
+        simplified: "clear, easy-to-understand language suitable for all reading levels"
+      };
+
+      const prompt = `Rewrite the following text in a ${toneDescriptions[tone]}. Preserve the core meaning and information but adjust the voice and style. Only return the rewritten text, no explanations:\n\n"${text}"\n\nRewritten version:`;
+
+      const result = await generate({
+        prompt,
+        userId,
+        taskType: 'refine',
+        maxTokens: 1500,
+      });
+
+      res.json({ success: true, rewrittenText: result.content });
+    } catch (error: any) {
+      console.error("Error in tone rewrite:", error);
+      res.status(500).json({ message: error.message || "Failed to rewrite text" });
+    }
+  });
+
   // AI Chat for Book Writing
   app.post('/api/ai/chat', isAuthenticated, async (req: any, res) => {
     try {

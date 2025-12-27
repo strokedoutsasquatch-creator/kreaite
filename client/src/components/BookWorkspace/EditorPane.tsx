@@ -15,7 +15,15 @@ import {
   ArrowRight,
   Target,
   Loader2,
+  Palette,
+  ChevronDown,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -93,6 +101,34 @@ export default function EditorPane({
       }
     } catch (error) {
       toast({ title: "Error", description: "AI action failed", variant: "destructive" });
+    } finally {
+      setIsAiProcessing(false);
+      setAiAction(null);
+      setSelectedText("");
+      setSelectionPosition(null);
+    }
+  };
+
+  const handleToneRewrite = async (tone: string) => {
+    if (!selectedText) return;
+    
+    setIsAiProcessing(true);
+    setAiAction(tone);
+
+    try {
+      const res = await apiRequest('POST', '/api/ai/tone-rewrite', {
+        text: selectedText,
+        tone,
+      });
+      const response = await res.json();
+
+      if (response.success && response.rewrittenText) {
+        const newContent = content.replace(selectedText, response.rewrittenText);
+        onChange(newContent);
+        toast({ title: "Tone Updated", description: `Text rewritten in ${tone} style` });
+      }
+    } catch (error) {
+      toast({ title: "Error", description: "Tone rewrite failed", variant: "destructive" });
     } finally {
       setIsAiProcessing(false);
       setAiAction(null);
@@ -239,6 +275,42 @@ export default function EditorPane({
               )}
               Rewrite
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={isAiProcessing}
+                  className="gap-1"
+                  data-testid="button-tone-menu"
+                >
+                  {isAiProcessing && !["expand", "rewrite", "continue"].includes(aiAction || "") ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Palette className="w-3 h-3" />
+                  )}
+                  Tone
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center">
+                <DropdownMenuItem onClick={() => handleToneRewrite("professional")} data-testid="tone-professional">
+                  Professional
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleToneRewrite("conversational")} data-testid="tone-conversational">
+                  Conversational
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleToneRewrite("academic")} data-testid="tone-academic">
+                  Academic
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleToneRewrite("friendly")} data-testid="tone-friendly">
+                  Friendly
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleToneRewrite("simplified")} data-testid="tone-simplified">
+                  Simplified
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         )}
       </div>
