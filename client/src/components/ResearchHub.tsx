@@ -82,6 +82,13 @@ export function ResearchHub() {
 
   const { data: trendingTopics = [], isLoading: trendingLoading } = useQuery<TrendingTopic[]>({
     queryKey: ['/api/research/trending', activeCategory],
+    queryFn: async () => {
+      const res = await fetch(`/api/research/trending?category=${encodeURIComponent(activeCategory)}`, {
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Failed to fetch trending');
+      return res.json();
+    },
     enabled: !!activeCategory,
   });
 
@@ -91,19 +98,31 @@ export function ResearchHub() {
 
   const searchMutation = useMutation({
     mutationFn: async (query: string): Promise<SearchResponse> => {
-      const res = await fetch(`/api/research/query?q=${encodeURIComponent(query)}`, {
-        credentials: 'include',
+      const res = await apiRequest('POST', '/api/research/query', {
+        query,
+        category: activeCategory,
+        market: 'us',
       });
-      if (!res.ok) throw new Error('Search failed');
+      if (!res.ok) {
+        if (res.status === 402) {
+          throw new Error('Insufficient credits');
+        }
+        throw new Error('Search failed');
+      }
       return res.json();
     },
     onSuccess: (data) => {
       setCurrentResults(data.results || []);
       queryClient.invalidateQueries({ queryKey: ['/api/research/history'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/credits/balance'] });
       toast({ title: "Search completed", description: `Found ${data.results?.length || 0} results` });
     },
-    onError: () => {
-      toast({ title: "Search failed", variant: "destructive" });
+    onError: (error: Error) => {
+      if (error.message === 'Insufficient credits') {
+        toast({ title: "Insufficient credits", description: "You need 1 credit to perform a research query", variant: "destructive" });
+      } else {
+        toast({ title: "Search failed", variant: "destructive" });
+      }
     },
   });
 
