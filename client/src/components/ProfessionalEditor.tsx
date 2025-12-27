@@ -18,7 +18,7 @@ import Subscript from '@tiptap/extension-subscript';
 import Superscript from '@tiptap/extension-superscript';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -212,6 +212,17 @@ export default function ProfessionalEditor({
       },
     },
   });
+
+  // Sync external content changes to the editor
+  useEffect(() => {
+    if (editor && content !== undefined) {
+      const currentContent = editor.getHTML();
+      // Only update if content is different and not empty (to avoid wiping user edits)
+      if (content && content !== currentContent && content !== '<p></p>') {
+        editor.commands.setContent(content, { emitUpdate: false });
+      }
+    }
+  }, [content, editor]);
 
   const addImage = useCallback(() => {
     if (imageUrl && editor) {
