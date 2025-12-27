@@ -8313,30 +8313,42 @@ Respond in JSON format:
   app.post('/api/ai/chat', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { message, projectId, context } = req.body;
+      const { message, projectId, context, manuscriptContent, conversationHistory } = req.body;
 
       if (!message) {
         return res.status(400).json({ message: "message is required" });
       }
 
-      const systemPrompt = `You are an expert book writing assistant. Help the author with:
-- Story development and plot structure
-- Character creation and arcs
-- Research and fact-checking
-- Writing style and voice
-- Overcoming writer's block
-- Chapter outlines and organization
-- Dialogue improvement
-- Pacing and tension
+      // Build context from manuscript
+      const manuscriptContext = manuscriptContent 
+        ? `\n\n--- CURRENT MANUSCRIPT EXCERPT ---\n${manuscriptContent.slice(0, 6000)}\n--- END MANUSCRIPT ---\n`
+        : '';
 
-Be encouraging, specific, and actionable in your advice.`;
+      // Build conversation context
+      const historyContext = conversationHistory?.length 
+        ? '\n\nRecent conversation:\n' + conversationHistory.map((m: any) => `${m.role}: ${m.content}`).join('\n')
+        : '';
+
+      const systemPrompt = `You are an expert book writing assistant actively working on the author's manuscript. You can see their current work and should reference it directly.
+
+Your capabilities:
+- Discuss and suggest edits to their actual manuscript content
+- Improve specific passages, dialogue, or descriptions  
+- Help with story structure, character arcs, pacing
+- Provide research and fact-checking
+- Overcome writer's block with concrete suggestions
+
+IMPORTANT: When suggesting text changes, be specific. Quote the original text and show your suggested revision.
+${manuscriptContext}${historyContext}
+
+Be encouraging, specific, and actionable. Reference their actual manuscript when relevant.`;
 
       const result = await generate({
         prompt: message,
         systemPrompt,
         userId,
         taskType: 'chat',
-        maxTokens: 1500,
+        maxTokens: 2000,
       });
 
       res.json({ response: result.content });

@@ -341,7 +341,7 @@ export default function WorkspaceShell({ onExport, onPublish }: WorkspaceShellPr
             <>
               <ResizableHandle withHandle />
               <ResizablePanel defaultSize={40} minSize={20} maxSize={60}>
-                <ToolPanel projectId={project?.id} onInsertContent={handleInsertContent} />
+                <ToolPanel projectId={project?.id} onInsertContent={handleInsertContent} manuscriptContent={editorContent} />
               </ResizablePanel>
             </>
           )}
@@ -374,7 +374,7 @@ export default function WorkspaceShell({ onExport, onPublish }: WorkspaceShellPr
             <>
               <ResizableHandle withHandle />
               <ResizablePanel defaultSize={40} minSize={30} maxSize={50}>
-                <ToolPanel projectId={project?.id} onInsertContent={handleInsertContent} />
+                <ToolPanel projectId={project?.id} onInsertContent={handleInsertContent} manuscriptContent={editorContent} />
               </ResizablePanel>
             </>
           )}

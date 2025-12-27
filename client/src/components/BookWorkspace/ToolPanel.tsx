@@ -101,6 +101,8 @@ import { useToast } from "@/hooks/use-toast";
 interface ToolPanelProps {
   projectId?: number;
   onInsertContent?: (html: string) => void;
+  manuscriptContent?: string;
+  onReplaceContent?: (html: string) => void;
 }
 
 interface ChatMessage {
@@ -108,6 +110,7 @@ interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  suggestedEdit?: string;
 }
 
 interface ImageAnalysis {
@@ -761,7 +764,7 @@ function example() {
   },
 };
 
-export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps) {
+export default function ToolPanel({ projectId, onInsertContent, manuscriptContent, onReplaceContent }: ToolPanelProps) {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("create");
   
@@ -843,10 +846,18 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
     setIsChatLoading(true);
 
     try {
+      // Build conversation history for context
+      const conversationHistory = chatMessages.slice(-6).map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+
       const res = await apiRequest('POST', '/api/ai/chat', {
         message: chatInput,
         projectId,
         context: "book-writing",
+        manuscriptContent: manuscriptContent?.slice(0, 8000), // Send first 8k chars for context
+        conversationHistory,
       });
       const response = await res.json();
 
@@ -855,10 +866,12 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
         role: "assistant",
         content: response.response || "I apologize, I couldn't generate a response.",
         timestamp: new Date(),
+        suggestedEdit: response.suggestedEdit,
       };
 
       setChatMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
+      console.error("AI chat error:", error);
       toast({ title: "Error", description: "Failed to get AI response", variant: "destructive" });
     } finally {
       setIsChatLoading(false);
