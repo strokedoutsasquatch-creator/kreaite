@@ -1,158 +1,167 @@
 # KreAIte.xyz - Design Guidelines
-**"Your Creative Sanctuary — Where Art Meets Intelligence"**
+**Professional AI-Powered Book Publishing Platform**
 
 ---
 
 ## Design Approach
 
-**Selected Approach:** Reference-Based with Literary Premium Aesthetic
+**Selected Approach:** Design System-Based with Premium Professional Aesthetic
 
-**Primary References:**
-- **Medium:** Editorial sophistication, typography mastery, reading-first design
-- **Notion:** Clean creative workspace, organized content hierarchy
-- **Behance:** Gallery-style project showcases, visual storytelling
-- **Squarespace:** Polished, refined interfaces with generous whitespace
-- **Canva:** Creator-focused tools with approachable elegance
+**Primary Reference:** Material Design meets Notion's clarity
+- Sharp hierarchy and contrast from Material Design
+- Clean workspace organization from Notion
+- Premium creator tools aesthetic from Figma/Linear
 
-**Key Principle:** A sophisticated digital atelier where creators feel inspired to craft their masterpieces. Every element should breathe creative possibility while maintaining premium polish.
+**Key Principle:** A professional publishing platform where clarity meets sophistication. Every element prioritizes readability and workflow efficiency with premium polish.
 
 ---
 
 ## Core Design Elements
 
-### Color System (Literary Dark)
-- **Background:** Pure black (#000000) - the canvas
-- **Surface/Cards:** #0F0F0F, #1A1A1A for elevated content blocks
-- **Primary Accent:** Orange (#FF6B35) for CTAs, active states, creative energy
-- **Text Primary:** White (#FFFFFF) for headlines, navigation
-- **Text Secondary:** #D0D0D0 for body text, descriptions
-- **Text Tertiary:** #808080 for metadata, subtle labels
-- **Borders:** #2A2A2A for card edges, dividers
-- **Success:** Mint green (#34D399) for published work
-- **Icons:** Lucide-react only, white with orange on hover/active
+### Color System (High Contrast Professional)
 
-### Typography System
+**Backgrounds:**
+- Primary: Pure black (#000000)
+- Elevated surfaces: #0A0A0A, #141414
+- Modal/panel backgrounds: #1A1A1A
+
+**Text (HIGH CONTRAST ONLY):**
+- On dark backgrounds: White (#FFFFFF) for all primary text
+- On dark backgrounds: #E5E5E5 for secondary text (never lower than this)
+- On light/white backgrounds: Black (#000000) for primary text
+- On light/white backgrounds: #404040 for secondary text
+
+**Accent:**
+- Primary orange: #FF6B35 for CTAs, active states, highlights
+- Hover orange: #FF8555
+- Success: #10B981
+- Warning: #F59E0B
+
+**UI Elements:**
+- Borders: #333333 (visible against black)
+- Dividers: #262626
+- Input backgrounds: #1A1A1A with #333333 borders
+
+### Typography
 
 **Font Families:**
-- **Primary:** 'Inter' - Clean, professional for UI and body text
-- **Display:** 'Playfair Display' or 'Literata' - Elegant serif for major headlines and creative section titles
+- Primary: 'Inter' for all UI, body text, headings
+- Display: 'Clash Display' or 'Cal Sans' for major headlines
 
 **Type Scale:**
-- **Hero Headlines:** text-6xl to text-7xl, font-serif, font-bold, tracking-tight, text-white
-- **Studio Titles:** text-4xl to text-5xl, font-serif, font-semibold, text-white
-- **Card Headers:** text-2xl, font-sans, font-semibold, text-white
-- **Body Text:** text-base to text-lg, font-sans, leading-relaxed, text-gray-300
-- **Labels:** text-sm, font-sans, font-medium, uppercase, tracking-wider, text-gray-400
-- **Creator Stats:** text-3xl to text-4xl, font-sans, font-bold, text-orange-500
+- Hero: text-6xl/text-7xl, font-bold, tracking-tight, text-white
+- Section Headers: text-4xl/text-5xl, font-bold, text-white
+- Panel Titles: text-2xl, font-semibold, text-white
+- Body: text-base/text-lg, font-normal, text-white or text-gray-100
+- Labels: text-sm, font-medium, uppercase, tracking-wide, text-gray-100
+- Metadata: text-sm, font-normal, text-gray-300
 
 ### Layout System
 
-**Spacing Primitives:** Tailwind units of 4, 6, 8, 12, 16, 24, 32
+**Spacing Primitives:** Tailwind units of 4, 6, 8, 12, 16, 24
 
-**Grid Patterns:**
-- **Studios Grid:** grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8
-- **Marketplace:** grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6
-- **Gallery Showcase:** Masonry grid with staggered heights
-- **Feature Sections:** Two-column splits (60/40) for text-image pairings
+**Container Widths:**
+- Full sections: max-w-7xl
+- Content blocks: max-w-6xl
+- Text content: max-w-4xl
 
 ---
 
 ## Component Library
 
 ### Navigation
-- Sticky header (bg-black/95 backdrop-blur-lg), centered max-w-7xl
-- Logo left, main links (STUDIOS, MARKETPLACE, SHOWCASE, PRICING), orange "START CREATING" CTA right, user avatar
-- Mobile: Full-screen overlay with elegant fade-in, centered menu items
+Sticky header (bg-black border-b border-gray-800), logo left, main nav links (DASHBOARD, LIBRARY, MARKETPLACE, TOOLS) in white text, orange "CREATE BOOK" CTA right, user profile
 
-### Hero Section
-- **Layout:** Full-screen (min-h-screen) with sophisticated creator workspace imagery
-- **Image:** Wide shot of elegant desk setup with creative tools, soft lighting, artistic workspace - dark gradient overlay ensuring text stands out
-- **Content:**
-  - Logo: "KreAIte" with refined typography
-  - Headline: "YOUR CREATIVE SANCTUARY" (serif, massive)
-  - Subhead: "Where Art Meets Intelligence — Six Studios, Infinite Possibilities"
-  - Dual CTAs: Orange "EXPLORE STUDIOS" (bg-orange-500/90 backdrop-blur-md) + Ghost "WATCH DEMO" (border-white/20 backdrop-blur-md)
-  - Trust bar: "10,000+ Creators | 50,000+ Works Published | Trusted by Artists Worldwide"
+### Hero Section (Full-Screen)
+- Background: Professional book publishing workspace image - elegant desk with open manuscript, warm desk lamp, coffee, bookshelf backdrop with natural light
+- Dark gradient overlay (black from bottom 70% opacity to transparent top)
+- Content centered with backdrop-blur on button containers:
+  - Platform name in display font (text-6xl, text-white)
+  - Headline: "PROFESSIONAL AI-POWERED BOOK PUBLISHING" (text-5xl, font-bold, text-white)
+  - Subheadline: Clear value proposition (text-xl, text-gray-100)
+  - Primary CTA: "START PUBLISHING" (bg-orange-500 with blur container)
+  - Secondary CTA: "VIEW DEMO" (border-white/30 with blur container)
+  - Trust indicators: "10,000+ Published Authors | 50,000+ Books Created" (text-gray-100)
 
-### Studio Cards (Featured Grid)
-- Elevated dark cards (bg-gray-950 border border-gray-800)
-- Lucide icon (48px) in white, turns orange on card hover
-- Studio name (serif font, text-2xl)
-- Brief description (2 lines, gray-300)
-- "Open Studio" link (orange, underlined)
-- Subtle shadow (shadow-2xl) for depth
+### Professional Tool Panels
+Dark elevated cards (bg-gray-900/90 border border-gray-700):
+- Panel header with icon and title (text-white, text-xl)
+- Clean content sections with white text on dark
+- Action buttons in orange
+- Clear visual separators (#333333 dividers)
+- Hover state: subtle border color shift to orange
 
-### Marketplace Template Cards
-- Template preview image with dark overlay on hover
-- Creator attribution with small avatar
-- Template category badge (orange border)
-- Price in white (text-xl font-bold)
-- Rating stars (orange fill)
-- "PREVIEW" button (orange)
+### Publishing Dashboard Cards
+Three-column grid showcasing key features:
+- Icon in orange (32px Lucide icons)
+- Feature title (text-2xl, font-semibold, text-white)
+- Description (text-base, text-gray-100)
+- Subtle card backgrounds (bg-gray-900 border border-gray-700)
 
-### Creative Gallery (Showcase)
-- Masonry layout displaying user creations
-- Image/thumbnail with title overlay on hover
-- Creator name and publish date
-- Engagement metrics (views, likes in gray-400)
-- Orange bookmark icon for save
+### Book Library Grid
+Four-column responsive grid:
+- Book cover thumbnails with dark overlay on hover
+- Book title (text-lg, font-semibold, text-white)
+- Author and status (text-sm, text-gray-100)
+- Action menu (orange icons)
+- Published/Draft badges with high contrast
 
 ---
 
-## Landing Page Structure (10 Comprehensive Sections)
+## Landing Page Structure (8 Sections)
 
-1. **Hero:** Full-screen with elegant workspace image, serif headline, dual CTAs, creator trust metrics
-2. **Six Studios Showcase:** 3x2 grid featuring Book, Music, Video, Course, Image, Doctrine studios with lucide icons and descriptions
-3. **Creative Workflow:** Two-column section (40/60) - "Ideate → Create → Publish" visualization with platform screenshots
-4. **Featured Creations Gallery:** 4-column masonry grid showcasing diverse creator works (books, music albums, courses, art)
-5. **AI-Powered Tools:** Three-column features (AI writing assistant, music generation, image creation) with icons
-6. **Marketplace Preview:** Scrollable horizontal showcase of premium templates with pricing
-7. **Creator Testimonials:** Two-column testimonials with creator headshots, quotes, and orange accent quotes
-8. **Platform Capabilities:** Two-column split - left (feature list with checkmarks), right (platform interface mockup)
-9. **Pricing Tiers:** Centered cards (Starter, Creator, Studio, Enterprise) with orange "START FREE" on primary tier
-10. **Creator Community:** Stats bar (creators, published works, downloads) + newsletter signup (orange subscribe)
+1. **Hero:** Full-screen publishing workspace image with gradient overlay, centered headline, dual CTAs with blur, trust metrics
 
-**Footer:** Four-column (Studios, Resources, Company, Community) + newsletter ("Join 10,000+ Creators") + social links + legal
+2. **Publishing Tools:** Three-column feature grid - AI Writing Assistant, Professional Formatting, Cover Design Studio (white icons turn orange on hover, white text)
+
+3. **Workflow Showcase:** Two-column (50/50) - Left: "Write → Format → Publish" process visualization, Right: Dashboard interface screenshot on dark background
+
+4. **Book Gallery:** Four-column grid of published book covers with author names and download stats (all text in white/gray-100)
+
+5. **Professional Features:** Four-column grid - ISBN Assignment, Distribution, Analytics, Marketing Tools (icon + title + description, all high contrast)
+
+6. **Author Testimonials:** Two-column layout with author photos, quotes in white text, orange quote marks, author credentials
+
+7. **Pricing Tiers:** Three-card layout (Starter, Professional, Enterprise) - dark cards with white text, orange "START FREE" on recommended tier, all features listed in white
+
+8. **CTA + Footer:** Newsletter signup (orange button), four-column footer (Publishing, Resources, Company, Support) all in white text on black, social links, legal
 
 ---
 
 ## Images Strategy
 
-**Required Images:**
+**Hero Background:** Wide shot of professional book publishing workspace - manuscript pages, elegant desk lamp casting warm light, bookshelf with classic volumes, window with natural daylight, coffee cup, professional stationery. Dark gradient overlay ensures perfect text contrast.
 
-1. **Hero Background:** Elegant creator workspace - warm desk lamp, notebook, coffee, window with soft light, artistic tools - treated with dark gradient overlay (black from bottom fading to transparent)
-2. **Workflow Section:** Clean interface screenshots showing studio workspaces on dark backgrounds
-3. **Gallery Showcase:** User-generated content samples - book covers, album art, course thumbnails, digital art
-4. **Testimonials:** Professional creator headshots (circle cropped) against dark backgrounds
-5. **Template Marketplace:** Template previews showing polished designs for various content types
-6. **Background Accents:** Subtle paper texture or canvas grain overlays on section backgrounds for tactile feel
+**Dashboard Screenshots:** Clean interface mockups showing publishing tools, manuscript editor, book management panels - all on dark backgrounds with high contrast UI elements
 
-**Treatment:** High contrast against black, slight warmth in lighting, sophisticated color grading, orange accent glows where appropriate
+**Book Covers:** Professional book cover designs in gallery showcasing platform capabilities
+
+**Author Photos:** Professional headshots for testimonials, circular crops with subtle border
+
+**All images:** Professionally lit, high quality, supporting the premium publishing platform aesthetic
 
 ---
 
-## Unique Visual Identity
+## Visual Identity
 
-**Literary Atelier Elements:**
-- Serif typography for emotional headlines creating editorial gravitas
-- Gallery-style spacing with generous whitespace
-- Subtle paper/canvas textures on card surfaces
-- Orange as creative spark - used sparingly for maximum impact
-- Lucide icons in clean, minimal style
-- Refined hover states: gentle scale (1.02) and subtle orange glow
-- Published work badges styled like wax seals or premium labels
+**Professional Characteristics:**
+- Uncompromising text contrast for maximum readability
+- Clean geometric layouts with consistent spacing
+- Orange accent used strategically for CTAs and active states
+- Sharp hierarchy through size and weight, not color opacity
+- Professional tool aesthetics - think Linear, Figma, Notion
+- Lucide icons throughout for consistency
 
-**Creator-First Language:**
-- "STUDIOS" not "Tools"
-- "SANCTUARY" not "Platform"
-- "PUBLISH" not "Export"
-- "GALLERY" not "Feed"
-- "ATELIER" not "Dashboard"
+**Interaction States:**
+- Buttons: Orange background with 10% darker on hover
+- Cards: Subtle scale (1.01) with orange border glow on hover
+- Links: White with orange underline, orange on hover
+- Inputs: Focus state shows orange border
 
-**Micro-interactions:**
-- Studio cards lift slightly on hover with orange icon transition
-- Smooth fade transitions between sections
-- Progress indicators styled as elegant progress bars with orange fill
-- Success states celebrate with refined confetti in orange/white
+**Platform Language:**
+- "PUBLISH" not "Create"
+- "MANUSCRIPT" not "Document"  
+- "LIBRARY" not "Collection"
+- "PROFESSIONAL TOOLS" not "Features"
 
-This design creates a premium creative environment that inspires while maintaining professional sophistication suitable for serious creators and artists.
+This creates a premium, highly readable professional platform suitable for serious authors and publishers.

@@ -961,13 +961,13 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
   };
 
   return (
-    <div className="h-full flex flex-col bg-zinc-800">
+    <div className="h-full flex flex-col bg-zinc-900">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
-        <div className="border-b border-zinc-600 p-3 shrink-0 bg-zinc-700">
-          <TabsList className="grid grid-cols-3 h-auto bg-zinc-600 p-1 rounded-lg w-full">
+        <div className="border-b border-zinc-700 p-3 shrink-0 bg-zinc-800">
+          <TabsList className="grid grid-cols-3 h-auto bg-zinc-700 p-1 rounded-lg w-full">
             <TabsTrigger 
               value="create" 
-              className="flex items-center justify-center gap-2 py-3 px-2 text-zinc-300 data-[state=active]:bg-primary data-[state=active]:text-white hover:text-white text-sm font-medium"
+              className="flex items-center justify-center gap-2 py-3 px-2 text-white data-[state=active]:bg-primary data-[state=active]:text-white hover:bg-zinc-600 text-sm font-medium"
               data-testid="tab-create"
             >
               <Wand2 className="w-4 h-4" />
@@ -975,7 +975,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
             </TabsTrigger>
             <TabsTrigger 
               value="library" 
-              className="flex items-center justify-center gap-2 py-3 px-2 text-zinc-300 data-[state=active]:bg-primary data-[state=active]:text-white hover:text-white text-sm font-medium"
+              className="flex items-center justify-center gap-2 py-3 px-2 text-white data-[state=active]:bg-primary data-[state=active]:text-white hover:bg-zinc-600 text-sm font-medium"
               data-testid="tab-library"
             >
               <FolderOpen className="w-4 h-4" />
@@ -983,7 +983,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
             </TabsTrigger>
             <TabsTrigger 
               value="format" 
-              className="flex items-center justify-center gap-2 py-3 px-2 text-zinc-300 data-[state=active]:bg-primary data-[state=active]:text-white hover:text-white text-sm font-medium"
+              className="flex items-center justify-center gap-2 py-3 px-2 text-white data-[state=active]:bg-primary data-[state=active]:text-white hover:bg-zinc-600 text-sm font-medium"
               data-testid="tab-format"
             >
               <Settings className="w-4 h-4" />
@@ -993,12 +993,12 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
         </div>
 
         {/* CREATE TAB - AI, Images, Content, Import */}
-        <TabsContent value="create" className="flex-1 m-0 overflow-hidden bg-zinc-300">
+        <TabsContent value="create" className="flex-1 m-0 overflow-hidden bg-white">
           <ScrollArea className="h-full">
             <div className="p-3">
               <Accordion type="multiple" defaultValue={["ai-chat", "images"]} className="space-y-2">
                 {/* AI Chat/Writing */}
-                <AccordionItem value="ai-chat" className="border rounded-lg bg-white overflow-hidden">
+                <AccordionItem value="ai-chat" className="border border-zinc-200 rounded-lg bg-white overflow-hidden shadow-sm">
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <MessageCircle className="w-4 h-4 text-primary" />
@@ -1007,7 +1007,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
                     <div className="space-y-3">
-                      <div className="bg-zinc-100 rounded-lg p-3 max-h-48 overflow-y-auto">
+                      <div className="bg-zinc-50 rounded-lg p-3 max-h-48 overflow-y-auto border border-zinc-200">
                         {chatMessages.map((msg) => (
                           <div
                             key={msg.id}
@@ -1022,8 +1022,8 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                               <div
                                 className={`rounded-lg px-3 py-2 text-sm ${
                                   msg.role === 'user'
-                                    ? 'bg-primary text-primary-foreground'
-                                    : 'bg-white border'
+                                    ? 'bg-primary text-white'
+                                    : 'bg-white border border-zinc-200 text-zinc-900'
                                 }`}
                               >
                                 {msg.content}
@@ -1080,7 +1080,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                 </AccordionItem>
 
                 {/* Image Generation & Upload */}
-                <AccordionItem value="images" className="border rounded-lg bg-white overflow-hidden">
+                <AccordionItem value="images" className="border border-zinc-200 rounded-lg bg-white overflow-hidden shadow-sm">
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <Image className="w-4 h-4 text-primary" />
@@ -1091,7 +1091,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                     <div className="space-y-4">
                       {/* Upload */}
                       <div>
-                        <Label className="text-xs font-medium text-zinc-800 mb-2 block">Upload Image</Label>
+                        <Label className="text-xs font-medium text-zinc-900 mb-2 block">Upload Image</Label>
                         <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-dashed border-zinc-300 rounded-lg cursor-pointer hover:bg-zinc-50 transition-colors">
                           <div className="flex items-center gap-2">
                             <Upload className="w-4 h-4 text-zinc-400" />
@@ -1122,7 +1122,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                       
                       {/* Generate */}
                       <div>
-                        <Label className="text-xs font-medium text-zinc-800 mb-2 block">Generate with AI</Label>
+                        <Label className="text-xs font-medium text-zinc-900 mb-2 block">Generate with AI</Label>
                         <Textarea
                           value={imagePrompt}
                           onChange={(e) => setImagePrompt(e.target.value)}
@@ -1150,7 +1150,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                 </AccordionItem>
 
                 {/* Content Blocks */}
-                <AccordionItem value="content" className="border rounded-lg bg-white overflow-hidden">
+                <AccordionItem value="content" className="border border-zinc-200 rounded-lg bg-white overflow-hidden shadow-sm">
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <LayoutGrid className="w-4 h-4 text-primary" />
@@ -1343,7 +1343,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                 </AccordionItem>
 
                 {/* Import Document */}
-                <AccordionItem value="import" className="border rounded-lg bg-white overflow-hidden">
+                <AccordionItem value="import" className="border border-zinc-200 rounded-lg bg-white overflow-hidden shadow-sm">
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <FileUp className="w-4 h-4 text-primary" />
@@ -1446,12 +1446,12 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
         </TabsContent>
 
         {/* LIBRARY TAB - Generated Images, Sources/Citations */}
-        <TabsContent value="library" className="flex-1 m-0 overflow-hidden bg-zinc-300">
+        <TabsContent value="library" className="flex-1 m-0 overflow-hidden bg-white">
           <ScrollArea className="h-full">
             <div className="p-3">
               <Accordion type="multiple" defaultValue={["images-gallery", "sources"]} className="space-y-2">
                 {/* Images Gallery */}
-                <AccordionItem value="images-gallery" className="border rounded-lg bg-white overflow-hidden">
+                <AccordionItem value="images-gallery" className="border border-zinc-200 rounded-lg bg-white overflow-hidden shadow-sm">
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <Image className="w-4 h-4 text-primary" />
@@ -1571,7 +1571,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
 
                                   <div className="grid grid-cols-2 gap-2">
                                     <div className="space-y-1">
-                                      <Label className="text-xs text-zinc-800">Size</Label>
+                                      <Label className="text-xs text-zinc-900">Size</Label>
                                       <Select 
                                         value={settings.size} 
                                         onValueChange={(v) => setImageSettings(prev => ({
@@ -1591,7 +1591,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                                       </Select>
                                     </div>
                                     <div className="space-y-1">
-                                      <Label className="text-xs text-zinc-800">Align</Label>
+                                      <Label className="text-xs text-zinc-900">Align</Label>
                                       <Select 
                                         value={settings.align} 
                                         onValueChange={(v) => setImageSettings(prev => ({
@@ -1612,7 +1612,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                                   </div>
 
                                   <div className="space-y-1">
-                                    <Label className="text-xs text-zinc-800">Caption</Label>
+                                    <Label className="text-xs text-zinc-900">Caption</Label>
                                     <Input
                                       value={settings.caption || img.analysis?.caption || ""}
                                       onChange={(e) => setImageSettings(prev => ({
@@ -1708,7 +1708,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                 </AccordionItem>
 
                 {/* Sources & Citations */}
-                <AccordionItem value="sources" className="border rounded-lg bg-white overflow-hidden">
+                <AccordionItem value="sources" className="border border-zinc-200 rounded-lg bg-white overflow-hidden shadow-sm">
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <BookMarked className="w-4 h-4 text-primary" />
@@ -1895,12 +1895,12 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
         </TabsContent>
 
         {/* FORMAT TAB - KDP Settings, Compliance, Export */}
-        <TabsContent value="format" className="flex-1 m-0 overflow-hidden bg-zinc-300">
+        <TabsContent value="format" className="flex-1 m-0 overflow-hidden bg-white">
           <ScrollArea className="h-full">
             <div className="p-3">
               <Accordion type="multiple" defaultValue={["page-setup", "front-matter"]} className="space-y-2">
                 {/* Page Setup / KDP Settings */}
-                <AccordionItem value="page-setup" className="border rounded-lg bg-white overflow-hidden">
+                <AccordionItem value="page-setup" className="border border-zinc-200 rounded-lg bg-white overflow-hidden shadow-sm">
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <BookOpen className="w-4 h-4 text-primary" />
@@ -1960,7 +1960,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                 </AccordionItem>
 
                 {/* Typography */}
-                <AccordionItem value="typography" className="border rounded-lg bg-white overflow-hidden">
+                <AccordionItem value="typography" className="border border-zinc-200 rounded-lg bg-white overflow-hidden shadow-sm">
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <FileText className="w-4 h-4 text-primary" />
@@ -2011,7 +2011,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                 </AccordionItem>
 
                 {/* Layout Options */}
-                <AccordionItem value="layout" className="border rounded-lg bg-white overflow-hidden">
+                <AccordionItem value="layout" className="border border-zinc-200 rounded-lg bg-white overflow-hidden shadow-sm">
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <Layers className="w-4 h-4 text-primary" />
@@ -2056,7 +2056,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                 </AccordionItem>
 
                 {/* Front Matter Templates */}
-                <AccordionItem value="front-matter" className="border rounded-lg bg-white overflow-hidden" data-testid="accordion-front-matter">
+                <AccordionItem value="front-matter" className="border border-zinc-200 rounded-lg bg-white overflow-hidden shadow-sm" data-testid="accordion-front-matter">
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <ScrollText className="w-4 h-4 text-primary" />
@@ -2173,7 +2173,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                 </AccordionItem>
 
                 {/* Back Matter */}
-                <AccordionItem value="back-matter" className="border rounded-lg bg-white overflow-hidden">
+                <AccordionItem value="back-matter" className="border border-zinc-200 rounded-lg bg-white overflow-hidden shadow-sm">
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <BookCopy className="w-4 h-4 text-primary" />
@@ -2278,7 +2278,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                 </AccordionItem>
 
                 {/* ISBN & Compliance */}
-                <AccordionItem value="isbn" className="border rounded-lg bg-white overflow-hidden">
+                <AccordionItem value="isbn" className="border border-zinc-200 rounded-lg bg-white overflow-hidden shadow-sm">
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4 text-primary" />
@@ -2332,7 +2332,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                 </AccordionItem>
 
                 {/* KDP Checklist */}
-                <AccordionItem value="kdp-checklist" className="border rounded-lg bg-white overflow-hidden">
+                <AccordionItem value="kdp-checklist" className="border border-zinc-200 rounded-lg bg-white overflow-hidden shadow-sm">
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <ClipboardCheck className="w-4 h-4 text-primary" />
