@@ -134,11 +134,18 @@ function CreditWidget() {
   );
 }
 
+interface BatchesResponse {
+  batches: BatchJob[];
+  count: number;
+}
+
 function ActiveJobsWidget() {
-  const { data: batches, isLoading, error } = useQuery<BatchJob[]>({
+  const { data, isLoading, error } = useQuery<BatchesResponse>({
     queryKey: ['/api/production/batches'],
     refetchInterval: 5000,
   });
+  
+  const batches = data?.batches || [];
 
   const getStatusIcon = (status: BatchJob["status"]) => {
     switch (status) {
@@ -185,7 +192,7 @@ function ActiveJobsWidget() {
     );
   }
 
-  const activeJobs = batches?.filter(b => b.status === "processing" || b.status === "pending") || [];
+  const activeJobs = batches.filter(b => b.status === "processing" || b.status === "pending");
 
   return (
     <Card className="bg-zinc-950 border-zinc-800" data-testid="card-active-jobs">
