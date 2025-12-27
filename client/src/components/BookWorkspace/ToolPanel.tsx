@@ -773,7 +773,7 @@ export default function ToolPanel({ projectId, onInsertContent, manuscriptConten
     {
       id: "welcome",
       role: "assistant",
-      content: "Hello! I'm your AI writing assistant. I can help you with writing, editing, brainstorming ideas, and improving your content. What would you like to work on?",
+      content: "I'm your professional editor. I can see your manuscript and will provide specific feedback, suggest edits with before/after examples, and help strengthen your writing. What would you like me to focus on?",
       timestamp: new Date(),
     },
   ]);
@@ -846,8 +846,8 @@ export default function ToolPanel({ projectId, onInsertContent, manuscriptConten
     setIsChatLoading(true);
 
     try {
-      // Build conversation history for context
-      const conversationHistory = chatMessages.slice(-6).map(msg => ({
+      // Build conversation history for context (last 12 messages for better memory)
+      const conversationHistory = chatMessages.slice(-12).map(msg => ({
         role: msg.role,
         content: msg.content
       }));
