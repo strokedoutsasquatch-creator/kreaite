@@ -27,11 +27,14 @@ import {
   Rocket, 
   PanelLeftClose,
   PanelRightClose,
+  PanelBottomClose,
   Maximize2,
   Minimize2,
   Loader2,
   HelpCircle,
   Keyboard,
+  Settings2,
+  GripVertical,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ChapterSidebar from "./ChapterSidebar";
@@ -65,6 +68,7 @@ export default function WorkspaceShell({ onExport, onPublish }: WorkspaceShellPr
 
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
+  const [toolPanelDock, setToolPanelDock] = useState<"right" | "bottom">("right");
   const [distractionFree, setDistractionFree] = useState(false);
   const [activeChapterId, setActiveChapterId] = useState<string | null>(null);
   const [editorContent, setEditorContent] = useState("");
@@ -260,48 +264,122 @@ export default function WorkspaceShell({ onExport, onPublish }: WorkspaceShellPr
             Publish
           </Button>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setRightPanelCollapsed(!rightPanelCollapsed)}
-            data-testid="button-toggle-right-panel"
-          >
-            <PanelRightClose className={`w-4 h-4 transition-transform ${rightPanelCollapsed ? 'rotate-180' : ''}`} />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                data-testid="button-toggle-right-panel"
+              >
+                {rightPanelCollapsed ? (
+                  <PanelRightClose className="w-4 h-4 rotate-180" />
+                ) : toolPanelDock === "right" ? (
+                  <PanelRightClose className="w-4 h-4" />
+                ) : (
+                  <PanelBottomClose className="w-4 h-4" />
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem 
+                onClick={() => { setRightPanelCollapsed(false); setToolPanelDock("right"); }}
+                data-testid="menu-dock-right"
+              >
+                <PanelRightClose className="w-4 h-4 mr-2" />
+                Dock Right
+                {!rightPanelCollapsed && toolPanelDock === "right" && " (Active)"}
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => { setRightPanelCollapsed(false); setToolPanelDock("bottom"); }}
+                data-testid="menu-dock-bottom"
+              >
+                <PanelBottomClose className="w-4 h-4 mr-2" />
+                Dock Bottom
+                {!rightPanelCollapsed && toolPanelDock === "bottom" && " (Active)"}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => setRightPanelCollapsed(!rightPanelCollapsed)}
+                data-testid="menu-collapse-panel"
+              >
+                <Minimize2 className="w-4 h-4 mr-2" />
+                {rightPanelCollapsed ? "Show Panel" : "Hide Panel"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
-      <ResizablePanelGroup direction="horizontal" className="flex-1">
-        {!leftPanelCollapsed && (
-          <>
-            <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
-              <ChapterSidebar
-                projectId={project?.id}
-                activeChapterId={activeChapterId}
-                onChapterSelect={setActiveChapterId}
-              />
-            </ResizablePanel>
-            <ResizableHandle withHandle />
-          </>
-        )}
+      {toolPanelDock === "bottom" ? (
+        /* Bottom dock layout */
+        <ResizablePanelGroup direction="vertical" className="flex-1">
+          <ResizablePanel defaultSize={rightPanelCollapsed ? 100 : 60} minSize={30}>
+            <ResizablePanelGroup direction="horizontal" className="h-full">
+              {!leftPanelCollapsed && (
+                <>
+                  <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
+                    <ChapterSidebar
+                      projectId={project?.id}
+                      activeChapterId={activeChapterId}
+                      onChapterSelect={setActiveChapterId}
+                    />
+                  </ResizablePanel>
+                  <ResizableHandle withHandle />
+                </>
+              )}
+              <ResizablePanel defaultSize={leftPanelCollapsed ? 100 : 80}>
+                <EditorPane
+                  content={editorContent}
+                  onChange={setEditorContent}
+                  projectId={project?.id}
+                />
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          </ResizablePanel>
+          
+          {!rightPanelCollapsed && (
+            <>
+              <ResizableHandle withHandle />
+              <ResizablePanel defaultSize={40} minSize={20} maxSize={60}>
+                <ToolPanel projectId={project?.id} onInsertContent={handleInsertContent} />
+              </ResizablePanel>
+            </>
+          )}
+        </ResizablePanelGroup>
+      ) : (
+        /* Right dock layout (default) */
+        <ResizablePanelGroup direction="horizontal" className="flex-1">
+          {!leftPanelCollapsed && (
+            <>
+              <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
+                <ChapterSidebar
+                  projectId={project?.id}
+                  activeChapterId={activeChapterId}
+                  onChapterSelect={setActiveChapterId}
+                />
+              </ResizablePanel>
+              <ResizableHandle withHandle />
+            </>
+          )}
 
-        <ResizablePanel defaultSize={leftPanelCollapsed && rightPanelCollapsed ? 100 : 40}>
-          <EditorPane
-            content={editorContent}
-            onChange={setEditorContent}
-            projectId={project?.id}
-          />
-        </ResizablePanel>
+          <ResizablePanel defaultSize={leftPanelCollapsed && rightPanelCollapsed ? 100 : 40}>
+            <EditorPane
+              content={editorContent}
+              onChange={setEditorContent}
+              projectId={project?.id}
+            />
+          </ResizablePanel>
 
-        {!rightPanelCollapsed && (
-          <>
-            <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={40} minSize={30} maxSize={50}>
-              <ToolPanel projectId={project?.id} onInsertContent={handleInsertContent} />
-            </ResizablePanel>
-          </>
-        )}
-      </ResizablePanelGroup>
+          {!rightPanelCollapsed && (
+            <>
+              <ResizableHandle withHandle />
+              <ResizablePanel defaultSize={40} minSize={30} maxSize={50}>
+                <ToolPanel projectId={project?.id} onInsertContent={handleInsertContent} />
+              </ResizablePanel>
+            </>
+          )}
+        </ResizablePanelGroup>
+      )}
 
       <Dialog open={showShortcuts} onOpenChange={setShowShortcuts}>
         <DialogContent className="max-w-lg">
