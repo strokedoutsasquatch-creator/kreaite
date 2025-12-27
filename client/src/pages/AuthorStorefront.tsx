@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "wouter";
+import SEO, { createAuthorSchema } from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -202,8 +203,39 @@ export default function AuthorStorefront() {
   const socialLinks = profile.socialLinks as Record<string, string> || {};
   const publisherInfo = profile.publisherInfo as Record<string, unknown> || {};
 
+  const sameAsLinks = useMemo(() => {
+    const links: string[] = [];
+    if (socialLinks.twitter) links.push(socialLinks.twitter);
+    if (socialLinks.instagram) links.push(socialLinks.instagram);
+    if (socialLinks.facebook) links.push(socialLinks.facebook);
+    if (socialLinks.linkedin) links.push(socialLinks.linkedin);
+    if (socialLinks.tiktok) links.push(socialLinks.tiktok);
+    if (socialLinks.youtube) links.push(socialLinks.youtube);
+    if (socialLinks.amazon) links.push(socialLinks.amazon);
+    if (socialLinks.goodreads) links.push(socialLinks.goodreads);
+    return links;
+  }, [socialLinks]);
+
+  const authorName = profile.penName || "Author";
+
+  const authorSchema = useMemo(() => createAuthorSchema({
+    name: authorName,
+    bio: profile.bio || undefined,
+    url: `/author/${params.slug}`,
+    image: profile.photoUrl || undefined,
+    sameAs: sameAsLinks,
+  }), [authorName, profile.bio, profile.photoUrl, params.slug, sameAsLinks]);
+
   return (
     <div className="min-h-screen bg-black">
+      <SEO
+        title={`${authorName} - Author Storefront`}
+        description={profile.bio || `Explore books and content by ${authorName} on KreAIte.xyz`}
+        author={authorName}
+        image={profile.photoUrl || undefined}
+        canonical={`/author/${params.slug}`}
+        schema={authorSchema}
+      />
       <div 
         className="h-64 md:h-80 relative bg-gradient-to-r from-orange-500/20 to-orange-600/10"
         style={socialLinks.bannerUrl ? {
