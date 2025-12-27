@@ -56,6 +56,7 @@ import Settings from "@/pages/Settings";
 import MagicLinkLogin, { MagicLinkVerify } from "@/pages/MagicLinkLogin";
 import AuthorProfile from "@/pages/AuthorProfile";
 import AuthorStorefront from "@/pages/AuthorStorefront";
+import CreatorProductDashboard from "@/pages/CreatorProductDashboard";
 
 // Stroke Recovery Platform Pages (under /recovery/*)
 import StrokeRecoveryLanding from "@/pages/Landing";
@@ -180,6 +181,11 @@ function Router() {
       <Route path="/creator/earnings">
         <ProtectedRoute>
           <CreatorEarnings />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/creator-products">
+        <ProtectedRoute>
+          <CreatorProductDashboard />
         </ProtectedRoute>
       </Route>
       <Route path="/analytics">

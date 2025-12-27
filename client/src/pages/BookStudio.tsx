@@ -611,6 +611,35 @@ export default function BookStudio() {
     }
   };
   
+  // Auto-load most recent project on first visit
+  useEffect(() => {
+    if (!project && projects.length > 0 && !isLoadingProjects) {
+      // Check localStorage for last project ID
+      const lastProjectId = localStorage.getItem('kreaite_last_book_project');
+      if (lastProjectId) {
+        const projectExists = projects.find(p => p.id === parseInt(lastProjectId, 10));
+        if (projectExists) {
+          loadProject(parseInt(lastProjectId, 10));
+          return;
+        }
+      }
+      // Otherwise load the most recently edited project
+      const sortedProjects = [...projects].sort((a, b) => 
+        new Date(b.lastEditedAt).getTime() - new Date(a.lastEditedAt).getTime()
+      );
+      if (sortedProjects[0]) {
+        loadProject(sortedProjects[0].id);
+      }
+    }
+  }, [projects, isLoadingProjects, project, loadProject]);
+  
+  // Save current project ID to localStorage whenever it changes
+  useEffect(() => {
+    if (project?.id) {
+      localStorage.setItem('kreaite_last_book_project', String(project.id));
+    }
+  }, [project?.id]);
+  
   // Handle loading a project
   const handleLoadProject = (projectId: number) => {
     loadProject(projectId);

@@ -17,6 +17,16 @@ import { generateImage, generateMovieScript, generateStoryboard, isVideoServiceC
 import { createGoogleDoc, getGoogleDoc, updateGoogleDoc, createGoogleSlides, createGoogleSheet, createGoogleForm, exportDocument, isGoogleWorkspaceConfigured, getWorkspaceStatus } from "./googleWorkspaceService";
 import { synthesizeSpeechTTS, synthesizeChapter, audiobookStyles, narratorVoices, estimateAudioDuration, estimateTTSCost, isTTSConfigured } from "./textToSpeechService";
 import { getAllPresets, getMusicalScales, getMusicalKeys, calculateSyncedDelay } from "./audioProcessingService";
+import { 
+  isSpotifyConfigured, 
+  searchTracks, 
+  searchArtists, 
+  getArtistTopTracks, 
+  getUserPlaylists, 
+  createPlaylist, 
+  addTracksToPlaylist, 
+  getUserTopTracks 
+} from "./spotifyService";
 import { seedRecoveryData } from "./seedRecoveryData";
 import { seedCreatorToolCategories } from "./seedCreatorTools";
 import { generate, generateStream, bookGenerator, marketingGenerator, screenplayGenerator, courseGenerator, researchGenerator, getUsageStats } from "./aiOrchestrator";
@@ -4130,6 +4140,148 @@ Include:
     } catch (error) {
       console.error("Error generating video prompt:", error);
       res.status(500).json({ message: "Failed to generate video prompt" });
+    }
+  });
+
+  // ============================================================================
+  // Spotify API Routes
+  // ============================================================================
+
+  app.get('/api/spotify/status', async (req, res) => {
+    try {
+      const configured = isSpotifyConfigured();
+      res.json({ connected: configured });
+    } catch (error) {
+      res.json({ connected: false });
+    }
+  });
+
+  app.get('/api/spotify/search/tracks', isAuthenticated, async (req: any, res) => {
+    try {
+      const { q, limit = '20' } = req.query;
+      if (!q || typeof q !== 'string') {
+        return res.status(400).json({ message: "Query parameter 'q' is required" });
+      }
+      const tracks = await searchTracks(q, parseInt(limit as string));
+      res.json(tracks.map(t => ({
+        id: t.id,
+        name: t.name,
+        artist: t.artist,
+        album: t.album,
+        previewUrl: t.previewUrl,
+        spotifyUrl: t.spotifyUrl,
+        albumArt: t.albumImageUrl
+      })));
+    } catch (error: any) {
+      console.error("Error searching Spotify tracks:", error);
+      res.status(500).json({ message: error.message || "Failed to search tracks" });
+    }
+  });
+
+  app.get('/api/spotify/search/artists', isAuthenticated, async (req: any, res) => {
+    try {
+      const { q, limit = '10' } = req.query;
+      if (!q || typeof q !== 'string') {
+        return res.status(400).json({ message: "Query parameter 'q' is required" });
+      }
+      const artists = await searchArtists(q, parseInt(limit as string));
+      res.json(artists.map(a => ({
+        id: a.id,
+        name: a.name,
+        genres: a.genres,
+        popularity: a.popularity,
+        imageUrl: a.imageUrl
+      })));
+    } catch (error: any) {
+      console.error("Error searching Spotify artists:", error);
+      res.status(500).json({ message: error.message || "Failed to search artists" });
+    }
+  });
+
+  app.get('/api/spotify/artist/:id/top-tracks', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        return res.status(400).json({ message: "Artist ID is required" });
+      }
+      const tracks = await getArtistTopTracks(id);
+      res.json(tracks.map(t => ({
+        id: t.id,
+        name: t.name,
+        artist: t.artist,
+        album: t.album,
+        previewUrl: t.previewUrl,
+        spotifyUrl: t.spotifyUrl,
+        albumArt: t.albumImageUrl
+      })));
+    } catch (error: any) {
+      console.error("Error getting artist top tracks:", error);
+      res.status(500).json({ message: error.message || "Failed to get artist top tracks" });
+    }
+  });
+
+  app.get('/api/spotify/user/playlists', isAuthenticated, async (req: any, res) => {
+    try {
+      const playlists = await getUserPlaylists();
+      res.json(playlists);
+    } catch (error: any) {
+      console.error("Error getting user playlists:", error);
+      res.status(500).json({ message: error.message || "Failed to get playlists" });
+    }
+  });
+
+  app.post('/api/spotify/playlists', isAuthenticated, async (req: any, res) => {
+    try {
+      const { name, description = '', isPublic = true } = req.body;
+      if (!name || typeof name !== 'string') {
+        return res.status(400).json({ message: "Playlist name is required" });
+      }
+      const playlist = await createPlaylist(name, description, isPublic);
+      res.json(playlist);
+    } catch (error: any) {
+      console.error("Error creating playlist:", error);
+      res.status(500).json({ message: error.message || "Failed to create playlist" });
+    }
+  });
+
+  app.post('/api/spotify/playlists/:id/tracks', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { trackUris } = req.body;
+      if (!id) {
+        return res.status(400).json({ message: "Playlist ID is required" });
+      }
+      if (!trackUris || !Array.isArray(trackUris) || trackUris.length === 0) {
+        return res.status(400).json({ message: "Track URIs array is required" });
+      }
+      const result = await addTracksToPlaylist(id, trackUris);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error adding tracks to playlist:", error);
+      res.status(500).json({ message: error.message || "Failed to add tracks to playlist" });
+    }
+  });
+
+  app.get('/api/spotify/user/top-tracks', isAuthenticated, async (req: any, res) => {
+    try {
+      const { timeRange = 'medium_term' } = req.query;
+      const validRanges = ['short_term', 'medium_term', 'long_term'];
+      const range = validRanges.includes(timeRange as string) 
+        ? (timeRange as 'short_term' | 'medium_term' | 'long_term') 
+        : 'medium_term';
+      const tracks = await getUserTopTracks(range);
+      res.json(tracks.map(t => ({
+        id: t.id,
+        name: t.name,
+        artist: t.artist,
+        album: t.album,
+        previewUrl: t.previewUrl,
+        spotifyUrl: t.spotifyUrl,
+        albumArt: t.albumImageUrl
+      })));
+    } catch (error: any) {
+      console.error("Error getting user top tracks:", error);
+      res.status(500).json({ message: error.message || "Failed to get top tracks" });
     }
   });
 
