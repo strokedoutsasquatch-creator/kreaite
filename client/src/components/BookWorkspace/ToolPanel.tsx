@@ -1196,39 +1196,70 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
   };
 
   return (
-    <div className="h-full flex flex-col bg-sidebar">
+    <div className="h-full flex flex-col bg-zinc-900">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
-        <div className="border-b px-2 shrink-0">
-          <TabsList className="w-full justify-start h-10 bg-transparent">
-            <TabsTrigger value="ai" className="gap-1 data-[state=active]:bg-sidebar-accent">
-              <MessageCircle className="w-4 h-4" />
-              AI
-            </TabsTrigger>
-            <TabsTrigger value="import" className="gap-1 data-[state=active]:bg-sidebar-accent" data-testid="tab-import">
-              <FileUp className="w-4 h-4" />
-              Import
-            </TabsTrigger>
-            <TabsTrigger value="content" className="gap-1 data-[state=active]:bg-sidebar-accent">
-              <LayoutGrid className="w-4 h-4" />
-              Content
-            </TabsTrigger>
-            <TabsTrigger value="images" className="gap-1 data-[state=active]:bg-sidebar-accent">
-              <Image className="w-4 h-4" />
-              Images
-            </TabsTrigger>
-            <TabsTrigger value="research" className="gap-1 data-[state=active]:bg-sidebar-accent" data-testid="tab-research">
-              <BookMarked className="w-4 h-4" />
-              Research
-            </TabsTrigger>
-            <TabsTrigger value="format" className="gap-1 data-[state=active]:bg-sidebar-accent">
-              <Settings className="w-4 h-4" />
-              Format
-            </TabsTrigger>
-            <TabsTrigger value="compliance" className="gap-1 data-[state=active]:bg-sidebar-accent" data-testid="tab-compliance">
-              <Shield className="w-4 h-4" />
-              Compliance
-            </TabsTrigger>
-          </TabsList>
+        {/* Large visible tab bar */}
+        <div className="border-b border-zinc-700 p-3 shrink-0 bg-zinc-800">
+          <div className="grid grid-cols-4 gap-2 mb-3">
+            <TabsList className="col-span-4 grid grid-cols-4 h-auto bg-zinc-700/50 p-1 rounded-lg">
+              <TabsTrigger 
+                value="ai" 
+                className="flex flex-col items-center gap-1 py-2 px-1 text-zinc-300 data-[state=active]:bg-primary data-[state=active]:text-white hover:text-white text-xs font-medium"
+              >
+                <MessageCircle className="w-5 h-5" />
+                AI
+              </TabsTrigger>
+              <TabsTrigger 
+                value="import" 
+                className="flex flex-col items-center gap-1 py-2 px-1 text-zinc-300 data-[state=active]:bg-primary data-[state=active]:text-white hover:text-white text-xs font-medium" 
+                data-testid="tab-import"
+              >
+                <FileUp className="w-5 h-5" />
+                Import
+              </TabsTrigger>
+              <TabsTrigger 
+                value="content" 
+                className="flex flex-col items-center gap-1 py-2 px-1 text-zinc-300 data-[state=active]:bg-primary data-[state=active]:text-white hover:text-white text-xs font-medium"
+              >
+                <LayoutGrid className="w-5 h-5" />
+                Content
+              </TabsTrigger>
+              <TabsTrigger 
+                value="images" 
+                className="flex flex-col items-center gap-1 py-2 px-1 text-zinc-300 data-[state=active]:bg-primary data-[state=active]:text-white hover:text-white text-xs font-medium"
+              >
+                <Image className="w-5 h-5" />
+                Images
+              </TabsTrigger>
+            </TabsList>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <TabsList className="col-span-3 grid grid-cols-3 h-auto bg-zinc-700/50 p-1 rounded-lg">
+              <TabsTrigger 
+                value="research" 
+                className="flex flex-col items-center gap-1 py-2 px-1 text-zinc-300 data-[state=active]:bg-primary data-[state=active]:text-white hover:text-white text-xs font-medium" 
+                data-testid="tab-research"
+              >
+                <BookMarked className="w-5 h-5" />
+                Research
+              </TabsTrigger>
+              <TabsTrigger 
+                value="format" 
+                className="flex flex-col items-center gap-1 py-2 px-1 text-zinc-300 data-[state=active]:bg-primary data-[state=active]:text-white hover:text-white text-xs font-medium"
+              >
+                <Settings className="w-5 h-5" />
+                Format
+              </TabsTrigger>
+              <TabsTrigger 
+                value="compliance" 
+                className="flex flex-col items-center gap-1 py-2 px-1 text-zinc-300 data-[state=active]:bg-primary data-[state=active]:text-white hover:text-white text-xs font-medium" 
+                data-testid="tab-compliance"
+              >
+                <Shield className="w-5 h-5" />
+                Compliance
+              </TabsTrigger>
+            </TabsList>
+          </div>
         </div>
 
         <TabsContent value="ai" className="flex-1 flex flex-col m-0 overflow-hidden">
@@ -1313,9 +1344,9 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
         <TabsContent value="import" className="flex-1 flex flex-col m-0 overflow-hidden">
           <ScrollArea className="flex-1 p-3">
             <div className="space-y-4">
-              <Card>
+              <Card className="bg-zinc-800 border-zinc-600">
                 <CardHeader className="py-3 gap-1">
-                  <CardTitle className="text-sm flex items-center gap-2">
+                  <CardTitle className="text-sm flex items-center gap-2 text-white">
                     <FileUp className="w-4 h-4" />
                     Import Document
                   </CardTitle>
@@ -1412,15 +1443,15 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                 </CardContent>
               </Card>
               
-              <Card>
+              <Card className="bg-zinc-800 border-zinc-600">
                 <CardHeader className="py-3 gap-1">
-                  <CardTitle className="text-sm flex items-center gap-2">
+                  <CardTitle className="text-sm flex items-center gap-2 text-white">
                     <File className="w-4 h-4" />
                     Supported Formats
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2 text-xs">
+                  <div className="space-y-2 text-xs text-zinc-300">
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-2">
                         <Badge variant="secondary">.docx</Badge>
@@ -1896,9 +1927,9 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
         <TabsContent value="images" className="flex-1 flex flex-col m-0 overflow-hidden">
           <ScrollArea className="flex-1 p-3">
             <div className="space-y-4">
-              <Card>
+              <Card className="bg-zinc-800 border-zinc-600">
                 <CardHeader className="py-3">
-                  <CardTitle className="text-sm flex items-center gap-2">
+                  <CardTitle className="text-sm flex items-center gap-2 text-white">
                     <Wand2 className="w-4 h-4" />
                     Generate Image
                   </CardTitle>
@@ -1908,7 +1939,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                     value={imagePrompt}
                     onChange={(e) => setImagePrompt(e.target.value)}
                     placeholder="Describe the image you want to create..."
-                    className="min-h-[80px]"
+                    className="min-h-[80px] bg-zinc-700 border-zinc-600 text-white placeholder:text-zinc-400"
                     data-testid="textarea-image-prompt"
                   />
                   <Button
@@ -1927,9 +1958,9 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-zinc-800 border-zinc-600">
                 <CardHeader className="py-3">
-                  <CardTitle className="text-sm flex items-center gap-2">
+                  <CardTitle className="text-sm flex items-center gap-2 text-white">
                     <Move className="w-4 h-4" />
                     Image Placement
                   </CardTitle>
@@ -1967,7 +1998,7 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                       Manual
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-zinc-400">
                     {imagePlacementMode === "auto" && "AI automatically places images at optimal positions"}
                     {imagePlacementMode === "hybrid" && "AI suggests placements, you approve or adjust"}
                     {imagePlacementMode === "manual" && "Full control over image positioning"}
@@ -2033,16 +2064,16 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
         <TabsContent value="research" className="flex-1 flex flex-col m-0 overflow-hidden" data-testid="tab-content-research">
           <ScrollArea className="flex-1 p-3">
             <div className="space-y-4">
-              <Card>
+              <Card className="bg-zinc-800 border-zinc-600">
                 <CardHeader className="py-3">
-                  <CardTitle className="text-sm flex items-center gap-2">
+                  <CardTitle className="text-sm flex items-center gap-2 text-white">
                     <Plus className="w-4 h-4" />
                     Add Source
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="space-y-2">
-                    <Label className="text-xs">Source Type</Label>
+                    <Label className="text-xs text-zinc-300">Source Type</Label>
                     <Select 
                       value={newSource.type} 
                       onValueChange={(v) => setNewSource(prev => ({ ...prev, type: v as "book" | "website" | "article" | "journal" }))}
@@ -2060,41 +2091,45 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-xs">Title</Label>
+                    <Label className="text-xs text-zinc-300">Title</Label>
                     <Input
                       value={newSource.title}
                       onChange={(e) => setNewSource(prev => ({ ...prev, title: e.target.value }))}
                       placeholder="Enter source title"
+                      className="bg-zinc-700 border-zinc-600 text-white placeholder:text-zinc-400"
                       data-testid="input-source-title"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-xs">Author</Label>
+                    <Label className="text-xs text-zinc-300">Author</Label>
                     <Input
                       value={newSource.author}
                       onChange={(e) => setNewSource(prev => ({ ...prev, author: e.target.value }))}
                       placeholder="Enter author name"
+                      className="bg-zinc-700 border-zinc-600 text-white placeholder:text-zinc-400"
                       data-testid="input-source-author"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-xs">URL (optional)</Label>
+                    <Label className="text-xs text-zinc-300">URL (optional)</Label>
                     <Input
                       value={newSource.url}
                       onChange={(e) => setNewSource(prev => ({ ...prev, url: e.target.value }))}
                       placeholder="https://..."
+                      className="bg-zinc-700 border-zinc-600 text-white placeholder:text-zinc-400"
                       data-testid="input-source-url"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-xs">Year</Label>
+                    <Label className="text-xs text-zinc-300">Year</Label>
                     <Input
                       value={newSource.year}
                       onChange={(e) => setNewSource(prev => ({ ...prev, year: e.target.value }))}
                       placeholder="2024"
+                      className="bg-zinc-700 border-zinc-600 text-white placeholder:text-zinc-400"
                       data-testid="input-source-year"
                     />
                   </div>
@@ -2127,9 +2162,9 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
               </Card>
 
               {sources.length > 0 && (
-                <Card>
+                <Card className="bg-zinc-800 border-zinc-600">
                   <CardHeader className="py-3">
-                    <CardTitle className="text-sm flex items-center gap-2">
+                    <CardTitle className="text-sm flex items-center gap-2 text-white">
                       <Library className="w-4 h-4" />
                       Sources ({sources.length})
                     </CardTitle>
@@ -2138,15 +2173,15 @@ export default function ToolPanel({ projectId, onInsertContent }: ToolPanelProps
                     {sources.map((source, index) => (
                       <div 
                         key={source.id} 
-                        className="p-3 border rounded-lg space-y-2"
+                        className="p-3 border border-zinc-600 rounded-lg space-y-2 bg-zinc-700"
                         data-testid={`source-item-${source.id}`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate" data-testid={`text-source-title-${source.id}`}>
+                            <p className="text-sm font-medium truncate text-white" data-testid={`text-source-title-${source.id}`}>
                               {source.title}
                             </p>
-                            <p className="text-xs text-muted-foreground" data-testid={`text-source-author-${source.id}`}>
+                            <p className="text-xs text-zinc-400" data-testid={`text-source-author-${source.id}`}>
                               {source.author}
                               {source.year && ` (${source.year})`}
                             </p>

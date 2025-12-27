@@ -173,8 +173,9 @@ export default function WorkspaceShell({ onExport, onPublish }: WorkspaceShellPr
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={handleSave} data-testid="button-save">
+          <Button variant="outline" onClick={handleSave} className="gap-2" data-testid="button-save">
             <Save className="w-4 h-4" />
+            Save
           </Button>
           
           <Button 
@@ -188,7 +189,7 @@ export default function WorkspaceShell({ onExport, onPublish }: WorkspaceShellPr
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2" data-testid="dropdown-export">
+              <Button variant="secondary" className="gap-2" data-testid="dropdown-export">
                 <Download className="w-4 h-4" />
                 Export
               </Button>
