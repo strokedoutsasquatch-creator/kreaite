@@ -3001,6 +3001,58 @@ export const creditPackages = pgTable("credit_packages", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Revenue events for tracking all payments and subscription revenue
+export const revenueEvents = pgTable("revenue_events", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }),
+  stripeEventId: text("stripe_event_id").unique(),
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  stripeCustomerId: text("stripe_customer_id"),
+  eventType: text("event_type").notNull(), // subscription_new, subscription_renewal, subscription_cancel, credit_purchase, marketplace_sale
+  amountCents: integer("amount_cents").notNull(),
+  currency: text("currency").notNull().default("usd"),
+  netAmountCents: integer("net_amount_cents"), // After Stripe fees
+  platformFeeCents: integer("platform_fee_cents"), // 15% platform cut for marketplace
+  creatorPayoutCents: integer("creator_payout_cents"), // 85% creator cut for marketplace
+  creatorId: varchar("creator_id").references(() => users.id), // For marketplace sales
+  productType: text("product_type"), // subscription, credits, book, course, template
+  productId: text("product_id"), // Reference to the product sold
+  tierName: text("tier_name"), // For subscriptions
+  creditsGranted: integer("credits_granted"), // Credits added from this payment
+  billingPeriod: text("billing_period"), // monthly, annual
+  status: text("status").notNull().default("succeeded"), // succeeded, pending, failed, refunded
+  refundedAt: timestamp("refunded_at"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_revenue_events_user").on(table.userId),
+  index("idx_revenue_events_created").on(table.createdAt),
+  index("idx_revenue_events_type").on(table.eventType),
+  index("idx_revenue_events_stripe").on(table.stripeEventId),
+]);
+
+// User subscription history for tracking renewals
+export const userSubscriptions = pgTable("user_subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  tierId: integer("tier_id").references(() => subscriptionTiers.id),
+  stripeSubscriptionId: text("stripe_subscription_id").unique(),
+  stripeCustomerId: text("stripe_customer_id"),
+  status: text("status").notNull().default("active"), // active, past_due, canceled, paused
+  billingPeriod: text("billing_period").notNull().default("monthly"), // monthly, annual
+  currentPeriodStart: timestamp("current_period_start"),
+  currentPeriodEnd: timestamp("current_period_end"),
+  canceledAt: timestamp("canceled_at"),
+  lastCreditGrantAt: timestamp("last_credit_grant_at"),
+  monthlyCreditsQuota: integer("monthly_credits_quota").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_user_subscriptions_user").on(table.userId),
+  index("idx_user_subscriptions_stripe").on(table.stripeSubscriptionId),
+]);
+
 // ============================================================================
 // TEMPLATE LIBRARY SYSTEM
 // ============================================================================
@@ -3471,6 +3523,8 @@ export const insertCreditWalletSchema = createInsertSchema(creditWallets).omit({
 export const insertCreditLedgerSchema = createInsertSchema(creditLedger).omit({ id: true, createdAt: true });
 export const insertUsageEventSchema = createInsertSchema(usageEvents).omit({ id: true, createdAt: true });
 export const insertCreditPackageSchema = createInsertSchema(creditPackages).omit({ id: true, createdAt: true });
+export const insertRevenueEventSchema = createInsertSchema(revenueEvents).omit({ id: true, createdAt: true });
+export const insertUserSubscriptionSchema = createInsertSchema(userSubscriptions).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertStudioTemplateSchema = createInsertSchema(studioTemplates).omit({ id: true, createdAt: true, updatedAt: true, usageCount: true });
 export const insertProjectVersionSchema = createInsertSchema(projectVersions).omit({ id: true, createdAt: true });
 export const insertWorkspaceSchema = createInsertSchema(workspaces).omit({ id: true, createdAt: true, updatedAt: true });
@@ -3536,6 +3590,10 @@ export type UsageEvent = typeof usageEvents.$inferSelect;
 export type InsertUsageEvent = z.infer<typeof insertUsageEventSchema>;
 export type CreditPackage = typeof creditPackages.$inferSelect;
 export type InsertCreditPackage = z.infer<typeof insertCreditPackageSchema>;
+export type RevenueEvent = typeof revenueEvents.$inferSelect;
+export type InsertRevenueEvent = z.infer<typeof insertRevenueEventSchema>;
+export type UserSubscription = typeof userSubscriptions.$inferSelect;
+export type InsertUserSubscription = z.infer<typeof insertUserSubscriptionSchema>;
 
 // Template Library Types
 export type StudioTemplate = typeof studioTemplates.$inferSelect;
