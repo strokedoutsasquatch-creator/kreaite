@@ -285,13 +285,24 @@ export default function PlanStep() {
                     onClick={async () => {
                       if (chapters.length > 0) {
                         const chapterContent = chapters.map(ch => 
-                          `${ch.title}: ${ch.description}`
+                          `${ch.title}: ${ch.description || ''}`
                         ).join('\n');
+                        
+                        // Need at least 50 characters for analysis
+                        if (chapterContent.trim().length < 50) {
+                          toast({ 
+                            title: "More Content Needed", 
+                            description: "Add more chapter descriptions for AI analysis",
+                            variant: "default"
+                          });
+                          return;
+                        }
+                        
                         try {
                           await analyzeContent(chapterContent, 'outline', bookOutline?.genre);
                           toast({ title: "Analysis Complete", description: "AI suggestions updated" });
                         } catch {
-                          toast({ title: "Analysis Failed", variant: "destructive" });
+                          toast({ title: "Analysis Failed", description: "Please try again", variant: "destructive" });
                         }
                       }
                     }}
