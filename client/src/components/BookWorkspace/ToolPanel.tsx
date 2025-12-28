@@ -814,6 +814,140 @@ export default function ToolPanel({ projectId, onInsertContent, manuscriptConten
 
   const [sources, setSources] = useState<Source[]>([]);
   const [newSource, setNewSource] = useState<{ type: "book" | "website" | "article" | "journal"; title: string; author: string; url: string; year: string }>({ type: "book", title: "", author: "", url: "", year: "" });
+  const [extractedHeadings, setExtractedHeadings] = useState<{ level: number; text: string; id: string }[]>([]);
+  const [isAnalyzingCompliance, setIsAnalyzingCompliance] = useState(false);
+  const [complianceResults, setComplianceResults] = useState<{
+    wordCount: number;
+    pageEstimate: number;
+    hasImages: boolean;
+    hasToc: boolean;
+    hasCopyright: boolean;
+    hasTitle: boolean;
+    headingCount: number;
+    issues: string[];
+    suggestions: string[];
+  } | null>(null);
+
+  // Extract headings from manuscript for TOC generation
+  const extractHeadings = () => {
+    if (!manuscriptContent) {
+      toast({ title: "No Content", description: "Write some content first", variant: "destructive" });
+      return;
+    }
+    
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(manuscriptContent, 'text/html');
+    const headings: { level: number; text: string; id: string }[] = [];
+    
+    doc.querySelectorAll('h1, h2, h3, h4').forEach((el, index) => {
+      const level = parseInt(el.tagName.substring(1));
+      const text = el.textContent?.trim() || '';
+      if (text) {
+        headings.push({
+          level,
+          text,
+          id: `heading-${index}`,
+        });
+      }
+    });
+    
+    setExtractedHeadings(headings);
+    
+    if (headings.length === 0) {
+      toast({ title: "No Headings Found", description: "Add H1, H2, or H3 headings to your manuscript" });
+    } else {
+      toast({ title: "Headings Extracted", description: `Found ${headings.length} headings` });
+    }
+  };
+
+  // Generate TOC HTML from extracted headings
+  const generateTocHtml = () => {
+    if (extractedHeadings.length === 0) return '';
+    
+    let tocHtml = `<div class="table-of-contents break-after-page p-10">
+  <h2 class="text-2xl font-bold mb-6 text-center text-foreground">Table of Contents</h2>
+  <nav class="toc-list leading-loose text-foreground">`;
+    
+    extractedHeadings.forEach((heading, index) => {
+      const indent = (heading.level - 1) * 20;
+      const pageNum = index + 1; // Placeholder - actual page numbers would come from print layout
+      tocHtml += `
+    <div class="toc-entry flex justify-between items-baseline py-1" style="margin-left: ${indent}px">
+      <span class="${heading.level === 1 ? 'font-semibold' : ''}">${heading.text}</span>
+      <span class="flex-1 mx-2 border-b border-dotted border-muted-foreground/30"></span>
+      <span class="text-muted-foreground">${pageNum}</span>
+    </div>`;
+    });
+    
+    tocHtml += `
+  </nav>
+</div>`;
+    
+    return tocHtml;
+  };
+
+  // Run KDP compliance analysis
+  const runComplianceCheck = () => {
+    setIsAnalyzingCompliance(true);
+    
+    setTimeout(() => {
+      const parser = new DOMParser();
+      const doc = manuscriptContent ? parser.parseFromString(manuscriptContent, 'text/html') : null;
+      const text = doc?.body?.textContent || '';
+      const wordCount = text.split(/\s+/).filter(Boolean).length;
+      const pageEstimate = Math.ceil(wordCount / 250); // ~250 words per page
+      
+      const hasImages = (doc?.querySelectorAll('img').length || 0) > 0;
+      const hasToc = manuscriptContent?.toLowerCase().includes('table of contents') || false;
+      const hasCopyright = manuscriptContent?.toLowerCase().includes('copyright') || false;
+      const hasTitle = doc?.querySelector('h1') !== null;
+      const headingCount = doc?.querySelectorAll('h1, h2, h3').length || 0;
+      
+      const issues: string[] = [];
+      const suggestions: string[] = [];
+      
+      if (wordCount < 5000) {
+        issues.push("Manuscript may be too short for print publishing");
+        suggestions.push("Consider expanding content to at least 10,000 words for better value");
+      }
+      if (!hasToc) {
+        suggestions.push("Add a Table of Contents for reader navigation");
+      }
+      if (!hasCopyright) {
+        issues.push("Missing copyright page");
+        suggestions.push("Insert a copyright page from Front Matter templates");
+      }
+      if (!hasTitle) {
+        issues.push("No main title (H1) found");
+        suggestions.push("Add a title page with H1 heading");
+      }
+      if (headingCount < 3) {
+        suggestions.push("Consider adding more chapter headings for structure");
+      }
+      if (marginInside < 0.625) {
+        issues.push("Inside margin too narrow for KDP binding");
+        suggestions.push("Increase inside margin to at least 0.625 inches");
+      }
+      
+      setComplianceResults({
+        wordCount,
+        pageEstimate,
+        hasImages,
+        hasToc,
+        hasCopyright,
+        hasTitle,
+        headingCount,
+        issues,
+        suggestions,
+      });
+      
+      setIsAnalyzingCompliance(false);
+      toast({ 
+        title: "Analysis Complete", 
+        description: issues.length > 0 ? `Found ${issues.length} issue(s)` : "Looking good!" 
+      });
+    }, 500);
+  };
 
   const handleInsertContent = (html: string) => {
     if (onInsertContent) {
@@ -2185,6 +2319,67 @@ export default function ToolPanel({ projectId, onInsertContent, manuscriptConten
                   </AccordionContent>
                 </AccordionItem>
 
+                {/* Auto-Generated TOC */}
+                <AccordionItem value="toc-generator" className="border border-zinc-200 rounded-lg bg-white overflow-hidden shadow-sm">
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <ListOrdered className="w-4 h-4 text-primary" />
+                      <span className="font-medium text-zinc-900">Auto-Generate TOC</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <div className="space-y-3">
+                      <p className="text-xs text-muted-foreground">
+                        Scan your manuscript for headings and automatically generate a Table of Contents.
+                      </p>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-xs gap-2"
+                        onClick={extractHeadings}
+                        data-testid="button-extract-headings"
+                      >
+                        <Wand2 className="w-3 h-3" />
+                        Scan for Headings
+                      </Button>
+                      
+                      {extractedHeadings.length > 0 && (
+                        <div className="space-y-2">
+                          <div className="border rounded p-2 bg-zinc-50 max-h-40 overflow-y-auto">
+                            <p className="text-xs font-medium text-zinc-600 mb-2">Found {extractedHeadings.length} headings:</p>
+                            {extractedHeadings.map((h, i) => (
+                              <div 
+                                key={i} 
+                                className="text-xs py-0.5 text-zinc-700"
+                                style={{ paddingLeft: `${(h.level - 1) * 12}px` }}
+                              >
+                                <span className="text-zinc-400 mr-1">H{h.level}</span>
+                                {h.text}
+                              </div>
+                            ))}
+                          </div>
+                          
+                          <Button
+                            size="sm"
+                            className="w-full text-xs gap-2"
+                            onClick={() => {
+                              const tocHtml = generateTocHtml();
+                              if (tocHtml) {
+                                handleInsertContent(tocHtml);
+                              }
+                            }}
+                            data-testid="button-insert-generated-toc"
+                          >
+                            <Plus className="w-3 h-3" />
+                            Insert TOC
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
                 {/* Back Matter */}
                 <AccordionItem value="back-matter" className="border border-zinc-200 rounded-lg bg-white overflow-hidden shadow-sm">
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
@@ -2290,26 +2485,41 @@ export default function ToolPanel({ projectId, onInsertContent, manuscriptConten
                   </AccordionContent>
                 </AccordionItem>
 
-                {/* ISBN & Compliance */}
+                {/* ISBN Helper */}
                 <AccordionItem value="isbn" className="border border-zinc-200 rounded-lg bg-white overflow-hidden shadow-sm">
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4 text-primary" />
-                      <span className="font-medium text-zinc-900">ISBN & Compliance</span>
+                      <span className="font-medium text-zinc-900">ISBN Helper</span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label className="text-xs">ISBN Number</Label>
+                        <Label className="text-xs">Enter ISBN</Label>
                         <Input
                           value={isbnInput}
                           onChange={(e) => {
-                            setIsbnInput(e.target.value);
-                            const cleaned = e.target.value.replace(/[-\s]/g, '');
-                            if (cleaned.length > 0 && !/^\d{10}$|^\d{13}$/.test(cleaned)) {
+                            const value = e.target.value;
+                            setIsbnInput(value);
+                            const cleaned = value.replace(/[-\s]/g, '');
+                            if (cleaned.length === 0) {
+                              setIsbnError("");
+                            } else if (!/^\d{10}$|^\d{13}$/.test(cleaned)) {
                               setIsbnError("ISBN must be 10 or 13 digits");
                             } else {
+                              // Validate check digit for ISBN-13
+                              if (cleaned.length === 13) {
+                                let sum = 0;
+                                for (let i = 0; i < 12; i++) {
+                                  sum += parseInt(cleaned[i]) * (i % 2 === 0 ? 1 : 3);
+                                }
+                                const checkDigit = (10 - (sum % 10)) % 10;
+                                if (checkDigit !== parseInt(cleaned[12])) {
+                                  setIsbnError("Invalid ISBN-13 check digit");
+                                  return;
+                                }
+                              }
                               setIsbnError("");
                             }
                           }}
@@ -2318,12 +2528,75 @@ export default function ToolPanel({ projectId, onInsertContent, manuscriptConten
                           data-testid="input-isbn"
                         />
                         {isbnError && <p className="text-xs text-red-500">{isbnError}</p>}
+                        {!isbnError && isbnInput && (
+                          <p className="text-xs text-green-600">Valid ISBN format</p>
+                        )}
+                      </div>
+                      
+                      {/* Format display */}
+                      {isbnInput && !isbnError && (
+                        <div className="bg-zinc-50 rounded p-2 space-y-1">
+                          <p className="text-xs text-zinc-500">Formatted:</p>
+                          <p className="font-mono text-sm">
+                            {(() => {
+                              const cleaned = isbnInput.replace(/[-\s]/g, '');
+                              if (cleaned.length === 13) {
+                                return `${cleaned.slice(0,3)}-${cleaned.slice(3,4)}-${cleaned.slice(4,9)}-${cleaned.slice(9,12)}-${cleaned.slice(12)}`;
+                              }
+                              return cleaned;
+                            })()}
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs gap-1"
+                          onClick={() => {
+                            if (isbnInput && !isbnError) {
+                              const cleaned = isbnInput.replace(/[-\s]/g, '');
+                              const formatted = cleaned.length === 13 
+                                ? `${cleaned.slice(0,3)}-${cleaned.slice(3,4)}-${cleaned.slice(4,9)}-${cleaned.slice(9,12)}-${cleaned.slice(12)}`
+                                : cleaned;
+                              handleInsertContent(`<p class="font-mono">ISBN: ${formatted}</p>`);
+                            }
+                          }}
+                          disabled={!isbnInput || !!isbnError}
+                          data-testid="button-insert-isbn"
+                        >
+                          <Plus className="w-3 h-3" />
+                          Insert ISBN
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs gap-1"
+                          onClick={() => {
+                            if (isbnInput && !isbnError) {
+                              handleInsertContent(`<div class="isbn-barcode my-4 text-center">
+  <div class="inline-block p-4 bg-white border rounded">
+    <p class="font-mono text-lg tracking-widest mb-2">${isbnInput.replace(/[-\s]/g, '')}</p>
+    <div class="h-12 bg-gradient-to-r from-black via-white to-black bg-[length:3px_100%]"></div>
+    <p class="text-xs text-muted-foreground mt-2">ISBN Barcode</p>
+  </div>
+</div>`);
+                            }
+                          }}
+                          disabled={!isbnInput || !!isbnError}
+                          data-testid="button-insert-barcode"
+                        >
+                          <BarChart3 className="w-3 h-3" />
+                          Insert Barcode
+                        </Button>
                       </div>
 
                       <Button
                         variant="outline"
                         size="sm"
-                        className="w-full text-xs"
+                        className="w-full text-xs gap-2"
                         onClick={() => {
                           if (isbnInput && !isbnError) {
                             handleInsertContent(`<div class="qr-code my-4 text-center">
@@ -2337,55 +2610,154 @@ export default function ToolPanel({ projectId, onInsertContent, manuscriptConten
                         disabled={!isbnInput || !!isbnError}
                         data-testid="button-insert-qr"
                       >
-                        <QrCode className="w-3 h-3 mr-2" />
+                        <QrCode className="w-3 h-3" />
                         Insert QR Code
                       </Button>
+                      
+                      <div className="pt-2 border-t">
+                        <p className="text-xs text-muted-foreground">
+                          Need an ISBN? Visit <a href="https://www.bowker.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Bowker.com</a> (US) or <a href="https://www.isbn.org" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">ISBN.org</a>
+                        </p>
+                      </div>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
 
-                {/* KDP Checklist */}
-                <AccordionItem value="kdp-checklist" className="border border-zinc-200 rounded-lg bg-white overflow-hidden shadow-sm">
+                {/* KDP Compliance Checker */}
+                <AccordionItem value="kdp-compliance" className="border border-zinc-200 rounded-lg bg-white overflow-hidden shadow-sm">
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <ClipboardCheck className="w-4 h-4 text-primary" />
-                      <span className="font-medium text-zinc-900">KDP Checklist</span>
+                      <span className="font-medium text-zinc-900">KDP Compliance</span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
-                    <div className="space-y-2">
-                      {Object.entries(kdpChecklist).map(([key, value]) => {
-                        const labels: Record<string, string> = {
-                          trimSizeSelected: "Trim size selected",
-                          marginsCompliant: "Margins KDP compliant",
-                          fontsEmbedded: "Fonts embedded",
-                          imagesHighRes: "Images 300+ DPI",
-                          noBleedIssues: "No bleed issues",
-                          tocLinksWorking: "TOC links working",
-                          copyrightComplete: "Copyright page complete",
-                          pageCountMet: "Page count requirements met",
-                        };
-                        return (
-                          <div key={key} className="flex items-center justify-between py-1">
-                            <Label className="text-xs">{labels[key]}</Label>
-                            <Switch
-                              checked={value}
-                              onCheckedChange={(checked) => 
-                                setKdpChecklist(prev => ({ ...prev, [key]: checked }))
-                              }
-                              data-testid={`switch-kdp-${key}`}
-                            />
+                    <div className="space-y-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-xs gap-2"
+                        onClick={runComplianceCheck}
+                        disabled={isAnalyzingCompliance}
+                        data-testid="button-run-compliance"
+                      >
+                        {isAnalyzingCompliance ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <Wand2 className="w-3 h-3" />
+                        )}
+                        {isAnalyzingCompliance ? "Analyzing..." : "Run Compliance Check"}
+                      </Button>
+                      
+                      {complianceResults && (
+                        <div className="space-y-3 pt-2">
+                          {/* Stats */}
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-zinc-50 rounded p-2 text-center">
+                              <p className="text-lg font-bold text-zinc-900">{complianceResults.wordCount.toLocaleString()}</p>
+                              <p className="text-xs text-zinc-500">Words</p>
+                            </div>
+                            <div className="bg-zinc-50 rounded p-2 text-center">
+                              <p className="text-lg font-bold text-zinc-900">~{complianceResults.pageEstimate}</p>
+                              <p className="text-xs text-zinc-500">Pages</p>
+                            </div>
                           </div>
-                        );
-                      })}
-                      <div className="pt-3 border-t mt-3">
+                          
+                          {/* Checks */}
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 text-xs">
+                              {complianceResults.hasTitle ? (
+                                <CheckSquare className="w-3 h-3 text-green-600" />
+                              ) : (
+                                <AlertTriangle className="w-3 h-3 text-orange-500" />
+                              )}
+                              <span>Title page (H1)</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs">
+                              {complianceResults.hasCopyright ? (
+                                <CheckSquare className="w-3 h-3 text-green-600" />
+                              ) : (
+                                <AlertTriangle className="w-3 h-3 text-orange-500" />
+                              )}
+                              <span>Copyright page</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs">
+                              {complianceResults.hasToc ? (
+                                <CheckSquare className="w-3 h-3 text-green-600" />
+                              ) : (
+                                <AlertTriangle className="w-3 h-3 text-orange-500" />
+                              )}
+                              <span>Table of Contents</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs">
+                              {complianceResults.headingCount >= 3 ? (
+                                <CheckSquare className="w-3 h-3 text-green-600" />
+                              ) : (
+                                <AlertTriangle className="w-3 h-3 text-orange-500" />
+                              )}
+                              <span>Chapter structure ({complianceResults.headingCount} headings)</span>
+                            </div>
+                          </div>
+                          
+                          {/* Issues */}
+                          {complianceResults.issues.length > 0 && (
+                            <div className="border-l-2 border-red-500 pl-2 py-1 bg-red-50">
+                              <p className="text-xs font-medium text-red-700 mb-1">Issues:</p>
+                              {complianceResults.issues.map((issue, i) => (
+                                <p key={i} className="text-xs text-red-600">{issue}</p>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {/* Suggestions */}
+                          {complianceResults.suggestions.length > 0 && (
+                            <div className="border-l-2 border-yellow-500 pl-2 py-1 bg-yellow-50">
+                              <p className="text-xs font-medium text-yellow-700 mb-1">Suggestions:</p>
+                              {complianceResults.suggestions.map((sug, i) => (
+                                <p key={i} className="text-xs text-yellow-600">{sug}</p>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Manual Checklist */}
+                      <div className="pt-3 border-t">
+                        <p className="text-xs font-medium text-zinc-600 mb-2">Manual Checks:</p>
+                        {Object.entries(kdpChecklist).map(([key, value]) => {
+                          const labels: Record<string, string> = {
+                            trimSizeSelected: "Trim size selected",
+                            marginsCompliant: "Margins KDP compliant",
+                            fontsEmbedded: "Fonts embedded",
+                            imagesHighRes: "Images 300+ DPI",
+                            noBleedIssues: "No bleed issues",
+                            tocLinksWorking: "TOC links working",
+                            copyrightComplete: "Copyright page complete",
+                            pageCountMet: "Page count requirements met",
+                          };
+                          return (
+                            <div key={key} className="flex items-center justify-between py-0.5">
+                              <Label className="text-xs">{labels[key]}</Label>
+                              <Switch
+                                checked={value}
+                                onCheckedChange={(checked) => 
+                                  setKdpChecklist(prev => ({ ...prev, [key]: checked }))
+                                }
+                                data-testid={`switch-kdp-${key}`}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                      
+                      <div className="pt-2 border-t">
                         <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium">Completion</span>
-                          <span className="text-sm font-medium text-primary">
+                          <span className="text-xs font-medium">Checklist Progress</span>
+                          <span className="text-xs font-medium text-primary">
                             {Math.round((Object.values(kdpChecklist).filter(Boolean).length / Object.keys(kdpChecklist).length) * 100)}%
                           </span>
                         </div>
-                        <div className="w-full bg-muted h-2 rounded-full mt-2 overflow-hidden">
+                        <div className="w-full bg-muted h-1.5 rounded-full mt-1 overflow-hidden">
                           <div 
                             className="bg-primary h-full transition-all"
                             style={{ 
