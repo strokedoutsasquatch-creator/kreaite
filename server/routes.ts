@@ -1651,26 +1651,70 @@ DO NOT include any text - the title will be added separately.`;
     }
   });
 
-  // Generate image from prompt
+  // Generate image from prompt using Google Gemini
   app.post('/api/book/images/generate', isAuthenticated, async (req: any, res) => {
-    const { prompt, style, purpose, chapterIndex } = req.body;
+    const { prompt, style, purpose, chapterIndex, bookTitle, genre } = req.body;
     try {
+      // Enhanced prompt for book illustration
+      const enhancedPrompt = `Book illustration for "${bookTitle || 'a book'}": ${prompt}. 
+Style: ${style || 'realistic'}, ${genre || 'literary'} genre.
+Professional book illustration quality, suitable for print publishing.
+Clean composition, artistic, evocative. No text or words in the image.`;
+
+      // Generate image using Google Gemini gemini-2.5-flash-image model
+      const { GoogleGenAI } = await import('@google/genai');
+      const ai = new GoogleGenAI({
+        apiKey: process.env.AI_INTEGRATIONS_GEMINI_API_KEY,
+        httpOptions: {
+          apiVersion: "",
+          baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL,
+        },
+      });
+
+      const response = await ai.models.generateImages({
+        model: "gemini-2.5-flash-image",
+        prompt: enhancedPrompt,
+        config: {
+          numberOfImages: 1,
+        },
+      });
+
+      // Get the base64 image data from response
+      if (!response.generatedImages || !response.generatedImages[0]) {
+        throw new Error('No image generated');
+      }
+      
+      const generatedImage = response.generatedImages[0];
+      const imageData = generatedImage.image?.imageBytes;
+      if (!imageData) {
+        throw new Error('No image data in response');
+      }
+
+      // Create data URL from base64
+      const imageUrl = `data:image/png;base64,${imageData}`;
+
+      // Save to database
       const [image] = await db.insert(bookImageAssets).values({
         ownerId: req.user.id,
         name: `Generated: ${prompt.substring(0, 50)}`,
         origin: 'generated',
         purpose: purpose || 'illustration',
-        prompt,
-        style: style || 'illustrated',
+        prompt: enhancedPrompt,
+        style: style || 'realistic',
         chapterIndex,
-        originalUrl: '/placeholder-generating.png',
-        status: 'processing',
+        originalUrl: imageUrl,
+        status: 'ready',
       }).returning();
       
-      res.json({ success: true, image, message: 'Image generation started. Use Image Studio for full AI generation.' });
+      res.json({ 
+        success: true, 
+        imageUrl: imageUrl,
+        id: image.id,
+        prompt: enhancedPrompt
+      });
     } catch (error) {
       console.error("Error generating image:", error);
-      res.status(500).json({ message: 'Failed to start image generation' });
+      res.status(500).json({ message: 'Failed to generate image', error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 

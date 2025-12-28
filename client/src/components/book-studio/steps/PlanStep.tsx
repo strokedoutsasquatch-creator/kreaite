@@ -42,7 +42,13 @@ export default function PlanStep() {
     isAnalyzingContent,
     applyFixes,
     isApplyingFixes,
+    documentImports,
+    generateBookImage,
+    isGeneratingImage,
   } = useBookStudio();
+  
+  const hasDocumentContent = documentImports.some(doc => doc.content?.trim());
+  const [generatingImageId, setGeneratingImageId] = useState<string | null>(null);
 
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
 
@@ -327,12 +333,13 @@ export default function PlanStep() {
                         className="w-full"
                         onClick={async () => {
                           try {
-                            await applyFixes();
+                            await applyFixes(undefined, hasDocumentContent);
+                            toast({ title: "Improvements Applied", description: "Your manuscript has been enhanced" });
                           } catch {
                             toast({ title: "Apply Failed", description: "Please try again", variant: "destructive" });
                           }
                         }}
-                        disabled={isApplyingFixes || chapters.every(ch => !ch.content?.trim())}
+                        disabled={isApplyingFixes || (!hasDocumentContent && chapters.every(ch => !ch.content?.trim()))}
                         data-testid="button-apply-fixes"
                       >
                         {isApplyingFixes ? (
@@ -356,15 +363,42 @@ export default function PlanStep() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    {imagePrompts.slice(0, 3).map((prompt, idx) => (
+                    {imagePrompts.slice(0, 5).map((prompt) => (
                       <div key={prompt.id} className="text-xs p-2 bg-card/80 rounded border border-primary/10">
                         <p className="font-medium text-foreground">{prompt.title}</p>
-                        <p className="text-muted-foreground truncate">{prompt.prompt.substring(0, 80)}...</p>
+                        <p className="text-muted-foreground line-clamp-2 mb-2">{prompt.prompt.substring(0, 100)}...</p>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full h-7 text-xs"
+                          disabled={isGeneratingImage || generatingImageId === prompt.id}
+                          onClick={async () => {
+                            setGeneratingImageId(prompt.id);
+                            try {
+                              const imageUrl = await generateBookImage(prompt.prompt, 'realistic', prompt.chapterNumber?.toString());
+                              if (imageUrl) {
+                                toast({ title: "Image Generated", description: `"${prompt.title}" created successfully` });
+                              }
+                            } catch {
+                              toast({ title: "Generation Failed", description: "Please try again", variant: "destructive" });
+                            } finally {
+                              setGeneratingImageId(null);
+                            }
+                          }}
+                          data-testid={`button-generate-image-${prompt.id}`}
+                        >
+                          {generatingImageId === prompt.id ? (
+                            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                          ) : (
+                            <Wand2 className="w-3 h-3 mr-1" />
+                          )}
+                          Generate Image
+                        </Button>
                       </div>
                     ))}
-                    {imagePrompts.length > 3 && (
+                    {imagePrompts.length > 5 && (
                       <p className="text-xs text-muted-foreground text-center">
-                        +{imagePrompts.length - 3} more suggestions
+                        +{imagePrompts.length - 5} more suggestions
                       </p>
                     )}
                   </CardContent>
