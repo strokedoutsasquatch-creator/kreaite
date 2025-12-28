@@ -286,6 +286,11 @@ function Router() {
           <DocHubPage />
         </ProtectedRoute>
       </Route>
+      <Route path="/moderation">
+        <ProtectedRoute>
+          <ModerationDashboard />
+        </ProtectedRoute>
+      </Route>
       <Route path="/admin/moderation">
         <ProtectedRoute>
           <ModerationDashboard />
