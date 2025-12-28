@@ -19,6 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   ChevronDown, 
   Plus, 
@@ -35,6 +36,10 @@ import {
   Keyboard,
   Settings2,
   GripVertical,
+  FileText,
+  List,
+  Wand2,
+  Menu,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ChapterSidebar from "./ChapterSidebar";
@@ -73,6 +78,16 @@ export default function WorkspaceShell({ onExport, onPublish }: WorkspaceShellPr
   const [activeChapterId, setActiveChapterId] = useState<string | null>(null);
   const [editorContent, setEditorContent] = useState("");
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"editor" | "chapters" | "tools">("editor");
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -150,22 +165,25 @@ export default function WorkspaceShell({ onExport, onPublish }: WorkspaceShellPr
 
   return (
     <div className="h-screen bg-background flex flex-col">
-      <header className="h-14 border-b flex items-center justify-between px-4 shrink-0">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setLeftPanelCollapsed(!leftPanelCollapsed)}
-            data-testid="button-toggle-left-panel"
-          >
-            <PanelLeftClose className={`w-4 h-4 transition-transform ${leftPanelCollapsed ? 'rotate-180' : ''}`} />
-          </Button>
+      <header className="h-12 md:h-14 border-b flex items-center justify-between px-2 md:px-4 shrink-0">
+        <div className="flex items-center gap-2 md:gap-3">
+          {/* Desktop only: panel toggle */}
+          {!isMobile && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setLeftPanelCollapsed(!leftPanelCollapsed)}
+              data-testid="button-toggle-left-panel"
+            >
+              <PanelLeftClose className={`w-4 h-4 transition-transform ${leftPanelCollapsed ? 'rotate-180' : ''}`} />
+            </Button>
+          )}
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2" data-testid="dropdown-project-selector">
-                {project?.title || "Select Project"}
-                <ChevronDown className="w-4 h-4" />
+              <Button variant="outline" className="gap-1 md:gap-2 text-sm md:text-base max-w-[140px] md:max-w-none" data-testid="dropdown-project-selector">
+                <span className="truncate">{project?.title || "Select Project"}</span>
+                <ChevronDown className="w-3 h-3 md:w-4 md:h-4 shrink-0" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-64">
@@ -186,49 +204,56 @@ export default function WorkspaceShell({ onExport, onPublish }: WorkspaceShellPr
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {isSaving && (
+          {/* Desktop only: save status */}
+          {!isMobile && isSaving && (
             <div className="flex items-center gap-1 text-muted-foreground text-sm">
               <Loader2 className="w-3 h-3 animate-spin" />
               Saving...
             </div>
           )}
-          {!isSaving && lastSaved && (
+          {!isMobile && !isSaving && lastSaved && (
             <span className="text-muted-foreground text-sm">
               Saved {formatLastSaved(lastSaved)}
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={handleSave} className="gap-2" data-testid="button-save">
+        <div className="flex items-center gap-1 md:gap-2">
+          <Button variant="outline" onClick={handleSave} size={isMobile ? "sm" : "default"} className="gap-1 md:gap-2" data-testid="button-save">
             <Save className="w-4 h-4" />
-            Save
+            <span className="hidden md:inline">Save</span>
           </Button>
           
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setShowShortcuts(true)}
-            title="Keyboard Shortcuts (?)"
-            data-testid="button-keyboard-shortcuts"
-          >
-            <Keyboard className="w-4 h-4" />
-          </Button>
+          {/* Desktop only: keyboard shortcuts */}
+          {!isMobile && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setShowShortcuts(true)}
+              title="Keyboard Shortcuts (?)"
+              data-testid="button-keyboard-shortcuts"
+            >
+              <Keyboard className="w-4 h-4" />
+            </Button>
+          )}
 
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setDistractionFree(true)}
-            data-testid="button-distraction-free"
-          >
-            <Maximize2 className="w-4 h-4" />
-          </Button>
+          {/* Desktop only: distraction free */}
+          {!isMobile && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setDistractionFree(true)}
+              data-testid="button-distraction-free"
+            >
+              <Maximize2 className="w-4 h-4" />
+            </Button>
+          )}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="secondary" className="gap-2" data-testid="dropdown-export">
+              <Button variant="secondary" size={isMobile ? "sm" : "default"} className="gap-1 md:gap-2" data-testid="dropdown-export">
                 <Download className="w-4 h-4" />
-                Export
+                <span className="hidden md:inline">Export</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -259,59 +284,106 @@ export default function WorkspaceShell({ onExport, onPublish }: WorkspaceShellPr
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button onClick={onPublish} className="gap-2" data-testid="button-publish">
+          <Button onClick={onPublish} size={isMobile ? "sm" : "default"} className="gap-1 md:gap-2" data-testid="button-publish">
             <Rocket className="w-4 h-4" />
-            Publish
+            <span className="hidden md:inline">Publish</span>
           </Button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                data-testid="button-toggle-right-panel"
-              >
-                {rightPanelCollapsed ? (
-                  <PanelRightClose className="w-4 h-4 rotate-180" />
-                ) : toolPanelDock === "right" ? (
-                  <PanelRightClose className="w-4 h-4" />
-                ) : (
-                  <PanelBottomClose className="w-4 h-4" />
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem 
-                onClick={() => { setRightPanelCollapsed(false); setToolPanelDock("right"); }}
-                data-testid="menu-dock-right"
-              >
-                <PanelRightClose className="w-4 h-4 mr-2" />
-                Dock Right
-                {!rightPanelCollapsed && toolPanelDock === "right" && " (Active)"}
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => { setRightPanelCollapsed(false); setToolPanelDock("bottom"); }}
-                data-testid="menu-dock-bottom"
-              >
-                <PanelBottomClose className="w-4 h-4 mr-2" />
-                Dock Bottom
-                {!rightPanelCollapsed && toolPanelDock === "bottom" && " (Active)"}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={() => setRightPanelCollapsed(!rightPanelCollapsed)}
-                data-testid="menu-collapse-panel"
-              >
-                <Minimize2 className="w-4 h-4 mr-2" />
-                {rightPanelCollapsed ? "Show Panel" : "Hide Panel"}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Desktop only: panel toggle */}
+          {!isMobile && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  data-testid="button-toggle-right-panel"
+                >
+                  {rightPanelCollapsed ? (
+                    <PanelRightClose className="w-4 h-4 rotate-180" />
+                  ) : toolPanelDock === "right" ? (
+                    <PanelRightClose className="w-4 h-4" />
+                  ) : (
+                    <PanelBottomClose className="w-4 h-4" />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem 
+                  onClick={() => { setRightPanelCollapsed(false); setToolPanelDock("right"); }}
+                  data-testid="menu-dock-right"
+                >
+                  <PanelRightClose className="w-4 h-4 mr-2" />
+                  Dock Right
+                  {!rightPanelCollapsed && toolPanelDock === "right" && " (Active)"}
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => { setRightPanelCollapsed(false); setToolPanelDock("bottom"); }}
+                  data-testid="menu-dock-bottom"
+                >
+                  <PanelBottomClose className="w-4 h-4 mr-2" />
+                  Dock Bottom
+                  {!rightPanelCollapsed && toolPanelDock === "bottom" && " (Active)"}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  onClick={() => setRightPanelCollapsed(!rightPanelCollapsed)}
+                  data-testid="menu-collapse-panel"
+                >
+                  <Minimize2 className="w-4 h-4 mr-2" />
+                  {rightPanelCollapsed ? "Show Panel" : "Hide Panel"}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </header>
 
-      {toolPanelDock === "bottom" ? (
-        /* Bottom dock layout */
+      {/* MOBILE LAYOUT */}
+      {isMobile ? (
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Tabs value={mobileTab} onValueChange={(v) => setMobileTab(v as any)} className="flex-1 flex flex-col">
+            <TabsContent value="editor" className="flex-1 m-0 overflow-hidden">
+              <EditorPane
+                content={editorContent}
+                onChange={setEditorContent}
+                projectId={project?.id}
+              />
+            </TabsContent>
+            <TabsContent value="chapters" className="flex-1 m-0 overflow-hidden">
+              <ChapterSidebar
+                projectId={project?.id}
+                activeChapterId={activeChapterId}
+                onChapterSelect={(id) => {
+                  setActiveChapterId(id);
+                  setMobileTab("editor");
+                }}
+              />
+            </TabsContent>
+            <TabsContent value="tools" className="flex-1 m-0 overflow-hidden">
+              <ToolPanel projectId={project?.id} onInsertContent={handleInsertContent} manuscriptContent={editorContent} />
+            </TabsContent>
+            
+            {/* Mobile Bottom Nav */}
+            <div className="border-t bg-zinc-900 p-2 shrink-0">
+              <TabsList className="grid grid-cols-3 w-full bg-zinc-800">
+                <TabsTrigger value="chapters" className="flex items-center gap-2 text-white data-[state=active]:bg-primary" data-testid="mobile-tab-chapters">
+                  <List className="w-4 h-4" />
+                  <span className="text-xs">Chapters</span>
+                </TabsTrigger>
+                <TabsTrigger value="editor" className="flex items-center gap-2 text-white data-[state=active]:bg-primary" data-testid="mobile-tab-editor">
+                  <FileText className="w-4 h-4" />
+                  <span className="text-xs">Write</span>
+                </TabsTrigger>
+                <TabsTrigger value="tools" className="flex items-center gap-2 text-white data-[state=active]:bg-primary" data-testid="mobile-tab-tools">
+                  <Wand2 className="w-4 h-4" />
+                  <span className="text-xs">AI Tools</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
+          </Tabs>
+        </div>
+      ) : toolPanelDock === "bottom" ? (
+        /* DESKTOP: Bottom dock layout */
         <ResizablePanelGroup direction="vertical" className="flex-1">
           <ResizablePanel defaultSize={rightPanelCollapsed ? 100 : 60} minSize={30}>
             <ResizablePanelGroup direction="horizontal" className="h-full">
@@ -347,7 +419,7 @@ export default function WorkspaceShell({ onExport, onPublish }: WorkspaceShellPr
           )}
         </ResizablePanelGroup>
       ) : (
-        /* Right dock layout (default) */
+        /* DESKTOP: Right dock layout (default) */
         <ResizablePanelGroup direction="horizontal" className="flex-1">
           {!leftPanelCollapsed && (
             <>
