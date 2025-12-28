@@ -14,6 +14,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import CreatorHeader from "@/components/CreatorHeader";
+import RecoveryHeader from "@/components/RecoveryHeader";
+import { usePlatform } from "@/lib/hooks/usePlatform";
 import type { ForumCategory, ForumThread, User } from "@shared/schema";
 
 function formatRelativeTime(date: Date | string): string {
@@ -40,11 +42,18 @@ interface CategoryWithStats extends ForumCategory {
 export default function Community() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const platform = usePlatform();
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [isNewThreadOpen, setIsNewThreadOpen] = useState(false);
   const [newThreadTitle, setNewThreadTitle] = useState("");
   const [newThreadContent, setNewThreadContent] = useState("");
   const [newThreadCategoryId, setNewThreadCategoryId] = useState<string>("");
+  
+  const isRecovery = platform === "recovery";
+  const pageTitle = isRecovery ? "Recovery Community" : "Creator Community";
+  const pageSubtitle = isRecovery 
+    ? "Connect with fellow stroke survivors, share your journey, and support each other"
+    : "Connect with fellow creators, share your work, and grow together";
 
   const { data: user } = useQuery<User | null>({
     queryKey: ["/api/auth/user"],
@@ -135,16 +144,16 @@ export default function Community() {
 
   return (
     <div className="min-h-screen bg-background">
-      <CreatorHeader />
+      {isRecovery ? <RecoveryHeader /> : <CreatorHeader />}
       
       <main className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-foreground" data-testid="text-page-title">
-              Recovery Community
+              {pageTitle}
             </h1>
             <p className="text-muted-foreground mt-1">
-              Connect with fellow stroke survivors, share your journey, and support each other
+              {pageSubtitle}
             </p>
           </div>
           
