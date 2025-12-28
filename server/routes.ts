@@ -1651,9 +1651,9 @@ DO NOT include any text - the title will be added separately.`;
     }
   });
 
-  // Generate image from prompt using Google Gemini
+  // Generate image from prompt using Vertex AI Imagen
   app.post('/api/book/images/generate', isAuthenticated, async (req: any, res) => {
-    const { prompt, style, purpose, chapterIndex, bookTitle, genre } = req.body;
+    const { prompt, style, purpose, chapterIndex, bookTitle, genre, aspectRatio } = req.body;
     try {
       // Enhanced prompt for book illustration
       const enhancedPrompt = `Book illustration for "${bookTitle || 'a book'}": ${prompt}. 
@@ -1661,37 +1661,21 @@ Style: ${style || 'realistic'}, ${genre || 'literary'} genre.
 Professional book illustration quality, suitable for print publishing.
 Clean composition, artistic, evocative. No text or words in the image.`;
 
-      // Generate image using Google Gemini gemini-2.5-flash-image model
-      const { GoogleGenAI } = await import('@google/genai');
-      const ai = new GoogleGenAI({
-        apiKey: process.env.AI_INTEGRATIONS_GEMINI_API_KEY,
-        httpOptions: {
-          apiVersion: "",
-          baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL,
-        },
-      });
-
-      const response = await ai.models.generateImages({
-        model: "gemini-2.5-flash-image",
-        prompt: enhancedPrompt,
-        config: {
-          numberOfImages: 1,
-        },
-      });
-
-      // Get the base64 image data from response
-      if (!response.generatedImages || !response.generatedImages[0]) {
-        throw new Error('No image generated');
+      // Use Vertex AI Imagen service (already imported at top)
+      if (!isImagenConfigured()) {
+        return res.status(500).json({ 
+          message: "Image generation service not configured. Please set up GOOGLE_SERVICE_ACCOUNT_KEY." 
+        });
       }
+
+      const result = await generateImageWithImagen(enhancedPrompt, aspectRatio || '1:1');
       
-      const generatedImage = response.generatedImages[0];
-      const imageData = generatedImage.image?.imageBytes;
-      if (!imageData) {
-        throw new Error('No image data in response');
+      if (!result.success || !result.imageBase64) {
+        throw new Error(result.error || 'No image generated');
       }
 
       // Create data URL from base64
-      const imageUrl = `data:image/png;base64,${imageData}`;
+      const imageUrl = `data:${result.mimeType || 'image/png'};base64,${result.imageBase64}`;
 
       // Save to database
       const [image] = await db.insert(bookImageAssets).values({
@@ -2921,7 +2905,7 @@ Only include genuinely new information. Return empty arrays if nothing new was l
   // Export book in various formats
   app.post('/api/book/export', isAuthenticated, async (req: any, res) => {
     try {
-      const { format, bookTitle, chapters, frontMatter, backMatter, settings } = req.body;
+      const { format, bookTitle, chapters, frontMatter, backMatter, settings, imagePlacements, images } = req.body;
       
       // Build the complete book content
       let fullContent = '';
@@ -2946,9 +2930,44 @@ Only include genuinely new information. Return empty arrays if nothing new was l
         fullContent += '\n---\n\n';
       }
       
-      // Add chapters
+      // Add chapters with embedded images
       chapters.forEach((chapter: any, index: number) => {
         fullContent += `# Chapter ${index + 1}: ${chapter.title}\n\n`;
+        
+        // Find approved images placed at this chapter, sorted by position
+        const chapterImages = (imagePlacements || [])
+          .filter((p: any) => p.chapterIndex === index && p.isApproved !== false)
+          .sort((a: any, b: any) => (a.position || 0) - (b.position || 0))
+          .map((p: any) => {
+            const img = (images || []).find((i: any) => i.id === p.imageId);
+            return img ? { ...p, url: img.url, prompt: img.prompt } : null;
+          })
+          .filter(Boolean);
+        
+        // Add images at start of chapter
+        chapterImages.forEach((img: any) => {
+          const alignStyle = img.alignment === 'center' ? 'margin: 0 auto; display: block;' :
+                           img.alignment === 'right' ? 'float: right; margin: 0 0 1em 1em;' :
+                           img.alignment === 'full' ? 'width: 100%;' : 
+                           'float: left; margin: 0 1em 1em 0;';
+          
+          if (format === 'html' || format === 'epub') {
+            fullContent += `<figure style="${alignStyle}">\n`;
+            fullContent += `  <img src="${img.url}" alt="${img.prompt || 'Chapter illustration'}" style="max-width: 100%; height: auto;" />\n`;
+            if (img.caption) {
+              fullContent += `  <figcaption style="text-align: center; font-style: italic; margin-top: 0.5em;">${img.caption}</figcaption>\n`;
+            }
+            fullContent += `</figure>\n\n`;
+          } else {
+            // Markdown format for PDF/DOCX
+            fullContent += `![${img.caption || 'Chapter illustration'}](${img.url})\n`;
+            if (img.caption) {
+              fullContent += `*${img.caption}*\n`;
+            }
+            fullContent += '\n';
+          }
+        });
+        
         fullContent += chapter.content || '';
         fullContent += '\n\n---\n\n';
       });

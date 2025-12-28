@@ -34,6 +34,8 @@ import {
   Trash2,
   CheckCircle,
   Loader2,
+  ImageIcon,
+  Plus,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -70,6 +72,11 @@ export default function PublishStep() {
     isGeneratingKeywords,
     exportBook,
     isExporting,
+    images,
+    imagePlacements,
+    addImagePlacement,
+    removeImagePlacement,
+    updateImagePlacement,
   } = useBookStudio();
 
   const [activeTab, setActiveTab] = useState('layout');
@@ -175,6 +182,7 @@ export default function PublishStep() {
               <TabsTrigger value="layout" data-testid="tab-layout">Page Layout</TabsTrigger>
               <TabsTrigger value="front-matter" data-testid="tab-front-matter">Front Matter</TabsTrigger>
               <TabsTrigger value="back-matter" data-testid="tab-back-matter">Back Matter</TabsTrigger>
+              <TabsTrigger value="images" data-testid="tab-images">Images</TabsTrigger>
               <TabsTrigger value="export" data-testid="tab-export">Export & Publish</TabsTrigger>
             </TabsList>
 
@@ -479,6 +487,138 @@ export default function PublishStep() {
                   </div>
                 </div>
               </div>
+            </TabsContent>
+
+            <TabsContent value="images" className="space-y-6">
+              <Card className="bg-card border">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-foreground">
+                    <ImageIcon className="w-5 h-5 text-primary" />
+                    Image Placements for KDP
+                  </CardTitle>
+                  <CardDescription>
+                    Assign generated images to specific chapters. Images will be embedded in your exported manuscript.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {!bookOutline?.chapters?.length ? (
+                    <div className="text-center py-8 text-muted-foreground" data-testid="status-no-chapters">
+                      <Layout className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <p>No book outline created yet.</p>
+                      <p className="text-sm">Create chapters in the Plan step first.</p>
+                    </div>
+                  ) : images.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground" data-testid="status-no-images">
+                      <ImageIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <p>No images generated yet.</p>
+                      <p className="text-sm">Generate images in the Plan step to place them here.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {images.map((image) => {
+                        const placement = imagePlacements.find(p => p.imageId === image.id);
+                        return (
+                          <Card key={image.id} className="bg-card/80 border overflow-hidden" data-testid={`card-image-${image.id}`}>
+                            <div className="aspect-square relative bg-muted">
+                              <img
+                                src={image.url}
+                                alt={image.prompt || 'Generated image'}
+                                className="w-full h-full object-cover"
+                                data-testid={`img-preview-${image.id}`}
+                              />
+                            </div>
+                            <CardContent className="p-3 space-y-3">
+                              <p className="text-xs text-muted-foreground line-clamp-2">
+                                {image.prompt || 'Uploaded image'}
+                              </p>
+                              {placement ? (
+                                <div className="space-y-2">
+                                  <Badge variant="secondary" className="bg-primary/20 text-primary">
+                                    Chapter {placement.chapterIndex + 1}
+                                  </Badge>
+                                  <div className="flex gap-2">
+                                    <Select
+                                      value={placement.alignment}
+                                      onValueChange={(v) => updateImagePlacement(placement.id, { alignment: v as any })}
+                                    >
+                                      <SelectTrigger className="h-8 text-xs" data-testid={`select-alignment-${image.id}`}>
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="left">Left</SelectItem>
+                                        <SelectItem value="center">Center</SelectItem>
+                                        <SelectItem value="right">Right</SelectItem>
+                                        <SelectItem value="full">Full Width</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => removeImagePlacement(placement.id)}
+                                      data-testid={`button-remove-placement-${image.id}`}
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                  <Input
+                                    placeholder="Caption (optional)"
+                                    value={placement.caption || ''}
+                                    onChange={(e) => updateImagePlacement(placement.id, { caption: e.target.value })}
+                                    className="text-xs h-8"
+                                    data-testid={`input-caption-${image.id}`}
+                                  />
+                                </div>
+                              ) : (
+                                <div className="space-y-2">
+                                  <Select
+                                    onValueChange={(chapterIdx) => {
+                                      addImagePlacement({
+                                        imageId: image.id,
+                                        chapterIndex: parseInt(chapterIdx),
+                                        position: 0,
+                                        alignment: 'center',
+                                        isApproved: true
+                                      });
+                                      toast({
+                                        title: "Image Placed",
+                                        description: `Image added to Chapter ${parseInt(chapterIdx) + 1}`
+                                      });
+                                    }}
+                                  >
+                                    <SelectTrigger className="h-8 text-xs" data-testid={`select-chapter-${image.id}`}>
+                                      <SelectValue placeholder="Assign to chapter..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {(bookOutline?.chapters || []).map((ch, idx) => (
+                                        <SelectItem key={idx} value={idx.toString()}>
+                                          Ch {idx + 1}: {ch.title.substring(0, 30)}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  )}
+                  
+                  {imagePlacements.length > 0 && (
+                    <Card className="bg-primary/5 border-primary/20" data-testid="card-placement-summary">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-2 text-sm text-foreground">
+                          <CheckCircle className="w-4 h-4 text-primary" />
+                          <span data-testid="text-placement-count">
+                            <strong>{imagePlacements.length}</strong> image{imagePlacements.length !== 1 ? 's' : ''} will be embedded in your KDP export
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="export" className="space-y-6">

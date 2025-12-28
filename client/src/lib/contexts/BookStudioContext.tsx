@@ -1077,7 +1077,9 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
         format,
         bookTitle: bookOutline.title,
         chapters: bookOutline.chapters.map(ch => ({ title: ch.title, content: ch.content })),
-        settings: printSettings
+        settings: printSettings,
+        imagePlacements,
+        images
       });
       return response.json();
     },
