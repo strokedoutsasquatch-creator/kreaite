@@ -1,0 +1,373 @@
+import { useState, useRef } from "react";
+import { useBookStudio } from "@/lib/contexts/BookStudioContext";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  FileUp,
+  MessageCircle,
+  Send,
+  Bot,
+  User,
+  Lightbulb,
+  Plus,
+  Trash2,
+  Wand2,
+  ChevronRight,
+  Loader2,
+  Sparkles,
+  BookOpen,
+  Target,
+  Users,
+  Palette,
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+const ideaTypes = [
+  { value: 'theme', label: 'Theme', icon: Palette },
+  { value: 'character', label: 'Character', icon: Users },
+  { value: 'plot', label: 'Plot Point', icon: Target },
+  { value: 'goal', label: 'Goal', icon: Lightbulb },
+  { value: 'note', label: 'Note', icon: BookOpen },
+] as const;
+
+const genreOptions = [
+  { value: "memoir", label: "Memoir" },
+  { value: "self-help", label: "Self-Help" },
+  { value: "fiction", label: "Fiction" },
+  { value: "business", label: "Business/How-To" },
+  { value: "health", label: "Health & Wellness" },
+  { value: "recovery", label: "Recovery Journey" },
+  { value: "childrens", label: "Children's Book" },
+  { value: "devotional", label: "Devotional/Spiritual" },
+];
+
+export default function StartStep() {
+  const { toast } = useToast();
+  const {
+    brainstormIdeas,
+    addBrainstormIdea,
+    removeBrainstormIdea,
+    bookOutline,
+    setBookOutline,
+    setCurrentStep,
+    generateFullBook,
+    generationProgress,
+    documentImports,
+    importDocument,
+  } = useBookStudio();
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [activeTab, setActiveTab] = useState<'brainstorm' | 'upload'>('brainstorm');
+  const [newIdeaContent, setNewIdeaContent] = useState("");
+  const [newIdeaType, setNewIdeaType] = useState<typeof ideaTypes[number]['value']>('theme');
+  const [bookDescription, setBookDescription] = useState("");
+  const [selectedGenre, setSelectedGenre] = useState("memoir");
+  const [bookTitle, setBookTitle] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleAddIdea = () => {
+    if (!newIdeaContent.trim()) return;
+    addBrainstormIdea({
+      content: newIdeaContent.trim(),
+      type: newIdeaType,
+    });
+    setNewIdeaContent("");
+    toast({ title: "Idea Added", description: "Your idea has been saved" });
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    for (const file of Array.from(files)) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const content = event.target?.result as string;
+        const wordCount = content.split(/\s+/).filter(Boolean).length;
+        importDocument({
+          fileName: file.name,
+          fileType: file.type,
+          content,
+          wordCount,
+        });
+        toast({ 
+          title: "Document Imported", 
+          description: `${file.name} (${wordCount.toLocaleString()} words)` 
+        });
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const handleGenerateOutline = async () => {
+    if (!bookDescription.trim() && brainstormIdeas.length === 0) {
+      toast({ 
+        title: "Need More Information", 
+        description: "Add some brainstorm ideas or describe your book", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      await generateFullBook(selectedGenre, bookDescription || "Generate based on brainstorm ideas");
+    } catch (error) {
+      toast({ 
+        title: "Generation Failed", 
+        description: error instanceof Error ? error.message : "Please try again", 
+        variant: "destructive" 
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const groupedIdeas = brainstormIdeas.reduce((acc, idea) => {
+    if (!acc[idea.type]) acc[idea.type] = [];
+    acc[idea.type].push(idea);
+    return acc;
+  }, {} as Record<string, typeof brainstormIdeas>);
+
+  return (
+    <div className="space-y-6">
+      <Card className="bg-black/50 border-orange-500/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-white">
+            <Lightbulb className="w-5 h-5 text-orange-500" />
+            Step 1: Start Your Book
+          </CardTitle>
+          <CardDescription>
+            Brainstorm ideas, upload existing content, or describe your book concept
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
+            <TabsList className="mb-6 bg-black/30">
+              <TabsTrigger value="brainstorm" data-testid="tab-brainstorm">
+                <Lightbulb className="w-4 h-4 mr-2" /> Brainstorm
+              </TabsTrigger>
+              <TabsTrigger value="upload" data-testid="tab-upload">
+                <FileUp className="w-4 h-4 mr-2" /> Upload
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="brainstorm" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-white">Book Title (optional)</Label>
+                    <Input
+                      value={bookTitle}
+                      onChange={(e) => setBookTitle(e.target.value)}
+                      placeholder="Enter your book title..."
+                      className="bg-black/30 border-orange-500/20 text-white"
+                      data-testid="input-book-title"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-white">Genre</Label>
+                    <Select value={selectedGenre} onValueChange={setSelectedGenre}>
+                      <SelectTrigger className="bg-black/30 border-orange-500/20 text-white" data-testid="select-genre">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {genreOptions.map((genre) => (
+                          <SelectItem key={genre.value} value={genre.value}>
+                            {genre.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label className="text-white">Book Description</Label>
+                    <Textarea
+                      value={bookDescription}
+                      onChange={(e) => setBookDescription(e.target.value)}
+                      placeholder="Describe what your book is about, who it's for, and what readers will learn..."
+                      className="min-h-[120px] bg-black/30 border-orange-500/20 text-white"
+                      data-testid="textarea-book-description"
+                    />
+                  </div>
+
+                  <div className="space-y-3 pt-2">
+                    <Label className="text-white">Add Brainstorm Ideas</Label>
+                    <div className="flex gap-2">
+                      <Select value={newIdeaType} onValueChange={(v) => setNewIdeaType(v as typeof newIdeaType)}>
+                        <SelectTrigger className="w-[140px] bg-black/30 border-orange-500/20 text-white" data-testid="select-idea-type">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ideaTypes.map((type) => (
+                            <SelectItem key={type.value} value={type.value}>
+                              {type.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        value={newIdeaContent}
+                        onChange={(e) => setNewIdeaContent(e.target.value)}
+                        placeholder="Enter your idea..."
+                        className="flex-1 bg-black/30 border-orange-500/20 text-white"
+                        onKeyDown={(e) => e.key === 'Enter' && handleAddIdea()}
+                        data-testid="input-new-idea"
+                      />
+                      <Button 
+                        onClick={handleAddIdea} 
+                        size="icon"
+                        className="bg-orange-500 hover:bg-orange-600"
+                        data-testid="button-add-idea"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-white mb-3 block">Your Ideas ({brainstormIdeas.length})</Label>
+                  <ScrollArea className="h-[350px] rounded-lg border border-orange-500/20 bg-black/30 p-3">
+                    {brainstormIdeas.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                        <Lightbulb className="w-12 h-12 mb-3 opacity-50" />
+                        <p className="text-sm">No ideas yet</p>
+                        <p className="text-xs">Add themes, characters, or plot points</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {Object.entries(groupedIdeas).map(([type, ideas]) => (
+                          <div key={type}>
+                            <h4 className="text-xs font-semibold text-orange-400 uppercase mb-2">
+                              {ideaTypes.find(t => t.value === type)?.label || type}
+                            </h4>
+                            <div className="space-y-2">
+                              {ideas.map((idea) => (
+                                <div
+                                  key={idea.id}
+                                  className="flex items-start gap-2 p-2 rounded bg-black/40 border border-orange-500/10 group"
+                                  data-testid={`idea-${idea.id}`}
+                                >
+                                  <p className="flex-1 text-sm text-gray-200">{idea.content}</p>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-300"
+                                    onClick={() => removeBrainstormIdea(idea.id)}
+                                    data-testid={`button-remove-idea-${idea.id}`}
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </ScrollArea>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4 border-t border-orange-500/20">
+                <Button
+                  onClick={handleGenerateOutline}
+                  disabled={isGenerating || generationProgress.isGenerating}
+                  className="bg-orange-500 hover:bg-orange-600"
+                  data-testid="button-generate-outline"
+                >
+                  {isGenerating || generationProgress.isGenerating ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Wand2 className="w-4 h-4 mr-2" />
+                  )}
+                  Generate Book Outline
+                  <ChevronRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="upload" className="space-y-6">
+              <div
+                className="border-2 border-dashed border-orange-500/30 rounded-lg p-8 text-center hover:border-orange-500/50 transition-colors cursor-pointer bg-black/30"
+                onClick={() => fileInputRef.current?.click()}
+                data-testid="upload-zone"
+              >
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  accept=".txt,.md,.doc,.docx,.pdf"
+                  multiple
+                  className="hidden"
+                  data-testid="input-file-upload"
+                />
+                <FileUp className="w-12 h-12 mx-auto mb-4 text-orange-500/50" />
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  Upload Your Manuscript
+                </h3>
+                <p className="text-muted-foreground text-sm mb-4">
+                  Drop files here or click to browse
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Supports: .txt, .md, .doc, .docx, .pdf
+                </p>
+              </div>
+
+              {documentImports.length > 0 && (
+                <div className="space-y-3">
+                  <Label className="text-white">Imported Documents</Label>
+                  <div className="space-y-2">
+                    {documentImports.map((doc) => (
+                      <Card key={doc.id} className="bg-black/30 border-orange-500/20">
+                        <CardContent className="p-3 flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-white">{doc.fileName}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {doc.wordCount?.toLocaleString()} words
+                            </p>
+                          </div>
+                          <Badge variant="secondary" className="bg-orange-500/20 text-orange-400">
+                            {doc.fileType.split('/')[1] || 'document'}
+                          </Badge>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end pt-4 border-t border-orange-500/20">
+                <Button
+                  onClick={() => setCurrentStep('plan')}
+                  disabled={documentImports.length === 0}
+                  className="bg-orange-500 hover:bg-orange-600"
+                  data-testid="button-continue-to-plan"
+                >
+                  Continue to Outline
+                  <ChevronRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

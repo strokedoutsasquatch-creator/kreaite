@@ -22,7 +22,7 @@ import MyStories from "@/pages/MyStories";
 import Pricing from "@/pages/Pricing";
 import MusicStudio from "@/pages/MusicStudio";
 import MusicSandbox from "@/pages/MusicSandbox";
-import BookStudioV2 from "@/pages/BookStudioV2";
+import BookStudioV3 from "@/pages/BookStudioV3";
 import VideoStudio from "@/pages/VideoStudio";
 import CourseStudio from "@/pages/CourseStudio";
 import ImageStudio from "@/pages/ImageStudio";
@@ -153,7 +153,7 @@ function Router() {
           <MusicSandbox />
         </ProtectedRoute>
       </Route>
-      <Route path="/book-studio" component={BookStudioV2} />
+      <Route path="/book-studio" component={BookStudioV3} />
       <Route path="/creator-store" component={CreatorStore} />
       <Route path="/video-studio" component={VideoStudio} />
       <Route path="/course-studio" component={CourseStudio} />
