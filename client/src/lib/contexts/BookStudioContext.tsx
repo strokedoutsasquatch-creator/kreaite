@@ -263,7 +263,7 @@ interface BookStudioContextValue {
   qualityPolish: (chapterIndex?: number) => Promise<void>;
   editChapter: (chapterIndex: number, editType: 'developmental' | 'line' | 'copy' | 'proofread') => Promise<void>;
   
-  applyFixes: (chapterIndex?: number) => Promise<void>;
+  applyFixes: (chapterIndex?: number, useDocumentImports?: boolean) => Promise<void>;
   isApplyingFixes: boolean;
   
   generateBookImage: (prompt: string, style?: string, chapterId?: string) => Promise<string | null>;
@@ -1109,56 +1109,75 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
   });
 
   const applyFixesMutation = useMutation({
-    mutationFn: async ({ chapterIndex }: { chapterIndex?: number }) => {
-      if (!bookOutline) throw new Error('No outline available');
+    mutationFn: async ({ chapterIndex, useDocumentImports }: { chapterIndex?: number, useDocumentImports?: boolean }) => {
+      let content = '';
       
-      const content = chapterIndex !== undefined && bookOutline.chapters[chapterIndex]
-        ? bookOutline.chapters[chapterIndex].content || ''
-        : bookOutline.chapters.map(ch => ch.content || '').join('\n\n---CHAPTER BREAK---\n\n');
+      // Try document imports first if specified or if no outline exists
+      if (useDocumentImports || !bookOutline?.chapters?.length) {
+        content = documentImports.map(doc => doc.content || '').join('\n\n').trim();
+      }
       
-      if (!content.trim()) throw new Error('No content to improve');
+      // If no document content, try chapters
+      if (!content && bookOutline?.chapters?.length) {
+        content = chapterIndex !== undefined && bookOutline.chapters[chapterIndex]
+          ? bookOutline.chapters[chapterIndex].content || ''
+          : bookOutline.chapters.map(ch => ch.content || '').join('\n\n---CHAPTER BREAK---\n\n');
+      }
+      
+      if (!content.trim()) throw new Error('No content to improve. Please upload a manuscript or generate chapters first.');
       
       const response = await apiRequest('POST', '/api/book/apply-fixes', {
         content,
         recommendations: recommendations
       });
-      return { data: await response.json(), chapterIndex };
+      return { data: await response.json(), chapterIndex, useDocumentImports };
     },
-    onSuccess: ({ data, chapterIndex }) => {
-      if (data.success && data.improvedContent && bookOutline) {
-        if (chapterIndex !== undefined) {
-          setBookOutline(prev => {
-            if (!prev) return null;
-            const updated = [...prev.chapters];
-            updated[chapterIndex] = {
-              ...updated[chapterIndex],
-              content: data.improvedContent,
-              wordCount: data.improvedContent.split(/\s+/).length,
-              status: 'complete' as const
-            };
-            return { ...prev, chapters: updated };
-          });
+    onSuccess: ({ data, chapterIndex, useDocumentImports }) => {
+      if (data.success && data.improvedContent) {
+        // If we improved document imports, update them
+        if (useDocumentImports || !bookOutline?.chapters?.length) {
+          setDocumentImports(prev => prev.map((doc, idx) => 
+            idx === 0 ? { ...doc, content: data.improvedContent } : doc
+          ));
           toast({ 
-            title: "Improvements Applied", 
-            description: `Chapter ${chapterIndex + 1} improved (${data.stats?.changePercent || 0}% changes)` 
+            title: "Manuscript Improved", 
+            description: `Your manuscript has been enhanced based on AI recommendations` 
           });
-        } else {
-          // Split improved content back into chapters
-          const improvedChapters = data.improvedContent.split(/---CHAPTER BREAK---/);
-          setBookOutline(prev => {
-            if (!prev) return null;
-            const updated = prev.chapters.map((ch, idx) => ({
-              ...ch,
-              content: improvedChapters[idx]?.trim() || ch.content,
-              wordCount: (improvedChapters[idx]?.trim() || ch.content || '').split(/\s+/).length,
-              status: 'complete' as const
-            }));
-            return { ...prev, chapters: updated };
-          });
-          toast({ 
-            title: "All Improvements Applied", 
-            description: `Book improved with ${data.stats?.changePercent || 0}% changes` 
-          });
+        } else if (bookOutline) {
+          if (chapterIndex !== undefined) {
+            setBookOutline(prev => {
+              if (!prev) return null;
+              const updated = [...prev.chapters];
+              updated[chapterIndex] = {
+                ...updated[chapterIndex],
+                content: data.improvedContent,
+                wordCount: data.improvedContent.split(/\s+/).length,
+                status: 'complete' as const
+              };
+              return { ...prev, chapters: updated };
+            });
+            toast({ 
+              title: "Improvements Applied", 
+              description: `Chapter ${chapterIndex + 1} improved (${data.stats?.changePercent || 0}% changes)` 
+            });
+          } else {
+            // Split improved content back into chapters
+            const improvedChapters = data.improvedContent.split(/---CHAPTER BREAK---/);
+            setBookOutline(prev => {
+              if (!prev) return null;
+              const updated = prev.chapters.map((ch, idx) => ({
+                ...ch,
+                content: improvedChapters[idx]?.trim() || ch.content,
+                wordCount: (improvedChapters[idx]?.trim() || ch.content || '').split(/\s+/).length,
+                status: 'complete' as const
+              }));
+              return { ...prev, chapters: updated };
+            });
+            toast({ 
+              title: "All Improvements Applied", 
+              description: `Book improved with ${data.stats?.changePercent || 0}% changes` 
+            });
+          }
         }
       }
     },
@@ -1277,23 +1296,18 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
   }, [bookOutline, editChapterMutation, toast]);
 
   // Apply AI-recommended fixes to content
-  const applyFixes = useCallback(async (chapterIndex?: number) => {
-    if (!bookOutline) {
-      toast({ title: "No Content", description: "Create book outline first", variant: "destructive" });
+  const applyFixes = useCallback(async (chapterIndex?: number, useDocumentImports?: boolean) => {
+    // Check for content in either documents or chapters
+    const hasDocumentContent = documentImports.some(doc => doc.content?.trim());
+    const hasChapterContent = bookOutline?.chapters?.some(ch => ch.content?.trim());
+    
+    if (!hasDocumentContent && !hasChapterContent) {
+      toast({ title: "No Content", description: "Upload a manuscript or generate chapters first", variant: "destructive" });
       return;
     }
     
-    const hasContent = chapterIndex !== undefined 
-      ? bookOutline.chapters[chapterIndex]?.content?.trim()
-      : bookOutline.chapters.some(ch => ch.content?.trim());
-    
-    if (!hasContent) {
-      toast({ title: "No Content", description: "Generate chapters first", variant: "destructive" });
-      return;
-    }
-    
-    await applyFixesMutation.mutateAsync({ chapterIndex });
-  }, [bookOutline, applyFixesMutation, toast]);
+    await applyFixesMutation.mutateAsync({ chapterIndex, useDocumentImports: useDocumentImports ?? hasDocumentContent });
+  }, [bookOutline, documentImports, applyFixesMutation, toast]);
 
   // Generate book image from prompt
   const generateBookImage = useCallback(async (prompt: string, style?: string, chapterId?: string): Promise<string | null> => {

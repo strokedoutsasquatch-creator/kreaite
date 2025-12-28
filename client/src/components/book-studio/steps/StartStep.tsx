@@ -604,10 +604,9 @@ export default function StartStep() {
                       className="w-full"
                       onClick={async () => {
                         try {
-                          await applyFixes();
-                          toast({ title: "Improvements Applied", description: "Your content has been enhanced based on AI recommendations" });
-                        } catch {
-                          toast({ title: "Apply Failed", description: "Please try again", variant: "destructive" });
+                          await applyFixes(undefined, true);
+                        } catch (error: any) {
+                          toast({ title: "Apply Failed", description: error?.message || "Please try again", variant: "destructive" });
                         }
                       }}
                       disabled={isApplyingFixes || !documentImports.some(doc => doc.content?.trim())}
