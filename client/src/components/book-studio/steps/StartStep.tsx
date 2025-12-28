@@ -32,6 +32,7 @@ import {
   Target,
   Users,
   Palette,
+  Zap,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -71,6 +72,8 @@ export default function StartStep() {
     isAnalyzingContent,
     contentAnalysis,
     recommendations,
+    applyFixes,
+    isApplyingFixes,
   } = useBookStudio();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -586,7 +589,7 @@ export default function StartStep() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ul className="text-sm space-y-2 text-muted-foreground">
+                    <ul className="text-sm space-y-2 text-muted-foreground mb-4">
                       {(recommendations.immediate || recommendations.nextSteps || []).slice(0, 3).map((rec, idx) => (
                         <li key={idx} className="flex items-start gap-2">
                           <ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
@@ -594,6 +597,29 @@ export default function StartStep() {
                         </li>
                       ))}
                     </ul>
+                    
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="w-full"
+                      onClick={async () => {
+                        try {
+                          await applyFixes();
+                          toast({ title: "Improvements Applied", description: "Your content has been enhanced based on AI recommendations" });
+                        } catch {
+                          toast({ title: "Apply Failed", description: "Please try again", variant: "destructive" });
+                        }
+                      }}
+                      disabled={isApplyingFixes || !documentImports.some(doc => doc.content?.trim())}
+                      data-testid="button-apply-fixes-start"
+                    >
+                      {isApplyingFixes ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Zap className="w-4 h-4 mr-2" />
+                      )}
+                      Apply Improvements
+                    </Button>
                   </CardContent>
                 </Card>
               )}
