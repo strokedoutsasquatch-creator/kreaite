@@ -62,6 +62,14 @@ export default function PublishStep() {
     isbnData,
     setIsbnData,
     setCurrentStep,
+    marketingBlurbs,
+    generateBlurb,
+    isGeneratingBlurb: isGeneratingBlurbContext,
+    amazonKeywords: contextKeywords,
+    generateKeywords,
+    isGeneratingKeywords,
+    exportBook,
+    isExporting,
   } = useBookStudio();
 
   const [activeTab, setActiveTab] = useState('layout');
@@ -88,9 +96,13 @@ export default function PublishStep() {
     resources: "",
   });
   
-  const [bookBlurb, setBookBlurb] = useState("");
-  const [amazonKeywords, setAmazonKeywords] = useState<string[]>([]);
-  const [isGeneratingBlurb, setIsGeneratingBlurb] = useState(false);
+  const [localKeywords, setLocalKeywords] = useState<string[]>([]);
+  
+  // Use context blurbs or fallback to empty
+  const bookBlurb = marketingBlurbs?.medium || marketingBlurbs?.long || "";
+  
+  // Combine context keywords with local ones (context first, then local additions)
+  const allKeywords = [...contextKeywords, ...localKeywords.filter(k => !contextKeywords.includes(k))].slice(0, 7);
 
   const chapters = bookOutline?.chapters || [];
   const totalWordCount = chapters.reduce((sum, ch) => sum + (ch.wordCount || ch.targetWordCount), 0);
@@ -101,17 +113,47 @@ export default function PublishStep() {
   const estimatedProfit = suggestedRetail * 0.85 - printCost;
 
   const handleGenerateBlurb = async () => {
-    setIsGeneratingBlurb(true);
-    setTimeout(() => {
-      setBookBlurb(`Discover the transformative journey that will change your life forever. In "${bookOutline?.title || 'this compelling book'}", you'll find practical wisdom, inspiring stories, and actionable strategies to overcome any obstacle.\n\nWhether you're facing challenges or seeking personal growth, this book provides the roadmap you need to achieve your goals and live your best life.`);
-      setIsGeneratingBlurb(false);
-      toast({ title: "Blurb Generated" });
-    }, 1500);
+    try {
+      toast({ title: "Generating Marketing Copy", description: "Creating compelling blurbs..." });
+      await generateBlurb();
+    } catch (error) {
+      toast({ 
+        title: "Generation Failed", 
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleGenerateKeywords = async () => {
+    try {
+      toast({ title: "Generating Keywords", description: "Creating Amazon-optimized keywords..." });
+      await generateKeywords();
+    } catch (error) {
+      toast({ 
+        title: "Generation Failed", 
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleExportBook = async (format: 'pdf' | 'epub' | 'docx' | 'html') => {
+    try {
+      toast({ title: "Exporting Book", description: `Creating ${format.toUpperCase()} file...` });
+      await exportBook(format);
+    } catch (error) {
+      toast({ 
+        title: "Export Failed", 
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleAddKeyword = (keyword: string) => {
-    if (keyword.trim() && amazonKeywords.length < 7) {
-      setAmazonKeywords([...amazonKeywords, keyword.trim()]);
+    if (keyword.trim() && localKeywords.length < 7) {
+      setLocalKeywords([...localKeywords, keyword.trim()]);
     }
   };
 
@@ -449,22 +491,31 @@ export default function PublishStep() {
                     <CardContent className="space-y-4">
                       <Button
                         onClick={handleGenerateBlurb}
-                        disabled={isGeneratingBlurb}
+                        disabled={isGeneratingBlurbContext}
                         variant="outline"
                         className="w-full border text-primary hover:bg-primary/10"
                         data-testid="button-generate-blurb"
                       >
-                        {isGeneratingBlurb ? (
+                        {isGeneratingBlurbContext ? (
                           <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                         ) : (
                           <Wand2 className="w-4 h-4 mr-2" />
                         )}
                         Generate Book Blurb
                       </Button>
+                      {marketingBlurbs && (
+                        <div className="space-y-2 text-sm">
+                          <div className="grid grid-cols-3 gap-2">
+                            <Badge variant="outline" className="text-xs">Short: {marketingBlurbs.short.length} chars</Badge>
+                            <Badge variant="outline" className="text-xs">Medium: {marketingBlurbs.medium.length} chars</Badge>
+                            <Badge variant="outline" className="text-xs">Long: {marketingBlurbs.long.length} chars</Badge>
+                          </div>
+                        </div>
+                      )}
                       <Textarea
                         value={bookBlurb}
-                        onChange={(e) => setBookBlurb(e.target.value)}
-                        placeholder="Your book description for Amazon..."
+                        readOnly
+                        placeholder="Click 'Generate Book Blurb' to create Amazon description..."
                         className="min-h-[200px] bg-card/80 border text-foreground"
                         data-testid="textarea-blurb"
                       />
@@ -479,12 +530,31 @@ export default function PublishStep() {
                       <CardTitle className="text-lg text-foreground">Amazon Keywords</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                      <div className="flex flex-wrap gap-2">
-                        {amazonKeywords.map((keyword, i) => (
+                      <Button
+                        onClick={handleGenerateKeywords}
+                        disabled={isGeneratingKeywords}
+                        variant="outline"
+                        className="w-full border text-primary hover:bg-primary/10"
+                        data-testid="button-generate-keywords"
+                      >
+                        {isGeneratingKeywords ? (
+                          <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Wand2 className="w-4 h-4 mr-2" />
+                        )}
+                        Generate AI Keywords
+                      </Button>
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {allKeywords.map((keyword, i) => (
                           <Badge key={i} variant="secondary" className="flex items-center gap-1 bg-primary/20 text-primary">
                             {keyword}
                             <button
-                              onClick={() => setAmazonKeywords(amazonKeywords.filter((_, idx) => idx !== i))}
+                              onClick={() => {
+                                // Remove from local if it's a local keyword
+                                if (localKeywords.includes(keyword)) {
+                                  setLocalKeywords(localKeywords.filter(k => k !== keyword));
+                                }
+                              }}
                               className="ml-1 hover:text-red-400"
                             >
                               <Trash2 className="w-3 h-3" />
@@ -506,7 +576,7 @@ export default function PublishStep() {
                         />
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {amazonKeywords.length}/7 keywords (Amazon allows up to 7)
+                        {allKeywords.length}/7 keywords (Amazon allows up to 7)
                       </div>
                     </CardContent>
                   </Card>
@@ -554,18 +624,45 @@ export default function PublishStep() {
                       <CardTitle className="text-lg text-foreground">Export Options</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      <Button className="w-full justify-start bg-primary hover:bg-primary/80" size="lg" data-testid="button-export-pdf">
-                        <FileDown className="w-5 h-5 mr-3" />
+                      <Button 
+                        className="w-full justify-start bg-primary hover:bg-primary/80" 
+                        size="lg" 
+                        onClick={() => handleExportBook('pdf')}
+                        disabled={isExporting}
+                        data-testid="button-export-pdf"
+                      >
+                        {isExporting ? <Loader2 className="w-5 h-5 mr-3 animate-spin" /> : <FileDown className="w-5 h-5 mr-3" />}
                         <div className="text-left">
                           <div className="font-medium">Export PDF for Print</div>
                           <div className="text-xs opacity-80">KDP-ready with bleeds and margins</div>
                         </div>
                       </Button>
-                      <Button className="w-full justify-start" size="lg" variant="outline" data-testid="button-export-epub">
-                        <FileDown className="w-5 h-5 mr-3" />
+                      <Button 
+                        className="w-full justify-start" 
+                        size="lg" 
+                        variant="outline"
+                        onClick={() => handleExportBook('epub')}
+                        disabled={isExporting}
+                        data-testid="button-export-epub"
+                      >
+                        {isExporting ? <Loader2 className="w-5 h-5 mr-3 animate-spin" /> : <FileDown className="w-5 h-5 mr-3" />}
                         <div className="text-left">
                           <div className="font-medium">Export EPUB for Kindle</div>
                           <div className="text-xs text-muted-foreground">Optimized for eBook readers</div>
+                        </div>
+                      </Button>
+                      <Button 
+                        className="w-full justify-start" 
+                        size="lg" 
+                        variant="outline"
+                        onClick={() => handleExportBook('docx')}
+                        disabled={isExporting}
+                        data-testid="button-export-docx"
+                      >
+                        {isExporting ? <Loader2 className="w-5 h-5 mr-3 animate-spin" /> : <FileDown className="w-5 h-5 mr-3" />}
+                        <div className="text-left">
+                          <div className="font-medium">Export DOCX</div>
+                          <div className="text-xs text-muted-foreground">Editable Word document</div>
                         </div>
                       </Button>
                       <Button className="w-full justify-start" size="lg" variant="outline" data-testid="button-preview">

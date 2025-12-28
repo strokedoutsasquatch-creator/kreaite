@@ -62,6 +62,15 @@ Icons: lucide-react only (no emoji)
 - **Doc Hub**: Document import/parsing, merging, snippet vault, manuscript builder.
 - **Book Projects**: Autosave, chapter management, full workflow persistence.
 - **Manuscript Analysis**: AI-powered structure detection, publication readiness scoring.
+- **Book Studio API Integration** (fully wired):
+  - `generateBookImage()` - AI image generation for book illustrations
+  - `uploadImageToServer()` - Backend image upload with persistence
+  - `removeImageBackground()` - Remove.bg integration for image processing
+  - `qualityPolish()` - Multi-pass editing (developmental, line, copy, proofread)
+  - `editChapter()` - Single chapter editing with pass type selection
+  - `generateBlurb()` - AI-powered marketing copy generation (short/medium/long)
+  - `generateKeywords()` - Amazon-optimized keyword generation
+  - `exportBook()` - KDP-ready export (PDF, EPUB, DOCX formats)
 
 ## External Dependencies
 

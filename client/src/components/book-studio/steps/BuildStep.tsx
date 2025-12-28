@@ -47,6 +47,12 @@ export default function BuildStep() {
     setManuscriptHtml,
     imagePrompts,
     recommendations,
+    generateBookImage,
+    isGeneratingImage,
+    uploadImageToServer,
+    isUploadingImage,
+    removeImageBackground,
+    isRemovingBackground,
   } = useBookStudio();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -55,7 +61,6 @@ export default function BuildStep() {
   const [illustrationStyle, setIllustrationStyle] = useState("realistic");
   const [imagePurpose, setImagePurpose] = useState("illustration");
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
 
   const selectedImage = images.find(img => img.id === selectedImageId);
@@ -63,63 +68,73 @@ export default function BuildStep() {
   const handleGenerateImage = async () => {
     if (!imagePrompt.trim()) return;
     
-    setIsGenerating(true);
     try {
-      addImage({
-        url: '/placeholder-image.jpg',
-        prompt: imagePrompt,
-        origin: 'generated',
-        hasBackground: true,
-      });
-      toast({ title: "Image Generation Started", description: "This may take a moment..." });
-      setImagePrompt("");
+      toast({ title: "Generating Image", description: "This may take a moment..." });
+      const imageUrl = await generateBookImage(imagePrompt, illustrationStyle);
+      if (imageUrl) {
+        setImagePrompt("");
+        toast({ title: "Image Generated", description: "Your illustration is ready" });
+      }
     } catch (error) {
       toast({ 
         title: "Generation Failed", 
         description: error instanceof Error ? error.message : "Please try again",
         variant: "destructive"
       });
-    } finally {
-      setIsGenerating(false);
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleRemoveBackground = async (imageId: string) => {
+    try {
+      toast({ title: "Removing Background", description: "Processing..." });
+      await removeImageBackground(imageId);
+    } catch (error) {
+      toast({ 
+        title: "Failed", 
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
     for (const file of Array.from(files)) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const url = event.target?.result as string;
-        addImage({
-          url,
-          origin: 'uploaded',
-          hasBackground: true,
+      try {
+        toast({ title: "Uploading", description: `Uploading ${file.name}...` });
+        const imageUrl = await uploadImageToServer(file);
+        if (imageUrl) {
+          toast({ title: "Image Uploaded", description: file.name });
+        }
+      } catch (error) {
+        toast({ 
+          title: "Upload Failed", 
+          description: error instanceof Error ? error.message : "Please try again",
+          variant: "destructive"
         });
-        toast({ title: "Image Uploaded", description: file.name });
-      };
-      reader.readAsDataURL(file);
+      }
     }
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
     
     const files = e.dataTransfer.files;
     for (const file of Array.from(files)) {
       if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const url = event.target?.result as string;
-          addImage({
-            url,
-            origin: 'uploaded',
-            hasBackground: true,
+        try {
+          toast({ title: "Uploading", description: `Uploading ${file.name}...` });
+          await uploadImageToServer(file);
+        } catch (error) {
+          toast({ 
+            title: "Upload Failed", 
+            description: error instanceof Error ? error.message : "Please try again",
+            variant: "destructive"
           });
-        };
-        reader.readAsDataURL(file);
+        }
       }
     }
   };
@@ -226,11 +241,11 @@ export default function BuildStep() {
                   </div>
                   <Button
                     onClick={handleGenerateImage}
-                    disabled={isGenerating || !imagePrompt.trim()}
+                    disabled={isGeneratingImage || !imagePrompt.trim()}
                     className="w-full bg-primary hover:bg-primary/80"
                     data-testid="button-generate-image"
                   >
-                    {isGenerating ? (
+                    {isGeneratingImage ? (
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     ) : (
                       <Sparkles className="w-4 h-4 mr-2" />

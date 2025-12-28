@@ -41,6 +41,9 @@ export default function GenerateStep() {
     setManuscriptHtml,
     imagePrompts,
     recommendations,
+    polishProgress,
+    qualityPolish,
+    editChapter,
   } = useBookStudio();
 
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(
@@ -195,24 +198,56 @@ export default function GenerateStep() {
             </div>
 
             {chapters.length > 0 && (
-              <Button
-                onClick={handleGenerateAll}
-                disabled={generationProgress.isGenerating}
-                className="w-full mt-4 bg-primary hover:bg-primary/80"
-                data-testid="button-generate-all"
-              >
-                {generationProgress.isGenerating ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Generating {generationProgress.currentChapter}/{generationProgress.totalChapters}
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Generate All Chapters
-                  </>
-                )}
-              </Button>
+              <div className="space-y-2 mt-4">
+                <Button
+                  onClick={handleGenerateAll}
+                  disabled={generationProgress.isGenerating || polishProgress.isPolishing}
+                  className="w-full bg-primary hover:bg-primary/80"
+                  data-testid="button-generate-all"
+                >
+                  {generationProgress.isGenerating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Generating {generationProgress.currentChapter}/{generationProgress.totalChapters}
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Generate All Chapters
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={async () => {
+                    try {
+                      toast({ title: "Quality Polish", description: "Running multi-pass editing on all chapters..." });
+                      await qualityPolish();
+                    } catch (error) {
+                      toast({ 
+                        title: "Polish Failed", 
+                        description: error instanceof Error ? error.message : "Please try again",
+                        variant: "destructive"
+                      });
+                    }
+                  }}
+                  disabled={generationProgress.isGenerating || polishProgress.isPolishing || !chapters.some(ch => ch.content)}
+                  variant="outline"
+                  className="w-full border text-primary hover:bg-primary/10"
+                  data-testid="button-polish-all"
+                >
+                  {polishProgress.isPolishing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      {polishProgress.status || 'Polishing...'}
+                    </>
+                  ) : (
+                    <>
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      Polish All Chapters
+                    </>
+                  )}
+                </Button>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -269,14 +304,31 @@ export default function GenerateStep() {
                         </SelectContent>
                       </Select>
                       <Button
-                        onClick={() => toast({ title: "Edit feature", description: "Coming soon!" })}
-                        disabled={!selectedChapter.content}
+                        onClick={async () => {
+                          const chapterIndex = chapters.findIndex(ch => ch.id === selectedChapterId);
+                          if (chapterIndex === -1) return;
+                          try {
+                            toast({ title: `Running ${editingPass} edit`, description: "Processing..." });
+                            await editChapter(chapterIndex, editingPass);
+                          } catch (error) {
+                            toast({ 
+                              title: "Edit Failed", 
+                              description: error instanceof Error ? error.message : "Please try again",
+                              variant: "destructive"
+                            });
+                          }
+                        }}
+                        disabled={!selectedChapter.content || polishProgress.isPolishing}
                         size="sm"
                         className="bg-primary hover:bg-primary/80"
                         data-testid="button-run-edit"
                       >
-                        <Edit3 className="w-3 h-3 mr-1" />
-                        Edit
+                        {polishProgress.isPolishing ? (
+                          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                        ) : (
+                          <Edit3 className="w-3 h-3 mr-1" />
+                        )}
+                        {polishProgress.isPolishing ? polishProgress.currentPass : 'Edit'}
                       </Button>
                     </div>
                   </div>

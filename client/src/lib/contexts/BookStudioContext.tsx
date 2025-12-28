@@ -147,6 +147,25 @@ export interface IsbnData {
   };
 }
 
+export interface PolishProgress {
+  isPolishing: boolean;
+  currentPass: 'developmental' | 'line' | 'copy' | 'proofread' | null;
+  completedPasses: string[];
+  status: string;
+}
+
+export interface MarketingBlurbs {
+  short: string;
+  medium: string;
+  long: string;
+}
+
+export interface ExportReadiness {
+  ready: boolean;
+  issues: string[];
+  checklist: { item: string; passed: boolean }[];
+}
+
 export type WorkflowStep = 'start' | 'plan' | 'generate' | 'build' | 'publish';
 
 interface GenerationProgress {
@@ -239,6 +258,31 @@ interface BookStudioContextValue {
   
   generateImagePrompts: () => Promise<void>;
   isGeneratingImagePrompts: boolean;
+
+  polishProgress: PolishProgress;
+  qualityPolish: (chapterIndex?: number) => Promise<void>;
+  editChapter: (chapterIndex: number, editType: 'developmental' | 'line' | 'copy' | 'proofread') => Promise<void>;
+  
+  generateBookImage: (prompt: string, style?: string, chapterId?: string) => Promise<string | null>;
+  isGeneratingImage: boolean;
+  removeImageBackground: (imageId: string) => Promise<void>;
+  isRemovingBackground: boolean;
+  
+  uploadImageToServer: (file: File) => Promise<string | null>;
+  isUploadingImage: boolean;
+  
+  marketingBlurbs: MarketingBlurbs | null;
+  generateBlurb: () => Promise<void>;
+  isGeneratingBlurb: boolean;
+  
+  amazonKeywords: string[];
+  generateKeywords: () => Promise<void>;
+  isGeneratingKeywords: boolean;
+  
+  exportReadiness: ExportReadiness | null;
+  checkExportReadiness: () => Promise<void>;
+  exportBook: (format: 'pdf' | 'epub' | 'docx' | 'html') => Promise<string | null>;
+  isExporting: boolean;
 }
 
 const BookStudioContext = createContext<BookStudioContextValue | null>(null);
@@ -278,6 +322,17 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
   const [recommendations, setRecommendations] = useState<AIRecommendations | null>(null);
   const [contentAnalysis, setContentAnalysis] = useState<ContentAnalysis | null>(null);
   const [imagePrompts, setImagePrompts] = useState<ImagePromptSuggestion[]>([]);
+  
+  const [polishProgress, setPolishProgress] = useState<PolishProgress>({
+    isPolishing: false,
+    currentPass: null,
+    completedPasses: [],
+    status: ''
+  });
+  
+  const [marketingBlurbs, setMarketingBlurbs] = useState<MarketingBlurbs | null>(null);
+  const [amazonKeywords, setAmazonKeywords] = useState<string[]>([]);
+  const [exportReadiness, setExportReadiness] = useState<ExportReadiness | null>(null);
   
   const isHydratedRef = useRef(false);
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -839,6 +894,217 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
     }
   });
 
+  const qualityPolishMutation = useMutation({
+    mutationFn: async ({ content, passes }: { content: string; passes?: string[] }) => {
+      const response = await apiRequest('POST', '/api/book/quality-polish', {
+        content,
+        passes: passes || ['developmental', 'line', 'copy', 'proofread']
+      });
+      return response.json();
+    },
+    onMutate: () => {
+      setPolishProgress({ isPolishing: true, currentPass: 'developmental', completedPasses: [], status: 'Starting developmental edit...' });
+    },
+    onSuccess: (data) => {
+      if (data.success && data.polishedContent) {
+        setPolishProgress({ isPolishing: false, currentPass: null, completedPasses: data.passesCompleted || [], status: 'Complete' });
+        toast({ title: "Content Polished", description: `${data.passesCompleted?.length || 0} editing passes complete` });
+        return data.polishedContent;
+      }
+    },
+    onError: (error: Error) => {
+      setPolishProgress({ isPolishing: false, currentPass: null, completedPasses: [], status: '' });
+      toast({ title: "Polish Failed", description: error.message, variant: "destructive" });
+    }
+  });
+
+  const generateBookImageMutation = useMutation({
+    mutationFn: async ({ prompt, style, chapterId }: { prompt: string; style?: string; chapterId?: string }) => {
+      const response = await apiRequest('POST', '/api/book/images/generate', {
+        prompt,
+        style: style || 'realistic',
+        chapterId,
+        bookTitle: bookOutline?.title,
+        genre: bookOutline?.genre
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.success && data.imageUrl) {
+        const newImage: BookImage = {
+          id: data.id || `img-${Date.now()}`,
+          url: data.imageUrl,
+          prompt: data.prompt,
+          origin: 'generated',
+          hasBackground: true
+        };
+        setImages(prev => [...prev, newImage]);
+        toast({ title: "Image Generated", description: "Your illustration is ready" });
+        return data.imageUrl;
+      }
+    },
+    onError: (error: Error) => {
+      toast({ title: "Generation Failed", description: error.message, variant: "destructive" });
+    }
+  });
+
+  const uploadImageMutation = useMutation({
+    mutationFn: async ({ file }: { file: File }) => {
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('bookTitle', bookOutline?.title || '');
+      
+      const response = await fetch('/api/book/images/upload', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      });
+      if (!response.ok) throw new Error('Upload failed');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.success && data.imageUrl) {
+        const newImage: BookImage = {
+          id: data.id || `img-${Date.now()}`,
+          url: data.imageUrl,
+          origin: 'uploaded',
+          hasBackground: true
+        };
+        setImages(prev => [...prev, newImage]);
+        toast({ title: "Image Uploaded", description: "Your image is ready" });
+        return data.imageUrl;
+      }
+    },
+    onError: (error: Error) => {
+      toast({ title: "Upload Failed", description: error.message, variant: "destructive" });
+    }
+  });
+
+  const removeBackgroundMutation = useMutation({
+    mutationFn: async ({ imageId }: { imageId: string }) => {
+      const response = await apiRequest('POST', `/api/book/images/${imageId}/remove-background`, {});
+      return { data: await response.json(), imageId };
+    },
+    onSuccess: ({ data, imageId }) => {
+      if (data.success && data.imageUrl) {
+        setImages(prev => prev.map(img => 
+          img.id === imageId ? { ...img, url: data.imageUrl, hasBackground: false } : img
+        ));
+        toast({ title: "Background Removed", description: "Image updated" });
+      }
+    },
+    onError: (error: Error) => {
+      toast({ title: "Remove Background Failed", description: error.message, variant: "destructive" });
+    }
+  });
+
+  const generateBlurbMutation = useMutation({
+    mutationFn: async () => {
+      if (!bookOutline) throw new Error('No book outline available');
+      const response = await apiRequest('POST', '/api/book/generate-blurb', {
+        title: bookOutline.title,
+        subtitle: bookOutline.subtitle,
+        genre: bookOutline.genre,
+        targetAudience: bookOutline.targetAudience,
+        chapters: bookOutline.chapters.map(ch => ({ title: ch.title, description: ch.description }))
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        setMarketingBlurbs({
+          short: data.shortBlurb || data.blurb?.substring(0, 150) || '',
+          medium: data.mediumBlurb || data.blurb?.substring(0, 400) || '',
+          long: data.longBlurb || data.blurb || ''
+        });
+        toast({ title: "Blurbs Generated", description: "Marketing copy ready" });
+      }
+    },
+    onError: (error: Error) => {
+      toast({ title: "Generation Failed", description: error.message, variant: "destructive" });
+    }
+  });
+
+  const generateKeywordsMutation = useMutation({
+    mutationFn: async () => {
+      if (!bookOutline) throw new Error('No book outline available');
+      const response = await apiRequest('POST', '/api/book/generate-keywords', {
+        title: bookOutline.title,
+        genre: bookOutline.genre,
+        description: bookOutline.chapters.map(ch => ch.description).join(' '),
+        targetAudience: bookOutline.targetAudience
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.success && data.keywords) {
+        setAmazonKeywords(data.keywords);
+        toast({ title: "Keywords Generated", description: `${data.keywords.length} Amazon keywords ready` });
+      }
+    },
+    onError: (error: Error) => {
+      toast({ title: "Generation Failed", description: error.message, variant: "destructive" });
+    }
+  });
+
+  const exportBookMutation = useMutation({
+    mutationFn: async ({ format }: { format: 'pdf' | 'epub' | 'docx' | 'html' }) => {
+      if (!bookOutline) throw new Error('No book outline available');
+      const response = await apiRequest('POST', '/api/book/export', {
+        format,
+        bookTitle: bookOutline.title,
+        chapters: bookOutline.chapters.map(ch => ({ title: ch.title, content: ch.content })),
+        settings: printSettings
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        if (data.downloadUrl) {
+          window.open(data.downloadUrl, '_blank');
+        }
+        toast({ title: "Export Complete", description: `Your book is ready for download` });
+        return data.downloadUrl || data.content;
+      }
+    },
+    onError: (error: Error) => {
+      toast({ title: "Export Failed", description: error.message, variant: "destructive" });
+    }
+  });
+
+  const editChapterMutation = useMutation({
+    mutationFn: async ({ chapterIndex, editType }: { chapterIndex: number; editType: 'developmental' | 'line' | 'copy' | 'proofread' }) => {
+      if (!bookOutline) throw new Error('No outline available');
+      const chapter = bookOutline.chapters[chapterIndex];
+      if (!chapter?.content) throw new Error('Chapter has no content to edit');
+      
+      const response = await apiRequest('POST', `/api/book/edit/${editType}`, {
+        content: chapter.content,
+        title: chapter.title,
+        context: `Book: "${bookOutline.title}", Genre: ${bookOutline.genre}`
+      });
+      return { data: await response.json(), chapterIndex };
+    },
+    onSuccess: ({ data, chapterIndex }) => {
+      if (data.editedContent) {
+        setBookOutline(prev => {
+          if (!prev) return null;
+          const updated = [...prev.chapters];
+          updated[chapterIndex] = {
+            ...updated[chapterIndex],
+            content: data.editedContent,
+            wordCount: data.editedContent.split(/\s+/).length
+          };
+          return { ...prev, chapters: updated };
+        });
+        toast({ title: "Edit Complete", description: `Chapter ${chapterIndex + 1} polished` });
+      }
+    },
+    onError: (error: Error) => {
+      toast({ title: "Edit Failed", description: error.message, variant: "destructive" });
+    }
+  });
+
   const generateFullBook = useCallback(async (genre: string, description: string, chapterCount?: number, title?: string) => {
     await generateFullBookMutation.mutateAsync({ genre, description, chapterCount, title });
   }, [generateFullBookMutation]);
@@ -906,6 +1172,80 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
     });
   }, [scheduleAutosave]);
 
+  // Quality Polish - run multi-pass editing on chapter or all content
+  const qualityPolish = useCallback(async (chapterIndex?: number) => {
+    const content = chapterIndex !== undefined && bookOutline?.chapters[chapterIndex]
+      ? bookOutline.chapters[chapterIndex].content || ''
+      : bookOutline?.chapters.map(ch => ch.content || '').join('\n\n---\n\n') || '';
+    
+    if (!content.trim()) {
+      toast({ title: "No Content", description: "Generate chapters first", variant: "destructive" });
+      return;
+    }
+    
+    const result = await qualityPolishMutation.mutateAsync({ content });
+    
+    if (result?.polishedContent && bookOutline) {
+      if (chapterIndex !== undefined) {
+        const updated = [...bookOutline.chapters];
+        updated[chapterIndex] = { ...updated[chapterIndex], content: result.polishedContent, status: 'polished' as const };
+        setBookOutline({ ...bookOutline, chapters: updated });
+      }
+    }
+  }, [bookOutline, qualityPolishMutation, toast, setBookOutline]);
+
+  // Edit single chapter with specific edit type
+  const editChapter = useCallback(async (chapterIndex: number, editType: 'developmental' | 'line' | 'copy' | 'proofread') => {
+    if (!bookOutline?.chapters[chapterIndex]?.content) {
+      toast({ title: "No Content", description: "Generate chapter first", variant: "destructive" });
+      return;
+    }
+    
+    const result = await editChapterMutation.mutateAsync({ 
+      chapterIndex, 
+      content: bookOutline.chapters[chapterIndex].content!,
+      editType 
+    });
+    
+    if (result?.editedContent && bookOutline) {
+      const updated = [...bookOutline.chapters];
+      updated[chapterIndex] = { ...updated[chapterIndex], content: result.editedContent };
+      setBookOutline({ ...bookOutline, chapters: updated });
+    }
+  }, [bookOutline, editChapterMutation, toast, setBookOutline]);
+
+  // Generate book image from prompt
+  const generateBookImage = useCallback(async (prompt: string, style?: string, chapterId?: string): Promise<string | null> => {
+    const result = await generateBookImageMutation.mutateAsync({ prompt, style, chapterId });
+    return result?.imageUrl || null;
+  }, [generateBookImageMutation]);
+
+  // Remove image background
+  const removeImageBackground = useCallback(async (imageId: string) => {
+    await removeBackgroundMutation.mutateAsync({ imageId });
+  }, [removeBackgroundMutation]);
+
+  // Upload image to server
+  const uploadImageToServer = useCallback(async (file: File): Promise<string | null> => {
+    const result = await uploadImageMutation.mutateAsync({ file });
+    return result?.imageUrl || null;
+  }, [uploadImageMutation]);
+
+  // Generate marketing blurbs
+  const generateBlurb = useCallback(async () => {
+    await generateBlurbMutation.mutateAsync();
+  }, [generateBlurbMutation]);
+
+  // Generate Amazon keywords
+  const generateKeywords = useCallback(async () => {
+    await generateKeywordsMutation.mutateAsync();
+  }, [generateKeywordsMutation]);
+
+  // Export book
+  const exportBook = useCallback(async (format: 'pdf' | 'epub' | 'docx' | 'html') => {
+    await exportBookMutation.mutateAsync({ format });
+  }, [exportBookMutation]);
+
   const value: BookStudioContextValue = {
     currentStep,
     setCurrentStep: handleSetCurrentStep,
@@ -953,6 +1293,33 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
     isAnalyzingContent: analyzeContentMutation.isPending,
     generateImagePrompts,
     isGeneratingImagePrompts: generateImagePromptsMutation.isPending,
+    
+    // Quality Polish
+    polishProgress,
+    qualityPolish,
+    editChapter,
+    
+    // Image Generation
+    generateBookImage,
+    isGeneratingImage: generateBookImageMutation.isPending,
+    removeImageBackground,
+    isRemovingBackground: removeBackgroundMutation.isPending,
+    uploadImageToServer,
+    isUploadingImage: uploadImageMutation.isPending,
+    
+    // Marketing
+    marketingBlurbs,
+    generateBlurb,
+    isGeneratingBlurb: generateBlurbMutation.isPending,
+    
+    // Keywords
+    amazonKeywords,
+    generateKeywords,
+    isGeneratingKeywords: generateKeywordsMutation.isPending,
+    
+    // Export
+    exportBook,
+    isExporting: exportBookMutation.isPending,
   };
 
   return (
