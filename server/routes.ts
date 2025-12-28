@@ -3075,11 +3075,13 @@ Provide research in this JSON format:
     }
   });
 
-  // One-click full book generation
+  // One-click full book generation with brainstorm ideas and manuscript support
   app.post('/api/book/generate-full-book', isAuthenticated, async (req: any, res) => {
     try {
       const { 
-        topic, 
+        topic,
+        description, // Frontend sends this - contains brainstorm ideas
+        title, // User-provided title
         genre, 
         targetAudience, 
         authorVoice,
@@ -3087,36 +3089,84 @@ Provide research in this JSON format:
         wordsPerChapter = 3000,
         style,
         includeIllustrations = false,
-        isChildrensBook = false
+        isChildrensBook = false,
+        manuscriptContent, // For uploaded manuscripts
+        brainstormIdeas // Direct array of ideas
       } = req.body;
       
-      // Step 1: Generate book concept and outline
-      const outlinePrompt = `You are a bestselling author and book architect.
-Create a complete book outline for a ${genre} book about: "${topic}"
+      // Use description or topic - frontend sends description with brainstorm context
+      const bookConcept = description || topic || '';
+      
+      // Build comprehensive context from all sources
+      let contextSections = [];
+      
+      if (brainstormIdeas && Array.isArray(brainstormIdeas) && brainstormIdeas.length > 0) {
+        const ideasByType = brainstormIdeas.reduce((acc: any, idea: any) => {
+          if (!acc[idea.type]) acc[idea.type] = [];
+          acc[idea.type].push(idea.content);
+          return acc;
+        }, {});
+        
+        let ideasContext = '\n\n## Author\'s Brainstorm Ideas:\n';
+        for (const [type, ideas] of Object.entries(ideasByType)) {
+          ideasContext += `### ${type.charAt(0).toUpperCase() + type.slice(1)}s:\n`;
+          (ideas as string[]).forEach((idea: string) => {
+            ideasContext += `- ${idea}\n`;
+          });
+        }
+        contextSections.push(ideasContext);
+      }
+      
+      if (manuscriptContent) {
+        const truncated = manuscriptContent.length > 20000 
+          ? manuscriptContent.substring(0, 10000) + '\n...[content continues]...\n' + manuscriptContent.substring(manuscriptContent.length - 5000)
+          : manuscriptContent;
+        contextSections.push(`\n\n## Existing Manuscript Content:\n${truncated}`);
+      }
+      
+      const fullContext = contextSections.join('\n');
+      
+      // Step 1: Generate book concept and outline with AI recommendations
+      const outlinePrompt = `You are a bestselling author and book architect. Your job is to create a professional, publishable book outline.
+
+${title ? `Working Title: "${title}"` : 'Create a compelling title based on the content.'}
+Genre: ${genre || 'non-fiction'}
+Book Concept: "${bookConcept}"
 Target audience: ${targetAudience || 'general readers'}
 ${authorVoice ? `Author voice/style: ${authorVoice}` : ''}
 ${isChildrensBook ? 'This is a children\'s book - keep language age-appropriate and include illustration suggestions.' : ''}
+${fullContext}
 
 Generate a JSON response with:
 {
   "title": "Compelling book title",
   "subtitle": "Descriptive subtitle",
   "hook": "One-sentence book premise",
+  "genre": "${genre || 'non-fiction'}",
+  "targetAudience": "${targetAudience || 'general readers'}",
   "chapters": [
     {
       "number": 1,
       "title": "Chapter Title",
       "description": "2-3 sentence chapter summary",
       "keyPoints": ["main point 1", "main point 2", "main point 3"],
-      "emotionalArc": "what the reader should feel"
-      ${isChildrensBook ? ', "illustrationPrompt": "describe the illustration for this page"' : ''}
+      "emotionalArc": "what the reader should feel",
+      "imagePrompt": "A detailed prompt for an illustration that would enhance this chapter"
     }
   ],
   "targetWordCount": ${chapterCount * wordsPerChapter},
-  "uniqueAngle": "What makes this book different"
+  "uniqueAngle": "What makes this book different",
+  "recommendations": {
+    "structure": ["3 specific recommendations for improving the book structure"],
+    "content": ["3 recommendations for enhancing content quality"],
+    "marketing": ["3 tips for positioning and marketing this book"],
+    "nextSteps": ["3 immediate action items for the author"]
+  },
+  "themes": ["list of 3-5 key themes identified in this book"],
+  "keyTopics": ["list of 5-7 important topics covered"]
 }
 
-Create exactly ${chapterCount} chapters.`;
+Create exactly ${chapterCount} chapters. Include imagePrompt for each chapter with detailed visual descriptions suitable for AI image generation.`;
 
       const outlineResult = await generateCoachResponse(outlinePrompt, []);
       
@@ -3138,6 +3188,9 @@ Create exactly ${chapterCount} chapters.`;
       res.json({
         success: true,
         outline: bookOutline,
+        recommendations: bookOutline.recommendations || null,
+        themes: bookOutline.themes || [],
+        keyTopics: bookOutline.keyTopics || [],
         status: 'outline_complete',
         message: `Book outline generated with ${bookOutline.chapters?.length || chapterCount} chapters. Ready for chapter generation.`,
         nextStep: 'generate-chapters',
@@ -3146,6 +3199,156 @@ Create exactly ${chapterCount} chapters.`;
     } catch (error) {
       console.error("Error generating full book:", error);
       res.status(500).json({ message: "Failed to generate book" });
+    }
+  });
+
+  // Analyze content (manuscript, brainstorm, or chapter) for AI insights
+  app.post('/api/book/analyze-content', isAuthenticated, async (req: any, res) => {
+    try {
+      const { content, contentType = 'general', genre, context } = req.body;
+
+      if (!content || typeof content !== 'string' || content.trim().length < 50) {
+        return res.status(400).json({ message: "Content must be at least 50 characters" });
+      }
+
+      const truncatedContent = content.length > 15000 
+        ? content.substring(0, 7500) + '\n...[content continues]...\n' + content.substring(content.length - 5000)
+        : content;
+
+      const analysisPrompt = `You are a professional book editor and literary analyst. Analyze the following ${contentType} content and provide comprehensive insights.
+
+Content to analyze:
+"""
+${truncatedContent}
+"""
+
+${genre ? `Genre context: ${genre}` : ''}
+${context ? `Additional context: ${context}` : ''}
+
+Provide your analysis as JSON:
+{
+  "themes": ["list of 3-5 major themes identified"],
+  "keyTopics": ["list of 5-7 key topics covered"],
+  "tone": "description of the overall tone and voice",
+  "strengths": ["3 notable strengths of this content"],
+  "areasForImprovement": ["3 specific areas that could be enhanced"],
+  "suggestedImagePrompts": [
+    {
+      "prompt": "detailed image generation prompt",
+      "placement": "where this image would work best",
+      "purpose": "what this image would accomplish"
+    }
+  ],
+  "recommendations": {
+    "immediate": ["3 things to do right away"],
+    "structure": ["2-3 structural improvements"],
+    "content": ["2-3 content enhancements"],
+    "style": ["2 style/voice suggestions"]
+  },
+  "targetAudience": "identified target audience based on content",
+  "wordCount": ${content.split(/\s+/).length},
+  "readingLevel": "estimated reading level (elementary, middle school, high school, college, professional)",
+  "summary": "2-3 sentence summary of the content"
+}`;
+
+      const result = await generateCoachResponse(analysisPrompt, []);
+      
+      try {
+        const jsonMatch = result.response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const analysis = JSON.parse(jsonMatch[0]);
+          res.json({ success: true, analysis });
+        } else {
+          res.json({ success: true, analysis: { raw: result.response } });
+        }
+      } catch {
+        res.json({ success: true, analysis: { raw: result.response } });
+      }
+    } catch (error) {
+      console.error("Error analyzing content:", error);
+      res.status(500).json({ message: "Failed to analyze content" });
+    }
+  });
+
+  // Generate detailed image prompts for chapters or book content
+  app.post('/api/book/generate-image-prompts', isAuthenticated, async (req: any, res) => {
+    try {
+      const { 
+        chapters, 
+        bookTitle, 
+        genre, 
+        style = 'realistic',
+        targetAudience,
+        existingContent 
+      } = req.body;
+
+      if (!chapters && !existingContent) {
+        return res.status(400).json({ message: "Either chapters or existingContent is required" });
+      }
+
+      let contentContext = '';
+      if (chapters && Array.isArray(chapters)) {
+        contentContext = chapters.map((ch: any, idx: number) => 
+          `Chapter ${idx + 1}: ${ch.title}\nDescription: ${ch.description || ''}\n${ch.content ? `Content preview: ${ch.content.substring(0, 500)}...` : ''}`
+        ).join('\n\n');
+      } else if (existingContent) {
+        contentContext = existingContent.substring(0, 10000);
+      }
+
+      const imagePrompt = `You are an expert art director for book publishing. Generate detailed image prompts for a ${genre || 'non-fiction'} book titled "${bookTitle || 'Untitled'}".
+
+Target audience: ${targetAudience || 'general readers'}
+Preferred visual style: ${style}
+
+Book content:
+${contentContext}
+
+Generate image prompts as JSON:
+{
+  "imagePrompts": [
+    {
+      "id": "unique-id-1",
+      "chapterNumber": 1,
+      "title": "short descriptive title for the image",
+      "prompt": "highly detailed image generation prompt with style, composition, lighting, mood, and specific visual elements - suitable for AI image generation",
+      "placement": "chapter-start" | "inline" | "chapter-end" | "cover",
+      "purpose": "narrative" | "explanatory" | "decorative" | "emotional",
+      "aspectRatio": "1:1" | "16:9" | "4:3" | "3:4",
+      "priority": "high" | "medium" | "low"
+    }
+  ],
+  "coverConcepts": [
+    {
+      "title": "Cover concept name",
+      "prompt": "detailed cover image prompt",
+      "style": "description of visual style"
+    }
+  ],
+  "styleGuide": {
+    "colorPalette": ["list of recommended colors"],
+    "visualTheme": "overall visual theme description",
+    "mood": "emotional tone for illustrations"
+  }
+}
+
+Generate 1-2 image prompts per chapter, plus 2-3 cover concepts.`;
+
+      const result = await generateCoachResponse(imagePrompt, []);
+      
+      try {
+        const jsonMatch = result.response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const prompts = JSON.parse(jsonMatch[0]);
+          res.json({ success: true, ...prompts });
+        } else {
+          res.json({ success: true, imagePrompts: [], raw: result.response });
+        }
+      } catch {
+        res.json({ success: true, imagePrompts: [], raw: result.response });
+      }
+    } catch (error) {
+      console.error("Error generating image prompts:", error);
+      res.status(500).json({ message: "Failed to generate image prompts" });
     }
   });
 

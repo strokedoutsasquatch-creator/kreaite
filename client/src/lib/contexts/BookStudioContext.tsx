@@ -30,6 +30,46 @@ export interface ChapterOutline {
   status: 'outline' | 'generating' | 'draft' | 'complete';
   content?: string;
   wordCount?: number;
+  imagePrompt?: string;
+  keyPoints?: string[];
+}
+
+export interface AIRecommendations {
+  structure?: string[];
+  content?: string[];
+  marketing?: string[];
+  nextSteps?: string[];
+  immediate?: string[];
+  style?: string[];
+}
+
+export interface ContentAnalysis {
+  themes?: string[];
+  keyTopics?: string[];
+  tone?: string;
+  strengths?: string[];
+  areasForImprovement?: string[];
+  suggestedImagePrompts?: Array<{
+    prompt: string;
+    placement: string;
+    purpose: string;
+  }>;
+  recommendations?: AIRecommendations;
+  targetAudience?: string;
+  wordCount?: number;
+  readingLevel?: string;
+  summary?: string;
+}
+
+export interface ImagePromptSuggestion {
+  id: string;
+  chapterNumber?: number;
+  title: string;
+  prompt: string;
+  placement: 'chapter-start' | 'inline' | 'chapter-end' | 'cover';
+  purpose: 'narrative' | 'explanatory' | 'decorative' | 'emotional';
+  aspectRatio?: string;
+  priority: 'high' | 'medium' | 'low';
 }
 
 export interface BookImage {
@@ -184,6 +224,21 @@ interface BookStudioContextValue {
   
   isSaving: boolean;
   lastSaved: Date | null;
+
+  recommendations: AIRecommendations | null;
+  setRecommendations: (recs: AIRecommendations | null) => void;
+  
+  contentAnalysis: ContentAnalysis | null;
+  setContentAnalysis: (analysis: ContentAnalysis | null) => void;
+  
+  imagePrompts: ImagePromptSuggestion[];
+  setImagePrompts: (prompts: ImagePromptSuggestion[]) => void;
+  
+  analyzeContent: (content: string, contentType?: string, genre?: string) => Promise<ContentAnalysis | null>;
+  isAnalyzingContent: boolean;
+  
+  generateImagePrompts: () => Promise<void>;
+  isGeneratingImagePrompts: boolean;
 }
 
 const BookStudioContext = createContext<BookStudioContextValue | null>(null);
@@ -219,6 +274,10 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
   const [sources, setSources] = useState<Source[]>([]);
   const [documentImports, setDocumentImports] = useState<DocumentImport[]>([]);
   const [isbnData, setIsbnDataState] = useState<IsbnData>(DEFAULT_ISBN_DATA);
+  
+  const [recommendations, setRecommendations] = useState<AIRecommendations | null>(null);
+  const [contentAnalysis, setContentAnalysis] = useState<ContentAnalysis | null>(null);
+  const [imagePrompts, setImagePrompts] = useState<ImagePromptSuggestion[]>([]);
   
   const isHydratedRef = useRef(false);
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -481,20 +540,24 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
 
   const generateFullBookMutation = useMutation({
     mutationFn: async ({ genre, description, chapterCount, title }: { genre: string; description: string; chapterCount?: number; title?: string }) => {
-      const brainstormContext = brainstormIdeas.length > 0 
-        ? `\n\nBrainstorm ideas:\n${brainstormIdeas.map(i => `- [${i.type}] ${i.content}`).join('\n')}`
-        : '';
+      const manuscriptContent = documentImports.length > 0 
+        ? documentImports.map(d => d.content).filter(Boolean).join('\n\n')
+        : undefined;
       
       const response = await apiRequest('POST', '/api/book/generate-full-book', {
         genre,
-        description: description + brainstormContext,
+        description,
         chapterCount: chapterCount || 10,
-        title: title || undefined
+        title: title || undefined,
+        brainstormIdeas: brainstormIdeas.map(i => ({ type: i.type, content: i.content })),
+        manuscriptContent
       });
       return response.json();
     },
     onSuccess: (data, variables) => {
+      console.log('[BookStudio] Generate full book response:', JSON.stringify(data, null, 2));
       if (data.success && data.outline) {
+        console.log('[BookStudio] Outline chapters count:', data.outline.chapters?.length || 0);
         const outline: BookOutline = {
           title: variables.title || data.outline.title || 'Untitled Book',
           subtitle: data.outline.subtitle,
@@ -508,15 +571,115 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
             title: ch.title || `Chapter ${idx + 1}`,
             description: ch.description || ch.summary || '',
             targetWordCount: ch.targetWordCount || 3000,
-            status: 'outline' as const
+            status: 'outline' as const,
+            imagePrompt: ch.imagePrompt,
+            keyPoints: ch.keyPoints
           }))
         };
         setBookOutline(outline);
+        
+        if (data.recommendations) {
+          setRecommendations(data.recommendations);
+        }
+        
+        const chapterImagePrompts: ImagePromptSuggestion[] = (data.outline.chapters || [])
+          .filter((ch: any) => ch.imagePrompt)
+          .map((ch: any, idx: number) => ({
+            id: `prompt-${idx + 1}-${Date.now()}`,
+            chapterNumber: idx + 1,
+            title: `Illustration for ${ch.title}`,
+            prompt: ch.imagePrompt,
+            placement: 'chapter-start' as const,
+            purpose: 'narrative' as const,
+            priority: 'medium' as const
+          }));
+        
+        if (chapterImagePrompts.length > 0) {
+          setImagePrompts(chapterImagePrompts);
+        }
+        
         handleSetCurrentStep('plan');
         toast({ 
           title: "Book Outline Generated", 
           description: `"${outline.title}" with ${outline.chapters.length} chapters ready` 
         });
+      }
+    },
+    onError: (error: Error) => {
+      toast({ title: "Generation Failed", description: error.message, variant: "destructive" });
+    }
+  });
+
+  const analyzeContentMutation = useMutation({
+    mutationFn: async ({ content, contentType, genre }: { content: string; contentType?: string; genre?: string }) => {
+      const response = await apiRequest('POST', '/api/book/analyze-content', {
+        content,
+        contentType: contentType || 'manuscript',
+        genre: genre || bookOutline?.genre
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.success && data.analysis) {
+        setContentAnalysis(data.analysis);
+        
+        if (data.analysis.recommendations) {
+          setRecommendations(prev => ({
+            ...prev,
+            ...data.analysis.recommendations
+          }));
+        }
+        
+        if (data.analysis.suggestedImagePrompts && data.analysis.suggestedImagePrompts.length > 0) {
+          const newPrompts: ImagePromptSuggestion[] = data.analysis.suggestedImagePrompts.map((p: any, idx: number) => ({
+            id: `analysis-prompt-${idx}-${Date.now()}`,
+            title: `Suggested Image ${idx + 1}`,
+            prompt: p.prompt,
+            placement: p.placement === 'chapter-start' ? 'chapter-start' : 'inline',
+            purpose: 'narrative' as const,
+            priority: 'medium' as const
+          }));
+          setImagePrompts(prev => [...prev, ...newPrompts]);
+        }
+        
+        toast({ title: "Content Analyzed", description: "AI insights are ready" });
+      }
+    },
+    onError: (error: Error) => {
+      toast({ title: "Analysis Failed", description: error.message, variant: "destructive" });
+    }
+  });
+
+  const generateImagePromptsMutation = useMutation({
+    mutationFn: async () => {
+      if (!bookOutline) throw new Error('No outline available');
+      
+      const response = await apiRequest('POST', '/api/book/generate-image-prompts', {
+        bookTitle: bookOutline.title,
+        genre: bookOutline.genre,
+        targetAudience: bookOutline.targetAudience,
+        chapters: bookOutline.chapters.map(ch => ({
+          title: ch.title,
+          description: ch.description,
+          content: ch.content?.substring(0, 1000)
+        }))
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.success && data.imagePrompts) {
+        const prompts: ImagePromptSuggestion[] = data.imagePrompts.map((p: any) => ({
+          id: p.id || `gen-prompt-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          chapterNumber: p.chapterNumber,
+          title: p.title,
+          prompt: p.prompt,
+          placement: p.placement || 'inline',
+          purpose: p.purpose || 'narrative',
+          aspectRatio: p.aspectRatio,
+          priority: p.priority || 'medium'
+        }));
+        setImagePrompts(prompts);
+        toast({ title: "Image Prompts Generated", description: `${prompts.length} illustration ideas ready` });
       }
     },
     onError: (error: Error) => {
@@ -690,6 +853,15 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
     await generateChapterMutation.mutateAsync({ chapterIndex });
   }, [generateChapterMutation]);
 
+  const analyzeContent = useCallback(async (content: string, contentType?: string, genre?: string): Promise<ContentAnalysis | null> => {
+    const result = await analyzeContentMutation.mutateAsync({ content, contentType, genre });
+    return result?.analysis || null;
+  }, [analyzeContentMutation]);
+
+  const generateImagePrompts = useCallback(async () => {
+    await generateImagePromptsMutation.mutateAsync();
+  }, [generateImagePromptsMutation]);
+
   const addImage = useCallback((image: Omit<BookImage, 'id'>) => {
     const newImage: BookImage = {
       ...image,
@@ -773,6 +945,16 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
     setIsbnData,
     isSaving: projectIsSaving,
     lastSaved: projectLastSaved,
+    recommendations,
+    setRecommendations,
+    contentAnalysis,
+    setContentAnalysis,
+    imagePrompts,
+    setImagePrompts,
+    analyzeContent,
+    isAnalyzingContent: analyzeContentMutation.isPending,
+    generateImagePrompts,
+    isGeneratingImagePrompts: generateImagePromptsMutation.isPending,
   };
 
   return (

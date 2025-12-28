@@ -19,6 +19,10 @@ import {
   Wand2,
   Edit3,
   BookOpen,
+  Loader2,
+  Sparkles,
+  Image,
+  RefreshCw,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { ChapterOutline } from "@/lib/contexts/BookStudioContext";
@@ -29,6 +33,12 @@ export default function PlanStep() {
     bookOutline,
     setBookOutline,
     setCurrentStep,
+    recommendations,
+    imagePrompts,
+    generateImagePrompts,
+    isGeneratingImagePrompts,
+    analyzeContent,
+    isAnalyzingContent,
   } = useBookStudio();
 
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
@@ -247,16 +257,95 @@ export default function PlanStep() {
 
               <Card className="bg-primary/5 border">
                 <CardContent className="p-4">
-                  <h4 className="font-semibold flex items-center gap-2 mb-2 text-foreground">
+                  <h4 className="font-semibold flex items-center gap-2 mb-3 text-foreground">
                     <Wand2 className="w-4 h-4 text-primary" /> AI Suggestions
                   </h4>
-                  <ul className="text-sm space-y-2 text-muted-foreground">
-                    <li>• Consider adding an "Introduction" chapter</li>
-                    <li>• A "Lessons Learned" chapter works well for memoirs</li>
-                    <li>• End with a "Call to Action" for your readers</li>
-                  </ul>
+                  
+                  {recommendations?.structure && recommendations.structure.length > 0 ? (
+                    <ul className="text-sm space-y-2 text-muted-foreground mb-4">
+                      {recommendations.structure.slice(0, 3).map((rec, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <Sparkles className="w-3 h-3 text-primary mt-1 flex-shrink-0" />
+                          <span>{rec}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <ul className="text-sm space-y-2 text-muted-foreground mb-4">
+                      <li>• Consider adding an "Introduction" chapter</li>
+                      <li>• A "Lessons Learned" chapter works well for memoirs</li>
+                      <li>• End with a "Call to Action" for your readers</li>
+                    </ul>
+                  )}
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full border text-primary hover:bg-primary/10"
+                    onClick={async () => {
+                      if (chapters.length > 0) {
+                        const chapterContent = chapters.map(ch => 
+                          `${ch.title}: ${ch.description}`
+                        ).join('\n');
+                        try {
+                          await analyzeContent(chapterContent, 'outline', bookOutline?.genre);
+                          toast({ title: "Analysis Complete", description: "AI suggestions updated" });
+                        } catch {
+                          toast({ title: "Analysis Failed", variant: "destructive" });
+                        }
+                      }
+                    }}
+                    disabled={isAnalyzingContent || chapters.length === 0}
+                    data-testid="button-get-suggestions"
+                  >
+                    {isAnalyzingContent ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                    )}
+                    Get AI Suggestions
+                  </Button>
                 </CardContent>
               </Card>
+
+              {imagePrompts.length > 0 && (
+                <Card className="bg-card border">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2 text-foreground">
+                      <Image className="w-4 h-4 text-primary" />
+                      Image Suggestions ({imagePrompts.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {imagePrompts.slice(0, 3).map((prompt, idx) => (
+                      <div key={prompt.id} className="text-xs p-2 bg-card/80 rounded border border-primary/10">
+                        <p className="font-medium text-foreground">{prompt.title}</p>
+                        <p className="text-muted-foreground truncate">{prompt.prompt.substring(0, 80)}...</p>
+                      </div>
+                    ))}
+                    {imagePrompts.length > 3 && (
+                      <p className="text-xs text-muted-foreground text-center">
+                        +{imagePrompts.length - 3} more suggestions
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              <Button
+                variant="outline"
+                className="w-full border text-primary hover:bg-primary/10"
+                onClick={() => generateImagePrompts()}
+                disabled={isGeneratingImagePrompts || chapters.length === 0}
+                data-testid="button-generate-image-prompts"
+              >
+                {isGeneratingImagePrompts ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Image className="w-4 h-4 mr-2" />
+                )}
+                Generate Image Ideas
+              </Button>
             </div>
           </div>
 

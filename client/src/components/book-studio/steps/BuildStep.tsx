@@ -45,6 +45,8 @@ export default function BuildStep() {
     setCurrentStep,
     manuscriptHtml,
     setManuscriptHtml,
+    imagePrompts,
+    recommendations,
   } = useBookStudio();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -122,11 +124,13 @@ export default function BuildStep() {
     }
   };
 
-  const quickPrompts = [
-    "A peaceful sunrise over a hospital window, symbolizing hope",
-    "Strong hands gripping therapy equipment, determination",
-    "A winding path through mountains, representing recovery",
-  ];
+  const aiSuggestedPrompts = imagePrompts.length > 0 
+    ? imagePrompts.slice(0, 3).map(p => p.prompt)
+    : [
+        "A peaceful sunrise over a hospital window, symbolizing hope",
+        "Strong hands gripping therapy equipment, determination",
+        "A winding path through mountains, representing recovery",
+      ];
 
   return (
     <div className="space-y-6">
@@ -235,18 +239,50 @@ export default function BuildStep() {
                   </Button>
 
                   <div className="space-y-2">
-                    <Label className="text-muted-foreground">Quick Prompts</Label>
-                    {quickPrompts.map((prompt, i) => (
+                    <Label className="text-muted-foreground flex items-center gap-2">
+                      {imagePrompts.length > 0 ? (
+                        <>
+                          <Sparkles className="w-3 h-3 text-primary" />
+                          AI-Suggested Prompts
+                        </>
+                      ) : (
+                        "Quick Prompts"
+                      )}
+                    </Label>
+                    {aiSuggestedPrompts.map((prompt, i) => (
                       <button
                         key={i}
                         onClick={() => setImagePrompt(prompt)}
                         className="w-full p-2 text-left text-sm bg-card rounded border border-primary/10 hover:border transition-colors text-gray-300"
                         data-testid={`button-quick-prompt-${i}`}
                       >
-                        {prompt}
+                        {prompt.length > 100 ? prompt.substring(0, 100) + '...' : prompt}
                       </button>
                     ))}
                   </div>
+
+                  {imagePrompts.length > 3 && (
+                    <div className="mt-3 p-3 bg-primary/5 rounded border">
+                      <p className="text-xs text-muted-foreground mb-2">
+                        +{imagePrompts.length - 3} more AI suggestions available
+                      </p>
+                      <ScrollArea className="h-[120px]">
+                        <div className="space-y-1">
+                          {imagePrompts.slice(3).map((p, idx) => (
+                            <button
+                              key={p.id}
+                              onClick={() => setImagePrompt(p.prompt)}
+                              className="w-full p-2 text-left text-xs bg-card/80 rounded hover:bg-card transition-colors text-gray-400"
+                              data-testid={`button-ai-prompt-${idx + 3}`}
+                            >
+                              <span className="font-medium text-foreground">{p.title}</span>
+                              <span className="ml-2">{p.prompt.substring(0, 50)}...</span>
+                            </button>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  )}
                 </div>
 
                 <div>

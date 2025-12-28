@@ -67,6 +67,10 @@ export default function StartStep() {
     generationProgress,
     documentImports,
     importDocument,
+    analyzeContent,
+    isAnalyzingContent,
+    contentAnalysis,
+    recommendations,
   } = useBookStudio();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -159,7 +163,7 @@ export default function StartStep() {
 
     for (const file of Array.from(files)) {
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
         const content = event.target?.result as string;
         const wordCount = content.split(/\s+/).filter(Boolean).length;
         importDocument({
@@ -172,6 +176,15 @@ export default function StartStep() {
           title: "Document Imported", 
           description: `${file.name} (${wordCount.toLocaleString()} words)` 
         });
+        
+        if (content.length >= 50) {
+          toast({ title: "Analyzing Content...", description: "AI is reviewing your manuscript" });
+          try {
+            await analyzeContent(content, 'manuscript', selectedGenre);
+          } catch {
+            console.log("Content analysis failed, but document was imported successfully");
+          }
+        }
       };
       reader.readAsText(file);
     }
@@ -425,6 +438,102 @@ export default function StartStep() {
                     ))}
                   </div>
                 </div>
+              )}
+
+              {isAnalyzingContent && (
+                <Card className="bg-primary/5 border animate-pulse">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                    <span className="text-foreground">AI is analyzing your manuscript...</span>
+                  </CardContent>
+                </Card>
+              )}
+
+              {contentAnalysis && !isAnalyzingContent && (
+                <Card className="bg-primary/5 border">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2 text-foreground">
+                      <Sparkles className="w-4 h-4 text-primary" />
+                      AI Manuscript Analysis
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {contentAnalysis.summary && (
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Summary</Label>
+                        <p className="text-sm text-foreground">{contentAnalysis.summary}</p>
+                      </div>
+                    )}
+                    
+                    {contentAnalysis.themes && contentAnalysis.themes.length > 0 && (
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Key Themes</Label>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {contentAnalysis.themes.map((theme, idx) => (
+                            <Badge key={idx} variant="secondary" className="bg-primary/20 text-primary">
+                              {theme}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {contentAnalysis.strengths && contentAnalysis.strengths.length > 0 && (
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Strengths</Label>
+                        <ul className="text-sm text-foreground space-y-1 mt-1">
+                          {contentAnalysis.strengths.map((s, idx) => (
+                            <li key={idx} className="flex items-start gap-2">
+                              <span className="text-green-500">+</span> {s}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {contentAnalysis.areasForImprovement && contentAnalysis.areasForImprovement.length > 0 && (
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Areas to Improve</Label>
+                        <ul className="text-sm text-foreground space-y-1 mt-1">
+                          {contentAnalysis.areasForImprovement.map((a, idx) => (
+                            <li key={idx} className="flex items-start gap-2">
+                              <span className="text-yellow-500">!</span> {a}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {contentAnalysis.targetAudience && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Users className="w-4 h-4 text-primary" />
+                        <span className="text-muted-foreground">Target Audience:</span>
+                        <span className="text-foreground">{contentAnalysis.targetAudience}</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {recommendations && (recommendations.immediate?.length || recommendations.nextSteps?.length) && (
+                <Card className="bg-card border">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2 text-foreground">
+                      <Wand2 className="w-4 h-4 text-primary" />
+                      AI Recommendations
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="text-sm space-y-2 text-muted-foreground">
+                      {(recommendations.immediate || recommendations.nextSteps || []).slice(0, 3).map((rec, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                          <span>{rec}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
               )}
 
               <div className="flex justify-end pt-4 border-t border">

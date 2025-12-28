@@ -23,6 +23,8 @@ import {
   RefreshCw,
   Loader2,
   BookOpen,
+  Image,
+  ImagePlus,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -37,6 +39,8 @@ export default function GenerateStep() {
     generationProgress,
     manuscriptHtml,
     setManuscriptHtml,
+    imagePrompts,
+    recommendations,
   } = useBookStudio();
 
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(
@@ -283,7 +287,7 @@ export default function GenerateStep() {
                     value={selectedChapter.content || ""}
                     onChange={(e) => updateChapterContent(e.target.value)}
                     placeholder="Start writing your chapter here, or click 'AI Write' to generate content..."
-                    className="min-h-[500px] bg-card/80 border text-gray-200 text-base leading-relaxed"
+                    className="min-h-[400px] bg-card/80 border text-gray-200 text-base leading-relaxed"
                     data-testid="textarea-chapter-content"
                   />
                   <div className="flex justify-between mt-3 text-xs text-muted-foreground">
@@ -295,6 +299,96 @@ export default function GenerateStep() {
                       Target: {selectedChapter.targetWordCount.toLocaleString()} words
                     </span>
                   </div>
+
+                  {selectedChapter.content && selectedChapter.content.length > 100 && (
+                    <div className="mt-4 p-4 bg-primary/5 rounded-lg border">
+                      <h4 className="text-sm font-semibold flex items-center gap-2 mb-3 text-foreground">
+                        <ImagePlus className="w-4 h-4 text-primary" />
+                        Suggested Images for This Chapter
+                      </h4>
+                      
+                      {(() => {
+                        const chapterIndex = chapters.findIndex(ch => ch.id === selectedChapterId);
+                        const chapterPrompts = imagePrompts.filter(p => p.chapterNumber === chapterIndex + 1);
+                        const chapterImagePrompt = selectedChapter.imagePrompt;
+                        
+                        if (chapterPrompts.length === 0 && !chapterImagePrompt) {
+                          return (
+                            <p className="text-sm text-muted-foreground">
+                              No image suggestions yet. Generate images from the Build step.
+                            </p>
+                          );
+                        }
+
+                        return (
+                          <div className="space-y-2">
+                            {chapterImagePrompt && (
+                              <div className="p-3 bg-card rounded border">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex-1">
+                                    <p className="text-xs font-medium text-foreground mb-1">Chapter Illustration</p>
+                                    <p className="text-xs text-muted-foreground">{chapterImagePrompt.substring(0, 120)}...</p>
+                                  </div>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="flex-shrink-0 text-primary border-primary/30"
+                                    onClick={() => {
+                                      setCurrentStep('build');
+                                      toast({ title: "Go to Build", description: "Generate this image in the Build step" });
+                                    }}
+                                    data-testid="button-goto-build"
+                                  >
+                                    <Image className="w-3 h-3 mr-1" />
+                                    Generate
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                            {chapterPrompts.map((prompt) => (
+                              <div key={prompt.id} className="p-3 bg-card rounded border">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex-1">
+                                    <p className="text-xs font-medium text-foreground mb-1">{prompt.title}</p>
+                                    <p className="text-xs text-muted-foreground">{prompt.prompt.substring(0, 100)}...</p>
+                                  </div>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="flex-shrink-0 text-primary border-primary/30"
+                                    onClick={() => {
+                                      setCurrentStep('build');
+                                    }}
+                                    data-testid={`button-generate-${prompt.id}`}
+                                  >
+                                    <Image className="w-3 h-3 mr-1" />
+                                    Generate
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+
+                  {recommendations?.content && recommendations.content.length > 0 && (
+                    <div className="mt-4 p-4 bg-card/80 rounded-lg border">
+                      <h4 className="text-sm font-semibold flex items-center gap-2 mb-2 text-foreground">
+                        <Wand2 className="w-4 h-4 text-primary" />
+                        Content Recommendations
+                      </h4>
+                      <ul className="text-xs space-y-1 text-muted-foreground">
+                        {recommendations.content.slice(0, 3).map((rec, idx) => (
+                          <li key={idx} className="flex items-start gap-2">
+                            <Sparkles className="w-3 h-3 text-primary mt-0.5 flex-shrink-0" />
+                            <span>{rec}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </>
             ) : (
