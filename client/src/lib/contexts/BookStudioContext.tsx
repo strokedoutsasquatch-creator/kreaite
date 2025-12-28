@@ -432,6 +432,20 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
         setImagePlacements(project.imagePlacements);
       }
       
+      // Restore document imports from manuscriptText if available
+      if (project.manuscriptText && !project.manuscriptHtml) {
+        // If we have manuscriptText but no HTML yet, restore as document import
+        const restoredDoc: DocumentImport = {
+          id: `doc-restored-${Date.now()}`,
+          fileName: project.title || 'Imported Manuscript',
+          fileType: 'text/plain',
+          content: project.manuscriptText,
+          wordCount: project.manuscriptText.split(/\s+/).filter(Boolean).length,
+          importedAt: new Date(project.createdAt),
+        };
+        setDocumentImports([restoredDoc]);
+      }
+      
       setPrintSettings({
         trimSize: project.trimSize || DEFAULT_PRINT_SETTINGS.trimSize,
         fontSize: project.fontSize || DEFAULT_PRINT_SETTINGS.fontSize,
@@ -570,8 +584,14 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
       id: `doc-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       importedAt: new Date(),
     };
-    setDocumentImports(prev => [...prev, newDoc]);
-  }, []);
+    setDocumentImports(prev => {
+      const updated = [...prev, newDoc];
+      // Persist all imported document content to manuscriptText
+      const allContent = updated.map(d => d.content).filter(Boolean).join('\n\n---\n\n');
+      scheduleAutosave({ manuscriptText: allContent });
+      return updated;
+    });
+  }, [scheduleAutosave]);
 
   const setIsbnData = useCallback((data: Partial<IsbnData>) => {
     setIsbnDataState(prev => ({
@@ -1136,9 +1156,15 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
       if (data.success && data.improvedContent) {
         // If we improved document imports, update them
         if (useDocumentImports || !bookOutline?.chapters?.length) {
-          setDocumentImports(prev => prev.map((doc, idx) => 
-            idx === 0 ? { ...doc, content: data.improvedContent } : doc
-          ));
+          setDocumentImports(prev => {
+            const updated = prev.map((doc, idx) => 
+              idx === 0 ? { ...doc, content: data.improvedContent } : doc
+            );
+            // Persist the improved content to the database
+            const allContent = updated.map(d => d.content).filter(Boolean).join('\n\n---\n\n');
+            scheduleAutosave({ manuscriptText: allContent });
+            return updated;
+          });
           toast({ 
             title: "Manuscript Improved", 
             description: `Your manuscript has been enhanced based on AI recommendations` 
