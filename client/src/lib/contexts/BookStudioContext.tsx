@@ -555,9 +555,7 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
       return response.json();
     },
     onSuccess: (data, variables) => {
-      console.log('[BookStudio] Generate full book response:', JSON.stringify(data, null, 2));
       if (data.success && data.outline) {
-        console.log('[BookStudio] Outline chapters count:', data.outline.chapters?.length || 0);
         const outline: BookOutline = {
           title: variables.title || data.outline.title || 'Untitled Book',
           subtitle: data.outline.subtitle,
