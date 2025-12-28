@@ -1119,6 +1119,15 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
 
   const analyzeContent = useCallback(async (content: string, contentType?: string, genre?: string): Promise<ContentAnalysis | null> => {
     const result = await analyzeContentMutation.mutateAsync({ content, contentType, genre });
+    if (result?.analysis) {
+      // Store the analysis in context
+      setContentAnalysis(result.analysis);
+      
+      // Also update recommendations if present
+      if (result.analysis.recommendations) {
+        setRecommendations(result.analysis.recommendations);
+      }
+    }
     return result?.analysis || null;
   }, [analyzeContentMutation]);
 
@@ -1188,7 +1197,7 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
     if (result?.polishedContent && bookOutline) {
       if (chapterIndex !== undefined) {
         const updated = [...bookOutline.chapters];
-        updated[chapterIndex] = { ...updated[chapterIndex], content: result.polishedContent, status: 'polished' as const };
+        updated[chapterIndex] = { ...updated[chapterIndex], content: result.polishedContent, status: 'complete' as const };
         setBookOutline({ ...bookOutline, chapters: updated });
       }
     }
@@ -1201,18 +1210,9 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
       return;
     }
     
-    const result = await editChapterMutation.mutateAsync({ 
-      chapterIndex, 
-      content: bookOutline.chapters[chapterIndex].content!,
-      editType 
-    });
-    
-    if (result?.editedContent && bookOutline) {
-      const updated = [...bookOutline.chapters];
-      updated[chapterIndex] = { ...updated[chapterIndex], content: result.editedContent };
-      setBookOutline({ ...bookOutline, chapters: updated });
-    }
-  }, [bookOutline, editChapterMutation, toast, setBookOutline]);
+    // The mutation handles getting content from bookOutline and updates the chapter on success
+    await editChapterMutation.mutateAsync({ chapterIndex, editType });
+  }, [bookOutline, editChapterMutation, toast]);
 
   // Generate book image from prompt
   const generateBookImage = useCallback(async (prompt: string, style?: string, chapterId?: string): Promise<string | null> => {
@@ -1242,9 +1242,54 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
   }, [generateKeywordsMutation]);
 
   // Export book
-  const exportBook = useCallback(async (format: 'pdf' | 'epub' | 'docx' | 'html') => {
-    await exportBookMutation.mutateAsync({ format });
+  const exportBook = useCallback(async (format: 'pdf' | 'epub' | 'docx' | 'html'): Promise<string | null> => {
+    const result = await exportBookMutation.mutateAsync({ format });
+    return result?.downloadUrl || null;
   }, [exportBookMutation]);
+
+  // Check export readiness
+  const checkExportReadiness = useCallback(async () => {
+    const checklist: { item: string; passed: boolean }[] = [];
+    const issues: string[] = [];
+    
+    if (!bookOutline) {
+      setExportReadiness({
+        ready: false,
+        issues: ['No book outline created'],
+        checklist: [{ item: 'Create book outline', passed: false }]
+      });
+      return;
+    }
+    
+    // Check for title
+    const hasTitle = !!bookOutline.title?.trim();
+    checklist.push({ item: 'Book title defined', passed: hasTitle });
+    if (!hasTitle) issues.push('Book title is missing');
+    
+    // Check for chapters with content
+    const chaptersWithContent = bookOutline.chapters.filter(ch => ch.content && ch.content.trim().length > 0);
+    const allChaptersHaveContent = chaptersWithContent.length === bookOutline.chapters.length;
+    checklist.push({ item: 'All chapters have content', passed: allChaptersHaveContent });
+    if (chaptersWithContent.length === 0) {
+      issues.push('No chapters have content - generate chapters first');
+    } else if (!allChaptersHaveContent) {
+      issues.push(`${bookOutline.chapters.length - chaptersWithContent.length} chapters missing content`);
+    }
+    
+    // Check total word count
+    const totalWords = bookOutline.chapters.reduce((sum, ch) => sum + (ch.wordCount || 0), 0);
+    const hasMinWordCount = totalWords >= 1000;
+    checklist.push({ item: 'Minimum word count (1,000)', passed: hasMinWordCount });
+    if (!hasMinWordCount) {
+      issues.push(`Low word count (${totalWords}) - consider adding more content`);
+    }
+    
+    setExportReadiness({
+      ready: issues.length === 0,
+      issues,
+      checklist
+    });
+  }, [bookOutline]);
 
   const value: BookStudioContextValue = {
     currentStep,
@@ -1320,6 +1365,8 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
     // Export
     exportBook,
     isExporting: exportBookMutation.isPending,
+    exportReadiness,
+    checkExportReadiness,
   };
 
   return (
