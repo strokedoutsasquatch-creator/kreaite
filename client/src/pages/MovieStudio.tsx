@@ -150,7 +150,7 @@ export default function MovieStudio() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <CreatorHeader />
       
       <main className="container mx-auto px-4 py-8">
@@ -161,32 +161,32 @@ export default function MovieStudio() {
             </Button>
           </Link>
           <div className="p-3 rounded-xl bg-gradient-to-br from-red-500 to-rose-600">
-            <Film className="w-8 h-8 text-white" />
+            <Film className="w-8 h-8 text-foreground" />
           </div>
           <div>
             <h1 className="text-3xl font-bold">Movie Studio</h1>
             <p className="text-zinc-400">AI-powered film production pipeline</p>
           </div>
-          <Badge className="ml-auto bg-orange-500/20 text-orange-400 border-orange-500/30">
+          <Badge className="ml-auto bg-primary/20 text-primary border">
             <Sparkles className="w-3 h-3 mr-1" /> Ultra-Premium
           </Badge>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-zinc-900 border border-zinc-800">
-            <TabsTrigger value="projects" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400">
+            <TabsTrigger value="projects" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
               <Clapperboard className="w-4 h-4 mr-2" /> Projects
             </TabsTrigger>
-            <TabsTrigger value="script" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400">
+            <TabsTrigger value="script" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
               <FileText className="w-4 h-4 mr-2" /> Script Generator
             </TabsTrigger>
-            <TabsTrigger value="characters" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400">
+            <TabsTrigger value="characters" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
               <Users className="w-4 h-4 mr-2" /> Characters
             </TabsTrigger>
-            <TabsTrigger value="storyboard" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400">
+            <TabsTrigger value="storyboard" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
               <Image className="w-4 h-4 mr-2" /> Storyboard
             </TabsTrigger>
-            <TabsTrigger value="dialogue" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400">
+            <TabsTrigger value="dialogue" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
               <Mic2 className="w-4 h-4 mr-2" /> Dialogue
             </TabsTrigger>
           </TabsList>
@@ -218,7 +218,7 @@ export default function MovieStudio() {
               <Card className="bg-zinc-900/50 border-zinc-800">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Wand2 className="w-5 h-5 text-orange-400" />
+                    <Wand2 className="w-5 h-5 text-primary" />
                     Script Generator
                   </CardTitle>
                   <CardDescription>AI-powered screenplay creation</CardDescription>
@@ -300,7 +300,7 @@ export default function MovieStudio() {
                     <ScrollArea className="h-[400px]">
                       <div className="space-y-4 text-sm">
                         <div className="p-3 bg-zinc-800 rounded-lg">
-                          <h4 className="font-bold text-orange-400">{generatedScript.title}</h4>
+                          <h4 className="font-bold text-primary">{generatedScript.title}</h4>
                           <p className="text-zinc-400 mt-1">{generatedScript.logline}</p>
                         </div>
                         {generatedScript.scenes?.map((scene: any, i: number) => (
@@ -383,8 +383,8 @@ export default function MovieStudio() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {characters.map((char, i) => (
                         <div key={i} className="p-4 bg-zinc-800/50 rounded-lg flex items-start gap-3">
-                          <div className="p-2 rounded-lg bg-orange-500/20">
-                            <Users className="w-5 h-5 text-orange-400" />
+                          <div className="p-2 rounded-lg bg-primary/20">
+                            <Users className="w-5 h-5 text-primary" />
                           </div>
                           <div className="flex-1">
                             <h4 className="font-medium">{char.name}</h4>
@@ -417,7 +417,7 @@ export default function MovieStudio() {
             <Card className="bg-zinc-900/50 border-zinc-800">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Camera className="w-5 h-5 text-orange-400" />
+                  <Camera className="w-5 h-5 text-primary" />
                   Storyboard Gallery
                 </CardTitle>
                 <CardDescription>AI-generated visual frames for each scene</CardDescription>
@@ -445,7 +445,7 @@ export default function MovieStudio() {
             <Card className="bg-zinc-900/50 border-zinc-800">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Mic2 className="w-5 h-5 text-orange-400" />
+                  <Mic2 className="w-5 h-5 text-primary" />
                   Multi-Character Dialogue
                 </CardTitle>
                 <CardDescription>AI voice synthesis with unique character voices</CardDescription>
@@ -485,7 +485,7 @@ export default function MovieStudio() {
           </TabsContent>
         </Tabs>
 
-        <Card className="mt-8 bg-gradient-to-r from-orange-500/20 to-rose-500/20 border-orange-500/30">
+        <Card className="mt-8 bg-gradient-to-r from-orange-500/20 to-rose-500/20 border">
           <CardContent className="flex items-center justify-between py-6">
             <div>
               <h3 className="text-xl font-bold">Full Production Pipeline</h3>

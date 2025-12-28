@@ -3,7 +3,7 @@ import { AvatarStudio } from "@/features/ai-avatar/AvatarStudio";
 
 export default function AvatarStudioPage() {
   return (
-    <div className="min-h-screen bg-black" data-testid="page-avatar-studio">
+    <div className="min-h-screen bg-background" data-testid="page-avatar-studio">
       <CreatorHeader />
       <AvatarStudio />
     </div>

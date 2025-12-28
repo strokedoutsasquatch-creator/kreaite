@@ -97,7 +97,7 @@ export default function DJStudio() {
   const presets = (presetsData as any)?.presets || [];
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <CreatorHeader />
       
       <main className="container mx-auto px-4 py-8">
@@ -108,26 +108,26 @@ export default function DJStudio() {
             </Button>
           </Link>
           <div className="p-3 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600">
-            <Disc3 className="w-8 h-8 text-white" />
+            <Disc3 className="w-8 h-8 text-foreground" />
           </div>
           <div>
             <h1 className="text-3xl font-bold">DJ/Mixing Studio</h1>
             <p className="text-zinc-400">Professional audio mixing with turntable scratching</p>
           </div>
-          <Badge className="ml-auto bg-orange-500/20 text-orange-400 border-orange-500/30">
+          <Badge className="ml-auto bg-primary/20 text-primary border">
             <Sparkles className="w-3 h-3 mr-1" /> Ultra-Premium
           </Badge>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-zinc-900 border border-zinc-800">
-            <TabsTrigger value="mixer" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400">
+            <TabsTrigger value="mixer" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
               <Sliders className="w-4 h-4 mr-2" /> Mixer
             </TabsTrigger>
-            <TabsTrigger value="turntable" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400">
+            <TabsTrigger value="turntable" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
               <Disc3 className="w-4 h-4 mr-2" /> Turntable
             </TabsTrigger>
-            <TabsTrigger value="presets" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400">
+            <TabsTrigger value="presets" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
               <Settings className="w-4 h-4 mr-2" /> Presets
             </TabsTrigger>
           </TabsList>
@@ -137,7 +137,7 @@ export default function DJStudio() {
               <Card className="bg-zinc-900/50 border-zinc-800">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Sliders className="w-5 h-5 text-orange-400" />
+                    <Sliders className="w-5 h-5 text-primary" />
                     8-Band EQ
                   </CardTitle>
                 </CardHeader>
@@ -184,7 +184,7 @@ export default function DJStudio() {
               <Card className="bg-zinc-900/50 border-zinc-800">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Zap className="w-5 h-5 text-orange-400" />
+                    <Zap className="w-5 h-5 text-primary" />
                     Compressor
                   </CardTitle>
                 </CardHeader>
@@ -243,7 +243,7 @@ export default function DJStudio() {
               <Card className="bg-zinc-900/50 border-zinc-800">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Radio className="w-5 h-5 text-orange-400" />
+                    <Radio className="w-5 h-5 text-primary" />
                     Effects
                   </CardTitle>
                 </CardHeader>
@@ -358,7 +358,7 @@ export default function DJStudio() {
               <Card className="bg-zinc-900/50 border-zinc-800">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Disc3 className="w-5 h-5 text-orange-400" />
+                    <Disc3 className="w-5 h-5 text-primary" />
                     Deck A
                   </CardTitle>
                 </CardHeader>
@@ -368,8 +368,8 @@ export default function DJStudio() {
                     style={{ animationDuration: '2s' }}
                     data-testid="turntable-deck-a"
                   >
-                    <div className="w-16 h-16 rounded-full bg-orange-500/20 border-2 border-orange-500 flex items-center justify-center">
-                      <Disc3 className="w-8 h-8 text-orange-400" />
+                    <div className="w-16 h-16 rounded-full bg-primary/20 border-2 border-orange-500 flex items-center justify-center">
+                      <Disc3 className="w-8 h-8 text-primary" />
                     </div>
                   </div>
                   <div className="flex gap-3 mt-6">
@@ -401,7 +401,7 @@ export default function DJStudio() {
               <Card className="bg-zinc-900/50 border-zinc-800">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Disc3 className="w-5 h-5 text-orange-400" />
+                    <Disc3 className="w-5 h-5 text-primary" />
                     Deck B
                   </CardTitle>
                 </CardHeader>
@@ -435,7 +435,7 @@ export default function DJStudio() {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-4">
-                  <span className="text-sm text-orange-400">A</span>
+                  <span className="text-sm text-primary">A</span>
                   <Slider
                     value={[50]}
                     min={0}

@@ -51,7 +51,7 @@ export default function Landing() {
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-background">
       <RecoveryHeader />
       <main>
         <HeroSection />

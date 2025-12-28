@@ -52,10 +52,10 @@ export default function ToolPanel() {
   } = useBookStudio();
 
   return (
-    <div className="flex flex-col h-full bg-black/50 border-r border-orange-500/20">
-      <div className="p-4 border-b border-orange-500/20">
-        <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-orange-500" />
+    <div className="flex flex-col h-full bg-sidebar border-r border-sidebar-border">
+      <div className="p-6 border-b border-sidebar-border">
+        <h2 className="text-sm font-serif font-semibold text-sidebar-foreground flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-primary" />
           Workflow
         </h2>
         <p className="text-xs text-muted-foreground mt-1">
@@ -63,7 +63,7 @@ export default function ToolPanel() {
         </p>
       </div>
 
-      <nav className="flex-1 p-2 space-y-1" data-testid="workflow-nav">
+      <nav className="flex-1 p-4 space-y-2" data-testid="workflow-nav">
         {workflowTabs.map((tab, index) => {
           const status = getStepStatus(tab.id, currentStep, bookOutline, brainstormIdeas);
           const isActive = currentStep === tab.id;
@@ -74,9 +74,9 @@ export default function ToolPanel() {
               key={tab.id}
               variant="ghost"
               className={cn(
-                "w-full justify-start gap-3 h-auto py-3 px-3 text-left",
-                isActive && "bg-orange-500/20 text-orange-400 border border-orange-500/30",
-                status === 'completed' && !isActive && "text-green-400",
+                "w-full justify-start gap-3 h-auto py-4 px-4 text-left",
+                isActive && "bg-primary/10 text-primary border border-primary/30",
+                status === 'completed' && !isActive && "text-green-600",
                 status === 'upcoming' && !isActive && "text-muted-foreground opacity-60"
               )}
               onClick={() => setCurrentStep(tab.id)}
@@ -84,8 +84,8 @@ export default function ToolPanel() {
             >
               <div className={cn(
                 "flex items-center justify-center w-8 h-8 rounded-full border-2 shrink-0",
-                isActive && "border-orange-500 bg-orange-500/20",
-                status === 'completed' && !isActive && "border-green-500 bg-green-500/20",
+                isActive && "border-primary bg-primary/10",
+                status === 'completed' && !isActive && "border-green-600 bg-green-500/10",
                 status === 'upcoming' && !isActive && "border-muted-foreground/30"
               )}>
                 {isGenerating ? (
@@ -101,16 +101,16 @@ export default function ToolPanel() {
                 <div className="text-xs text-muted-foreground truncate">{tab.description}</div>
               </div>
               {isActive && (
-                <ChevronRight className="w-4 h-4 text-orange-500 shrink-0" />
+                <ChevronRight className="w-4 h-4 text-primary shrink-0" />
               )}
             </Button>
           );
         })}
       </nav>
 
-      <Separator className="bg-orange-500/20" />
+      <Separator className="bg-sidebar-border" />
 
-      <div className="p-3">
+      <div className="p-4">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           {isSaving ? (
             <>
@@ -119,7 +119,7 @@ export default function ToolPanel() {
             </>
           ) : lastSaved ? (
             <>
-              <Save className="w-3 h-3 text-green-500" />
+              <Save className="w-3 h-3 text-green-600" />
               <span>Saved {new Date(lastSaved).toLocaleTimeString()}</span>
             </>
           ) : (
@@ -128,7 +128,7 @@ export default function ToolPanel() {
         </div>
 
         {generationProgress.isGenerating && (
-          <Badge className="mt-2 w-full justify-center bg-orange-500/20 text-orange-400 border-orange-500/30">
+          <Badge className="mt-3 w-full justify-center bg-primary/10 text-primary border-primary/30">
             <Loader2 className="w-3 h-3 mr-1 animate-spin" />
             Generating {generationProgress.currentChapter}/{generationProgress.totalChapters}
           </Badge>

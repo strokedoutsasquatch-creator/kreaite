@@ -211,7 +211,7 @@ export default function ConversationPanel({
       <Button
         variant="outline"
         size="icon"
-        className="fixed bottom-4 right-4 h-14 w-14 rounded-full bg-orange-500 hover:bg-orange-600 text-black border-0 shadow-lg z-50"
+        className="fixed bottom-4 right-4 h-14 w-14 rounded-full bg-primary hover:bg-primary/80 text-primary-foreground border-0 shadow-lg z-50"
         onClick={() => setIsCollapsed(false)}
         data-testid="button-expand-chat"
       >
@@ -222,14 +222,14 @@ export default function ConversationPanel({
 
   const panelContent = (
     <>
-      <CardHeader className="pb-2 border-b border-orange-500/20">
+      <CardHeader className="pb-2 border-b border">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center">
-              <Bot className="w-4 h-4 text-orange-500" />
+            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+              <Bot className="w-4 h-4 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-sm text-white">{title}</CardTitle>
+              <CardTitle className="text-sm text-foreground">{title}</CardTitle>
               <p className="text-xs text-muted-foreground capitalize">{studio} Studio</p>
             </div>
           </div>
@@ -269,7 +269,7 @@ export default function ConversationPanel({
       <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
         {showHistory ? (
           <div className="flex-1 p-4">
-            <h3 className="text-sm font-medium text-white mb-3">Recent Conversations</h3>
+            <h3 className="text-sm font-medium text-foreground mb-3">Recent Conversations</h3>
             <ScrollArea className="h-[300px]">
               <div className="space-y-2">
                 {(sessionsQuery.data as ConversationSession[] || []).map((session) => (
@@ -278,7 +278,7 @@ export default function ConversationPanel({
                     className="p-3 bg-zinc-800 rounded-lg cursor-pointer hover-elevate"
                     onClick={() => loadSession(session.id)}
                   >
-                    <div className="font-medium text-sm text-white">{session.title}</div>
+                    <div className="font-medium text-sm text-foreground">{session.title}</div>
                     <div className="text-xs text-muted-foreground">
                       {new Date(session.createdAt).toLocaleDateString()}
                     </div>
@@ -298,7 +298,7 @@ export default function ConversationPanel({
               <div className="space-y-4">
                 {messages.length === 0 && (
                   <div className="text-center py-8">
-                    <Bot className="w-12 h-12 text-orange-500/50 mx-auto mb-4" />
+                    <Bot className="w-12 h-12 text-primary/50 mx-auto mb-4" />
                     <p className="text-sm text-muted-foreground mb-4">
                       Start a conversation to get AI assistance with your {studio} project.
                     </p>
@@ -309,7 +309,7 @@ export default function ConversationPanel({
                             key={action.id}
                             variant="outline"
                             size="sm"
-                            className="border-orange-500/30 text-xs gap-1"
+                            className="border text-xs gap-1"
                             onClick={() => handleQuickAction(action)}
                           >
                             <action.icon className="w-3 h-3" />
@@ -326,7 +326,7 @@ export default function ConversationPanel({
                     key={i}
                     className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
                   >
-                    <Avatar className="h-8 w-8 border border-orange-500/20 shrink-0">
+                    <Avatar className="h-8 w-8 border border shrink-0">
                       {msg.role === "user" ? (
                         <>
                           <AvatarImage src={user?.profileImageUrl || undefined} />
@@ -335,7 +335,7 @@ export default function ConversationPanel({
                           </AvatarFallback>
                         </>
                       ) : (
-                        <AvatarFallback className="bg-orange-500/20 text-orange-500">
+                        <AvatarFallback className="bg-primary/20 text-primary">
                           <Bot className="w-4 h-4" />
                         </AvatarFallback>
                       )}
@@ -343,8 +343,8 @@ export default function ConversationPanel({
                     <div
                       className={`flex-1 px-4 py-3 rounded-lg ${
                         msg.role === "user"
-                          ? "bg-orange-500 text-black"
-                          : "bg-zinc-800 text-white"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-zinc-800 text-foreground"
                       }`}
                     >
                       <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
@@ -361,20 +361,20 @@ export default function ConversationPanel({
 
                 {isStreaming && (
                   <div className="flex gap-3">
-                    <Avatar className="h-8 w-8 border border-orange-500/20">
-                      <AvatarFallback className="bg-orange-500/20 text-orange-500">
+                    <Avatar className="h-8 w-8 border border">
+                      <AvatarFallback className="bg-primary/20 text-primary">
                         <Bot className="w-4 h-4" />
                       </AvatarFallback>
                     </Avatar>
                     <div className="bg-zinc-800 px-4 py-3 rounded-lg">
-                      <Loader2 className="w-4 h-4 animate-spin text-orange-500" />
+                      <Loader2 className="w-4 h-4 animate-spin text-primary" />
                     </div>
                   </div>
                 )}
               </div>
             </ScrollArea>
 
-            <div className="p-3 border-t border-orange-500/20">
+            <div className="p-3 border-t border">
               <div className="flex gap-2">
                 <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0">
                   <Paperclip className="h-4 w-4" />
@@ -390,7 +390,7 @@ export default function ConversationPanel({
                 />
                 <Button
                   size="icon"
-                  className="h-9 w-9 shrink-0 bg-orange-500 hover:bg-orange-600 text-black"
+                  className="h-9 w-9 shrink-0 bg-primary hover:bg-primary/80 text-primary-foreground"
                   onClick={handleSend}
                   disabled={isStreaming || !inputValue.trim()}
                   data-testid="button-send-message"
@@ -411,8 +411,8 @@ export default function ConversationPanel({
 
   if (isExpanded) {
     return (
-      <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
-        <Card className="w-full max-w-4xl h-[80vh] bg-zinc-900 border-orange-500/20 flex flex-col">
+      <div className="fixed inset-0 z-50 bg-background/90 flex items-center justify-center p-4">
+        <Card className="w-full max-w-4xl h-[80vh] bg-zinc-900 border flex flex-col">
           <div className="absolute top-4 right-4">
             <Button
               variant="ghost"
@@ -430,7 +430,7 @@ export default function ConversationPanel({
 
   return (
     <Card 
-      className={`bg-zinc-900 border-orange-500/20 flex flex-col ${className}`}
+      className={`bg-zinc-900 border flex flex-col ${className}`}
       data-testid="conversation-panel"
     >
       {panelContent}

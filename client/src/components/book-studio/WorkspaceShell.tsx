@@ -13,10 +13,10 @@ export default function WorkspaceShell({ children }: WorkspaceShellProps) {
         <ToolPanel />
       </ResizablePanel>
       
-      <ResizableHandle className="bg-orange-500/20 hover:bg-orange-500/40 transition-colors w-1" />
+      <ResizableHandle className="bg-border hover:bg-primary/20 transition-colors w-1" />
       
       <ResizablePanel defaultSize={82}>
-        <div className="h-full overflow-hidden">
+        <div className="h-full overflow-hidden bg-background">
           {children}
         </div>
       </ResizablePanel>

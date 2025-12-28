@@ -138,14 +138,14 @@ function BookCard({ book }: { book: typeof books[0] }) {
           >
             <div className="absolute inset-0 bg-black/20 rounded-lg" />
             <div className="relative text-center">
-              <BookOpen className="h-12 w-12 mx-auto mb-4 text-white/90" aria-hidden="true" />
-              <h3 className="text-xl font-black text-white uppercase tracking-wide leading-tight">
+              <BookOpen className="h-12 w-12 mx-auto mb-4 text-foreground/90" aria-hidden="true" />
+              <h3 className="text-xl font-black text-foreground uppercase tracking-wide leading-tight">
                 {book.title}
               </h3>
-              <p className="text-sm text-white/80 mt-2">by {book.author}</p>
+              <p className="text-sm text-foreground/80 mt-2">by {book.author}</p>
             </div>
             {book.status === "coming-soon" && (
-              <Badge className="absolute top-3 right-3 bg-black/60 text-white border-none">
+              <Badge className="absolute top-3 right-3 bg-black/60 text-foreground border-none">
                 Coming Soon
               </Badge>
             )}
@@ -229,7 +229,7 @@ function ModuleCard({ module }: { module: typeof featuredModules[0] }) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
           <div className="absolute bottom-3 left-3 right-3">
             <Badge className="mb-2">{module.category}</Badge>
-            <h4 className="text-white font-semibold">{module.title}</h4>
+            <h4 className="text-foreground font-semibold">{module.title}</h4>
           </div>
           <div className="absolute top-3 right-3 flex gap-2">
             <Badge variant="secondary" className="text-xs">

@@ -178,7 +178,7 @@ export default function TherapistMarketplace() {
   });
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -245,7 +245,7 @@ export default function TherapistMarketplace() {
                         </Avatar>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="text-lg font-semibold text-white">
+                            <h3 className="text-lg font-semibold text-foreground">
                               {storefront.therapist.firstName} {storefront.therapist.lastName}
                             </h3>
                             {storefront.profile.isVerified && (
@@ -255,7 +255,7 @@ export default function TherapistMarketplace() {
                           <p className="text-gray-400 text-sm">{storefront.profile.licenseType}</p>
                           <div className="flex items-center gap-1 mt-1">
                             <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                            <span className="text-white text-sm">
+                            <span className="text-foreground text-sm">
                               {((storefront.profile.rating || 0) / 10).toFixed(1)}
                             </span>
                             <span className="text-gray-500 text-sm">
@@ -313,7 +313,7 @@ export default function TherapistMarketplace() {
                 </DialogTrigger>
                 <DialogContent className="bg-gray-900 border-gray-800 max-w-lg">
                   <DialogHeader>
-                    <DialogTitle className="text-white">Create New Product</DialogTitle>
+                    <DialogTitle className="text-foreground">Create New Product</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4 py-4 max-h-[70vh] overflow-y-auto">
                     <div>
@@ -399,7 +399,7 @@ export default function TherapistMarketplace() {
                       <div className="space-y-2">
                         {productForm.features.map((feature, i) => (
                           <div key={i} className="flex items-center justify-between p-2 bg-gray-800 rounded">
-                            <span className="text-sm text-white">{feature}</span>
+                            <span className="text-sm text-foreground">{feature}</span>
                             <Button
                               size="icon"
                               variant="ghost"
@@ -445,7 +445,7 @@ export default function TherapistMarketplace() {
                           {product.isActive ? "Active" : "Inactive"}
                         </Badge>
                       </div>
-                      <h3 className="text-lg font-semibold text-white mb-2">{product.title}</h3>
+                      <h3 className="text-lg font-semibold text-foreground mb-2">{product.title}</h3>
                       <p className="text-gray-400 text-sm line-clamp-2 mb-4">{product.description}</p>
                       <div className="flex items-center justify-between mb-4">
                         <p className="text-2xl font-bold text-primary">
@@ -493,7 +493,7 @@ export default function TherapistMarketplace() {
                     <TrendingUp className="w-4 h-4 text-green-400" />
                   </div>
                   <p className="text-gray-400 text-sm">Total Earnings</p>
-                  <p className="text-3xl font-bold text-white">
+                  <p className="text-3xl font-bold text-foreground">
                     ${((myEarnings?.total || 0) / 100).toFixed(2)}
                   </p>
                 </CardContent>
@@ -504,7 +504,7 @@ export default function TherapistMarketplace() {
                     <Calendar className="w-8 h-8 text-blue-400" />
                   </div>
                   <p className="text-gray-400 text-sm">This Month</p>
-                  <p className="text-3xl font-bold text-white">
+                  <p className="text-3xl font-bold text-foreground">
                     ${((myEarnings?.thisMonth || 0) / 100).toFixed(2)}
                   </p>
                 </CardContent>
@@ -515,7 +515,7 @@ export default function TherapistMarketplace() {
                     <Clock className="w-8 h-8 text-yellow-400" />
                   </div>
                   <p className="text-gray-400 text-sm">Pending Payout</p>
-                  <p className="text-3xl font-bold text-white">
+                  <p className="text-3xl font-bold text-foreground">
                     ${((myEarnings?.pending || 0) / 100).toFixed(2)}
                   </p>
                 </CardContent>
@@ -524,7 +524,7 @@ export default function TherapistMarketplace() {
 
             <Card className="bg-gray-900 border-gray-800">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-foreground flex items-center gap-2">
                   <CreditCard className="w-5 h-5" />
                   Payout Settings
                 </CardTitle>
@@ -556,7 +556,7 @@ export default function TherapistMarketplace() {
                     </Avatar>
                     <div>
                       <div className="flex items-center gap-2">
-                        <DialogTitle className="text-white text-xl">
+                        <DialogTitle className="text-foreground text-xl">
                           {selectedStorefront.therapist.firstName} {selectedStorefront.therapist.lastName}
                         </DialogTitle>
                         {selectedStorefront.profile.isVerified && (
@@ -567,7 +567,7 @@ export default function TherapistMarketplace() {
                       <div className="flex items-center gap-4 mt-2">
                         <div className="flex items-center gap-1">
                           <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                          <span className="text-white">
+                          <span className="text-foreground">
                             {((selectedStorefront.profile.rating || 0) / 10).toFixed(1)}
                           </span>
                           <span className="text-gray-500">
@@ -584,11 +584,11 @@ export default function TherapistMarketplace() {
                 </DialogHeader>
                 <div className="mt-6 space-y-6">
                   <div>
-                    <h4 className="text-white font-medium mb-2">About</h4>
+                    <h4 className="text-foreground font-medium mb-2">About</h4>
                     <p className="text-gray-400">{selectedStorefront.profile.bio}</p>
                   </div>
                   <div>
-                    <h4 className="text-white font-medium mb-2">Specializations</h4>
+                    <h4 className="text-foreground font-medium mb-2">Specializations</h4>
                     <div className="flex flex-wrap gap-2">
                       {selectedStorefront.profile.specializations?.map((spec, i) => (
                         <Badge key={i} variant="outline">{spec}</Badge>
@@ -596,14 +596,14 @@ export default function TherapistMarketplace() {
                     </div>
                   </div>
                   <div>
-                    <h4 className="text-white font-medium mb-4">Services & Products</h4>
+                    <h4 className="text-foreground font-medium mb-4">Services & Products</h4>
                     <div className="space-y-4">
                       {selectedStorefront.products?.map((product) => (
                         <Card key={product.id} className="bg-gray-800 border-gray-700">
                           <CardContent className="p-4">
                             <div className="flex items-center justify-between">
                               <div>
-                                <h5 className="text-white font-medium">{product.title}</h5>
+                                <h5 className="text-foreground font-medium">{product.title}</h5>
                                 <p className="text-gray-400 text-sm">{product.description}</p>
                                 <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
                                   <span>{product.duration} mins</span>

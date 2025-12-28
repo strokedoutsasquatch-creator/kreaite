@@ -114,16 +114,16 @@ export function LiteraryChatPanel({
   if (!isOpen) return null;
 
   return (
-    <Card className="w-96 h-full bg-black border-orange-500/20 flex flex-col" data-testid="literary-chat-panel">
-      <CardHeader className="pb-2 border-b border-orange-500/20">
+    <Card className="w-96 h-full bg-background border flex flex-col" data-testid="literary-chat-panel">
+      <CardHeader className="pb-2 border-b border">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-white flex items-center gap-2 text-sm">
-            <BookOpen className="w-4 h-4 text-orange-500" />
+          <CardTitle className="text-foreground flex items-center gap-2 text-sm">
+            <BookOpen className="w-4 h-4 text-primary" />
             Literary AI Expert
           </CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-[10px] flex items-center gap-1">
-              <Coins className="w-3 h-3 text-orange-500" />
+              <Coins className="w-3 h-3 text-primary" />
               3 cr/msg
             </Badge>
             <Button size="icon" variant="ghost" onClick={onClose} className="h-6 w-6" data-testid="button-close-chat">
@@ -137,7 +137,7 @@ export function LiteraryChatPanel({
               type="checkbox"
               checked={includeContent}
               onChange={(e) => setIncludeContent(e.target.checked)}
-              className="w-3 h-3 rounded border-orange-500/30 bg-black/50"
+              className="w-3 h-3 rounded border bg-card"
               data-testid="checkbox-include-content"
             />
             Include current chapter for context
@@ -150,7 +150,7 @@ export function LiteraryChatPanel({
           {messages.length === 0 ? (
             <div className="space-y-4">
               <div className="text-center py-4">
-                <BookOpen className="w-10 h-10 mx-auto mb-2 text-orange-500/50" />
+                <BookOpen className="w-10 h-10 mx-auto mb-2 text-primary/50" />
                 <p className="text-sm text-gray-400">Ask about literary techniques, story craft, or get feedback on your writing</p>
               </div>
               <div className="space-y-2">
@@ -162,12 +162,12 @@ export function LiteraryChatPanel({
                       <button
                         key={prompt.label}
                         onClick={() => handleQuickPrompt(prompt.prompt)}
-                        className="p-2 text-left bg-black/30 rounded border border-orange-500/20 hover:border-orange-500/50 transition-colors"
+                        className="p-2 text-left bg-card/80 rounded border border hover:border-orange-500/50 transition-colors"
                         data-testid={`button-prompt-${prompt.label.toLowerCase().replace(/\s/g, '-')}`}
                       >
                         <div className="flex items-center gap-1 mb-1">
-                          <Icon className="w-3 h-3 text-orange-500" />
-                          <span className="text-xs font-medium text-white">{prompt.label}</span>
+                          <Icon className="w-3 h-3 text-primary" />
+                          <span className="text-xs font-medium text-foreground">{prompt.label}</span>
                         </div>
                       </button>
                     );
@@ -183,14 +183,14 @@ export function LiteraryChatPanel({
               >
                 {message.role === "assistant" && (
                   <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center flex-shrink-0">
-                    <Bot className="w-3 h-3 text-white" />
+                    <Bot className="w-3 h-3 text-foreground" />
                   </div>
                 )}
                 <div
                   className={`max-w-[80%] rounded-lg p-2 ${
                     message.role === "user"
-                      ? "bg-orange-500/20 text-white"
-                      : "bg-black/50 border border-orange-500/20"
+                      ? "bg-primary/20 text-foreground"
+                      : "bg-card border border"
                   }`}
                 >
                   <p className="text-xs text-gray-300 whitespace-pre-wrap">{message.content}</p>
@@ -198,7 +198,7 @@ export function LiteraryChatPanel({
                   {message.suggestions?.suggestions && message.suggestions.suggestions.length > 0 && (
                     <div className="mt-2 space-y-1">
                       {message.suggestions.suggestions.slice(0, 3).map((s, i) => (
-                        <div key={i} className="bg-black/30 rounded p-1.5 text-xs">
+                        <div key={i} className="bg-card/80 rounded p-1.5 text-xs">
                           <div className="flex items-center gap-1 mb-1">
                             <Badge variant="outline" className="text-[9px] px-1">{s.type}</Badge>
                             {s.literaryTechnique && (
@@ -213,7 +213,7 @@ export function LiteraryChatPanel({
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-5 text-[10px] mt-1 text-orange-400"
+                              className="h-5 text-[10px] mt-1 text-primary"
                               onClick={() => onInsertSuggestion(s.suggestion)}
                               data-testid={`button-insert-suggestion-${i}`}
                             >
@@ -231,7 +231,7 @@ export function LiteraryChatPanel({
                 </div>
                 {message.role === "user" && (
                   <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center flex-shrink-0">
-                    <User className="w-3 h-3 text-white" />
+                    <User className="w-3 h-3 text-foreground" />
                   </div>
                 )}
               </div>
@@ -241,17 +241,17 @@ export function LiteraryChatPanel({
           {chatMutation.isPending && (
             <div className="flex gap-2">
               <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center">
-                <Bot className="w-3 h-3 text-white" />
+                <Bot className="w-3 h-3 text-foreground" />
               </div>
-              <div className="bg-black/50 border border-orange-500/20 rounded-lg p-2">
-                <Loader2 className="w-4 h-4 animate-spin text-orange-500" />
+              <div className="bg-card border border rounded-lg p-2">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
               </div>
             </div>
           )}
         </CardContent>
       </ScrollArea>
 
-      <div className="p-3 border-t border-orange-500/20">
+      <div className="p-3 border-t border">
         <div className="flex gap-2">
           <Textarea
             value={input}
@@ -263,7 +263,7 @@ export function LiteraryChatPanel({
               }
             }}
             placeholder="Ask about writing techniques..."
-            className="min-h-[60px] max-h-[100px] bg-black/50 border-orange-500/20 text-sm resize-none"
+            className="min-h-[60px] max-h-[100px] bg-card border text-sm resize-none"
             data-testid="textarea-chat-input"
           />
           <Button

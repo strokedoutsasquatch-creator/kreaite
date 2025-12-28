@@ -300,7 +300,7 @@ export function DocHub() {
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8" data-testid="doc-hub">
       <div className="text-center mb-12">
-        <h1 className="text-5xl font-serif font-bold tracking-tight text-white mb-3">Doc Hub</h1>
+        <h1 className="text-5xl font-serif font-bold tracking-tight text-foreground mb-3">Doc Hub</h1>
         <p className="text-lg text-zinc-400 leading-relaxed">Import, Parse, Merge & Build Manuscripts</p>
       </div>
 
@@ -314,7 +314,7 @@ export function DocHub() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="pl-9 bg-black/50 border-zinc-700"
+                className="pl-9 bg-card border-zinc-700"
                 data-testid="input-search"
               />
             </div>
@@ -384,7 +384,7 @@ export function DocHub() {
                   data-testid="input-file-upload"
                 />
                 <Upload className="w-12 h-12 mx-auto mb-4 text-zinc-500" />
-                <h3 className="text-white font-medium mb-2">Drop files here or click to upload</h3>
+                <h3 className="text-foreground font-medium mb-2">Drop files here or click to upload</h3>
                 <p className="text-sm text-zinc-500 mb-4">
                   Supports Word (.docx), PDF, Text, RTF, Markdown, HTML, and code files
                 </p>
@@ -412,7 +412,7 @@ export function DocHub() {
 
           {sourcesLoading ? (
             <div className="flex justify-center py-8">
-              <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
           ) : displayedSources.length > 0 ? (
             <div className="grid md:grid-cols-2 gap-4">
@@ -428,8 +428,8 @@ export function DocHub() {
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-3 gap-2">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <div className="w-10 h-10 rounded bg-orange-500/20 flex items-center justify-center flex-shrink-0">
-                            <FormatIcon className="w-5 h-5 text-orange-500" />
+                          <div className="w-10 h-10 rounded bg-primary/20 flex items-center justify-center flex-shrink-0">
+                            <FormatIcon className="w-5 h-5 text-primary" />
                           </div>
                           <div className="flex-1 min-w-0">
                             {isEditing ? (
@@ -437,7 +437,7 @@ export function DocHub() {
                                 <Input
                                   value={editingName}
                                   onChange={(e) => setEditingName(e.target.value)}
-                                  className="h-7 text-sm bg-black/50 border-zinc-700"
+                                  className="h-7 text-sm bg-card border-zinc-700"
                                   autoFocus
                                   onKeyDown={(e) => {
                                     if (e.key === 'Enter') saveRename(source.id);
@@ -465,7 +465,7 @@ export function DocHub() {
                                 </Button>
                               </div>
                             ) : (
-                              <h4 className="text-white font-medium text-sm truncate">
+                              <h4 className="text-foreground font-medium text-sm truncate">
                                 {source.originalFilename}
                               </h4>
                             )}
@@ -554,8 +554,8 @@ export function DocHub() {
         <TabsContent value="merge" className="space-y-6">
           <Card className="bg-zinc-950 border border-zinc-800/50 shadow-xl">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Merge className="w-5 h-5 text-orange-500" />
+              <CardTitle className="text-foreground flex items-center gap-2">
+                <Merge className="w-5 h-5 text-primary" />
                 Merge Documents
               </CardTitle>
             </CardHeader>
@@ -564,7 +564,7 @@ export function DocHub() {
                 placeholder="Merged manuscript title..."
                 value={mergeTitle}
                 onChange={(e) => setMergeTitle(e.target.value)}
-                className="bg-black/50 border-zinc-700"
+                className="bg-card border-zinc-700"
                 data-testid="input-merge-title"
               />
               <p className="text-sm text-zinc-400">
@@ -582,13 +582,13 @@ export function DocHub() {
                       onClick={() => toggleSourceSelection(source.id)}
                       className={`p-3 rounded-lg cursor-pointer mb-2 border transition-colors ${
                         selectedSources.includes(source.id)
-                          ? 'border-orange-500 bg-orange-500/10'
+                          ? 'border-orange-500 bg-primary/10'
                           : 'border-zinc-800 hover:border-zinc-700'
                       }`}
                       data-testid={`merge-source-${source.id}`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-white text-sm">{source.originalFilename}</span>
+                        <span className="text-foreground text-sm">{source.originalFilename}</span>
                         <span className="text-xs text-zinc-500">{source.wordCount} words</span>
                       </div>
                     </div>
@@ -615,8 +615,8 @@ export function DocHub() {
         <TabsContent value="snippets" className="space-y-6">
           <Card className="bg-zinc-950 border border-zinc-800/50 shadow-xl">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Scissors className="w-5 h-5 text-orange-500" />
+              <CardTitle className="text-foreground flex items-center gap-2">
+                <Scissors className="w-5 h-5 text-primary" />
                 Save New Snippet
               </CardTitle>
             </CardHeader>
@@ -625,21 +625,21 @@ export function DocHub() {
                 placeholder="Snippet label..."
                 value={snippetLabel}
                 onChange={(e) => setSnippetLabel(e.target.value)}
-                className="bg-black/50 border-zinc-700"
+                className="bg-card border-zinc-700"
                 data-testid="input-snippet-label"
               />
               <Textarea
                 placeholder="Paste content to save for later..."
                 value={snippetContent}
                 onChange={(e) => setSnippetContent(e.target.value)}
-                className="min-h-[150px] bg-black/50 border-zinc-700"
+                className="min-h-[150px] bg-card border-zinc-700"
                 data-testid="textarea-snippet-content"
               />
               <Input
                 placeholder="Tags (comma separated)..."
                 value={snippetTags}
                 onChange={(e) => setSnippetTags(e.target.value)}
-                className="bg-black/50 border-zinc-700"
+                className="bg-card border-zinc-700"
                 data-testid="input-snippet-tags"
               />
               <Button
@@ -664,7 +664,7 @@ export function DocHub() {
 
           {snippetsLoading ? (
             <div className="flex justify-center py-8">
-              <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
           ) : displayedSnippets.length > 0 ? (
             <div className="grid md:grid-cols-2 gap-4">
@@ -676,7 +676,7 @@ export function DocHub() {
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-2 gap-2">
-                      <h4 className="text-white font-medium">{snippet.label}</h4>
+                      <h4 className="text-foreground font-medium">{snippet.label}</h4>
                       <div className="flex gap-1">
                         <Button 
                           size="sm" 
@@ -727,7 +727,7 @@ export function DocHub() {
         <TabsContent value="manuscripts" className="space-y-6">
           {mergeLoading ? (
             <div className="flex justify-center py-8">
-              <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
           ) : mergeSessions.length > 0 ? (
             <div className="space-y-4">
@@ -740,7 +740,7 @@ export function DocHub() {
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between mb-4 gap-2">
                       <div>
-                        <h3 className="text-xl font-serif text-white">{session.title}</h3>
+                        <h3 className="text-xl font-serif text-foreground">{session.title}</h3>
                         <p className="text-sm text-zinc-500">
                           {session.sourceIds?.length || 0} documents merged • 
                           {session.mergedContent?.split(/\s+/).length || 0} words
@@ -813,8 +813,8 @@ export function DocHub() {
       <Dialog open={!!viewingDoc} onOpenChange={() => setViewingDoc(null)}>
         <DialogContent className="max-w-4xl max-h-[80vh] bg-zinc-950 border-zinc-800">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-white">
-              <FileText className="w-5 h-5 text-orange-500" />
+            <DialogTitle className="flex items-center gap-2 text-foreground">
+              <FileText className="w-5 h-5 text-primary" />
               {viewingDoc?.originalFilename}
             </DialogTitle>
           </DialogHeader>

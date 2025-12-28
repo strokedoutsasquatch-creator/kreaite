@@ -63,7 +63,7 @@ export default function About() {
                   />
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
                     <Badge variant="secondary" className="mb-2">2018 - Early Recovery</Badge>
-                    <p className="text-white text-sm">
+                    <p className="text-foreground text-sm">
                       Massive hemorrhagic stroke. Wheelchair. Walker. 
                       Doctors said I'd never walk again.
                     </p>
@@ -81,7 +81,7 @@ export default function About() {
                   />
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
                     <Badge className="mb-2 bg-primary text-primary-foreground">Today - 90% Recovery</Badge>
-                    <p className="text-white text-sm">
+                    <p className="text-foreground text-sm">
                       Living proof that your greatest comeback 
                       starts with your greatest setback.
                     </p>

@@ -162,14 +162,14 @@ export default function CreatorHub() {
   });
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <CreatorHeader />
       
       <main className="container mx-auto px-4 py-8">
         <div className="flex flex-col gap-2 mb-8">
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600">
-              <Sparkles className="w-8 h-8 text-white" />
+              <Sparkles className="w-8 h-8 text-foreground" />
             </div>
             <div>
               <h1 className="text-4xl font-bold tracking-tight">Creator Hub</h1>
@@ -180,19 +180,19 @@ export default function CreatorHub() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-zinc-900 border border-zinc-800">
-            <TabsTrigger value="studios" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400">
+            <TabsTrigger value="studios" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
               <Layers className="w-4 h-4 mr-2" />
               Studios
             </TabsTrigger>
-            <TabsTrigger value="ultra-premium" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400">
+            <TabsTrigger value="ultra-premium" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
               <Zap className="w-4 h-4 mr-2" />
               Ultra-Premium
             </TabsTrigger>
-            <TabsTrigger value="workflows" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400">
+            <TabsTrigger value="workflows" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
               <GitBranch className="w-4 h-4 mr-2" />
               Workflows
             </TabsTrigger>
-            <TabsTrigger value="earnings" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400">
+            <TabsTrigger value="earnings" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
               <DollarSign className="w-4 h-4 mr-2" />
               Earnings
             </TabsTrigger>
@@ -209,15 +209,15 @@ export default function CreatorHub() {
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className={`p-3 rounded-xl bg-gradient-to-br ${studio.color}`}>
-                          <studio.icon className="w-6 h-6 text-white" />
+                          <studio.icon className="w-6 h-6 text-foreground" />
                         </div>
                         {studio.isPremium && (
-                          <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">
+                          <Badge className="bg-primary/20 text-primary border">
                             <Star className="w-3 h-3 mr-1" /> Premium
                           </Badge>
                         )}
                       </div>
-                      <CardTitle className="text-xl mt-3 group-hover:text-orange-400 transition-colors">
+                      <CardTitle className="text-xl mt-3 group-hover:text-primary transition-colors">
                         {studio.name}
                       </CardTitle>
                       <CardDescription className="text-zinc-400">
@@ -236,7 +236,7 @@ export default function CreatorHub() {
                           </Badge>
                         ))}
                       </div>
-                      <div className="flex items-center justify-end mt-4 text-zinc-500 group-hover:text-orange-400 transition-colors">
+                      <div className="flex items-center justify-end mt-4 text-zinc-500 group-hover:text-primary transition-colors">
                         <span className="text-sm mr-1">Open Studio</span>
                         <ChevronRight className="w-4 h-4" />
                       </div>
@@ -249,7 +249,7 @@ export default function CreatorHub() {
 
           <TabsContent value="ultra-premium" className="space-y-6">
             <div className="flex items-center gap-2 mb-4">
-              <Badge className="bg-gradient-to-r from-orange-500 to-amber-600 text-white border-0">
+              <Badge className="bg-gradient-to-r from-orange-500 to-amber-600 text-foreground border-0">
                 <Zap className="w-3 h-3 mr-1" /> Ultra-Premium Features
               </Badge>
             </div>
@@ -264,17 +264,17 @@ export default function CreatorHub() {
                     <CardHeader>
                       <div className="flex items-center gap-4">
                         <div className={`p-4 rounded-xl bg-gradient-to-br ${tool.color}`}>
-                          <tool.icon className="w-8 h-8 text-white" />
+                          <tool.icon className="w-8 h-8 text-foreground" />
                         </div>
                         <div className="flex-1">
-                          <CardTitle className="text-xl group-hover:text-orange-400 transition-colors">
+                          <CardTitle className="text-xl group-hover:text-primary transition-colors">
                             {tool.name}
                           </CardTitle>
                           <CardDescription className="text-zinc-400">
                             {tool.description}
                           </CardDescription>
                         </div>
-                        <ArrowRight className="w-5 h-5 text-zinc-600 group-hover:text-orange-400 transition-colors" />
+                        <ArrowRight className="w-5 h-5 text-zinc-600 group-hover:text-primary transition-colors" />
                       </div>
                     </CardHeader>
                   </Card>
@@ -285,7 +285,7 @@ export default function CreatorHub() {
             <Card className="bg-zinc-900/50 border-zinc-800 mt-8">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Mic2 className="w-5 h-5 text-orange-400" />
+                  <Mic2 className="w-5 h-5 text-primary" />
                   Voice Cloning Library
                 </CardTitle>
                 <CardDescription>
@@ -298,7 +298,7 @@ export default function CreatorHub() {
                     {voicesData?.voices?.slice(0, 4).map((voice: any) => (
                       <div key={voice.id} className="p-3 bg-zinc-800/50 rounded-lg">
                         <div className="flex items-center gap-2">
-                          <Mic2 className="w-4 h-4 text-orange-400" />
+                          <Mic2 className="w-4 h-4 text-primary" />
                           <span className="text-sm font-medium truncate">{voice.name}</span>
                         </div>
                         <Badge className="mt-2 text-xs" variant="secondary">{voice.voiceType}</Badge>
@@ -337,7 +337,7 @@ export default function CreatorHub() {
               {workflowTemplates?.templates?.map((template: any) => (
                 <Card 
                   key={template.type} 
-                  className="bg-zinc-900/50 border-zinc-800 hover:border-orange-500/30 transition-all"
+                  className="bg-zinc-900/50 border-zinc-800 hover:border transition-all"
                   data-testid={`card-workflow-${template.type}`}
                 >
                   <CardHeader>
@@ -363,7 +363,7 @@ export default function CreatorHub() {
                           {(template.estimatedCost / 100).toFixed(2)}
                         </span>
                       </div>
-                      <Button variant="ghost" size="sm" className="text-orange-400" data-testid={`button-start-${template.type}`}>
+                      <Button variant="ghost" size="sm" className="text-primary" data-testid={`button-start-${template.type}`}>
                         Start <ArrowRight className="w-4 h-4 ml-1" />
                       </Button>
                     </div>
@@ -389,7 +389,7 @@ export default function CreatorHub() {
               <Card className="bg-zinc-900/50 border-zinc-800">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-zinc-400">Pending Payout</CardTitle>
-                  <Wallet className="w-4 h-4 text-orange-400" />
+                  <Wallet className="w-4 h-4 text-primary" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">$0.00</div>
@@ -412,7 +412,7 @@ export default function CreatorHub() {
             <Card className="bg-zinc-900/50 border-zinc-800">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-orange-400" />
+                  <TrendingUp className="w-5 h-5 text-primary" />
                   Revenue Split
                 </CardTitle>
                 <CardDescription>You keep 85% of all sales</CardDescription>

@@ -148,7 +148,7 @@ interface BookStudioContextValue {
   setBookOutline: (outline: BookOutline | null) => void;
   
   generationProgress: GenerationProgress;
-  generateFullBook: (genre: string, description: string, chapterCount?: number) => Promise<void>;
+  generateFullBook: (genre: string, description: string, chapterCount?: number, title?: string) => Promise<void>;
   generateAllChapters: () => Promise<void>;
   generateChapter: (chapterIndex: number) => Promise<void>;
   
@@ -480,7 +480,7 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
   }, [scheduleAutosave]);
 
   const generateFullBookMutation = useMutation({
-    mutationFn: async ({ genre, description, chapterCount }: { genre: string; description: string; chapterCount?: number }) => {
+    mutationFn: async ({ genre, description, chapterCount, title }: { genre: string; description: string; chapterCount?: number; title?: string }) => {
       const brainstormContext = brainstormIdeas.length > 0 
         ? `\n\nBrainstorm ideas:\n${brainstormIdeas.map(i => `- [${i.type}] ${i.content}`).join('\n')}`
         : '';
@@ -488,14 +488,15 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
       const response = await apiRequest('POST', '/api/book/generate-full-book', {
         genre,
         description: description + brainstormContext,
-        chapterCount: chapterCount || 10
+        chapterCount: chapterCount || 10,
+        title: title || undefined
       });
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       if (data.success && data.outline) {
         const outline: BookOutline = {
-          title: data.outline.title || 'Untitled Book',
+          title: variables.title || data.outline.title || 'Untitled Book',
           subtitle: data.outline.subtitle,
           hook: data.outline.hook,
           genre: data.outline.genre || 'fiction',
@@ -677,8 +678,8 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
     }
   });
 
-  const generateFullBook = useCallback(async (genre: string, description: string, chapterCount?: number) => {
-    await generateFullBookMutation.mutateAsync({ genre, description, chapterCount });
+  const generateFullBook = useCallback(async (genre: string, description: string, chapterCount?: number, title?: string) => {
+    await generateFullBookMutation.mutateAsync({ genre, description, chapterCount, title });
   }, [generateFullBookMutation]);
 
   const generateAllChapters = useCallback(async () => {

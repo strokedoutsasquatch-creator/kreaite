@@ -63,7 +63,7 @@ export default function CreatorHeader() {
   const { user, isLoading } = useAuth();
 
   return (
-    <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-sm border-b border-orange-500/20">
+    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href="/" data-testid="link-home">
@@ -75,7 +75,7 @@ export default function CreatorHeader() {
                 data-testid="img-logo"
               />
               <div className="hidden sm:block">
-                <div className="text-[10px] font-medium text-orange-500 uppercase tracking-wider">
+                <div className="text-[10px] font-medium text-primary uppercase tracking-wider">
                   Create. Publish. Earn.
                 </div>
               </div>
@@ -88,15 +88,15 @@ export default function CreatorHeader() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="font-medium text-xs tracking-wide text-white gap-1"
+                  className="font-medium text-xs tracking-wide text-foreground gap-1"
                   data-testid="dropdown-studios"
                 >
-                  <Sparkles className="w-4 h-4 text-orange-500" />
+                  <Sparkles className="w-4 h-4 text-primary" />
                   STUDIOS
                   <ChevronDown className="w-3 h-3" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-72 bg-black border-orange-500/20">
+              <DropdownMenuContent align="start" className="w-72 bg-background border">
                 {studios.map((studio) => (
                   <DropdownMenuItem 
                     key={studio.href} 
@@ -107,9 +107,9 @@ export default function CreatorHeader() {
                     {studio.enabled ? (
                       <Link href={studio.href}>
                         <div className="flex items-start gap-3 py-1 cursor-pointer w-full" data-testid={`link-${studio.label.toLowerCase().replace(" ", "-")}`}>
-                          <studio.icon className="w-5 h-5 text-orange-500 mt-0.5" />
+                          <studio.icon className="w-5 h-5 text-primary mt-0.5" />
                           <div className="flex-1">
-                            <div className="font-medium text-white flex items-center gap-2">
+                            <div className="font-medium text-foreground flex items-center gap-2">
                               {studio.label}
                             </div>
                             <div className="text-xs text-muted-foreground">{studio.description}</div>
@@ -118,11 +118,11 @@ export default function CreatorHeader() {
                       </Link>
                     ) : (
                       <div className="flex items-start gap-3 py-1 w-full" data-testid={`link-${studio.label.toLowerCase().replace(" ", "-")}`}>
-                        <studio.icon className="w-5 h-5 text-orange-500/50 mt-0.5" />
+                        <studio.icon className="w-5 h-5 text-primary/50 mt-0.5" />
                         <div className="flex-1">
-                          <div className="font-medium text-white/60 flex items-center gap-2">
+                          <div className="font-medium text-foreground/60 flex items-center gap-2">
                             {studio.label}
-                            <Badge variant="outline" className="text-[9px] border-orange-500/30 text-orange-500/70">
+                            <Badge variant="outline" className="text-[9px] border text-primary/70">
                               Coming Soon
                             </Badge>
                           </div>
@@ -132,7 +132,7 @@ export default function CreatorHeader() {
                     )}
                   </DropdownMenuItem>
                 ))}
-                <DropdownMenuSeparator className="bg-orange-500/20" />
+                <DropdownMenuSeparator className="bg-primary/20" />
                 {quickActions.map((action) => (
                   <DropdownMenuItem 
                     key={action.href} 
@@ -143,20 +143,20 @@ export default function CreatorHeader() {
                     {action.enabled ? (
                       <Link href={action.href}>
                         <div className="flex items-start gap-3 py-1 cursor-pointer w-full" data-testid={`link-${action.label.toLowerCase().replace(" ", "-")}`}>
-                          <action.icon className="w-5 h-5 text-orange-500 mt-0.5" />
+                          <action.icon className="w-5 h-5 text-primary mt-0.5" />
                           <div>
-                            <div className="font-medium text-white">{action.label}</div>
+                            <div className="font-medium text-foreground">{action.label}</div>
                             <div className="text-xs text-muted-foreground">{action.description}</div>
                           </div>
                         </div>
                       </Link>
                     ) : (
                       <div className="flex items-start gap-3 py-1 w-full" data-testid={`link-${action.label.toLowerCase().replace(" ", "-")}`}>
-                        <action.icon className="w-5 h-5 text-orange-500/50 mt-0.5" />
+                        <action.icon className="w-5 h-5 text-primary/50 mt-0.5" />
                         <div>
-                          <div className="font-medium text-white/60 flex items-center gap-2">
+                          <div className="font-medium text-foreground/60 flex items-center gap-2">
                             {action.label}
-                            <Badge variant="outline" className="text-[9px] border-orange-500/30 text-orange-500/70">
+                            <Badge variant="outline" className="text-[9px] border text-primary/70">
                               Coming Soon
                             </Badge>
                           </div>
@@ -177,8 +177,8 @@ export default function CreatorHeader() {
                   data-testid={`link-${link.label.toLowerCase()}`}
                   className={`font-medium text-xs tracking-wide gap-1 ${
                     location === link.href 
-                      ? "text-orange-500" 
-                      : "text-muted-foreground hover:text-white"
+                      ? "text-primary" 
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <link.icon className="w-4 h-4" />
@@ -197,53 +197,53 @@ export default function CreatorHeader() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-xs gap-1 text-muted-foreground hover:text-white"
+                    className="text-xs gap-1 text-muted-foreground hover:text-foreground"
                     data-testid="link-credits"
                   >
-                    <Coins className="w-4 h-4 text-orange-500" />
+                    <Coins className="w-4 h-4 text-primary" />
                     <span>Credits</span>
                   </Button>
                 </Link>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="gap-2" data-testid="dropdown-user">
-                      <Avatar className="h-7 w-7 border border-orange-500/30">
+                      <Avatar className="h-7 w-7 border border">
                         <AvatarImage src={user.profileImageUrl || undefined} />
-                        <AvatarFallback className="bg-orange-500/20 text-orange-500 text-xs">
+                        <AvatarFallback className="bg-primary/20 text-primary text-xs">
                           {user.firstName?.[0] || user.email?.[0]?.toUpperCase() || 'U'}
                         </AvatarFallback>
                       </Avatar>
                       <ChevronDown className="w-3 h-3 text-muted-foreground" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 bg-black border-orange-500/20">
-                    <div className="px-3 py-2 border-b border-orange-500/20">
-                      <div className="font-medium text-white">{user.firstName || 'Creator'}</div>
+                  <DropdownMenuContent align="end" className="w-56 bg-background border">
+                    <div className="px-3 py-2 border-b border">
+                      <div className="font-medium text-foreground">{user.firstName || 'Creator'}</div>
                       <div className="text-xs text-muted-foreground">{user.email}</div>
-                      <Badge variant="outline" className="mt-2 text-[10px] border-orange-500/50 text-orange-500">
+                      <Badge variant="outline" className="mt-2 text-[10px] border-orange-500/50 text-primary">
                         <Crown className="w-3 h-3 mr-1" />
                         Pro Creator
                       </Badge>
                     </div>
                     <DropdownMenuItem asChild>
                       <Link href="/author-dashboard" className="cursor-pointer">
-                        <DollarSign className="w-4 h-4 mr-2 text-orange-500" />
+                        <DollarSign className="w-4 h-4 mr-2 text-primary" />
                         Earnings Dashboard
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link href="/creator-settings" className="cursor-pointer">
-                        <Settings className="w-4 h-4 mr-2 text-orange-500" />
+                        <Settings className="w-4 h-4 mr-2 text-primary" />
                         Creator Settings
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link href="/pricing" className="cursor-pointer">
-                        <Coins className="w-4 h-4 mr-2 text-orange-500" />
+                        <Coins className="w-4 h-4 mr-2 text-primary" />
                         Buy Credits
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-orange-500/20" />
+                    <DropdownMenuSeparator className="bg-primary/20" />
                     <DropdownMenuItem 
                       className="cursor-pointer text-red-400 focus:text-red-400"
                       onClick={() => window.location.href = '/api/logout'}
@@ -261,7 +261,7 @@ export default function CreatorHeader() {
                     variant="ghost"
                     size="sm"
                     data-testid="link-pricing"
-                    className="font-medium text-xs text-muted-foreground hover:text-white"
+                    className="font-medium text-xs text-muted-foreground hover:text-foreground"
                   >
                     PRICING
                   </Button>
@@ -270,7 +270,7 @@ export default function CreatorHeader() {
                   size="sm"
                   data-testid="button-login"
                   onClick={() => window.location.href = '/api/login'}
-                  className="font-semibold text-xs tracking-wide bg-orange-500 hover:bg-orange-600 text-black"
+                  className="font-semibold text-xs tracking-wide bg-primary hover:bg-primary/80 text-primary-foreground"
                 >
                   START CREATING
                 </Button>
@@ -281,7 +281,7 @@ export default function CreatorHeader() {
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden text-white"
+            className="lg:hidden text-foreground"
             data-testid="button-menu"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
@@ -290,23 +290,23 @@ export default function CreatorHeader() {
         </div>
 
         {mobileMenuOpen && (
-          <div className="lg:hidden py-4 space-y-2 border-t border-orange-500/20">
+          <div className="lg:hidden py-4 space-y-2 border-t border">
             {user && (
               <div className="flex items-center gap-3 px-3 py-2 mb-2 bg-zinc-900/50 rounded-lg">
-                <Avatar className="h-10 w-10 border border-orange-500/30">
+                <Avatar className="h-10 w-10 border border">
                   <AvatarImage src={user.profileImageUrl || undefined} />
-                  <AvatarFallback className="bg-orange-500/20 text-orange-500">
+                  <AvatarFallback className="bg-primary/20 text-primary">
                     {user.firstName?.[0] || user.email?.[0]?.toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <div className="font-medium text-white">{user.firstName || 'Creator'}</div>
+                  <div className="font-medium text-foreground">{user.firstName || 'Creator'}</div>
                   <div className="text-xs text-muted-foreground">{user.email}</div>
                 </div>
               </div>
             )}
             
-            <div className="text-xs font-semibold text-orange-500 uppercase tracking-wider px-3 py-2">
+            <div className="text-xs font-semibold text-primary uppercase tracking-wider px-3 py-2">
               Studios
             </div>
             {studios.map((studio) => (
@@ -314,27 +314,27 @@ export default function CreatorHeader() {
                 <Link key={studio.href} href={studio.href}>
                   <Button
                     variant="ghost"
-                    className="w-full justify-start text-white gap-3"
+                    className="w-full justify-start text-foreground gap-3"
                     onClick={() => setMobileMenuOpen(false)}
                     data-testid={`mobile-link-${studio.label.toLowerCase().replace(" ", "-")}`}
                   >
-                    <studio.icon className="w-5 h-5 text-orange-500" />
+                    <studio.icon className="w-5 h-5 text-primary" />
                     {studio.label}
                   </Button>
                 </Link>
               ) : (
                 <div key={studio.href} className="flex items-center gap-3 px-4 py-2 opacity-60">
-                  <studio.icon className="w-5 h-5 text-orange-500/50" />
-                  <span className="text-white/60">{studio.label}</span>
-                  <Badge variant="outline" className="text-[9px] border-orange-500/30 text-orange-500/70 ml-auto">
+                  <studio.icon className="w-5 h-5 text-primary/50" />
+                  <span className="text-foreground/60">{studio.label}</span>
+                  <Badge variant="outline" className="text-[9px] border text-primary/70 ml-auto">
                     Coming Soon
                   </Badge>
                 </div>
               )
             ))}
             
-            <div className="border-t border-orange-500/20 my-2" />
-            <div className="text-xs font-semibold text-orange-500 uppercase tracking-wider px-3 py-2">
+            <div className="border-t border my-2" />
+            <div className="text-xs font-semibold text-primary uppercase tracking-wider px-3 py-2">
               Quick Actions
             </div>
             {quickActions.map((action) => (
@@ -342,35 +342,35 @@ export default function CreatorHeader() {
                 <Link key={action.href} href={action.href}>
                   <Button
                     variant="ghost"
-                    className="w-full justify-start text-white gap-3"
+                    className="w-full justify-start text-foreground gap-3"
                     onClick={() => setMobileMenuOpen(false)}
                     data-testid={`mobile-link-${action.label.toLowerCase().replace(" ", "-")}`}
                   >
-                    <action.icon className="w-5 h-5 text-orange-500" />
+                    <action.icon className="w-5 h-5 text-primary" />
                     {action.label}
                   </Button>
                 </Link>
               ) : (
                 <div key={action.href} className="flex items-center gap-3 px-4 py-2 opacity-60">
-                  <action.icon className="w-5 h-5 text-orange-500/50" />
-                  <span className="text-white/60">{action.label}</span>
-                  <Badge variant="outline" className="text-[9px] border-orange-500/30 text-orange-500/70 ml-auto">
+                  <action.icon className="w-5 h-5 text-primary/50" />
+                  <span className="text-foreground/60">{action.label}</span>
+                  <Badge variant="outline" className="text-[9px] border text-primary/70 ml-auto">
                     Coming Soon
                   </Badge>
                 </div>
               )
             ))}
             
-            <div className="border-t border-orange-500/20 my-2" />
+            <div className="border-t border my-2" />
             {navLinks.map((link) => (
               <Link key={link.href} href={link.href}>
                 <Button
                   variant={location === link.href ? "secondary" : "ghost"}
-                  className="w-full justify-start text-white gap-3"
+                  className="w-full justify-start text-foreground gap-3"
                   onClick={() => setMobileMenuOpen(false)}
                   data-testid={`mobile-link-${link.label.toLowerCase()}`}
                 >
-                  <link.icon className="w-5 h-5 text-orange-500" />
+                  <link.icon className="w-5 h-5 text-primary" />
                   {link.label}
                 </Button>
               </Link>
@@ -381,7 +381,7 @@ export default function CreatorHeader() {
                   <Link href="/creator-settings">
                     <Button
                       variant="outline"
-                      className="w-full border-orange-500/30 text-white gap-2"
+                      className="w-full border text-foreground gap-2"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       <Settings className="w-4 h-4" />
@@ -402,14 +402,14 @@ export default function CreatorHeader() {
                   <Link href="/pricing">
                     <Button
                       variant="outline"
-                      className="w-full border-orange-500/30 text-white"
+                      className="w-full border text-foreground"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       PRICING
                     </Button>
                   </Link>
                   <Button
-                    className="w-full bg-orange-500 hover:bg-orange-600 text-black"
+                    className="w-full bg-primary hover:bg-primary/80 text-primary-foreground"
                     data-testid="mobile-button-login"
                     onClick={() => window.location.href = '/api/login'}
                   >

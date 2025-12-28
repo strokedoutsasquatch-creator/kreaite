@@ -86,12 +86,12 @@ function CreditWidget() {
       <Card className="bg-zinc-950 border-zinc-800" data-testid="card-credits-error">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-zinc-400 flex items-center gap-2">
-            <Coins className="h-4 w-4 text-orange-500" />
+            <Coins className="h-4 w-4 text-primary" />
             Credit Balance
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-white">--</div>
+          <div className="text-2xl font-bold text-foreground">--</div>
           <p className="text-xs text-zinc-500">Unable to load balance</p>
         </CardContent>
       </Card>
@@ -102,18 +102,18 @@ function CreditWidget() {
     <Card className="bg-zinc-950 border-zinc-800" data-testid="card-credits">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium text-zinc-400 flex items-center gap-2">
-          <Coins className="h-4 w-4 text-orange-500" />
+          <Coins className="h-4 w-4 text-primary" />
           Credit Balance
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="text-3xl sm:text-4xl font-bold text-white" data-testid="text-credit-balance">
+        <div className="text-3xl sm:text-4xl font-bold text-foreground" data-testid="text-credit-balance">
           {credits.total.toLocaleString()}
         </div>
         <div className="flex items-center gap-2 mt-1">
           <span className="text-xs text-zinc-500">{credits.balance.toLocaleString()} base</span>
           {credits.bonusCredits > 0 && (
-            <Badge variant="outline" className="text-[10px] border-orange-500/50 text-orange-500">
+            <Badge variant="outline" className="text-[10px] border-orange-500/50 text-primary">
               +{credits.bonusCredits.toLocaleString()} bonus
             </Badge>
           )}
@@ -122,7 +122,7 @@ function CreditWidget() {
           <Button 
             variant="outline" 
             size="sm" 
-            className="mt-3 w-full border-orange-500/30 text-orange-500 hover:bg-orange-500/10"
+            className="mt-3 w-full border text-primary hover:bg-primary/10"
             data-testid="button-buy-credits"
           >
             <Plus className="h-4 w-4 mr-1" />
@@ -150,7 +150,7 @@ function ActiveJobsWidget() {
   const getStatusIcon = (status: BatchJob["status"]) => {
     switch (status) {
       case "processing":
-        return <RefreshCw className="h-4 w-4 text-orange-500 animate-spin" />;
+        return <RefreshCw className="h-4 w-4 text-primary animate-spin" />;
       case "completed":
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       case "failed":
@@ -163,7 +163,7 @@ function ActiveJobsWidget() {
 
   const getStatusBadge = (status: BatchJob["status"]) => {
     const variants: Record<string, string> = {
-      processing: "border-orange-500/50 text-orange-500 bg-orange-500/10",
+      processing: "border-orange-500/50 text-primary bg-primary/10",
       completed: "border-green-500/50 text-green-500 bg-green-500/10",
       failed: "border-red-500/50 text-red-500 bg-red-500/10",
       pending: "border-zinc-500/50 text-zinc-400 bg-zinc-500/10",
@@ -199,7 +199,7 @@ function ActiveJobsWidget() {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-medium text-zinc-400 flex items-center gap-2">
-            <Layers className="h-4 w-4 text-orange-500" />
+            <Layers className="h-4 w-4 text-primary" />
             Active Batch Jobs
           </CardTitle>
           <Badge variant="outline" className="border-zinc-700 text-zinc-400">
@@ -216,7 +216,7 @@ function ActiveJobsWidget() {
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="mt-3 border-orange-500/30 text-orange-500 hover:bg-orange-500/10"
+                className="mt-3 border text-primary hover:bg-primary/10"
                 data-testid="button-start-batch"
               >
                 Start Batch Job
@@ -234,7 +234,7 @@ function ActiveJobsWidget() {
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     {getStatusIcon(job.status)}
-                    <span className="text-sm font-medium text-white truncate max-w-[150px]">
+                    <span className="text-sm font-medium text-foreground truncate max-w-[150px]">
                       {job.name}
                     </span>
                   </div>
@@ -256,7 +256,7 @@ function ActiveJobsWidget() {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="w-full text-zinc-400 hover:text-white"
+                  className="w-full text-zinc-400 hover:text-foreground"
                   data-testid="button-view-all-jobs"
                 >
                   View all {activeJobs.length} jobs
@@ -279,15 +279,15 @@ function RecentVaultWidget() {
   const getTypeIcon = (type: string) => {
     switch (type) {
       case "book":
-        return <BookOpen className="h-4 w-4 text-orange-500" />;
+        return <BookOpen className="h-4 w-4 text-primary" />;
       case "music":
-        return <Music className="h-4 w-4 text-orange-500" />;
+        return <Music className="h-4 w-4 text-primary" />;
       case "video":
-        return <Video className="h-4 w-4 text-orange-500" />;
+        return <Video className="h-4 w-4 text-primary" />;
       case "image":
-        return <Image className="h-4 w-4 text-orange-500" />;
+        return <Image className="h-4 w-4 text-primary" />;
       default:
-        return <FileText className="h-4 w-4 text-orange-500" />;
+        return <FileText className="h-4 w-4 text-primary" />;
     }
   };
 
@@ -310,7 +310,7 @@ function RecentVaultWidget() {
     <Card className="bg-zinc-950 border-zinc-800" data-testid="card-recent-vault">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium text-zinc-400 flex items-center gap-2">
-          <Vault className="h-4 w-4 text-orange-500" />
+          <Vault className="h-4 w-4 text-primary" />
           Recent Vault Entries
         </CardTitle>
       </CardHeader>
@@ -332,7 +332,7 @@ function RecentVaultWidget() {
                   {getTypeIcon(entry.type)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{entry.title}</p>
+                  <p className="text-sm font-medium text-foreground truncate">{entry.title}</p>
                   <p className="text-xs text-zinc-500">{entry.type}</p>
                 </div>
               </div>
@@ -346,17 +346,17 @@ function RecentVaultWidget() {
 
 function QuickActionsWidget() {
   const quickActions = [
-    { href: "/book-studio", label: "Write Book", icon: BookOpen, color: "text-orange-500" },
-    { href: "/music-studio", label: "Create Music", icon: Music, color: "text-orange-500" },
-    { href: "/video-studio", label: "Edit Video", icon: Video, color: "text-orange-500" },
-    { href: "/image-studio", label: "Generate Image", icon: Image, color: "text-orange-500" },
+    { href: "/book-studio", label: "Write Book", icon: BookOpen, color: "text-primary" },
+    { href: "/music-studio", label: "Create Music", icon: Music, color: "text-primary" },
+    { href: "/video-studio", label: "Edit Video", icon: Video, color: "text-primary" },
+    { href: "/image-studio", label: "Generate Image", icon: Image, color: "text-primary" },
   ];
 
   return (
     <Card className="bg-zinc-950 border-zinc-800" data-testid="card-quick-actions">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium text-zinc-400 flex items-center gap-2">
-          <Zap className="h-4 w-4 text-orange-500" />
+          <Zap className="h-4 w-4 text-primary" />
           Quick Actions
         </CardTitle>
       </CardHeader>
@@ -393,26 +393,26 @@ function OverviewTab() {
         <Card className="bg-zinc-950 border-zinc-800" data-testid="card-stats">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-zinc-400 flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-orange-500" />
+              <TrendingUp className="h-4 w-4 text-primary" />
               Production Stats
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <div className="p-3 rounded-lg bg-zinc-900 border border-zinc-800">
-                <p className="text-2xl font-bold text-white" data-testid="text-projects-count">0</p>
+                <p className="text-2xl font-bold text-foreground" data-testid="text-projects-count">0</p>
                 <p className="text-xs text-zinc-500">Total Projects</p>
               </div>
               <div className="p-3 rounded-lg bg-zinc-900 border border-zinc-800">
-                <p className="text-2xl font-bold text-white" data-testid="text-published-count">0</p>
+                <p className="text-2xl font-bold text-foreground" data-testid="text-published-count">0</p>
                 <p className="text-xs text-zinc-500">Published</p>
               </div>
               <div className="p-3 rounded-lg bg-zinc-900 border border-zinc-800">
-                <p className="text-2xl font-bold text-white" data-testid="text-this-week">0</p>
+                <p className="text-2xl font-bold text-foreground" data-testid="text-this-week">0</p>
                 <p className="text-xs text-zinc-500">This Week</p>
               </div>
               <div className="p-3 rounded-lg bg-zinc-900 border border-zinc-800">
-                <p className="text-2xl font-bold text-white" data-testid="text-earnings">$0</p>
+                <p className="text-2xl font-bold text-foreground" data-testid="text-earnings">$0</p>
                 <p className="text-xs text-zinc-500">Earnings</p>
               </div>
             </div>
@@ -434,17 +434,17 @@ function CreatorVaultTab() {
 function BatchStudioTab() {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4">
-      <div className="w-16 h-16 rounded-full bg-orange-500/10 flex items-center justify-center mb-4">
-        <Layers className="h-8 w-8 text-orange-500" />
+      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+        <Layers className="h-8 w-8 text-primary" />
       </div>
-      <h3 className="text-xl font-semibold text-white mb-2" data-testid="text-batch-title">
+      <h3 className="text-xl font-semibold text-foreground mb-2" data-testid="text-batch-title">
         Batch Studio
       </h3>
       <p className="text-zinc-400 text-center max-w-md mb-6" data-testid="text-batch-description">
         Process multiple content pieces at once. Batch generate images, convert formats, 
         and automate repetitive creative tasks.
       </p>
-      <Badge variant="outline" className="border-orange-500/50 text-orange-500">
+      <Badge variant="outline" className="border-orange-500/50 text-primary">
         Coming Soon
       </Badge>
     </div>
@@ -454,17 +454,17 @@ function BatchStudioTab() {
 function CrossFormatTab() {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4">
-      <div className="w-16 h-16 rounded-full bg-orange-500/10 flex items-center justify-center mb-4">
-        <Grid3X3 className="h-8 w-8 text-orange-500" />
+      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+        <Grid3X3 className="h-8 w-8 text-primary" />
       </div>
-      <h3 className="text-xl font-semibold text-white mb-2" data-testid="text-crossformat-title">
+      <h3 className="text-xl font-semibold text-foreground mb-2" data-testid="text-crossformat-title">
         Cross-Format Canvas
       </h3>
       <p className="text-zinc-400 text-center max-w-md mb-6" data-testid="text-crossformat-description">
         Transform your content across formats. Turn books into courses, podcasts into blogs, 
         and videos into social posts with AI assistance.
       </p>
-      <Badge variant="outline" className="border-orange-500/50 text-orange-500">
+      <Badge variant="outline" className="border-orange-500/50 text-primary">
         Coming Soon
       </Badge>
     </div>
@@ -473,17 +473,17 @@ function CrossFormatTab() {
 
 export default function ProductionDashboard() {
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-background">
       <CreatorHeader />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
-              <LayoutDashboard className="h-5 w-5 text-orange-500" />
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <LayoutDashboard className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white" data-testid="text-page-title">
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground" data-testid="text-page-title">
                 Production Dashboard
               </h1>
               <p className="text-sm text-zinc-400" data-testid="text-page-subtitle">

@@ -26,10 +26,10 @@ export default function TestimonyVideo() {
 
         <div className="max-w-4xl mx-auto">
           <Card className="overflow-hidden">
-            <div className="relative aspect-video bg-black">
+            <div className="relative aspect-video bg-background">
               {!isPlaying && (
                 <button 
-                  className="absolute inset-0 flex items-center justify-center bg-black/50 hover:bg-black/40 transition-colors group w-full"
+                  className="absolute inset-0 flex items-center justify-center bg-card hover:bg-card transition-colors group w-full"
                   onClick={() => setIsPlaying(true)}
                   data-testid="button-play-video"
                   aria-label="Play testimony video"
@@ -38,7 +38,7 @@ export default function TestimonyVideo() {
                     <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center group-hover:scale-110 transition-transform">
                       <Play className="w-10 h-10 text-primary-foreground ml-1" />
                     </div>
-                    <div className="text-white text-lg font-semibold">
+                    <div className="text-foreground text-lg font-semibold">
                       Watch Nick's Testimony
                     </div>
                   </div>

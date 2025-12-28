@@ -95,10 +95,10 @@ export default function PlanStep() {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-black/50 border-orange-500/20">
+      <Card className="bg-card border">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
-            <Layers className="w-5 h-5 text-orange-500" />
+          <CardTitle className="flex items-center gap-2 text-foreground">
+            <Layers className="w-5 h-5 text-primary" />
             Step 2: Structure & Outline
           </CardTitle>
           <CardDescription>
@@ -110,7 +110,7 @@ export default function PlanStep() {
             <div className="lg:col-span-2">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="font-bold text-white">Chapter Outline</h3>
+                  <h3 className="font-bold text-foreground">Chapter Outline</h3>
                   {bookOutline?.title && (
                     <p className="text-sm text-muted-foreground">{bookOutline.title}</p>
                   )}
@@ -119,7 +119,7 @@ export default function PlanStep() {
                   onClick={addChapter}
                   variant="outline"
                   size="sm"
-                  className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+                  className="border text-primary hover:bg-primary/10"
                   data-testid="button-add-chapter"
                 >
                   <Plus className="w-4 h-4 mr-2" /> Add Chapter
@@ -137,7 +137,7 @@ export default function PlanStep() {
                         onClick={addChapter}
                         variant="outline"
                         size="sm"
-                        className="mt-4 border-orange-500/30 text-orange-400"
+                        className="mt-4 border text-primary"
                         data-testid="button-add-first-chapter"
                       >
                         <Plus className="w-4 h-4 mr-2" /> Add First Chapter
@@ -147,8 +147,8 @@ export default function PlanStep() {
                     chapters.map((chapter, index) => (
                       <Card
                         key={chapter.id}
-                        className={`cursor-pointer transition-all bg-black/40 border-orange-500/20 hover:border-orange-500/40 ${
-                          selectedChapterId === chapter.id ? 'border-orange-500 ring-1 ring-orange-500/50' : ''
+                        className={`cursor-pointer transition-all bg-card border hover:border ${
+                          selectedChapterId === chapter.id ? 'border-primary ring-1 ring-primary/50' : ''
                         }`}
                         onClick={() => setSelectedChapterId(chapter.id)}
                         data-testid={`card-chapter-${chapter.id}`}
@@ -158,13 +158,13 @@ export default function PlanStep() {
                             <GripVertical className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-1 cursor-move" />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                <Badge variant="outline" className="text-xs border-orange-500/30 text-orange-400">
+                                <Badge variant="outline" className="text-xs border text-primary">
                                   Ch. {index + 1}
                                 </Badge>
                                 <Input
                                   value={chapter.title}
                                   onChange={(e) => updateChapter(chapter.id, { title: e.target.value })}
-                                  className="h-8 font-semibold bg-transparent border-orange-500/20 text-white flex-1"
+                                  className="h-8 font-semibold bg-transparent border text-foreground flex-1"
                                   onClick={(e) => e.stopPropagation()}
                                   data-testid={`input-chapter-title-${chapter.id}`}
                                 />
@@ -183,7 +183,7 @@ export default function PlanStep() {
                                 value={chapter.description}
                                 onChange={(e) => updateChapter(chapter.id, { description: e.target.value })}
                                 placeholder="Brief description of this chapter..."
-                                className="min-h-[60px] text-sm bg-transparent border-orange-500/20 text-gray-200"
+                                className="min-h-[60px] text-sm bg-transparent border text-gray-200"
                                 onClick={(e) => e.stopPropagation()}
                                 data-testid={`textarea-chapter-desc-${chapter.id}`}
                               />
@@ -214,9 +214,9 @@ export default function PlanStep() {
             </div>
 
             <div className="space-y-4">
-              <Card className="bg-black/40 border-orange-500/20">
+              <Card className="bg-card border">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm text-white">Book Stats</CardTitle>
+                  <CardTitle className="text-sm text-foreground">Book Stats</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex justify-between text-gray-200">
@@ -231,7 +231,7 @@ export default function PlanStep() {
                     <span className="text-muted-foreground">Est. Pages</span>
                     <span className="font-bold">{estimatedPages}</span>
                   </div>
-                  <Separator className="bg-orange-500/20" />
+                  <Separator className="bg-primary/20" />
                   <div>
                     <div className="text-sm text-muted-foreground mb-2">Progress</div>
                     <Progress
@@ -245,10 +245,10 @@ export default function PlanStep() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-orange-500/5 border-orange-500/20">
+              <Card className="bg-primary/5 border">
                 <CardContent className="p-4">
-                  <h4 className="font-semibold flex items-center gap-2 mb-2 text-white">
-                    <Wand2 className="w-4 h-4 text-orange-500" /> AI Suggestions
+                  <h4 className="font-semibold flex items-center gap-2 mb-2 text-foreground">
+                    <Wand2 className="w-4 h-4 text-primary" /> AI Suggestions
                   </h4>
                   <ul className="text-sm space-y-2 text-muted-foreground">
                     <li>• Consider adding an "Introduction" chapter</li>
@@ -260,18 +260,18 @@ export default function PlanStep() {
             </div>
           </div>
 
-          <div className="flex justify-between mt-6 pt-4 border-t border-orange-500/20">
+          <div className="flex justify-between mt-6 pt-4 border-t border">
             <Button
               variant="outline"
               onClick={() => setCurrentStep('start')}
-              className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+              className="border text-primary hover:bg-primary/10"
               data-testid="button-back-step-plan"
             >
               <ChevronLeft className="w-4 h-4 mr-2" /> Back
             </Button>
             <Button
               onClick={() => setCurrentStep('generate')}
-              className="bg-orange-500 hover:bg-orange-600"
+              className="bg-primary hover:bg-primary/80"
               data-testid="button-next-step-plan"
             >
               Next: Generate Content

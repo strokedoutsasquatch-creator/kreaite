@@ -473,7 +473,7 @@ export function PodcastStudio() {
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6" data-testid="podcast-studio">
       <div className="text-center mb-8">
-        <h1 className="text-4xl md:text-5xl font-serif font-bold tracking-tight text-white mb-2">
+        <h1 className="text-4xl md:text-5xl font-serif font-bold tracking-tight text-foreground mb-2">
           Podcast Studio
         </h1>
         <p className="text-base md:text-lg text-zinc-400">
@@ -487,8 +487,8 @@ export function PodcastStudio() {
           <Card className="bg-zinc-950 border-zinc-800/50">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between gap-2">
-                <CardTitle className="text-sm font-medium text-white flex items-center gap-2">
-                  <Radio className="w-4 h-4 text-orange-500" />
+                <CardTitle className="text-sm font-medium text-foreground flex items-center gap-2">
+                  <Radio className="w-4 h-4 text-primary" />
                   Your Podcasts
                 </CardTitle>
                 <Dialog open={showNewPodcastDialog} onOpenChange={setShowNewPodcastDialog}>
@@ -499,7 +499,7 @@ export function PodcastStudio() {
                   </DialogTrigger>
                   <DialogContent className="bg-zinc-950 border-zinc-800">
                     <DialogHeader>
-                      <DialogTitle className="text-white">Create New Podcast</DialogTitle>
+                      <DialogTitle className="text-foreground">Create New Podcast</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
@@ -565,7 +565,7 @@ export function PodcastStudio() {
             <CardContent className="pt-0">
               {isLoadingPodcasts ? (
                 <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
                 </div>
               ) : podcasts.length === 0 ? (
                 <div className="text-center py-8">
@@ -582,7 +582,7 @@ export function PodcastStudio() {
                         onClick={() => setSelectedPodcast(podcast)}
                         className={`p-3 rounded-lg cursor-pointer transition-colors hover-elevate ${
                           selectedPodcast?.id === podcast.id
-                            ? "bg-orange-500/10 border border-orange-500/30"
+                            ? "bg-primary/10 border border"
                             : "bg-zinc-900/50 border border-transparent hover:border-zinc-700"
                         }`}
                         data-testid={`podcast-item-${podcast.id}`}
@@ -596,11 +596,11 @@ export function PodcastStudio() {
                                 className="w-full h-full object-cover rounded"
                               />
                             ) : (
-                              <Radio className="w-5 h-5 text-orange-500" />
+                              <Radio className="w-5 h-5 text-primary" />
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-white truncate">
+                            <p className="text-sm font-medium text-foreground truncate">
                               {podcast.title}
                             </p>
                             <p className="text-xs text-zinc-500">
@@ -649,22 +649,22 @@ export function PodcastStudio() {
                             ? isPaused
                               ? "bg-yellow-500/20 border-2 border-yellow-500"
                               : "bg-red-500 animate-pulse"
-                            : "bg-orange-500/20 border-2 border-orange-500"
+                            : "bg-primary/20 border-2 border-orange-500"
                         }`}
                       >
                         {isRecording ? (
                           isPaused ? (
                             <Pause className="w-10 h-10 md:w-12 md:h-12 text-yellow-500" />
                           ) : (
-                            <MicOff className="w-10 h-10 md:w-12 md:h-12 text-white" />
+                            <MicOff className="w-10 h-10 md:w-12 md:h-12 text-foreground" />
                           )
                         ) : (
-                          <Mic className="w-10 h-10 md:w-12 md:h-12 text-orange-500" />
+                          <Mic className="w-10 h-10 md:w-12 md:h-12 text-primary" />
                         )}
                       </div>
                       {isRecording && (
                         <div className="absolute -bottom-2 left-1/2 -translate-x-1/2">
-                          <Badge className={isPaused ? "bg-yellow-500 text-black" : "bg-red-500 text-white animate-pulse"}>
+                          <Badge className={isPaused ? "bg-yellow-500 text-black" : "bg-red-500 text-foreground animate-pulse"}>
                             {isPaused ? "PAUSED" : "REC"}
                           </Badge>
                         </div>
@@ -672,7 +672,7 @@ export function PodcastStudio() {
                     </div>
 
                     {/* Timer */}
-                    <div className="text-3xl md:text-4xl font-mono text-white" data-testid="recording-time">
+                    <div className="text-3xl md:text-4xl font-mono text-foreground" data-testid="recording-time">
                       {formatTime(recordingTime)}
                     </div>
 
@@ -683,7 +683,7 @@ export function PodcastStudio() {
                           ref={canvasRef}
                           width={500}
                           height={100}
-                          className="w-full h-20 rounded-lg border border-zinc-800 bg-black"
+                          className="w-full h-20 rounded-lg border border-zinc-800 bg-background"
                           data-testid="waveform-canvas"
                         />
                       </div>
@@ -717,7 +717,7 @@ export function PodcastStudio() {
                           </Button>
 
                           <label>
-                            <Button variant="outline" className="border-orange-500/30" asChild>
+                            <Button variant="outline" className="border" asChild>
                               <span>
                                 <Upload className="w-4 h-4 mr-2" />
                                 Upload Audio
@@ -828,8 +828,8 @@ export function PodcastStudio() {
               <Card className="bg-zinc-950 border-zinc-800/50">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between gap-2">
-                    <CardTitle className="text-sm font-medium text-white flex items-center gap-2">
-                      <FileAudio className="w-4 h-4 text-orange-500" />
+                    <CardTitle className="text-sm font-medium text-foreground flex items-center gap-2">
+                      <FileAudio className="w-4 h-4 text-primary" />
                       {selectedPodcast ? `${selectedPodcast.title} - Episodes` : "Episodes"}
                     </CardTitle>
                   </div>
@@ -842,7 +842,7 @@ export function PodcastStudio() {
                     </div>
                   ) : isLoadingEpisodes ? (
                     <div className="flex items-center justify-center py-12">
-                      <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
+                      <Loader2 className="w-6 h-6 animate-spin text-primary" />
                     </div>
                   ) : episodes.length === 0 ? (
                     <div className="text-center py-12">
@@ -877,7 +877,7 @@ export function PodcastStudio() {
                                     {episode.status}
                                   </Badge>
                                 </div>
-                                <h3 className="text-sm font-medium text-white truncate">
+                                <h3 className="text-sm font-medium text-foreground truncate">
                                   {episode.title}
                                 </h3>
                                 <p className="text-xs text-zinc-500 mt-1 line-clamp-2">
@@ -957,8 +957,8 @@ export function PodcastStudio() {
                   {/* Episode Info */}
                   <Card className="bg-zinc-950 border-zinc-800/50">
                     <CardHeader>
-                      <CardTitle className="text-sm font-medium text-white flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-orange-500" />
+                      <CardTitle className="text-sm font-medium text-foreground flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-primary" />
                         Episode Information
                       </CardTitle>
                     </CardHeader>
@@ -1043,8 +1043,8 @@ export function PodcastStudio() {
                   <div className="space-y-4">
                     <Card className="bg-zinc-950 border-zinc-800/50">
                       <CardHeader>
-                        <CardTitle className="text-sm font-medium text-white flex items-center gap-2">
-                          <Image className="w-4 h-4 text-orange-500" />
+                        <CardTitle className="text-sm font-medium text-foreground flex items-center gap-2">
+                          <Image className="w-4 h-4 text-primary" />
                           Cover Art
                         </CardTitle>
                       </CardHeader>
@@ -1083,8 +1083,8 @@ export function PodcastStudio() {
 
                     <Card className="bg-zinc-950 border-zinc-800/50">
                       <CardHeader>
-                        <CardTitle className="text-sm font-medium text-white flex items-center gap-2">
-                          <Sparkles className="w-4 h-4 text-orange-500" />
+                        <CardTitle className="text-sm font-medium text-foreground flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-primary" />
                           AI Transcription
                         </CardTitle>
                       </CardHeader>
@@ -1165,7 +1165,7 @@ export function PodcastStudio() {
       <Dialog open={showNewEpisodeDialog} onOpenChange={setShowNewEpisodeDialog}>
         <DialogContent className="bg-zinc-950 border-zinc-800 max-w-lg">
           <DialogHeader>
-            <DialogTitle className="text-white">Save as Episode</DialogTitle>
+            <DialogTitle className="text-foreground">Save as Episode</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">

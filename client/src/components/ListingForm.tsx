@@ -177,9 +177,9 @@ export default function ListingForm({
 
   return (
     <div className="space-y-6" data-testid="listing-form">
-      <Card className="bg-black border-zinc-800">
+      <Card className="bg-background border-zinc-800">
         <CardHeader>
-          <CardTitle className="text-white">
+          <CardTitle className="text-foreground">
             {isEditing ? "Edit Listing" : "Create New Listing"}
           </CardTitle>
           <CardDescription>
@@ -194,7 +194,7 @@ export default function ListingForm({
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white">Title</FormLabel>
+                    <FormLabel className="text-foreground">Title</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -214,7 +214,7 @@ export default function ListingForm({
                 name="subtitle"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white">Subtitle (optional)</FormLabel>
+                    <FormLabel className="text-foreground">Subtitle (optional)</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -234,7 +234,7 @@ export default function ListingForm({
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white">Description</FormLabel>
+                    <FormLabel className="text-foreground">Description</FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}
@@ -254,7 +254,7 @@ export default function ListingForm({
                 name="genre"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white">Content Type</FormLabel>
+                    <FormLabel className="text-foreground">Content Type</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
@@ -278,7 +278,7 @@ export default function ListingForm({
                               data-testid={`option-genre-${genre.value}`}
                             >
                               <div className="flex items-center gap-2">
-                                <Icon className="w-4 h-4 text-orange-500" />
+                                <Icon className="w-4 h-4 text-primary" />
                                 {genre.label}
                               </div>
                             </SelectItem>
@@ -296,8 +296,8 @@ export default function ListingForm({
                 name="tags"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white flex items-center gap-2">
-                      <Tag className="w-4 h-4 text-orange-500" />
+                    <FormLabel className="text-foreground flex items-center gap-2">
+                      <Tag className="w-4 h-4 text-primary" />
                       Tags (optional)
                     </FormLabel>
                     <FormControl>
@@ -323,7 +323,7 @@ export default function ListingForm({
                   name="coverImageUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-white">Cover Image URL (optional)</FormLabel>
+                      <FormLabel className="text-foreground">Cover Image URL (optional)</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -343,7 +343,7 @@ export default function ListingForm({
                   name="previewUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-white">Preview URL (optional)</FormLabel>
+                      <FormLabel className="text-foreground">Preview URL (optional)</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -365,7 +365,7 @@ export default function ListingForm({
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between rounded-lg border border-zinc-800 p-4 bg-zinc-900/30">
                     <div className="space-y-0.5">
-                      <FormLabel className="text-white">Digital Only</FormLabel>
+                      <FormLabel className="text-foreground">Digital Only</FormLabel>
                       <FormDescription className="text-muted-foreground">
                         Check if this content is only available digitally (no physical copies)
                       </FormDescription>

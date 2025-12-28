@@ -1804,7 +1804,7 @@ Your journey to healing starts here.`);
   // If children's genre is selected, show the dedicated ChildrensBookMode
   if (isChildrensGenre && !uploadedContent) {
     return (
-      <div className="min-h-screen bg-black">
+      <div className="min-h-screen bg-background">
         <Header />
         <ChildrensBookMode 
           onStoryGenerated={(story) => {
@@ -1838,7 +1838,7 @@ Your journey to healing starts here.`);
           <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
             <img src={publishingLogo} alt="Stroke Lyfe Publishing" className="h-10 sm:h-16 w-auto" />
             <div>
-              <h1 className="text-xl sm:text-3xl font-bold text-white">Book Studio</h1>
+              <h1 className="text-xl sm:text-3xl font-bold text-foreground">Book Studio</h1>
               <p className="text-xs sm:text-base text-muted-foreground hidden sm:block">Professional book creation from manuscript to KDP-ready</p>
             </div>
           </div>
@@ -2000,7 +2000,7 @@ Your journey to healing starts here.`);
                 >
                   <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold transition-all
                     ${currentStep === s.step ? 'bg-primary text-primary-foreground' : 
-                      currentStep > s.step ? 'bg-primary/50 text-white' : 'bg-muted text-muted-foreground'}`}>
+                      currentStep > s.step ? 'bg-primary/50 text-foreground' : 'bg-muted text-muted-foreground'}`}>
                     {currentStep > s.step ? <Check className="w-4 h-4 sm:w-5 sm:h-5" /> : <s.icon className="w-4 h-4 sm:w-5 sm:h-5" />}
                   </div>
                   <span className={`text-[10px] sm:text-xs font-medium hidden sm:block ${currentStep === s.step ? 'text-primary' : 'text-muted-foreground'}`}>
@@ -2109,7 +2109,7 @@ Your journey to healing starts here.`);
                                 <CheckCircle className="w-3 h-3 mr-1" /> Ready for Publication
                               </Badge>
                             ) : (
-                              <Badge variant="outline" className="border-orange-500/30 text-orange-400">
+                              <Badge variant="outline" className="border text-primary">
                                 {readiness.score}% Complete
                               </Badge>
                             );
@@ -2407,7 +2407,7 @@ Your journey to healing starts here.`);
                                 <CheckCircle className="w-3 h-3 mr-1" /> Ready for Publication
                               </Badge>
                             ) : (
-                              <Badge variant="outline" className="border-orange-500/30 text-orange-400">
+                              <Badge variant="outline" className="border text-primary">
                                 {readiness.score}% Complete
                               </Badge>
                             );
@@ -3751,10 +3751,10 @@ Your journey to healing starts here.`);
                         </CardContent>
                       </Card>
                       
-                      <Card className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border-orange-500/30">
+                      <Card className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border">
                         <CardHeader className="pb-2">
                           <CardTitle className="text-lg flex items-center gap-2">
-                            <Store className="w-5 h-5 text-orange-500" /> Publish to Marketplace
+                            <Store className="w-5 h-5 text-primary" /> Publish to Marketplace
                           </CardTitle>
                           <CardDescription>Sell your book on Stroke Recovery Academy</CardDescription>
                         </CardHeader>

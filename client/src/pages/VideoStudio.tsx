@@ -276,23 +276,23 @@ export default function VideoStudio() {
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-background">
       <CreatorHeader />
 
-      <section className="relative py-12 px-4 sm:px-6 lg:px-8 border-b border-orange-500/20">
+      <section className="relative py-12 px-4 sm:px-6 lg:px-8 border-b border">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-orange-500/20 rounded-lg">
-                  <Video className="w-8 h-8 text-orange-500" />
+                <div className="p-2 bg-primary/20 rounded-lg">
+                  <Video className="w-8 h-8 text-primary" />
                 </div>
-                <Badge variant="outline" className="border-orange-500/50 text-orange-500" data-testid="badge-ai-powered">
+                <Badge variant="outline" className="border-orange-500/50 text-primary" data-testid="badge-ai-powered">
                   <Sparkles className="w-3 h-3 mr-1" />
                   AI-Powered
                 </Badge>
               </div>
-              <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight" data-testid="text-hero-title">
+              <h1 className="text-4xl md:text-5xl font-black text-foreground tracking-tight" data-testid="text-hero-title">
                 VIDEO STUDIO
               </h1>
               <p className="text-gray-400 text-lg mt-2 max-w-xl" data-testid="text-hero-description">
@@ -303,7 +303,7 @@ export default function VideoStudio() {
             <div className="flex items-center gap-3">
               <Button
                 variant="outline"
-                className="border-orange-500/30 text-white"
+                className="border text-foreground"
                 data-testid="button-open-project"
               >
                 <FolderOpen className="w-4 h-4 mr-2" />
@@ -367,7 +367,7 @@ export default function VideoStudio() {
               onClick={() => fileInputRef.current?.click()}
               className={`relative border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all ${
                 isDragging
-                  ? "border-orange-500 bg-orange-500/10"
+                  ? "border-orange-500 bg-primary/10"
                   : "border-gray-700 hover:border-orange-500/50 bg-gray-900/50"
               }`}
               data-testid="dropzone-upload"
@@ -382,11 +382,11 @@ export default function VideoStudio() {
                 data-testid="input-file"
               />
               <div className="flex flex-col items-center gap-4">
-                <div className="p-4 bg-orange-500/20 rounded-full">
-                  <Upload className="w-12 h-12 text-orange-500" />
+                <div className="p-4 bg-primary/20 rounded-full">
+                  <Upload className="w-12 h-12 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-white mb-2">
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
                     Drop your videos here
                   </h3>
                   <p className="text-gray-400">
@@ -413,8 +413,8 @@ export default function VideoStudio() {
             {uploadedFiles.length > 0 && (
               <Card className="bg-gray-900 border-gray-800">
                 <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <FileVideo className="w-5 h-5 text-orange-500" />
+                  <CardTitle className="text-foreground flex items-center gap-2">
+                    <FileVideo className="w-5 h-5 text-primary" />
                     Uploaded Files ({uploadedFiles.length})
                   </CardTitle>
                 </CardHeader>
@@ -429,7 +429,7 @@ export default function VideoStudio() {
                         <div className="aspect-video bg-gray-700 rounded flex items-center justify-center mb-2">
                           <Video className="w-8 h-8 text-gray-500" />
                         </div>
-                        <p className="text-sm text-white truncate">{file.name}</p>
+                        <p className="text-sm text-foreground truncate">{file.name}</p>
                         <p className="text-xs text-gray-500">
                           {(file.size / (1024 * 1024)).toFixed(1)} MB
                         </p>
@@ -466,11 +466,11 @@ export default function VideoStudio() {
               <Card className="bg-gray-900 border-gray-800 hover-elevate">
                 <CardHeader>
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-orange-500/20 rounded-lg">
-                      <Zap className="w-6 h-6 text-orange-500" />
+                    <div className="p-2 bg-primary/20 rounded-lg">
+                      <Zap className="w-6 h-6 text-primary" />
                     </div>
                     <div>
-                      <CardTitle className="text-white">Quick Start</CardTitle>
+                      <CardTitle className="text-foreground">Quick Start</CardTitle>
                       <CardDescription>Use a template</CardDescription>
                     </div>
                   </div>
@@ -478,7 +478,7 @@ export default function VideoStudio() {
                 <CardContent>
                   <Button
                     variant="outline"
-                    className="w-full border-orange-500/30 text-white"
+                    className="w-full border text-foreground"
                     onClick={() => setActiveTab("templates")}
                     data-testid="button-browse-templates"
                   >
@@ -494,7 +494,7 @@ export default function VideoStudio() {
                       <Brain className="w-6 h-6 text-blue-500" />
                     </div>
                     <div>
-                      <CardTitle className="text-white">AI Magic</CardTitle>
+                      <CardTitle className="text-foreground">AI Magic</CardTitle>
                       <CardDescription>Auto-edit with AI</CardDescription>
                     </div>
                   </div>
@@ -502,7 +502,7 @@ export default function VideoStudio() {
                 <CardContent>
                   <Button
                     variant="outline"
-                    className="w-full border-blue-500/30 text-white"
+                    className="w-full border-blue-500/30 text-foreground"
                     data-testid="button-ai-auto-edit"
                   >
                     Let AI Edit
@@ -517,7 +517,7 @@ export default function VideoStudio() {
                       <Film className="w-6 h-6 text-purple-500" />
                     </div>
                     <div>
-                      <CardTitle className="text-white">Recent Projects</CardTitle>
+                      <CardTitle className="text-foreground">Recent Projects</CardTitle>
                       <CardDescription>Continue editing</CardDescription>
                     </div>
                   </div>
@@ -525,7 +525,7 @@ export default function VideoStudio() {
                 <CardContent>
                   <Button
                     variant="outline"
-                    className="w-full border-purple-500/30 text-white"
+                    className="w-full border-purple-500/30 text-foreground"
                     onClick={() => setActiveTab("projects")}
                     data-testid="button-view-projects"
                   >
@@ -539,7 +539,7 @@ export default function VideoStudio() {
           <TabsContent value="templates" className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-white">Video Templates</h2>
+                <h2 className="text-2xl font-bold text-foreground">Video Templates</h2>
                 <p className="text-gray-400">Start with a template optimized for your platform</p>
               </div>
               <div className="flex items-center gap-3">
@@ -547,12 +547,12 @@ export default function VideoStudio() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                   <Input
                     placeholder="Search templates..."
-                    className="pl-10 bg-gray-900 border-gray-700 text-white w-64"
+                    className="pl-10 bg-gray-900 border-gray-700 text-foreground w-64"
                     data-testid="input-search-templates"
                   />
                 </div>
                 <Select defaultValue="all">
-                  <SelectTrigger className="w-40 bg-gray-900 border-gray-700 text-white" data-testid="select-template-category">
+                  <SelectTrigger className="w-40 bg-gray-900 border-gray-700 text-foreground" data-testid="select-template-category">
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-900 border-gray-700">
@@ -593,7 +593,7 @@ export default function VideoStudio() {
                         </Badge>
                       )}
                     </div>
-                    <h3 className="font-semibold text-white text-sm">{template.name}</h3>
+                    <h3 className="font-semibold text-foreground text-sm">{template.name}</h3>
                     <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
                       <span>{template.aspectRatio}</span>
                       <span>•</span>
@@ -628,7 +628,7 @@ export default function VideoStudio() {
           <TabsContent value="projects" className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-white">My Projects</h2>
+                <h2 className="text-2xl font-bold text-foreground">My Projects</h2>
                 <p className="text-gray-400">Continue working on your video projects</p>
               </div>
               <div className="flex items-center gap-3">
@@ -651,20 +651,20 @@ export default function VideoStudio() {
                   <CardContent className="p-0">
                     <div className="relative aspect-video bg-gray-800 rounded-t-lg flex items-center justify-center">
                       <Video className="w-12 h-12 text-gray-600" />
-                      <div className="absolute bottom-2 right-2 bg-black/70 px-2 py-1 rounded text-xs text-white">
+                      <div className="absolute bottom-2 right-2 bg-black/70 px-2 py-1 rounded text-xs text-foreground">
                         02:45
                       </div>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="absolute top-2 right-2 text-gray-400 hover:text-white"
+                        className="absolute top-2 right-2 text-gray-400 hover:text-foreground"
                         data-testid={`button-project-menu-${project}`}
                       >
                         <MoreHorizontal className="w-4 h-4" />
                       </Button>
                     </div>
                     <div className="p-4">
-                      <h3 className="font-semibold text-white">Project {project}</h3>
+                      <h3 className="font-semibold text-foreground">Project {project}</h3>
                       <p className="text-sm text-gray-500 mt-1">Edited 2 hours ago</p>
                       <div className="flex items-center gap-2 mt-3">
                         <Badge variant="outline" className="border-gray-700 text-gray-400 text-xs">
@@ -691,8 +691,8 @@ export default function VideoStudio() {
               {showAIPanel && (
                 <div className="col-span-2 bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
                   <div className="p-3 border-b border-gray-800 flex items-center justify-between">
-                    <h3 className="font-semibold text-white text-sm flex items-center gap-2">
-                      <Wand2 className="w-4 h-4 text-orange-500" />
+                    <h3 className="font-semibold text-foreground text-sm flex items-center gap-2">
+                      <Wand2 className="w-4 h-4 text-primary" />
                       AI Tools
                     </h3>
                     <Button
@@ -712,7 +712,7 @@ export default function VideoStudio() {
                           key={tool.id}
                           variant="ghost"
                           className={`w-full justify-start h-auto py-2 px-3 ${
-                            selectedTool === tool.id ? "bg-orange-500/20 text-orange-500" : "text-gray-300"
+                            selectedTool === tool.id ? "bg-primary/20 text-primary" : "text-gray-300"
                           }`}
                           onClick={() => {
                             setSelectedTool(tool.id);
@@ -760,7 +760,7 @@ export default function VideoStudio() {
               <div className={`${showAIPanel ? "col-span-7" : "col-span-9"} flex flex-col gap-4`}>
                 <Card className="bg-gray-900 border-gray-800 flex-1">
                   <CardContent className="p-0 h-full flex flex-col">
-                    <div className="flex-1 bg-black rounded-t-lg flex items-center justify-center relative">
+                    <div className="flex-1 bg-background rounded-t-lg flex items-center justify-center relative">
                       <div className="aspect-video w-full max-w-3xl bg-gray-800 rounded flex items-center justify-center">
                         <Video className="w-24 h-24 text-gray-600" />
                       </div>
@@ -800,7 +800,7 @@ export default function VideoStudio() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-white"
+                            className="text-foreground"
                             onClick={() => setIsPlaying(!isPlaying)}
                             data-testid="button-play-pause"
                           >
@@ -924,7 +924,7 @@ export default function VideoStudio() {
                                   onClick={() => setSelectedClip(clip.id)}
                                   data-testid={`clip-${clip.id}`}
                                 >
-                                  <span className="text-[10px] text-white px-1 truncate block">{clip.name}</span>
+                                  <span className="text-[10px] text-foreground px-1 truncate block">{clip.name}</span>
                                 </div>
                               ))}
                               <div
@@ -970,7 +970,7 @@ export default function VideoStudio() {
                           <Input
                             type="number"
                             defaultValue="0"
-                            className="bg-gray-800 border-gray-700 text-white h-8"
+                            className="bg-gray-800 border-gray-700 text-foreground h-8"
                             data-testid="input-position-x"
                           />
                         </div>
@@ -979,7 +979,7 @@ export default function VideoStudio() {
                           <Input
                             type="number"
                             defaultValue="0"
-                            className="bg-gray-800 border-gray-700 text-white h-8"
+                            className="bg-gray-800 border-gray-700 text-foreground h-8"
                             data-testid="input-position-y"
                           />
                         </div>
@@ -988,7 +988,7 @@ export default function VideoStudio() {
                           <Input
                             type="number"
                             defaultValue="100"
-                            className="bg-gray-800 border-gray-700 text-white h-8"
+                            className="bg-gray-800 border-gray-700 text-foreground h-8"
                             data-testid="input-scale"
                           />
                         </div>
@@ -997,7 +997,7 @@ export default function VideoStudio() {
                           <Input
                             type="number"
                             defaultValue="0"
-                            className="bg-gray-800 border-gray-700 text-white h-8"
+                            className="bg-gray-800 border-gray-700 text-foreground h-8"
                             data-testid="input-rotation"
                           />
                         </div>
@@ -1077,7 +1077,7 @@ export default function VideoStudio() {
                     <div>
                       <Label className="text-gray-400 text-xs uppercase mb-2 block">Export Format</Label>
                       <Select value={exportFormat} onValueChange={setExportFormat}>
-                        <SelectTrigger className="bg-gray-800 border-gray-700 text-white" data-testid="select-export-format">
+                        <SelectTrigger className="bg-gray-800 border-gray-700 text-foreground" data-testid="select-export-format">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-gray-900 border-gray-700">
@@ -1092,7 +1092,7 @@ export default function VideoStudio() {
                     <div>
                       <Label className="text-gray-400 text-xs uppercase mb-2 block">Quality</Label>
                       <Select value={exportQuality} onValueChange={setExportQuality}>
-                        <SelectTrigger className="bg-gray-800 border-gray-700 text-white" data-testid="select-export-quality">
+                        <SelectTrigger className="bg-gray-800 border-gray-700 text-foreground" data-testid="select-export-quality">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-gray-900 border-gray-700">
@@ -1109,7 +1109,7 @@ export default function VideoStudio() {
                       <div className="grid grid-cols-1 gap-2">
                         <Button
                           variant="outline"
-                          className="justify-start border-gray-700 text-white"
+                          className="justify-start border-gray-700 text-foreground"
                           data-testid="button-preset-tiktok"
                         >
                           <SiTiktok className="w-4 h-4 mr-2" />
@@ -1117,7 +1117,7 @@ export default function VideoStudio() {
                         </Button>
                         <Button
                           variant="outline"
-                          className="justify-start border-gray-700 text-white"
+                          className="justify-start border-gray-700 text-foreground"
                           data-testid="button-preset-youtube"
                         >
                           <Youtube className="w-4 h-4 mr-2" />
@@ -1125,7 +1125,7 @@ export default function VideoStudio() {
                         </Button>
                         <Button
                           variant="outline"
-                          className="justify-start border-gray-700 text-white"
+                          className="justify-start border-gray-700 text-foreground"
                           data-testid="button-preset-instagram"
                         >
                           <Instagram className="w-4 h-4 mr-2" />
@@ -1149,7 +1149,7 @@ export default function VideoStudio() {
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-gray-400">Exporting...</span>
-                          <span className="text-orange-500">{exportProgress}%</span>
+                          <span className="text-primary">{exportProgress}%</span>
                         </div>
                         <Progress value={exportProgress} className="h-2" />
                       </div>
@@ -1177,7 +1177,7 @@ export default function VideoStudio() {
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
-                        className="flex-1 border-gray-700 text-white"
+                        className="flex-1 border-gray-700 text-foreground"
                         data-testid="button-save-project"
                       >
                         <Save className="w-4 h-4 mr-2" />
@@ -1185,7 +1185,7 @@ export default function VideoStudio() {
                       </Button>
                       <Button
                         variant="outline"
-                        className="flex-1 border-gray-700 text-white"
+                        className="flex-1 border-gray-700 text-foreground"
                         data-testid="button-share"
                       >
                         <Share2 className="w-4 h-4 mr-2" />
@@ -1201,7 +1201,7 @@ export default function VideoStudio() {
               <Button
                 variant="outline"
                 size="sm"
-                className="fixed left-4 top-1/2 -translate-y-1/2 border-orange-500/30 text-orange-500"
+                className="fixed left-4 top-1/2 -translate-y-1/2 border text-primary"
                 onClick={() => setShowAIPanel(true)}
                 data-testid="button-show-ai-panel"
               >

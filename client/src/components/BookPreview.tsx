@@ -257,7 +257,7 @@ function Thumbnail({ content, pageNumber, isActive, onClick, isCover, coverImage
       )}
       <div className={cn(
         "absolute bottom-0.5 right-0.5 text-[8px] px-1 rounded",
-        isActive ? "bg-orange-500 text-white" : "bg-gray-200 text-gray-600"
+        isActive ? "bg-orange-500 text-foreground" : "bg-gray-200 text-gray-600"
       )}>
         {pageNumber}
       </div>
@@ -509,7 +509,7 @@ export default function BookPreview({
     <div
       ref={containerRef}
       className={cn(
-        "flex flex-col bg-black rounded-lg overflow-hidden",
+        "flex flex-col bg-background rounded-lg overflow-hidden",
         isFullscreen ? "fixed inset-0 z-50" : "h-full min-h-[600px]"
       )}
       data-testid="book-preview-container"
@@ -697,7 +697,7 @@ export default function BookPreview({
               variant="ghost"
               onClick={goToPreviousPage}
               disabled={currentPage <= 1}
-              className="absolute left-4 top-1/2 -translate-y-1/2 h-12 w-12 bg-black/50 hover:bg-black/70 disabled:opacity-30"
+              className="absolute left-4 top-1/2 -translate-y-1/2 h-12 w-12 bg-card hover:bg-black/70 disabled:opacity-30"
               data-testid="button-prev-page"
             >
               <ChevronLeft className="w-6 h-6" />
@@ -707,7 +707,7 @@ export default function BookPreview({
               variant="ghost"
               onClick={goToNextPage}
               disabled={currentPage >= totalPages}
-              className="absolute right-4 top-1/2 -translate-y-1/2 h-12 w-12 bg-black/50 hover:bg-black/70 disabled:opacity-30"
+              className="absolute right-4 top-1/2 -translate-y-1/2 h-12 w-12 bg-card hover:bg-black/70 disabled:opacity-30"
               data-testid="button-next-page"
             >
               <ChevronRight className="w-6 h-6" />

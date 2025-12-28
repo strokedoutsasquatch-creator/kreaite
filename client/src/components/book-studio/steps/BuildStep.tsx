@@ -130,10 +130,10 @@ export default function BuildStep() {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-black/50 border-orange-500/20">
+      <Card className="bg-card border">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
-            <ImagePlus className="w-5 h-5 text-orange-500" />
+          <CardTitle className="flex items-center gap-2 text-foreground">
+            <ImagePlus className="w-5 h-5 text-primary" />
             Step 4: Images & Cover Design
           </CardTitle>
           <CardDescription>
@@ -142,7 +142,7 @@ export default function BuildStep() {
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="mb-4 bg-black/30 flex-wrap gap-1">
+            <TabsList className="mb-4 bg-card/80 flex-wrap gap-1">
               <TabsTrigger value="generate" data-testid="tab-generate">
                 <Wand2 className="w-4 h-4 mr-1" /> Generate
               </TabsTrigger>
@@ -158,11 +158,11 @@ export default function BuildStep() {
             </TabsList>
 
             <TabsContent value="generate" className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 p-3 bg-black/30 rounded-lg border border-orange-500/20">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 p-3 bg-card/80 rounded-lg border border">
                 <div>
                   <Label className="text-xs text-muted-foreground">Style</Label>
                   <Select value={illustrationStyle} onValueChange={setIllustrationStyle}>
-                    <SelectTrigger className="h-8 bg-transparent border-orange-500/20 text-white" data-testid="select-style">
+                    <SelectTrigger className="h-8 bg-transparent border text-foreground" data-testid="select-style">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -179,7 +179,7 @@ export default function BuildStep() {
                 <div>
                   <Label className="text-xs text-muted-foreground">Purpose</Label>
                   <Select value={imagePurpose} onValueChange={setImagePurpose}>
-                    <SelectTrigger className="h-8 bg-transparent border-orange-500/20 text-white" data-testid="select-purpose">
+                    <SelectTrigger className="h-8 bg-transparent border text-foreground" data-testid="select-purpose">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -193,7 +193,7 @@ export default function BuildStep() {
                 <div>
                   <Label className="text-xs text-muted-foreground">For Chapter</Label>
                   <Select defaultValue="all">
-                    <SelectTrigger className="h-8 bg-transparent border-orange-500/20 text-white" data-testid="select-chapter">
+                    <SelectTrigger className="h-8 bg-transparent border text-foreground" data-testid="select-chapter">
                       <SelectValue placeholder="Select..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -211,19 +211,19 @@ export default function BuildStep() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
-                    <Label className="text-white">Image Description</Label>
+                    <Label className="text-foreground">Image Description</Label>
                     <Textarea
                       value={imagePrompt}
                       onChange={(e) => setImagePrompt(e.target.value)}
                       placeholder="Describe the illustration you want to generate..."
-                      className="min-h-[100px] bg-black/30 border-orange-500/20 text-white"
+                      className="min-h-[100px] bg-card/80 border text-foreground"
                       data-testid="textarea-image-prompt"
                     />
                   </div>
                   <Button
                     onClick={handleGenerateImage}
                     disabled={isGenerating || !imagePrompt.trim()}
-                    className="w-full bg-orange-500 hover:bg-orange-600"
+                    className="w-full bg-primary hover:bg-primary/80"
                     data-testid="button-generate-image"
                   >
                     {isGenerating ? (
@@ -240,7 +240,7 @@ export default function BuildStep() {
                       <button
                         key={i}
                         onClick={() => setImagePrompt(prompt)}
-                        className="w-full p-2 text-left text-sm bg-black/40 rounded border border-orange-500/10 hover:border-orange-500/30 transition-colors text-gray-300"
+                        className="w-full p-2 text-left text-sm bg-card rounded border border-primary/10 hover:border transition-colors text-gray-300"
                         data-testid={`button-quick-prompt-${i}`}
                       >
                         {prompt}
@@ -250,8 +250,8 @@ export default function BuildStep() {
                 </div>
 
                 <div>
-                  <Label className="mb-2 block text-white">Recent Generated Images</Label>
-                  <ScrollArea className="h-[400px] rounded-lg border border-orange-500/20 p-2 bg-black/30">
+                  <Label className="mb-2 block text-foreground">Recent Generated Images</Label>
+                  <ScrollArea className="h-[400px] rounded-lg border border p-2 bg-card/80">
                     <div className="grid grid-cols-2 gap-3">
                       {images.filter(img => img.origin === 'generated').length > 0 ? (
                         images.filter(img => img.origin === 'generated').slice(0, 6).map((img) => (
@@ -259,7 +259,7 @@ export default function BuildStep() {
                             <img
                               src={img.url}
                               alt="Generated"
-                              className="w-full aspect-square object-cover rounded-lg border border-orange-500/20"
+                              className="w-full aspect-square object-cover rounded-lg border border"
                             />
                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
                               <Button
@@ -284,13 +284,13 @@ export default function BuildStep() {
                             </div>
                             {img.isAnalyzing && (
                               <div className="absolute inset-0 bg-black/70 rounded-lg flex items-center justify-center">
-                                <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
+                                <Loader2 className="w-6 h-6 animate-spin text-primary" />
                               </div>
                             )}
                           </div>
                         ))
                       ) : (
-                        <div className="col-span-2 aspect-video bg-black/40 rounded-lg flex flex-col items-center justify-center p-8">
+                        <div className="col-span-2 aspect-video bg-card rounded-lg flex flex-col items-center justify-center p-8">
                           <Image className="w-16 h-16 text-muted-foreground/50 mb-3" />
                           <p className="text-sm text-muted-foreground text-center">No images generated yet</p>
                         </div>
@@ -304,9 +304,9 @@ export default function BuildStep() {
             <TabsContent value="library" className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <Label className="text-sm text-white">Filter:</Label>
+                  <Label className="text-sm text-foreground">Filter:</Label>
                   <Select defaultValue="all">
-                    <SelectTrigger className="w-32 h-8 bg-transparent border-orange-500/20 text-white" data-testid="select-filter-purpose">
+                    <SelectTrigger className="w-32 h-8 bg-transparent border text-foreground" data-testid="select-filter-purpose">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -329,7 +329,7 @@ export default function BuildStep() {
                 <Button
                   variant="outline"
                   onClick={() => fileInputRef.current?.click()}
-                  className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+                  className="border text-primary hover:bg-primary/10"
                   data-testid="button-upload-image"
                 >
                   <Upload className="w-4 h-4 mr-2" />
@@ -339,7 +339,7 @@ export default function BuildStep() {
 
               <div
                 className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                  isDragOver ? 'border-orange-500 bg-orange-500/5' : 'border-orange-500/30'
+                  isDragOver ? 'border-primary bg-primary/5' : 'border'
                 }`}
                 onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
                 onDragLeave={() => setIsDragOver(false)}
@@ -351,7 +351,7 @@ export default function BuildStep() {
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {images.map((img) => (
-                  <Card key={img.id} className="overflow-hidden group bg-black/40 border-orange-500/20" data-testid={`card-image-${img.id}`}>
+                  <Card key={img.id} className="overflow-hidden group bg-card border" data-testid={`card-image-${img.id}`}>
                     <div className="relative aspect-square">
                       <img
                         src={img.url}
@@ -382,7 +382,7 @@ export default function BuildStep() {
                     </div>
                     <CardContent className="p-2">
                       <div className="flex items-center gap-1 mt-1">
-                        <Badge variant="outline" className="text-xs border-orange-500/30 text-orange-400">
+                        <Badge variant="outline" className="text-xs border text-primary">
                           {img.origin}
                         </Badge>
                       </div>
@@ -403,7 +403,7 @@ export default function BuildStep() {
               {selectedImage ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <div className="aspect-square rounded-lg border border-orange-500/20 overflow-hidden bg-black/40">
+                    <div className="aspect-square rounded-lg border border overflow-hidden bg-card">
                       <img
                         src={selectedImage.url}
                         alt="Selected"
@@ -415,7 +415,7 @@ export default function BuildStep() {
                         variant="outline"
                         onClick={() => analyzeImage(selectedImage.id)}
                         disabled={selectedImage.isAnalyzing}
-                        className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+                        className="border text-primary hover:bg-primary/10"
                         data-testid="button-analyze-image"
                       >
                         {selectedImage.isAnalyzing ? (
@@ -433,7 +433,7 @@ export default function BuildStep() {
                           link.download = 'image.png';
                           link.click();
                         }}
-                        className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+                        className="border text-primary hover:bg-primary/10"
                         data-testid="button-download-edit"
                       >
                         <Download className="w-4 h-4 mr-2" />
@@ -443,9 +443,9 @@ export default function BuildStep() {
                   </div>
                   <div className="space-y-4">
                     {selectedImage.analysis && (
-                      <Card className="bg-black/40 border-orange-500/20">
+                      <Card className="bg-card border">
                         <CardHeader className="pb-2">
-                          <CardTitle className="text-sm text-white">Image Analysis</CardTitle>
+                          <CardTitle className="text-sm text-foreground">Image Analysis</CardTitle>
                         </CardHeader>
                         <CardContent className="text-sm text-gray-300 space-y-2">
                           <p><strong>Description:</strong> {selectedImage.analysis.description}</p>
@@ -459,7 +459,7 @@ export default function BuildStep() {
                     {selectedImage.prompt && (
                       <div>
                         <Label className="text-muted-foreground">Original Prompt</Label>
-                        <p className="text-sm bg-black/40 p-2 rounded mt-1 border border-orange-500/20 text-gray-300">
+                        <p className="text-sm bg-card p-2 rounded mt-1 border border text-gray-300">
                           {selectedImage.prompt}
                         </p>
                       </div>
@@ -478,9 +478,9 @@ export default function BuildStep() {
             <TabsContent value="cover" className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <div className="aspect-[2/3] bg-gradient-to-br from-orange-900/50 to-black rounded-lg border border-orange-500/20 flex flex-col items-center justify-center p-8">
-                    <BookOpen className="w-24 h-24 text-orange-500/50 mb-4" />
-                    <h2 className="text-2xl font-bold text-white text-center">
+                  <div className="aspect-[2/3] bg-gradient-to-br from-primary/50 to-black rounded-lg border border flex flex-col items-center justify-center p-8">
+                    <BookOpen className="w-24 h-24 text-primary/50 mb-4" />
+                    <h2 className="text-2xl font-bold text-foreground text-center">
                       {bookOutline?.title || "Your Book Title"}
                     </h2>
                     {bookOutline?.subtitle && (
@@ -491,13 +491,13 @@ export default function BuildStep() {
                   </div>
                 </div>
                 <div className="space-y-4">
-                  <Card className="bg-black/40 border-orange-500/20">
+                  <Card className="bg-card border">
                     <CardHeader>
-                      <CardTitle className="text-sm text-white">Cover Options</CardTitle>
+                      <CardTitle className="text-sm text-foreground">Cover Options</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <Button
-                        className="w-full bg-orange-500 hover:bg-orange-600"
+                        className="w-full bg-primary hover:bg-primary/80"
                         data-testid="button-generate-cover"
                       >
                         <Wand2 className="w-4 h-4 mr-2" />
@@ -505,7 +505,7 @@ export default function BuildStep() {
                       </Button>
                       <Button
                         variant="outline"
-                        className="w-full border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+                        className="w-full border text-primary hover:bg-primary/10"
                         onClick={() => fileInputRef.current?.click()}
                         data-testid="button-upload-cover"
                       >
@@ -519,18 +519,18 @@ export default function BuildStep() {
             </TabsContent>
           </Tabs>
 
-          <div className="flex justify-between mt-6 pt-4 border-t border-orange-500/20">
+          <div className="flex justify-between mt-6 pt-4 border-t border">
             <Button
               variant="outline"
               onClick={() => setCurrentStep('generate')}
-              className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+              className="border text-primary hover:bg-primary/10"
               data-testid="button-back-step-build"
             >
               <ChevronLeft className="w-4 h-4 mr-2" /> Back
             </Button>
             <Button
               onClick={() => setCurrentStep('publish')}
-              className="bg-orange-500 hover:bg-orange-600"
+              className="bg-primary hover:bg-primary/80"
               data-testid="button-next-step-build"
             >
               Next: Format & Publish

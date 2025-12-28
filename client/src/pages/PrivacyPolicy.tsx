@@ -25,13 +25,13 @@ export default function PrivacyPolicy() {
   };
 
   return (
-    <div className="min-h-screen bg-black" data-testid="page-privacy-policy">
+    <div className="min-h-screen bg-background" data-testid="page-privacy-policy">
       <CreatorHeader />
       
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="flex items-center justify-between mb-8 print:hidden">
           <Link href="/">
-            <Button variant="ghost" className="text-muted-foreground hover:text-white" data-testid="button-back-home">
+            <Button variant="ghost" className="text-muted-foreground hover:text-foreground" data-testid="button-back-home">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Home
             </Button>
@@ -43,7 +43,7 @@ export default function PrivacyPolicy() {
         </div>
 
         <header className="mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4" data-testid="heading-privacy-title">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4" data-testid="heading-privacy-title">
             Privacy Policy
           </h1>
           <p className="text-lg text-muted-foreground" data-testid="text-last-updated">
@@ -52,13 +52,13 @@ export default function PrivacyPolicy() {
         </header>
 
         <nav className="mb-12 p-6 bg-zinc-900/50 rounded-lg border border-zinc-800" data-testid="nav-table-of-contents">
-          <h2 className="text-lg font-semibold text-white mb-4">Table of Contents</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Table of Contents</h2>
           <ul className="space-y-2">
             {sections.map((section) => (
               <li key={section.id}>
                 <a 
                   href={`#${section.id}`}
-                  className="text-muted-foreground hover:text-orange-500 transition-colors"
+                  className="text-muted-foreground hover:text-primary transition-colors"
                   data-testid={`link-toc-${section.id}`}
                 >
                   {section.title}
@@ -78,26 +78,26 @@ export default function PrivacyPolicy() {
           <Separator className="my-8 bg-zinc-800" />
 
           <section id="info-collect" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold text-white mb-4">1. Information We Collect</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">1. Information We Collect</h2>
             
-            <h3 className="text-xl font-semibold text-white mb-3">Information You Provide</h3>
+            <h3 className="text-xl font-semibold text-foreground mb-3">Information You Provide</h3>
             <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
-              <li><strong className="text-white">Account Information:</strong> Name, email address, username, password, and profile picture</li>
-              <li><strong className="text-white">Creator Profile:</strong> Bio, social media links, and portfolio information</li>
-              <li><strong className="text-white">Payment Information:</strong> Billing address, bank account details (processed securely by Stripe)</li>
-              <li><strong className="text-white">Content:</strong> Books, music, videos, courses, images, and other creative works you upload</li>
-              <li><strong className="text-white">Communications:</strong> Messages, support requests, and feedback you send us</li>
+              <li><strong className="text-foreground">Account Information:</strong> Name, email address, username, password, and profile picture</li>
+              <li><strong className="text-foreground">Creator Profile:</strong> Bio, social media links, and portfolio information</li>
+              <li><strong className="text-foreground">Payment Information:</strong> Billing address, bank account details (processed securely by Stripe)</li>
+              <li><strong className="text-foreground">Content:</strong> Books, music, videos, courses, images, and other creative works you upload</li>
+              <li><strong className="text-foreground">Communications:</strong> Messages, support requests, and feedback you send us</li>
             </ul>
 
-            <h3 className="text-xl font-semibold text-white mb-3">Information Collected Automatically</h3>
+            <h3 className="text-xl font-semibold text-foreground mb-3">Information Collected Automatically</h3>
             <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
-              <li><strong className="text-white">Device Information:</strong> IP address, browser type, operating system, device identifiers</li>
-              <li><strong className="text-white">Usage Data:</strong> Pages viewed, features used, time spent on the platform, click patterns</li>
-              <li><strong className="text-white">Location Data:</strong> General geographic location based on IP address</li>
-              <li><strong className="text-white">Log Data:</strong> Access times, error logs, and referring URLs</li>
+              <li><strong className="text-foreground">Device Information:</strong> IP address, browser type, operating system, device identifiers</li>
+              <li><strong className="text-foreground">Usage Data:</strong> Pages viewed, features used, time spent on the platform, click patterns</li>
+              <li><strong className="text-foreground">Location Data:</strong> General geographic location based on IP address</li>
+              <li><strong className="text-foreground">Log Data:</strong> Access times, error logs, and referring URLs</li>
             </ul>
 
-            <h3 className="text-xl font-semibold text-white mb-3">Information from Third Parties</h3>
+            <h3 className="text-xl font-semibold text-foreground mb-3">Information from Third Parties</h3>
             <ul className="list-disc pl-6 text-muted-foreground space-y-2">
               <li>Social login providers (if you choose to sign in with Google, Apple, etc.)</li>
               <li>Payment processors for transaction verification</li>
@@ -108,7 +108,7 @@ export default function PrivacyPolicy() {
           <Separator className="my-8 bg-zinc-800" />
 
           <section id="how-use" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold text-white mb-4">2. How We Use Your Information</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">2. How We Use Your Information</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               We use the information we collect to:
             </p>
@@ -129,60 +129,60 @@ export default function PrivacyPolicy() {
           <Separator className="my-8 bg-zinc-800" />
 
           <section id="data-sharing" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold text-white mb-4">3. Data Sharing</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">3. Data Sharing</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               We do not sell your personal information. We may share your information in the following circumstances:
             </p>
 
-            <h3 className="text-xl font-semibold text-white mb-3">Service Providers</h3>
+            <h3 className="text-xl font-semibold text-foreground mb-3">Service Providers</h3>
             <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 mb-4">
               <ul className="space-y-3 text-muted-foreground">
                 <li className="flex items-start gap-3">
-                  <span className="text-orange-500 font-semibold min-w-[100px]">Stripe</span>
+                  <span className="text-primary font-semibold min-w-[100px]">Stripe</span>
                   <span>Payment processing, creator payouts, and financial compliance</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="text-orange-500 font-semibold min-w-[100px]">Analytics</span>
+                  <span className="text-primary font-semibold min-w-[100px]">Analytics</span>
                   <span>Usage analytics, performance monitoring, and error tracking</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="text-orange-500 font-semibold min-w-[100px]">Cloud Hosting</span>
+                  <span className="text-primary font-semibold min-w-[100px]">Cloud Hosting</span>
                   <span>Data storage and content delivery infrastructure</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="text-orange-500 font-semibold min-w-[100px]">Email</span>
+                  <span className="text-primary font-semibold min-w-[100px]">Email</span>
                   <span>Transactional emails and notifications</span>
                 </li>
               </ul>
             </div>
 
-            <h3 className="text-xl font-semibold text-white mb-3">Other Disclosures</h3>
+            <h3 className="text-xl font-semibold text-foreground mb-3">Other Disclosures</h3>
             <ul className="list-disc pl-6 text-muted-foreground space-y-2">
-              <li><strong className="text-white">Legal Requirements:</strong> When required by law, subpoena, or government request</li>
-              <li><strong className="text-white">Protection of Rights:</strong> To protect the rights, property, or safety of KreAIte, our users, or the public</li>
-              <li><strong className="text-white">Business Transfers:</strong> In connection with a merger, acquisition, or sale of assets</li>
-              <li><strong className="text-white">With Your Consent:</strong> When you explicitly authorize us to share information</li>
+              <li><strong className="text-foreground">Legal Requirements:</strong> When required by law, subpoena, or government request</li>
+              <li><strong className="text-foreground">Protection of Rights:</strong> To protect the rights, property, or safety of KreAIte, our users, or the public</li>
+              <li><strong className="text-foreground">Business Transfers:</strong> In connection with a merger, acquisition, or sale of assets</li>
+              <li><strong className="text-foreground">With Your Consent:</strong> When you explicitly authorize us to share information</li>
             </ul>
           </section>
 
           <Separator className="my-8 bg-zinc-800" />
 
           <section id="cookies" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold text-white mb-4">4. Cookies and Tracking</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">4. Cookies and Tracking</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               We use cookies and similar tracking technologies to collect and store information about your 
               preferences and activities on our platform.
             </p>
 
-            <h3 className="text-xl font-semibold text-white mb-3">Types of Cookies We Use</h3>
+            <h3 className="text-xl font-semibold text-foreground mb-3">Types of Cookies We Use</h3>
             <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
-              <li><strong className="text-white">Essential Cookies:</strong> Required for the platform to function (authentication, security)</li>
-              <li><strong className="text-white">Functional Cookies:</strong> Remember your preferences and settings</li>
-              <li><strong className="text-white">Analytics Cookies:</strong> Help us understand how users interact with our platform</li>
-              <li><strong className="text-white">Marketing Cookies:</strong> Used to deliver relevant advertisements (with your consent)</li>
+              <li><strong className="text-foreground">Essential Cookies:</strong> Required for the platform to function (authentication, security)</li>
+              <li><strong className="text-foreground">Functional Cookies:</strong> Remember your preferences and settings</li>
+              <li><strong className="text-foreground">Analytics Cookies:</strong> Help us understand how users interact with our platform</li>
+              <li><strong className="text-foreground">Marketing Cookies:</strong> Used to deliver relevant advertisements (with your consent)</li>
             </ul>
 
-            <h3 className="text-xl font-semibold text-white mb-3">Managing Cookies</h3>
+            <h3 className="text-xl font-semibold text-foreground mb-3">Managing Cookies</h3>
             <p className="text-muted-foreground leading-relaxed">
               Most browsers allow you to control cookies through their settings. You can block or delete cookies, 
               but this may affect the functionality of our platform. Some features may not work properly without 
@@ -193,7 +193,7 @@ export default function PrivacyPolicy() {
           <Separator className="my-8 bg-zinc-800" />
 
           <section id="data-security" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold text-white mb-4">5. Data Security</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">5. Data Security</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               We implement industry-standard security measures to protect your personal information:
             </p>
@@ -215,32 +215,32 @@ export default function PrivacyPolicy() {
           <Separator className="my-8 bg-zinc-800" />
 
           <section id="your-rights" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold text-white mb-4">6. Your Rights</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">6. Your Rights</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               Depending on your location, you may have the following rights regarding your personal data:
             </p>
 
-            <h3 className="text-xl font-semibold text-white mb-3">GDPR Rights (European Economic Area)</h3>
+            <h3 className="text-xl font-semibold text-foreground mb-3">GDPR Rights (European Economic Area)</h3>
             <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
-              <li><strong className="text-white">Right to Access:</strong> Request a copy of your personal data</li>
-              <li><strong className="text-white">Right to Rectification:</strong> Correct inaccurate or incomplete data</li>
-              <li><strong className="text-white">Right to Erasure:</strong> Request deletion of your personal data</li>
-              <li><strong className="text-white">Right to Restrict Processing:</strong> Limit how we use your data</li>
-              <li><strong className="text-white">Right to Data Portability:</strong> Receive your data in a portable format</li>
-              <li><strong className="text-white">Right to Object:</strong> Object to processing based on legitimate interests</li>
-              <li><strong className="text-white">Right to Withdraw Consent:</strong> Withdraw consent at any time</li>
+              <li><strong className="text-foreground">Right to Access:</strong> Request a copy of your personal data</li>
+              <li><strong className="text-foreground">Right to Rectification:</strong> Correct inaccurate or incomplete data</li>
+              <li><strong className="text-foreground">Right to Erasure:</strong> Request deletion of your personal data</li>
+              <li><strong className="text-foreground">Right to Restrict Processing:</strong> Limit how we use your data</li>
+              <li><strong className="text-foreground">Right to Data Portability:</strong> Receive your data in a portable format</li>
+              <li><strong className="text-foreground">Right to Object:</strong> Object to processing based on legitimate interests</li>
+              <li><strong className="text-foreground">Right to Withdraw Consent:</strong> Withdraw consent at any time</li>
             </ul>
 
-            <h3 className="text-xl font-semibold text-white mb-3">CCPA Rights (California Residents)</h3>
+            <h3 className="text-xl font-semibold text-foreground mb-3">CCPA Rights (California Residents)</h3>
             <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
-              <li><strong className="text-white">Right to Know:</strong> What personal information is collected and how it's used</li>
-              <li><strong className="text-white">Right to Delete:</strong> Request deletion of your personal information</li>
-              <li><strong className="text-white">Right to Opt-Out:</strong> Opt out of the sale of personal information (we do not sell data)</li>
-              <li><strong className="text-white">Right to Non-Discrimination:</strong> Equal service regardless of exercising privacy rights</li>
+              <li><strong className="text-foreground">Right to Know:</strong> What personal information is collected and how it's used</li>
+              <li><strong className="text-foreground">Right to Delete:</strong> Request deletion of your personal information</li>
+              <li><strong className="text-foreground">Right to Opt-Out:</strong> Opt out of the sale of personal information (we do not sell data)</li>
+              <li><strong className="text-foreground">Right to Non-Discrimination:</strong> Equal service regardless of exercising privacy rights</li>
             </ul>
 
             <p className="text-muted-foreground leading-relaxed">
-              To exercise any of these rights, please contact us at <a href="mailto:hello@kreaite.xyz" className="text-orange-500 hover:underline">hello@kreaite.xyz</a>. 
+              To exercise any of these rights, please contact us at <a href="mailto:hello@kreaite.xyz" className="text-primary hover:underline">hello@kreaite.xyz</a>. 
               We will respond to your request within 30 days (or as required by applicable law).
             </p>
           </section>
@@ -248,7 +248,7 @@ export default function PrivacyPolicy() {
           <Separator className="my-8 bg-zinc-800" />
 
           <section id="childrens-privacy" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold text-white mb-4">7. Children's Privacy</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">7. Children's Privacy</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               KreAIte is not intended for children under the age of 13 (or 16 in the EEA). We do not knowingly 
               collect personal information from children under these ages.
@@ -259,14 +259,14 @@ export default function PrivacyPolicy() {
             </p>
             <p className="text-muted-foreground leading-relaxed">
               If you are a parent or guardian and believe your child has provided us with personal information, 
-              please contact us immediately at <a href="mailto:hello@kreaite.xyz" className="text-orange-500 hover:underline">hello@kreaite.xyz</a>.
+              please contact us immediately at <a href="mailto:hello@kreaite.xyz" className="text-primary hover:underline">hello@kreaite.xyz</a>.
             </p>
           </section>
 
           <Separator className="my-8 bg-zinc-800" />
 
           <section id="international" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold text-white mb-4">8. International Data Transfers</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">8. International Data Transfers</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               Your information may be transferred to and processed in countries other than your country of 
               residence. These countries may have different data protection laws.
@@ -281,7 +281,7 @@ export default function PrivacyPolicy() {
           <Separator className="my-8 bg-zinc-800" />
 
           <section id="data-retention" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold text-white mb-4">9. Data Retention</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">9. Data Retention</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               We retain your personal information for as long as necessary to:
             </p>
@@ -300,7 +300,7 @@ export default function PrivacyPolicy() {
           <Separator className="my-8 bg-zinc-800" />
 
           <section id="policy-updates" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold text-white mb-4">10. Policy Updates</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">10. Policy Updates</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               We may update this Privacy Policy from time to time to reflect changes in our practices, 
               technologies, legal requirements, or other factors.
@@ -322,15 +322,15 @@ export default function PrivacyPolicy() {
           <Separator className="my-8 bg-zinc-800" />
 
           <section id="contact" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold text-white mb-4">11. Contact Information</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">11. Contact Information</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               If you have any questions, concerns, or requests regarding this Privacy Policy or our data 
               practices, please contact us:
             </p>
             <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
-              <p className="text-white font-semibold mb-2">KreAIte Privacy Team</p>
+              <p className="text-foreground font-semibold mb-2">KreAIte Privacy Team</p>
               <p className="text-muted-foreground mb-4">
-                Email: <a href="mailto:hello@kreaite.xyz" className="text-orange-500 hover:underline" data-testid="link-contact-email">hello@kreaite.xyz</a>
+                Email: <a href="mailto:hello@kreaite.xyz" className="text-primary hover:underline" data-testid="link-contact-email">hello@kreaite.xyz</a>
               </p>
               <p className="text-muted-foreground text-sm">
                 For GDPR-related inquiries, you may also contact our Data Protection Officer at the above email address.
@@ -382,10 +382,10 @@ export default function PrivacyPolicy() {
             background: #f5f5f5 !important;
             border-color: #ddd !important;
           }
-          .text-orange-500 {
+          .text-primary {
             color: #c45000 !important;
           }
-          .text-white {
+          .text-foreground {
             color: black !important;
           }
           .text-muted-foreground {

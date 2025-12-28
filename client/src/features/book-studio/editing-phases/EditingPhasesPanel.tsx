@@ -161,11 +161,11 @@ export function EditingPhasesPanel({
   if (!isOpen) return null;
 
   return (
-    <Card className="w-96 h-full bg-black border-orange-500/20 flex flex-col" data-testid="editing-phases-panel">
-      <CardHeader className="pb-2 border-b border-orange-500/20">
+    <Card className="w-96 h-full bg-background border flex flex-col" data-testid="editing-phases-panel">
+      <CardHeader className="pb-2 border-b border">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-white flex items-center gap-2 text-sm">
-            <Sparkles className="w-4 h-4 text-orange-500" />
+          <CardTitle className="text-foreground flex items-center gap-2 text-sm">
+            <Sparkles className="w-4 h-4 text-primary" />
             Professional Editing
           </CardTitle>
           <Button size="icon" variant="ghost" onClick={onClose} className="h-6 w-6" data-testid="button-close-editing">
@@ -188,14 +188,14 @@ export function EditingPhasesPanel({
                 }}
                 className={`flex-1 p-2 rounded-lg transition-all ${
                   isActive
-                    ? "bg-orange-500/20 border border-orange-500"
-                    : "bg-black/30 border border-transparent hover:border-orange-500/30"
+                    ? "bg-primary/20 border border-orange-500"
+                    : "bg-card/80 border border-transparent hover:border"
                 }`}
                 data-testid={`button-phase-${phase.id}`}
               >
                 <div className="flex flex-col items-center gap-1">
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center ${phase.color}`}>
-                    <Icon className="w-3 h-3 text-white" />
+                    <Icon className="w-3 h-3 text-foreground" />
                   </div>
                   <span className="text-[10px] text-gray-400">{index + 1}</span>
                 </div>
@@ -207,19 +207,19 @@ export function EditingPhasesPanel({
 
       <ScrollArea className="flex-1">
         <CardContent className="p-3 space-y-3">
-          <div className="bg-black/30 rounded-lg p-3 border border-orange-500/20">
+          <div className="bg-card/80 rounded-lg p-3 border border">
             <div className="flex items-center gap-2 mb-2">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentPhase.color}`}>
-                <PhaseIcon className="w-4 h-4 text-white" />
+                <PhaseIcon className="w-4 h-4 text-foreground" />
               </div>
               <div>
-                <h3 className="text-sm font-medium text-white">{currentPhase.label}</h3>
+                <h3 className="text-sm font-medium text-foreground">{currentPhase.label}</h3>
                 <p className="text-xs text-gray-400">{currentPhase.description}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 text-xs">
               <Badge variant="outline" className="flex items-center gap-1">
-                <Coins className="w-3 h-3 text-orange-500" />
+                <Coins className="w-3 h-3 text-primary" />
                 {currentPhase.credits} credits
               </Badge>
               <span className="text-gray-500">|</span>
@@ -231,7 +231,7 @@ export function EditingPhasesPanel({
             <div className="space-y-2">
               <label className="text-xs text-gray-400">Style Guide</label>
               <Select value={styleGuide} onValueChange={setStyleGuide}>
-                <SelectTrigger className="bg-black/50 border-orange-500/30" data-testid="select-style-guide">
+                <SelectTrigger className="bg-card border" data-testid="select-style-guide">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -266,7 +266,7 @@ export function EditingPhasesPanel({
           {result && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h4 className="text-sm font-medium text-white">Results</h4>
+                <h4 className="text-sm font-medium text-foreground">Results</h4>
                 <Badge className="bg-green-500/20 text-green-400">
                   -{result.creditsUsed} credits
                 </Badge>
@@ -275,7 +275,7 @@ export function EditingPhasesPanel({
               {result.edit ? (
                 <div className="space-y-3">
                   {result.edit.overallAssessment && (
-                    <div className="bg-black/30 rounded p-2 border border-orange-500/10">
+                    <div className="bg-card/80 rounded p-2 border border-orange-500/10">
                       <p className="text-xs text-gray-300">{result.edit.overallAssessment}</p>
                     </div>
                   )}
@@ -287,8 +287,8 @@ export function EditingPhasesPanel({
                         { label: "Pacing", score: result.edit.pacingScore },
                         { label: "Character", score: result.edit.characterScore },
                       ].map((item) => (
-                        <div key={item.label} className="bg-black/30 rounded p-2 text-center">
-                          <div className="text-lg font-bold text-orange-500">{item.score}/10</div>
+                        <div key={item.label} className="bg-card/80 rounded p-2 text-center">
+                          <div className="text-lg font-bold text-primary">{item.score}/10</div>
                           <div className="text-[10px] text-gray-400">{item.label}</div>
                         </div>
                       ))}
@@ -299,7 +299,7 @@ export function EditingPhasesPanel({
                     <div className="space-y-2">
                       <h5 className="text-xs font-medium text-gray-400">Suggestions</h5>
                       {result.edit.suggestions.slice(0, 5).map((s: any, i: number) => (
-                        <div key={i} className="bg-black/30 rounded p-2 border-l-2 border-orange-500">
+                        <div key={i} className="bg-card/80 rounded p-2 border-l-2 border-orange-500">
                           <div className="flex items-center gap-1 mb-1">
                             <Badge variant="outline" className="text-[10px]">{s.area || s.type}</Badge>
                             {s.priority && (
@@ -354,7 +354,7 @@ export function EditingPhasesPanel({
                   )}
                 </div>
               ) : result.raw ? (
-                <div className="bg-black/30 rounded p-2 border border-orange-500/10">
+                <div className="bg-card/80 rounded p-2 border border-orange-500/10">
                   <pre className="text-xs text-gray-300 whitespace-pre-wrap">{result.raw}</pre>
                 </div>
               ) : null}

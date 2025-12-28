@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useBookStudio } from "@/lib/contexts/BookStudioContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -78,6 +78,71 @@ export default function StartStep() {
   const [bookTitle, setBookTitle] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
+  const isInitializedRef = useRef(false);
+
+  // Initialize local state from context's bookOutline if it exists (only once)
+  useEffect(() => {
+    if (bookOutline && !isInitializedRef.current) {
+      isInitializedRef.current = true;
+      setBookTitle(bookOutline.title || "");
+      setSelectedGenre(bookOutline.genre || "memoir");
+      setBookDescription(bookOutline.hook || "");
+    }
+  }, [bookOutline]);
+
+  // Auto-sync local state to context with debouncing when user makes changes
+  useEffect(() => {
+    // Skip initial render and wait for user to start typing
+    if (!isInitializedRef.current && !bookTitle && !bookDescription && selectedGenre === 'memoir') {
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      if (bookOutline) {
+        // Only update if values actually changed
+        if (bookTitle !== bookOutline.title || selectedGenre !== bookOutline.genre || bookDescription !== bookOutline.hook) {
+          setBookOutline({
+            ...bookOutline,
+            title: bookTitle || bookOutline.title,
+            genre: selectedGenre || bookOutline.genre,
+            hook: bookDescription || bookOutline.hook,
+          });
+        }
+      } else if (bookTitle || bookDescription || selectedGenre !== 'memoir') {
+        // Create a draft outline to persist user's metadata
+        setBookOutline({
+          title: bookTitle || 'Untitled Book',
+          genre: selectedGenre,
+          hook: bookDescription,
+          targetWordCount: 50000,
+          chapters: [],
+        });
+      }
+    }, 500); // Debounce 500ms
+
+    return () => clearTimeout(timeoutId);
+  }, [bookTitle, selectedGenre, bookDescription, bookOutline, setBookOutline]);
+
+  // Sync local state to context before navigation (immediate sync)
+  const syncStateToContext = useCallback(() => {
+    if (bookOutline) {
+      setBookOutline({
+        ...bookOutline,
+        title: bookTitle || bookOutline.title,
+        genre: selectedGenre || bookOutline.genre,
+        hook: bookDescription || bookOutline.hook,
+      });
+    } else if (bookTitle || bookDescription || selectedGenre !== 'memoir') {
+      setBookOutline({
+        title: bookTitle || 'Untitled Book',
+        genre: selectedGenre,
+        hook: bookDescription,
+        targetWordCount: 50000,
+        chapters: [],
+      });
+    }
+  }, [bookOutline, bookTitle, selectedGenre, bookDescription, setBookOutline]);
+
   const handleAddIdea = () => {
     if (!newIdeaContent.trim()) return;
     addBrainstormIdea({
@@ -122,9 +187,18 @@ export default function StartStep() {
       return;
     }
 
+    // Sync state to context immediately before generation
+    syncStateToContext();
+
     setIsGenerating(true);
     try {
-      await generateFullBook(selectedGenre, bookDescription || "Generate based on brainstorm ideas");
+      // Pass title along with genre and description
+      await generateFullBook(
+        selectedGenre, 
+        bookDescription || "Generate based on brainstorm ideas",
+        undefined, // chapterCount
+        bookTitle || undefined // title
+      );
     } catch (error) {
       toast({ 
         title: "Generation Failed", 
@@ -144,10 +218,10 @@ export default function StartStep() {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-black/50 border-orange-500/20">
+      <Card className="bg-card border">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
-            <Lightbulb className="w-5 h-5 text-orange-500" />
+          <CardTitle className="flex items-center gap-2 text-foreground">
+            <Lightbulb className="w-5 h-5 text-primary" />
             Step 1: Start Your Book
           </CardTitle>
           <CardDescription>
@@ -156,7 +230,7 @@ export default function StartStep() {
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
-            <TabsList className="mb-6 bg-black/30">
+            <TabsList className="mb-6 bg-card/80">
               <TabsTrigger value="brainstorm" data-testid="tab-brainstorm">
                 <Lightbulb className="w-4 h-4 mr-2" /> Brainstorm
               </TabsTrigger>
@@ -169,20 +243,20 @@ export default function StartStep() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
-                    <Label className="text-white">Book Title (optional)</Label>
+                    <Label className="text-foreground">Book Title (optional)</Label>
                     <Input
                       value={bookTitle}
                       onChange={(e) => setBookTitle(e.target.value)}
                       placeholder="Enter your book title..."
-                      className="bg-black/30 border-orange-500/20 text-white"
+                      className="bg-card/80 border text-foreground"
                       data-testid="input-book-title"
                     />
                   </div>
 
                   <div>
-                    <Label className="text-white">Genre</Label>
+                    <Label className="text-foreground">Genre</Label>
                     <Select value={selectedGenre} onValueChange={setSelectedGenre}>
-                      <SelectTrigger className="bg-black/30 border-orange-500/20 text-white" data-testid="select-genre">
+                      <SelectTrigger className="bg-card/80 border text-foreground" data-testid="select-genre">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -196,21 +270,21 @@ export default function StartStep() {
                   </div>
 
                   <div>
-                    <Label className="text-white">Book Description</Label>
+                    <Label className="text-foreground">Book Description</Label>
                     <Textarea
                       value={bookDescription}
                       onChange={(e) => setBookDescription(e.target.value)}
                       placeholder="Describe what your book is about, who it's for, and what readers will learn..."
-                      className="min-h-[120px] bg-black/30 border-orange-500/20 text-white"
+                      className="min-h-[120px] bg-card/80 border text-foreground"
                       data-testid="textarea-book-description"
                     />
                   </div>
 
                   <div className="space-y-3 pt-2">
-                    <Label className="text-white">Add Brainstorm Ideas</Label>
+                    <Label className="text-foreground">Add Brainstorm Ideas</Label>
                     <div className="flex gap-2">
                       <Select value={newIdeaType} onValueChange={(v) => setNewIdeaType(v as typeof newIdeaType)}>
-                        <SelectTrigger className="w-[140px] bg-black/30 border-orange-500/20 text-white" data-testid="select-idea-type">
+                        <SelectTrigger className="w-[140px] bg-card/80 border text-foreground" data-testid="select-idea-type">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -225,14 +299,14 @@ export default function StartStep() {
                         value={newIdeaContent}
                         onChange={(e) => setNewIdeaContent(e.target.value)}
                         placeholder="Enter your idea..."
-                        className="flex-1 bg-black/30 border-orange-500/20 text-white"
+                        className="flex-1 bg-card/80 border text-foreground"
                         onKeyDown={(e) => e.key === 'Enter' && handleAddIdea()}
                         data-testid="input-new-idea"
                       />
                       <Button 
                         onClick={handleAddIdea} 
                         size="icon"
-                        className="bg-orange-500 hover:bg-orange-600"
+                        className="bg-primary hover:bg-primary/80"
                         data-testid="button-add-idea"
                       >
                         <Plus className="w-4 h-4" />
@@ -242,8 +316,8 @@ export default function StartStep() {
                 </div>
 
                 <div>
-                  <Label className="text-white mb-3 block">Your Ideas ({brainstormIdeas.length})</Label>
-                  <ScrollArea className="h-[350px] rounded-lg border border-orange-500/20 bg-black/30 p-3">
+                  <Label className="text-foreground mb-3 block">Your Ideas ({brainstormIdeas.length})</Label>
+                  <ScrollArea className="h-[350px] rounded-lg border border bg-card/80 p-3">
                     {brainstormIdeas.length === 0 ? (
                       <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                         <Lightbulb className="w-12 h-12 mb-3 opacity-50" />
@@ -254,17 +328,17 @@ export default function StartStep() {
                       <div className="space-y-4">
                         {Object.entries(groupedIdeas).map(([type, ideas]) => (
                           <div key={type}>
-                            <h4 className="text-xs font-semibold text-orange-400 uppercase mb-2">
+                            <h4 className="text-xs font-semibold text-primary uppercase mb-2">
                               {ideaTypes.find(t => t.value === type)?.label || type}
                             </h4>
                             <div className="space-y-2">
                               {ideas.map((idea) => (
                                 <div
                                   key={idea.id}
-                                  className="flex items-start gap-2 p-2 rounded bg-black/40 border border-orange-500/10 group"
+                                  className="flex items-start gap-2 p-2 rounded bg-card border border-primary/10 group"
                                   data-testid={`idea-${idea.id}`}
                                 >
-                                  <p className="flex-1 text-sm text-gray-200">{idea.content}</p>
+                                  <p className="flex-1 text-sm text-foreground">{idea.content}</p>
                                   <Button
                                     variant="ghost"
                                     size="icon"
@@ -285,11 +359,11 @@ export default function StartStep() {
                 </div>
               </div>
 
-              <div className="flex justify-end pt-4 border-t border-orange-500/20">
+              <div className="flex justify-end pt-4 border-t border">
                 <Button
                   onClick={handleGenerateOutline}
                   disabled={isGenerating || generationProgress.isGenerating}
-                  className="bg-orange-500 hover:bg-orange-600"
+                  className="bg-primary hover:bg-primary/80"
                   data-testid="button-generate-outline"
                 >
                   {isGenerating || generationProgress.isGenerating ? (
@@ -305,7 +379,7 @@ export default function StartStep() {
 
             <TabsContent value="upload" className="space-y-6">
               <div
-                className="border-2 border-dashed border-orange-500/30 rounded-lg p-8 text-center hover:border-orange-500/50 transition-colors cursor-pointer bg-black/30"
+                className="border-2 border-dashed border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer bg-card/80"
                 onClick={() => fileInputRef.current?.click()}
                 data-testid="upload-zone"
               >
@@ -318,8 +392,8 @@ export default function StartStep() {
                   className="hidden"
                   data-testid="input-file-upload"
                 />
-                <FileUp className="w-12 h-12 mx-auto mb-4 text-orange-500/50" />
-                <h3 className="text-lg font-semibold text-white mb-2">
+                <FileUp className="w-12 h-12 mx-auto mb-4 text-primary/50" />
+                <h3 className="text-lg font-semibold text-foreground mb-2">
                   Upload Your Manuscript
                 </h3>
                 <p className="text-muted-foreground text-sm mb-4">
@@ -332,18 +406,18 @@ export default function StartStep() {
 
               {documentImports.length > 0 && (
                 <div className="space-y-3">
-                  <Label className="text-white">Imported Documents</Label>
+                  <Label className="text-foreground">Imported Documents</Label>
                   <div className="space-y-2">
                     {documentImports.map((doc) => (
-                      <Card key={doc.id} className="bg-black/30 border-orange-500/20">
+                      <Card key={doc.id} className="bg-card/80 border">
                         <CardContent className="p-3 flex items-center justify-between">
                           <div>
-                            <p className="font-medium text-white">{doc.fileName}</p>
+                            <p className="font-medium text-foreground">{doc.fileName}</p>
                             <p className="text-xs text-muted-foreground">
                               {doc.wordCount?.toLocaleString()} words
                             </p>
                           </div>
-                          <Badge variant="secondary" className="bg-orange-500/20 text-orange-400">
+                          <Badge variant="secondary" className="bg-primary/20 text-primary">
                             {doc.fileType.split('/')[1] || 'document'}
                           </Badge>
                         </CardContent>
@@ -353,11 +427,14 @@ export default function StartStep() {
                 </div>
               )}
 
-              <div className="flex justify-end pt-4 border-t border-orange-500/20">
+              <div className="flex justify-end pt-4 border-t border">
                 <Button
-                  onClick={() => setCurrentStep('plan')}
+                  onClick={() => {
+                    syncStateToContext();
+                    setCurrentStep('plan');
+                  }}
                   disabled={documentImports.length === 0}
-                  className="bg-orange-500 hover:bg-orange-600"
+                  className="bg-primary hover:bg-primary/80"
                   data-testid="button-continue-to-plan"
                 >
                   Continue to Outline

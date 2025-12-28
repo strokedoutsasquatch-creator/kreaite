@@ -57,7 +57,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   beat: 'bg-red-500/20 text-red-300 border-red-500/30',
   melody: 'bg-pink-500/20 text-pink-300 border-pink-500/30',
   screenplay: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
-  jingle: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
+  jingle: 'bg-primary/20 text-orange-300 border',
 };
 
 interface FolderNodeProps {

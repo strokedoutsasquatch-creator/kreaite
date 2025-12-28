@@ -8,15 +8,15 @@ export default function CTASection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Card className="relative overflow-hidden bg-gradient-to-br from-primary via-secondary to-accent p-12">
           <div className="relative z-10 max-w-3xl mx-auto text-center">
-            <Zap className="h-16 w-16 text-white mx-auto mb-6" />
+            <Zap className="h-16 w-16 text-foreground mx-auto mb-6" />
             <h2
-              className="text-4xl sm:text-5xl font-black text-white mb-6 uppercase"
+              className="text-4xl sm:text-5xl font-black text-foreground mb-6 uppercase"
               data-testid="text-cta-title"
             >
               YOUR IMPOSSIBLE STARTS NOW
             </h2>
             <p
-              className="text-xl text-white/90 mb-8 leading-relaxed"
+              className="text-xl text-foreground/90 mb-8 leading-relaxed"
               data-testid="text-cta-description"
             >
               Stop accepting limitations. Join 50,000+ survivors proving that extraordinary recovery
@@ -37,7 +37,7 @@ export default function CTASection() {
               <Button
                 size="lg"
                 variant="outline"
-                className="text-lg font-bold bg-transparent border-white text-white hover:bg-white/10"
+                className="text-lg font-bold bg-transparent border-white text-foreground hover:bg-white/10"
                 data-testid="button-cta-secondary"
                 onClick={() => console.log("Access Free Resources clicked")}
               >

@@ -125,14 +125,14 @@ export default function Wearables() {
 
   if (connectionsLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -172,7 +172,7 @@ export default function Wearables() {
                     <TrendingUp className="w-4 h-4 text-green-400" />
                   </div>
                   <p className="text-gray-400 text-sm">Steps</p>
-                  <p className="text-2xl font-bold text-white">{todayStats?.steps?.toLocaleString() || 0}</p>
+                  <p className="text-2xl font-bold text-foreground">{todayStats?.steps?.toLocaleString() || 0}</p>
                   <Progress value={(todayStats?.steps || 0) / 100} className="h-1 mt-2" />
                   <p className="text-gray-500 text-xs mt-1">Goal: 10,000</p>
                 </CardContent>
@@ -185,7 +185,7 @@ export default function Wearables() {
                     <Badge className="bg-green-500/20 text-green-400 text-xs">Normal</Badge>
                   </div>
                   <p className="text-gray-400 text-sm">Heart Rate</p>
-                  <p className="text-2xl font-bold text-white">{todayStats?.heartRate || 72} BPM</p>
+                  <p className="text-2xl font-bold text-foreground">{todayStats?.heartRate || 72} BPM</p>
                   <p className="text-gray-500 text-xs mt-2">Resting average</p>
                 </CardContent>
               </Card>
@@ -193,11 +193,11 @@ export default function Wearables() {
               <Card className="bg-gray-900 border-gray-800">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-2">
-                    <Flame className="w-8 h-8 text-orange-400" />
+                    <Flame className="w-8 h-8 text-primary" />
                     <TrendingUp className="w-4 h-4 text-green-400" />
                   </div>
                   <p className="text-gray-400 text-sm">Calories</p>
-                  <p className="text-2xl font-bold text-white">{todayStats?.calories?.toLocaleString() || 0}</p>
+                  <p className="text-2xl font-bold text-foreground">{todayStats?.calories?.toLocaleString() || 0}</p>
                   <p className="text-gray-500 text-xs mt-2">Active calories burned</p>
                 </CardContent>
               </Card>
@@ -209,7 +209,7 @@ export default function Wearables() {
                     <TrendingUp className="w-4 h-4 text-green-400" />
                   </div>
                   <p className="text-gray-400 text-sm">Active Minutes</p>
-                  <p className="text-2xl font-bold text-white">{todayStats?.activeMinutes || 0}</p>
+                  <p className="text-2xl font-bold text-foreground">{todayStats?.activeMinutes || 0}</p>
                   <Progress value={(todayStats?.activeMinutes || 0) / 0.3} className="h-1 mt-2" />
                   <p className="text-gray-500 text-xs mt-1">Goal: 30 mins</p>
                 </CardContent>
@@ -222,7 +222,7 @@ export default function Wearables() {
                     <Badge className="bg-blue-500/20 text-blue-400 text-xs">Good</Badge>
                   </div>
                   <p className="text-gray-400 text-sm">Sleep</p>
-                  <p className="text-2xl font-bold text-white">{todayStats?.sleep || 7}h</p>
+                  <p className="text-2xl font-bold text-foreground">{todayStats?.sleep || 7}h</p>
                   <p className="text-gray-500 text-xs mt-2">Last night</p>
                 </CardContent>
               </Card>
@@ -231,7 +231,7 @@ export default function Wearables() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card className="bg-gray-900 border-gray-800">
                 <CardHeader>
-                  <CardTitle className="text-white">Connected Devices</CardTitle>
+                  <CardTitle className="text-foreground">Connected Devices</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {connections && connections.length > 0 ? (
@@ -246,7 +246,7 @@ export default function Wearables() {
                                 <Icon className={`w-5 h-5 ${provider?.color}`} />
                               </div>
                               <div>
-                                <p className="text-white font-medium">{connection.deviceName || provider?.name}</p>
+                                <p className="text-foreground font-medium">{connection.deviceName || provider?.name}</p>
                                 <p className="text-gray-400 text-sm">
                                   Last sync: {connection.lastSyncAt ? new Date(connection.lastSyncAt).toLocaleString() : "Never"}
                                 </p>
@@ -279,7 +279,7 @@ export default function Wearables() {
 
               <Card className="bg-gray-900 border-gray-800">
                 <CardHeader>
-                  <CardTitle className="text-white">Weekly Activity</CardTitle>
+                  <CardTitle className="text-foreground">Weekly Activity</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -324,7 +324,7 @@ export default function Wearables() {
                           </Badge>
                         )}
                       </div>
-                      <h3 className="text-xl font-semibold text-white mb-2">{provider.name}</h3>
+                      <h3 className="text-xl font-semibold text-foreground mb-2">{provider.name}</h3>
                       {connected && connection ? (
                         <div className="space-y-4">
                           <p className="text-gray-400 text-sm">
@@ -397,7 +397,7 @@ export default function Wearables() {
           <TabsContent value="history" className="space-y-6">
             <Card className="bg-gray-900 border-gray-800">
               <CardHeader>
-                <CardTitle className="text-white">Recent Synced Data</CardTitle>
+                <CardTitle className="text-foreground">Recent Synced Data</CardTitle>
               </CardHeader>
               <CardContent>
                 {metricsLoading ? (
@@ -412,16 +412,16 @@ export default function Wearables() {
                           {metric.metricType === "steps" && <Footprints className="w-5 h-5 text-blue-400" />}
                           {metric.metricType === "heart_rate" && <Heart className="w-5 h-5 text-red-400" />}
                           {metric.metricType === "sleep" && <Moon className="w-5 h-5 text-purple-400" />}
-                          {metric.metricType === "calories" && <Flame className="w-5 h-5 text-orange-400" />}
+                          {metric.metricType === "calories" && <Flame className="w-5 h-5 text-primary" />}
                           {metric.metricType === "active_minutes" && <Zap className="w-5 h-5 text-yellow-400" />}
                           <div>
-                            <p className="text-white capitalize">{metric.metricType.replace("_", " ")}</p>
+                            <p className="text-foreground capitalize">{metric.metricType.replace("_", " ")}</p>
                             <p className="text-gray-400 text-sm">
                               {new Date(metric.recordedAt).toLocaleString()}
                             </p>
                           </div>
                         </div>
-                        <p className="text-white font-medium">
+                        <p className="text-foreground font-medium">
                           {metric.value.toLocaleString()} {metric.unit}
                         </p>
                       </div>

@@ -98,8 +98,8 @@ function StatCard({
               </div>
             )}
           </div>
-          <div className="p-3 rounded-full bg-orange-500/10">
-            <Icon className="w-5 h-5 text-orange-500" />
+          <div className="p-3 rounded-full bg-primary/10">
+            <Icon className="w-5 h-5 text-primary" />
           </div>
         </div>
       </CardContent>
@@ -122,7 +122,7 @@ function BookPerformanceCard({ book }: { book: BookWithStats }) {
                 className="w-full h-full object-cover rounded"
               />
             ) : (
-              <BookOpen className="w-8 h-8 text-orange-500/50" />
+              <BookOpen className="w-8 h-8 text-primary/50" />
             )}
           </div>
           
@@ -235,7 +235,7 @@ export default function AuthorDashboard() {
         <main className="flex-1 container mx-auto px-4 py-8 flex items-center justify-center">
           <Card className="max-w-md w-full">
             <CardContent className="p-8 text-center">
-              <BookOpen className="w-16 h-16 mx-auto text-orange-500/50 mb-4" />
+              <BookOpen className="w-16 h-16 mx-auto text-primary/50 mb-4" />
               <h2 className="text-xl font-semibold mb-2">Sign In Required</h2>
               <p className="text-muted-foreground mb-4">
                 Please sign in to access your author dashboard.
@@ -338,7 +338,7 @@ export default function AuthorDashboard() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5 text-orange-500" />
+                      <TrendingUp className="w-5 h-5 text-primary" />
                       Top Performing Books
                     </CardTitle>
                   </CardHeader>
@@ -368,7 +368,7 @@ export default function AuthorDashboard() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Wallet className="w-5 h-5 text-orange-500" />
+                      <Wallet className="w-5 h-5 text-primary" />
                       Earnings Summary
                     </CardTitle>
                   </CardHeader>
@@ -406,7 +406,7 @@ export default function AuthorDashboard() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Star className="w-5 h-5 text-orange-500" />
+                      <Star className="w-5 h-5 text-primary" />
                       Recent Reviews
                     </CardTitle>
                   </CardHeader>

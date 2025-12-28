@@ -170,8 +170,8 @@ const calloutTemplates = {
     label: "Warning",
     description: "Important caution or alert",
     color: "orange",
-    html: `<div class="callout callout-warning border-l-4 border-orange-500 bg-orange-500/10 dark:bg-orange-500/20 p-4 my-4 rounded">
-  <p class="flex items-center gap-2 font-semibold text-orange-600 dark:text-orange-400 mb-2">
+    html: `<div class="callout callout-warning border-l-4 border-primary bg-primary/10 dark:bg-primary/20 p-4 my-4 rounded">
+  <p class="flex items-center gap-2 font-semibold text-primary dark:text-primary mb-2">
     <strong>[WARNING]</strong>
   </p>
   <p class="text-foreground">Enter your warning message here...</p>
@@ -1114,7 +1114,7 @@ export default function ToolPanel({ projectId, onInsertContent, manuscriptConten
           <TabsList className="grid grid-cols-3 h-auto bg-zinc-700 p-1 rounded-lg w-full">
             <TabsTrigger 
               value="create" 
-              className="flex items-center justify-center gap-2 py-3 px-2 text-white data-[state=active]:bg-primary data-[state=active]:text-white hover:bg-zinc-600 text-sm font-medium"
+              className="flex items-center justify-center gap-2 py-3 px-2 text-foreground data-[state=active]:bg-primary data-[state=active]:text-foreground hover:bg-zinc-600 text-sm font-medium"
               data-testid="tab-create"
             >
               <Wand2 className="w-4 h-4" />
@@ -1122,7 +1122,7 @@ export default function ToolPanel({ projectId, onInsertContent, manuscriptConten
             </TabsTrigger>
             <TabsTrigger 
               value="library" 
-              className="flex items-center justify-center gap-2 py-3 px-2 text-white data-[state=active]:bg-primary data-[state=active]:text-white hover:bg-zinc-600 text-sm font-medium"
+              className="flex items-center justify-center gap-2 py-3 px-2 text-foreground data-[state=active]:bg-primary data-[state=active]:text-foreground hover:bg-zinc-600 text-sm font-medium"
               data-testid="tab-library"
             >
               <FolderOpen className="w-4 h-4" />
@@ -1130,7 +1130,7 @@ export default function ToolPanel({ projectId, onInsertContent, manuscriptConten
             </TabsTrigger>
             <TabsTrigger 
               value="format" 
-              className="flex items-center justify-center gap-2 py-3 px-2 text-white data-[state=active]:bg-primary data-[state=active]:text-white hover:bg-zinc-600 text-sm font-medium"
+              className="flex items-center justify-center gap-2 py-3 px-2 text-foreground data-[state=active]:bg-primary data-[state=active]:text-foreground hover:bg-zinc-600 text-sm font-medium"
               data-testid="tab-format"
             >
               <Settings className="w-4 h-4" />
@@ -1169,7 +1169,7 @@ export default function ToolPanel({ projectId, onInsertContent, manuscriptConten
                               <div
                                 className={`rounded-lg px-3 py-2 text-sm ${
                                   msg.role === 'user'
-                                    ? 'bg-primary text-white'
+                                    ? 'bg-primary text-foreground'
                                     : 'bg-white border border-zinc-200 text-zinc-900'
                                 }`}
                               >
@@ -1707,12 +1707,12 @@ export default function ToolPanel({ projectId, onInsertContent, manuscriptConten
                                   </div>
 
                                   {img.analysis && (
-                                    <div className="bg-orange-50 border border-orange-200 rounded p-2">
-                                      <p className="text-xs font-medium text-orange-800 flex items-center gap-1 mb-1">
+                                    <div className="bg-primary/10 border border-primary/30 rounded p-2">
+                                      <p className="text-xs font-medium text-primary flex items-center gap-1 mb-1">
                                         <Lightbulb className="w-3 h-3" />
                                         AI Recommendation
                                       </p>
-                                      <p className="text-xs text-orange-700">{img.analysis.placement.recommendation}</p>
+                                      <p className="text-xs text-primary/80">{img.analysis.placement.recommendation}</p>
                                     </div>
                                   )}
 
@@ -2669,7 +2669,7 @@ export default function ToolPanel({ projectId, onInsertContent, manuscriptConten
                               {complianceResults.hasTitle ? (
                                 <CheckSquare className="w-3 h-3 text-green-600" />
                               ) : (
-                                <AlertTriangle className="w-3 h-3 text-orange-500" />
+                                <AlertTriangle className="w-3 h-3 text-primary" />
                               )}
                               <span>Title page (H1)</span>
                             </div>
@@ -2677,7 +2677,7 @@ export default function ToolPanel({ projectId, onInsertContent, manuscriptConten
                               {complianceResults.hasCopyright ? (
                                 <CheckSquare className="w-3 h-3 text-green-600" />
                               ) : (
-                                <AlertTriangle className="w-3 h-3 text-orange-500" />
+                                <AlertTriangle className="w-3 h-3 text-primary" />
                               )}
                               <span>Copyright page</span>
                             </div>
@@ -2685,7 +2685,7 @@ export default function ToolPanel({ projectId, onInsertContent, manuscriptConten
                               {complianceResults.hasToc ? (
                                 <CheckSquare className="w-3 h-3 text-green-600" />
                               ) : (
-                                <AlertTriangle className="w-3 h-3 text-orange-500" />
+                                <AlertTriangle className="w-3 h-3 text-primary" />
                               )}
                               <span>Table of Contents</span>
                             </div>
@@ -2693,7 +2693,7 @@ export default function ToolPanel({ projectId, onInsertContent, manuscriptConten
                               {complianceResults.headingCount >= 3 ? (
                                 <CheckSquare className="w-3 h-3 text-green-600" />
                               ) : (
-                                <AlertTriangle className="w-3 h-3 text-orange-500" />
+                                <AlertTriangle className="w-3 h-3 text-primary" />
                               )}
                               <span>Chapter structure ({complianceResults.headingCount} headings)</span>
                             </div>

@@ -99,7 +99,7 @@ function AnalyticsSkeleton() {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {[1, 2, 3].map((i) => (
-          <Card key={i} className="bg-black border-gray-800">
+          <Card key={i} className="bg-background border-gray-800">
             <CardHeader>
               <Skeleton className="h-5 w-32" />
               <Skeleton className="h-4 w-24" />
@@ -123,7 +123,7 @@ function CreditUsageCard({
 }) {
   if (isLoading) {
     return (
-      <Card className="bg-black border-gray-800" data-testid="card-credit-usage-loading">
+      <Card className="bg-background border-gray-800" data-testid="card-credit-usage-loading">
         <CardHeader>
           <Skeleton className="h-5 w-32" />
           <Skeleton className="h-4 w-24" />
@@ -140,10 +140,10 @@ function CreditUsageCard({
   const featureBreakdown = data?.featureBreakdown || [];
 
   return (
-    <Card className="bg-black border-gray-800" data-testid="card-credit-usage">
+    <Card className="bg-background border-gray-800" data-testid="card-credit-usage">
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
         <div>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-foreground flex items-center gap-2">
             <Coins className="h-5 w-5 text-[#FF6B35]" />
             Credit Usage
           </CardTitle>
@@ -152,7 +152,7 @@ function CreditUsageCard({
           </CardDescription>
         </div>
         <div className="text-right">
-          <p className="text-3xl font-bold text-white" data-testid="text-total-credits">
+          <p className="text-3xl font-bold text-foreground" data-testid="text-total-credits">
             {totalCredits.toLocaleString()}
           </p>
           <p className="text-sm text-gray-400">credits used</p>
@@ -164,7 +164,7 @@ function CreditUsageCard({
             <TabsTrigger
               value="chart"
               data-testid="tab-credit-chart"
-              className="data-[state=active]:bg-[#FF6B35] data-[state=active]:text-white"
+              className="data-[state=active]:bg-[#FF6B35] data-[state=active]:text-foreground"
             >
               <TrendingUp className="h-4 w-4 mr-2" />
               Trend
@@ -172,7 +172,7 @@ function CreditUsageCard({
             <TabsTrigger
               value="breakdown"
               data-testid="tab-credit-breakdown"
-              className="data-[state=active]:bg-[#FF6B35] data-[state=active]:text-white"
+              className="data-[state=active]:bg-[#FF6B35] data-[state=active]:text-foreground"
             >
               <BarChart3 className="h-4 w-4 mr-2" />
               Breakdown
@@ -271,7 +271,7 @@ function StudioUsageCard({
 }) {
   if (isLoading) {
     return (
-      <Card className="bg-black border-gray-800" data-testid="card-studio-usage-loading">
+      <Card className="bg-background border-gray-800" data-testid="card-studio-usage-loading">
         <CardHeader>
           <Skeleton className="h-5 w-32" />
           <Skeleton className="h-4 w-24" />
@@ -288,10 +288,10 @@ function StudioUsageCard({
   const totalTokens = data?.totalTokens || 0;
 
   return (
-    <Card className="bg-black border-gray-800" data-testid="card-studio-usage">
+    <Card className="bg-background border-gray-800" data-testid="card-studio-usage">
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
         <div>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-foreground flex items-center gap-2">
             <Activity className="h-5 w-5 text-[#FF6B35]" />
             Studio Usage
           </CardTitle>
@@ -305,7 +305,7 @@ function StudioUsageCard({
           <div className="bg-gray-900 rounded-lg p-3">
             <p className="text-sm text-gray-400">Total Generations</p>
             <p
-              className="text-2xl font-bold text-white"
+              className="text-2xl font-bold text-foreground"
               data-testid="text-total-generations"
             >
               {totalGenerations.toLocaleString()}
@@ -314,7 +314,7 @@ function StudioUsageCard({
           <div className="bg-gray-900 rounded-lg p-3">
             <p className="text-sm text-gray-400">Tokens Used</p>
             <p
-              className="text-2xl font-bold text-white"
+              className="text-2xl font-bold text-foreground"
               data-testid="text-total-tokens"
             >
               {totalTokens.toLocaleString()}
@@ -380,7 +380,7 @@ function CreatorEarningsCard() {
 
   if (isLoading) {
     return (
-      <Card className="bg-black border-gray-800" data-testid="card-creator-earnings-loading">
+      <Card className="bg-background border-gray-800" data-testid="card-creator-earnings-loading">
         <CardHeader>
           <Skeleton className="h-5 w-32" />
           <Skeleton className="h-4 w-24" />
@@ -398,10 +398,10 @@ function CreatorEarningsCard() {
   const payoutHistory = earnings?.payoutHistory || [];
 
   return (
-    <Card className="bg-black border-gray-800" data-testid="card-creator-earnings">
+    <Card className="bg-background border-gray-800" data-testid="card-creator-earnings">
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
         <div>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-foreground flex items-center gap-2">
             <DollarSign className="h-5 w-5 text-[#FF6B35]" />
             Creator Earnings
           </CardTitle>
@@ -554,11 +554,11 @@ export default function AnalyticsDashboard() {
   }
 
   return (
-    <div className="bg-black min-h-screen p-4 sm:p-6 lg:p-8" data-testid="analytics-dashboard">
+    <div className="bg-background min-h-screen p-4 sm:p-6 lg:p-8" data-testid="analytics-dashboard">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
               Analytics Dashboard
             </h1>
             <p className="text-gray-400 mt-1">
@@ -570,7 +570,7 @@ export default function AnalyticsDashboard() {
             onValueChange={setTimePeriod}
           >
             <SelectTrigger
-              className="w-40 bg-gray-900 border-gray-700 text-white"
+              className="w-40 bg-gray-900 border-gray-700 text-foreground"
               data-testid="select-time-period"
             >
               <SelectValue placeholder="Select period" />

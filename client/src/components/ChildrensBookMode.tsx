@@ -524,9 +524,9 @@ export default function ChildrensBookMode({ onStoryGenerated, onExport }: Childr
   const editingCharacter = characters.find(c => c.id === editingCharacterId);
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Progress Steps */}
-      <div className="border-b border-orange-500/20 bg-black/50 sticky top-16 z-40">
+      <div className="border-b border bg-card sticky top-16 z-40">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-2">
             {steps.map((s, i) => (
@@ -561,10 +561,10 @@ export default function ChildrensBookMode({ onStoryGenerated, onExport }: Childr
             </div>
 
             {/* Age Band Selection */}
-            <Card className="bg-black border-orange-500/20">
+            <Card className="bg-background border">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Baby className="w-5 h-5 text-orange-500" />
+                  <Baby className="w-5 h-5 text-primary" />
                   Target Age Group
                 </CardTitle>
                 <CardDescription>Choose who your book is for</CardDescription>
@@ -582,15 +582,15 @@ export default function ChildrensBookMode({ onStoryGenerated, onExport }: Childr
                       }}
                       className={`p-4 rounded-xl border-2 transition-all text-left ${
                         ageBand === option.value
-                          ? "border-orange-500 bg-orange-500/10"
+                          ? "border-orange-500 bg-primary/10"
                           : "border-border hover:border-orange-500/50"
                       }`}
                       data-testid={`age-band-${option.value}`}
                     >
-                      <option.icon className={`w-8 h-8 mb-2 ${ageBand === option.value ? "text-orange-500" : "text-muted-foreground"}`} />
+                      <option.icon className={`w-8 h-8 mb-2 ${ageBand === option.value ? "text-primary" : "text-muted-foreground"}`} />
                       <div className="font-semibold">{option.label}</div>
                       <div className="text-xs text-muted-foreground mt-1">{option.description}</div>
-                      <div className="text-xs text-orange-500 mt-2">{option.wordRange}</div>
+                      <div className="text-xs text-primary mt-2">{option.wordRange}</div>
                     </button>
                   ))}
                 </div>
@@ -598,10 +598,10 @@ export default function ChildrensBookMode({ onStoryGenerated, onExport }: Childr
             </Card>
 
             {/* Theme Selection */}
-            <Card className="bg-black border-orange-500/20">
+            <Card className="bg-background border">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Heart className="w-5 h-5 text-orange-500" />
+                  <Heart className="w-5 h-5 text-primary" />
                   Story Themes & Morals
                 </CardTitle>
                 <CardDescription>Select up to 3 themes for your story</CardDescription>
@@ -625,8 +625,8 @@ export default function ChildrensBookMode({ onStoryGenerated, onExport }: Childr
                   ))}
                 </div>
                 {selectedThemes.length > 0 && (
-                  <div className="mt-4 p-3 bg-orange-500/10 rounded-lg">
-                    <span className="text-sm text-orange-400">Selected: </span>
+                  <div className="mt-4 p-3 bg-primary/10 rounded-lg">
+                    <span className="text-sm text-primary">Selected: </span>
                     <span className="text-sm">{selectedThemes.map(t => themeOptions.find(o => o.value === t)?.label).join(", ")}</span>
                   </div>
                 )}
@@ -634,10 +634,10 @@ export default function ChildrensBookMode({ onStoryGenerated, onExport }: Childr
             </Card>
 
             {/* Illustration Style */}
-            <Card className="bg-black border-orange-500/20">
+            <Card className="bg-background border">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Palette className="w-5 h-5 text-orange-500" />
+                  <Palette className="w-5 h-5 text-primary" />
                   Illustration Style
                 </CardTitle>
                 <CardDescription>Choose the visual style for your book</CardDescription>
@@ -650,7 +650,7 @@ export default function ChildrensBookMode({ onStoryGenerated, onExport }: Childr
                       onClick={() => setIllustrationStyle(style.value)}
                       className={`p-3 rounded-lg border transition-all text-left ${
                         illustrationStyle === style.value
-                          ? "border-orange-500 bg-orange-500/10"
+                          ? "border-orange-500 bg-primary/10"
                           : "border-border hover:border-orange-500/50"
                       }`}
                       data-testid={`style-${style.value}`}
@@ -664,10 +664,10 @@ export default function ChildrensBookMode({ onStoryGenerated, onExport }: Childr
             </Card>
 
             {/* Educational Tags (Optional) */}
-            <Card className="bg-black border-orange-500/20">
+            <Card className="bg-background border">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <GraduationCap className="w-5 h-5 text-orange-500" />
+                  <GraduationCap className="w-5 h-5 text-primary" />
                   Educational Focus (Optional)
                 </CardTitle>
                 <CardDescription>Add educational elements to your story</CardDescription>
@@ -680,7 +680,7 @@ export default function ChildrensBookMode({ onStoryGenerated, onExport }: Childr
                       onClick={() => toggleEducationalTag(tag.value)}
                       className={`cursor-pointer ${
                         selectedEducationalTags.includes(tag.value)
-                          ? "bg-blue-500 text-white hover:bg-blue-600"
+                          ? "bg-blue-500 text-foreground hover:bg-blue-600"
                           : "bg-white/5 text-muted-foreground hover:bg-white/10"
                       }`}
                       data-testid={`edu-tag-${tag.value}`}
@@ -693,10 +693,10 @@ export default function ChildrensBookMode({ onStoryGenerated, onExport }: Childr
             </Card>
 
             {/* Writing Style */}
-            <Card className="bg-black border-orange-500/20">
+            <Card className="bg-background border">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Music className="w-5 h-5 text-orange-500" />
+                  <Music className="w-5 h-5 text-primary" />
                   Writing Style
                 </CardTitle>
               </CardHeader>
@@ -758,7 +758,7 @@ export default function ChildrensBookMode({ onStoryGenerated, onExport }: Childr
 
             <div className="grid lg:grid-cols-3 gap-6">
               {/* Character List */}
-              <Card className="bg-black border-orange-500/20">
+              <Card className="bg-background border">
                 <CardHeader>
                   <CardTitle>Characters</CardTitle>
                 </CardHeader>
@@ -769,13 +769,13 @@ export default function ChildrensBookMode({ onStoryGenerated, onExport }: Childr
                       onClick={() => setEditingCharacterId(char.id || null)}
                       className={`w-full p-3 rounded-lg text-left transition-all flex items-center gap-3 ${
                         editingCharacterId === char.id
-                          ? "bg-orange-500/20 border border-orange-500"
+                          ? "bg-primary/20 border border-orange-500"
                           : "bg-white/5 hover:bg-white/10"
                       }`}
                       data-testid={`character-${char.id}`}
                     >
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold ${
-                        index === 0 ? "bg-orange-500 text-black" : "bg-blue-500 text-white"
+                        index === 0 ? "bg-orange-500 text-black" : "bg-blue-500 text-foreground"
                       }`}>
                         {char.name?.[0] || "?"}
                       </div>
@@ -792,7 +792,7 @@ export default function ChildrensBookMode({ onStoryGenerated, onExport }: Childr
               </Card>
 
               {/* Character Editor */}
-              <Card className="bg-black border-orange-500/20 lg:col-span-2">
+              <Card className="bg-background border lg:col-span-2">
                 <CardHeader>
                   <CardTitle>Character Details</CardTitle>
                   <CardDescription>Define your character's appearance and personality</CardDescription>
@@ -969,10 +969,10 @@ export default function ChildrensBookMode({ onStoryGenerated, onExport }: Childr
             </div>
 
             {/* Story Premise */}
-            <Card className="bg-black border-orange-500/20">
+            <Card className="bg-background border">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-orange-500" />
+                  <Sparkles className="w-5 h-5 text-primary" />
                   Story Premise
                 </CardTitle>
                 <CardDescription>What's your story about?</CardDescription>
@@ -1082,7 +1082,7 @@ export default function ChildrensBookMode({ onStoryGenerated, onExport }: Childr
             <ScrollArea className="h-[600px]">
               <div className="space-y-4">
                 {spreads.map((spread, index) => (
-                  <Card key={spread.id} className="bg-black border-border">
+                  <Card key={spread.id} className="bg-background border-border">
                     <CardHeader className="py-3">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-lg">Page {spread.pageNumber || index + 1}</CardTitle>
@@ -1173,7 +1173,7 @@ export default function ChildrensBookMode({ onStoryGenerated, onExport }: Childr
               <p className="text-muted-foreground">Create beautiful artwork for each page</p>
             </div>
 
-            <Card className="bg-black border-orange-500/20">
+            <Card className="bg-background border">
               <CardHeader>
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div>
@@ -1199,7 +1199,7 @@ export default function ChildrensBookMode({ onStoryGenerated, onExport }: Childr
                   <div className="mt-4">
                     <div className="flex items-center justify-between text-sm mb-2">
                       <span className="text-muted-foreground">Batch Progress</span>
-                      <span className="text-orange-500">{Math.round(generationProgress)}%</span>
+                      <span className="text-primary">{Math.round(generationProgress)}%</span>
                     </div>
                     <Progress value={generationProgress} className="h-2" />
                   </div>
@@ -1212,9 +1212,9 @@ export default function ChildrensBookMode({ onStoryGenerated, onExport }: Childr
                     return (
                       <Card key={spread.id} className={`bg-white/5 border-border ${isGenerating ? "ring-2 ring-orange-500" : ""}`}>
                         <CardContent className="p-4">
-                          <div className="aspect-[4/3] bg-black/50 rounded-lg mb-3 flex items-center justify-center border border-dashed border-border relative overflow-hidden">
+                          <div className="aspect-[4/3] bg-card rounded-lg mb-3 flex items-center justify-center border border-dashed border-border relative overflow-hidden">
                             {isGenerating ? (
-                              <div className="text-center text-orange-500">
+                              <div className="text-center text-primary">
                                 <Loader2 className="w-8 h-8 mx-auto mb-2 animate-spin" />
                                 <div className="text-xs">Generating...</div>
                               </div>
@@ -1227,7 +1227,7 @@ export default function ChildrensBookMode({ onStoryGenerated, onExport }: Childr
                               </div>
                             )}
                             {spread.illustrationUrl && (
-                              <Badge className="absolute top-2 right-2 bg-green-500/80 text-white">
+                              <Badge className="absolute top-2 right-2 bg-green-500/80 text-foreground">
                                 <Check className="w-3 h-3" />
                               </Badge>
                             )}
@@ -1266,7 +1266,7 @@ export default function ChildrensBookMode({ onStoryGenerated, onExport }: Childr
                 <div className="text-muted-foreground">Generated</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-orange-500">{spreads.filter(s => s.illustrationPrompt && !s.illustrationUrl).length}</div>
+                <div className="text-2xl font-bold text-primary">{spreads.filter(s => s.illustrationPrompt && !s.illustrationUrl).length}</div>
                 <div className="text-muted-foreground">Pending</div>
               </div>
               <div className="text-center">
@@ -1301,7 +1301,7 @@ export default function ChildrensBookMode({ onStoryGenerated, onExport }: Childr
             </div>
 
             {/* Flipbook Preview */}
-            <Card className="bg-black border-orange-500/20">
+            <Card className="bg-background border">
               <CardContent className="p-8">
                 <div className="max-w-2xl mx-auto">
                   {/* Page Display */}
@@ -1368,7 +1368,7 @@ export default function ChildrensBookMode({ onStoryGenerated, onExport }: Childr
             </Card>
 
             {/* Export Options */}
-            <Card className="bg-black border-orange-500/20">
+            <Card className="bg-background border">
               <CardHeader>
                 <CardTitle>Export Your Book</CardTitle>
                 <CardDescription>Choose your format and publish</CardDescription>

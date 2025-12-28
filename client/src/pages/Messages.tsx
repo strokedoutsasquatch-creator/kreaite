@@ -174,7 +174,7 @@ export default function Messages() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-7xl mx-auto h-screen flex flex-col">
         <div className="flex items-center justify-between p-4 border-b border-gray-800">
           <h1 className="text-2xl font-bold" data-testid="text-messages-title">Messages</h1>
@@ -187,7 +187,7 @@ export default function Messages() {
             </DialogTrigger>
             <DialogContent className="bg-gray-900 border-gray-800">
               <DialogHeader>
-                <DialogTitle className="text-white">Start a Conversation</DialogTitle>
+                <DialogTitle className="text-foreground">Start a Conversation</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <Input
@@ -209,7 +209,7 @@ export default function Messages() {
                           </AvatarFallback>
                         </Avatar>
                         <div className="text-left">
-                          <p className="text-white font-medium">{u.firstName} {u.lastName}</p>
+                          <p className="text-foreground font-medium">{u.firstName} {u.lastName}</p>
                           <p className="text-gray-400 text-sm">{u.email}</p>
                         </div>
                       </button>
@@ -278,7 +278,7 @@ export default function Messages() {
                         </div>
                         <div className="flex-1 min-w-0 text-left">
                           <div className="flex items-center justify-between">
-                            <p className="text-white font-medium truncate">
+                            <p className="text-foreground font-medium truncate">
                               {getConversationName(conv)}
                             </p>
                             <span className="text-gray-500 text-xs">
@@ -290,7 +290,7 @@ export default function Messages() {
                               {conv.lastMessage?.content || "No messages yet"}
                             </p>
                             {(conv.unreadCount || 0) > 0 && (
-                              <Badge className="bg-primary text-white text-xs px-1.5 py-0.5 min-w-[20px]">
+                              <Badge className="bg-primary text-foreground text-xs px-1.5 py-0.5 min-w-[20px]">
                                 {conv.unreadCount}
                               </Badge>
                             )}
@@ -327,7 +327,7 @@ export default function Messages() {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="text-white font-medium">
+                      <p className="text-foreground font-medium">
                         {getConversationName(selectedConversation)}
                       </p>
                       <p className="text-gray-400 text-sm">
@@ -377,8 +377,8 @@ export default function Messages() {
                                 <div
                                   className={`rounded-2xl px-4 py-2 ${
                                     isOwn
-                                      ? "bg-primary text-white rounded-br-md"
-                                      : "bg-gray-800 text-white rounded-bl-md"
+                                      ? "bg-primary text-foreground rounded-br-md"
+                                      : "bg-gray-800 text-foreground rounded-bl-md"
                                   }`}
                                 >
                                   {message.content}

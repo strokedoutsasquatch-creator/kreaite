@@ -200,13 +200,13 @@ export default function MusicSandbox() {
   const currentTypeInfo = PROJECT_TYPES.find(t => t.value === projectType);
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="flex h-screen">
         <aside className="w-72 border-r border-gray-800 bg-gray-950 flex flex-col">
           <div className="p-4 border-b border-gray-800">
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-lg font-semibold flex items-center gap-2">
-                <Music className="w-5 h-5 text-orange-500" />
+                <Music className="w-5 h-5 text-primary" />
                 Music Sandbox
               </h2>
               <Button
@@ -248,11 +248,11 @@ export default function MusicSandbox() {
                         data-testid={`button-project-${project.id}`}
                         className={`w-full flex items-center gap-3 p-3 rounded-md text-left transition-colors hover-elevate ${
                           selectedProjectId === project.id
-                            ? "bg-orange-500/10 border border-orange-500/30"
+                            ? "bg-primary/10 border border"
                             : "hover:bg-gray-800"
                         }`}
                       >
-                        <TypeIcon className={`w-4 h-4 ${selectedProjectId === project.id ? "text-orange-500" : "text-gray-400"}`} />
+                        <TypeIcon className={`w-4 h-4 ${selectedProjectId === project.id ? "text-primary" : "text-gray-400"}`} />
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm truncate">{project.title}</p>
                           <p className="text-xs text-gray-500 capitalize">{project.projectType}</p>
@@ -300,7 +300,7 @@ export default function MusicSandbox() {
                       <TabsTrigger
                         key={type.value}
                         value={type.value}
-                        className="data-[state=active]:bg-orange-500 data-[state=active]:text-white"
+                        className="data-[state=active]:bg-orange-500 data-[state=active]:text-foreground"
                         data-testid={`tab-${type.value}`}
                       >
                         <Icon className="w-4 h-4 mr-2" />
@@ -315,7 +315,7 @@ export default function MusicSandbox() {
                     <Card className="bg-gray-950 border-gray-800">
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                          <type.icon className="w-5 h-5 text-orange-500" />
+                          <type.icon className="w-5 h-5 text-primary" />
                           {type.label} Settings
                         </CardTitle>
                       </CardHeader>
@@ -412,7 +412,7 @@ export default function MusicSandbox() {
               <Card className="bg-gray-950 border-gray-800">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-orange-500" />
+                    <Sparkles className="w-5 h-5 text-primary" />
                     AI Generation
                   </CardTitle>
                 </CardHeader>
@@ -422,7 +422,7 @@ export default function MusicSandbox() {
                       onClick={() => generateBeatMutation.mutate()}
                       disabled={generateBeatMutation.isPending}
                       variant="outline"
-                      className="border-orange-500/50 hover:bg-orange-500/10"
+                      className="border-orange-500/50 hover:bg-primary/10"
                       data-testid="button-generate-beat"
                     >
                       {generateBeatMutation.isPending ? (
@@ -437,7 +437,7 @@ export default function MusicSandbox() {
                       onClick={() => generateMelodyMutation.mutate()}
                       disabled={generateMelodyMutation.isPending}
                       variant="outline"
-                      className="border-orange-500/50 hover:bg-orange-500/10"
+                      className="border-orange-500/50 hover:bg-primary/10"
                       data-testid="button-generate-melody"
                     >
                       {generateMelodyMutation.isPending ? (
@@ -452,7 +452,7 @@ export default function MusicSandbox() {
                       onClick={() => lyricsToMusicMutation.mutate()}
                       disabled={lyricsToMusicMutation.isPending || !lyrics.trim()}
                       variant="outline"
-                      className="border-orange-500/50 hover:bg-orange-500/10"
+                      className="border-orange-500/50 hover:bg-primary/10"
                       data-testid="button-lyrics-to-music"
                     >
                       {lyricsToMusicMutation.isPending ? (
@@ -470,7 +470,7 @@ export default function MusicSandbox() {
                 <Card className="bg-gray-950 border-gray-800">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <FileAudio className="w-5 h-5 text-orange-500" />
+                      <FileAudio className="w-5 h-5 text-primary" />
                       Generated Output
                     </CardTitle>
                   </CardHeader>

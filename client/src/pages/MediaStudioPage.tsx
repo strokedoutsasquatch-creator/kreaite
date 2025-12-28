@@ -5,7 +5,7 @@ export default function MediaStudioPage() {
   const [, setLocation] = useLocation();
   
   return (
-    <div className="h-screen w-full bg-black">
+    <div className="h-screen w-full bg-background">
       <MediaStudio 
         onClose={() => setLocation('/')}
         onSave={(data) => {

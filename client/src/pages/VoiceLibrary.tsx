@@ -103,7 +103,7 @@ export default function VoiceLibrary() {
   const voices = (voicesData as any)?.voices || [];
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <CreatorHeader />
       
       <main className="container mx-auto px-4 py-8">
@@ -114,26 +114,26 @@ export default function VoiceLibrary() {
             </Button>
           </Link>
           <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600">
-            <Mic2 className="w-8 h-8 text-white" />
+            <Mic2 className="w-8 h-8 text-foreground" />
           </div>
           <div>
             <h1 className="text-3xl font-bold">Voice Cloning Library</h1>
             <p className="text-zinc-400">Create and manage reusable AI voices</p>
           </div>
-          <Badge className="ml-auto bg-orange-500/20 text-orange-400 border-orange-500/30">
+          <Badge className="ml-auto bg-primary/20 text-primary border">
             <Sparkles className="w-3 h-3 mr-1" /> Ultra-Premium
           </Badge>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-zinc-900 border border-zinc-800">
-            <TabsTrigger value="library" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400">
+            <TabsTrigger value="library" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
               <Mic2 className="w-4 h-4 mr-2" /> My Voices
             </TabsTrigger>
-            <TabsTrigger value="create" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400">
+            <TabsTrigger value="create" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
               <Plus className="w-4 h-4 mr-2" /> Create Voice
             </TabsTrigger>
-            <TabsTrigger value="community" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400">
+            <TabsTrigger value="community" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
               <User className="w-4 h-4 mr-2" /> Community
             </TabsTrigger>
           </TabsList>
@@ -145,8 +145,8 @@ export default function VoiceLibrary() {
                   <Card key={voice.id} className="bg-zinc-900/50 border-zinc-800">
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
-                        <div className="p-2 rounded-lg bg-orange-500/20">
-                          <Mic2 className="w-5 h-5 text-orange-400" />
+                        <div className="p-2 rounded-lg bg-primary/20">
+                          <Mic2 className="w-5 h-5 text-primary" />
                         </div>
                         <div className="flex gap-2">
                           {voice.isPublic && (
@@ -214,7 +214,7 @@ export default function VoiceLibrary() {
               <Card className="bg-zinc-900/50 border-zinc-800">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Wand2 className="w-5 h-5 text-orange-400" />
+                    <Wand2 className="w-5 h-5 text-primary" />
                     Voice Details
                   </CardTitle>
                 </CardHeader>
@@ -262,7 +262,7 @@ export default function VoiceLibrary() {
               <Card className="bg-zinc-900/50 border-zinc-800">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Upload className="w-5 h-5 text-orange-400" />
+                    <Upload className="w-5 h-5 text-primary" />
                     Voice Sample
                   </CardTitle>
                   <CardDescription>Record or upload a voice sample</CardDescription>
@@ -330,7 +330,7 @@ export default function VoiceLibrary() {
                     {(publicVoices as any).voices.map((voice: VoiceClone) => (
                       <div key={voice.id} className="p-4 bg-zinc-800/50 rounded-lg">
                         <div className="flex items-center gap-3 mb-2">
-                          <Mic2 className="w-5 h-5 text-orange-400" />
+                          <Mic2 className="w-5 h-5 text-primary" />
                           <span className="font-medium">{voice.name}</span>
                         </div>
                         <p className="text-sm text-zinc-400 mb-3">{voice.description}</p>

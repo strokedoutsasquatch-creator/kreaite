@@ -3,7 +3,7 @@ import { PodcastStudio } from "@/features/podcast-studio/PodcastStudio";
 
 export default function PodcastStudioPage() {
   return (
-    <div className="min-h-screen bg-black" data-testid="page-podcast-studio">
+    <div className="min-h-screen bg-background" data-testid="page-podcast-studio">
       <CreatorHeader />
       <PodcastStudio />
     </div>

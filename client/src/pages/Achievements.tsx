@@ -33,7 +33,7 @@ const categoryColors: Record<string, string> = {
   emotional: "text-pink-400",
   cognitive: "text-blue-400",
   social: "text-purple-400",
-  streak: "text-orange-400",
+  streak: "text-primary",
 };
 
 const categoryBgColors: Record<string, string> = {
@@ -41,7 +41,7 @@ const categoryBgColors: Record<string, string> = {
   emotional: "bg-pink-500/20 border-pink-500/40",
   cognitive: "bg-blue-500/20 border-blue-500/40",
   social: "bg-purple-500/20 border-purple-500/40",
-  streak: "bg-orange-500/20 border-orange-500/40",
+  streak: "bg-primary/20 border",
 };
 
 const sasquatchQuotes = [
@@ -115,8 +115,8 @@ export default function Achievements() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="animate-pulse text-orange-500 text-xl" data-testid="loading-state">
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse text-primary text-xl" data-testid="loading-state">
           Loading achievements...
         </div>
       </div>
@@ -126,8 +126,8 @@ export default function Achievements() {
   const categories = ["physical", "emotional", "cognitive", "social", "streak"];
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <header className="sticky top-0 z-50 bg-black/95 border-b border-gray-800 backdrop-blur">
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-50 bg-background/95 border-b border-gray-800 backdrop-blur">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/recovery">
@@ -137,7 +137,7 @@ export default function Achievements() {
               </Button>
             </Link>
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-orange-400">
+              <div className="flex items-center gap-2 text-primary">
                 <Flame className="w-5 h-5" />
                 <span className="font-bold" data-testid="text-current-streak">{stats?.currentStreak || 0} Day Streak</span>
               </div>
@@ -158,37 +158,37 @@ export default function Achievements() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-black text-white mb-2" data-testid="heading-achievements">
+          <h1 className="text-4xl font-black text-foreground mb-2" data-testid="heading-achievements">
             ACHIEVEMENTS & BADGES
           </h1>
           <p className="text-gray-400">Your recovery victories, earned one milestone at a time</p>
         </div>
 
-        <Card className="bg-gray-900/50 border-orange-500/30 mb-8 p-6" data-testid="card-report">
-          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <Award className="w-5 h-5 text-orange-400" />
+        <Card className="bg-gray-900/50 border mb-8 p-6" data-testid="card-report">
+          <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+            <Award className="w-5 h-5 text-primary" />
             Recovery Report Card
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-black/50 rounded-lg border border-gray-800">
-              <div className="text-3xl font-black text-orange-400" data-testid="stat-total-points">
+            <div className="text-center p-4 bg-card rounded-lg border border-gray-800">
+              <div className="text-3xl font-black text-primary" data-testid="stat-total-points">
                 {stats?.totalPoints || 0}
               </div>
               <div className="text-sm text-gray-400 mt-1">Total Points</div>
             </div>
-            <div className="text-center p-4 bg-black/50 rounded-lg border border-gray-800">
+            <div className="text-center p-4 bg-card rounded-lg border border-gray-800">
               <div className="text-3xl font-black text-green-400" data-testid="stat-badges-earned">
                 {stats?.badgesEarned || 0}
               </div>
               <div className="text-sm text-gray-400 mt-1">Badges Earned</div>
             </div>
-            <div className="text-center p-4 bg-black/50 rounded-lg border border-gray-800">
+            <div className="text-center p-4 bg-card rounded-lg border border-gray-800">
               <div className="text-3xl font-black text-yellow-400" data-testid="stat-current-streak">
                 {stats?.currentStreak || 0}
               </div>
               <div className="text-sm text-gray-400 mt-1">Current Streak</div>
             </div>
-            <div className="text-center p-4 bg-black/50 rounded-lg border border-gray-800">
+            <div className="text-center p-4 bg-card rounded-lg border border-gray-800">
               <div className="text-3xl font-black text-blue-400" data-testid="stat-active-days">
                 {stats?.totalActiveDays || 0}
               </div>
@@ -205,10 +205,10 @@ export default function Achievements() {
                 const total = (availableMilestones || []).filter((m: any) => m.category === cat).length || 1;
                 const percentage = Math.round((earned / total) * 100);
                 return (
-                  <div key={cat} className="p-3 bg-black/30 rounded-lg border border-gray-800">
+                  <div key={cat} className="p-3 bg-card/80 rounded-lg border border-gray-800">
                     <div className="flex items-center gap-2 mb-2">
                       <Icon className={`w-4 h-4 ${categoryColors[cat]}`} />
-                      <span className="text-sm font-medium text-white capitalize">{cat}</span>
+                      <span className="text-sm font-medium text-foreground capitalize">{cat}</span>
                     </div>
                     <Progress value={percentage} className="h-2" />
                     <div className="text-xs text-gray-500 mt-1">{earned}/{total} badges</div>
@@ -247,7 +247,7 @@ export default function Achievements() {
 
         {earnedMilestones.length > 0 && (
           <section className="mb-12">
-            <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+            <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
               <Star className="w-6 h-6 text-yellow-400" />
               Earned Badges ({earnedMilestones.length})
             </h2>
@@ -282,11 +282,11 @@ export default function Achievements() {
                       </Button>
                     </div>
 
-                    <h3 className="text-lg font-bold text-white mb-1">{achievement.name}</h3>
+                    <h3 className="text-lg font-bold text-foreground mb-1">{achievement.name}</h3>
                     <p className="text-sm text-gray-400 mb-3">{achievement.description}</p>
 
                     <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="text-orange-400 border-orange-500/40">
+                      <Badge variant="outline" className="text-primary border">
                         +{achievement.pointsAwarded} pts
                       </Badge>
                       <span className="text-xs text-gray-500">
@@ -301,7 +301,7 @@ export default function Achievements() {
         )}
 
         <section>
-          <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
             <TrendingUp className="w-6 h-6 text-gray-400" />
             Upcoming Milestones ({upcomingMilestones.length})
           </h2>
@@ -344,9 +344,9 @@ export default function Achievements() {
       </main>
 
       <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
-        <DialogContent className="bg-black border border-orange-500/30 max-w-md">
+        <DialogContent className="bg-background border border max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-white">Share Achievement</DialogTitle>
+            <DialogTitle className="text-foreground">Share Achievement</DialogTitle>
           </DialogHeader>
           
           {selectedAchievement && (
@@ -368,12 +368,12 @@ export default function Achievements() {
               </div>
 
               <div className="text-center mb-4">
-                <h3 className="text-xl font-black text-white mb-1">{selectedAchievement.name}</h3>
+                <h3 className="text-xl font-black text-foreground mb-1">{selectedAchievement.name}</h3>
                 <p className="text-sm text-gray-400">{selectedAchievement.description}</p>
               </div>
 
               <div className="flex items-center justify-center gap-4 mb-4">
-                <Badge variant="outline" className="text-orange-400 border-orange-500/40">
+                <Badge variant="outline" className="text-primary border">
                   +{selectedAchievement.pointsAwarded} points
                 </Badge>
                 <span className="text-xs text-gray-500">
@@ -388,7 +388,7 @@ export default function Achievements() {
 
               <div className="mt-4 text-center">
                 <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-                  <Flame className="w-4 h-4 text-orange-500" />
+                  <Flame className="w-4 h-4 text-primary" />
                   <span>Stroke Recovery OS</span>
                 </div>
                 {user && (

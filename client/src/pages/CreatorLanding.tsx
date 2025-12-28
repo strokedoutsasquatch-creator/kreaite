@@ -107,7 +107,7 @@ const testimonials = [
 
 export default function CreatorLanding() {
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-background">
       <CreatorHeader />
       
       <main>
@@ -115,30 +115,30 @@ export default function CreatorLanding() {
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-transparent to-blue-500/10" />
           <div className="absolute inset-0">
-            <div className="absolute top-20 left-10 w-72 h-72 bg-orange-500/20 rounded-full blur-3xl" />
+            <div className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl" />
             <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl" />
           </div>
           
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
             <div className="text-center max-w-4xl mx-auto">
-              <Badge className="mb-6 bg-orange-500/20 text-orange-400 border-orange-500/30 hover:bg-orange-500/30">
+              <Badge className="mb-6 bg-primary/20 text-primary border hover:bg-orange-500/30">
                 <Sparkles className="w-3 h-3 mr-1" />
                 AI-Powered Creator Platform
               </Badge>
               
               <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight mb-6" data-testid="text-hero-title">
-                <span className="text-white">Create </span>
+                <span className="text-foreground">Create </span>
                 <span className="bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">Anything</span>
-                <span className="text-white">.</span>
+                <span className="text-foreground">.</span>
                 <br />
-                <span className="text-white">From </span>
+                <span className="text-foreground">From </span>
                 <span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">Anywhere</span>
-                <span className="text-white">.</span>
+                <span className="text-foreground">.</span>
               </h1>
               
               <p className="text-xl sm:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto">
                 Books. Music. Videos. Courses. You don't need Hollywood or Silicon Valley. 
-                <span className="text-white font-medium"> Just AI and your ideas.</span>
+                <span className="text-foreground font-medium"> Just AI and your ideas.</span>
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -155,7 +155,7 @@ export default function CreatorLanding() {
                   <Button 
                     size="lg" 
                     variant="outline" 
-                    className="border-orange-500/30 text-white hover:bg-orange-500/10 font-semibold text-lg px-8 gap-2"
+                    className="border text-foreground hover:bg-primary/10 font-semibold text-lg px-8 gap-2"
                     data-testid="button-explore-marketplace"
                   >
                     <Play className="w-5 h-5" />
@@ -172,12 +172,12 @@ export default function CreatorLanding() {
         </section>
 
         {/* Stats Bar */}
-        <section className="border-y border-orange-500/20 bg-orange-500/5">
+        <section className="border-y border bg-orange-500/5">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {stats.map((stat) => (
                 <div key={stat.label} className="text-center">
-                  <div className="text-3xl sm:text-4xl font-bold text-orange-500">{stat.value}</div>
+                  <div className="text-3xl sm:text-4xl font-bold text-primary">{stat.value}</div>
                   <div className="text-sm text-muted-foreground">{stat.label}</div>
                 </div>
               ))}
@@ -193,7 +193,7 @@ export default function CreatorLanding() {
                 <Zap className="w-3 h-3 mr-1" />
                 6 Powerful Studios
               </Badge>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
                 One Platform. Unlimited Creativity.
               </h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -204,13 +204,13 @@ export default function CreatorLanding() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {studios.map((studio) => (
                 <Link key={studio.href} href={studio.href}>
-                  <Card className="group h-full bg-black border-border hover:border-orange-500/50 transition-all duration-300 cursor-pointer hover-elevate" data-testid={`card-${studio.title.toLowerCase().replace(" ", "-")}`}>
+                  <Card className="group h-full bg-background border-border hover:border-orange-500/50 transition-all duration-300 cursor-pointer hover-elevate" data-testid={`card-${studio.title.toLowerCase().replace(" ", "-")}`}>
                     <CardContent className="p-6">
                       <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${studio.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                        <studio.icon className="w-6 h-6 text-white" />
+                        <studio.icon className="w-6 h-6 text-foreground" />
                       </div>
                       
-                      <h3 className="text-xl font-bold text-white mb-2 group-hover:text-orange-400 transition-colors">
+                      <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
                         {studio.title}
                       </h3>
                       
@@ -237,7 +237,7 @@ export default function CreatorLanding() {
         <section className="py-20 bg-gradient-to-b from-transparent via-orange-500/5 to-transparent">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
-              <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+              <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
                 From Idea to Income in 3 Steps
               </h2>
               <p className="text-xl text-muted-foreground">
@@ -250,7 +250,7 @@ export default function CreatorLanding() {
                 <div className="w-16 h-16 rounded-full bg-orange-500 text-black font-bold text-2xl flex items-center justify-center mx-auto mb-4">
                   1
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">Create</h3>
+                <h3 className="text-xl font-bold text-foreground mb-2">Create</h3>
                 <p className="text-muted-foreground">
                   Pick a studio. Tell AI what you want to create. Watch it come to life in minutes.
                 </p>
@@ -260,7 +260,7 @@ export default function CreatorLanding() {
                 <div className="w-16 h-16 rounded-full bg-orange-500 text-black font-bold text-2xl flex items-center justify-center mx-auto mb-4">
                   2
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">Publish</h3>
+                <h3 className="text-xl font-bold text-foreground mb-2">Publish</h3>
                 <p className="text-muted-foreground">
                   One-click publishing to marketplace, Amazon, Spotify, YouTube, or your own website.
                 </p>
@@ -270,7 +270,7 @@ export default function CreatorLanding() {
                 <div className="w-16 h-16 rounded-full bg-orange-500 text-black font-bold text-2xl flex items-center justify-center mx-auto mb-4">
                   3
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">Earn</h3>
+                <h3 className="text-xl font-bold text-foreground mb-2">Earn</h3>
                 <p className="text-muted-foreground">
                   Sell your creations. Build an audience. Generate passive income while you sleep.
                 </p>
@@ -283,7 +283,7 @@ export default function CreatorLanding() {
         <section className="py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
-              <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+              <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
                 Creators Are Winning
               </h2>
               <p className="text-xl text-muted-foreground">
@@ -293,11 +293,11 @@ export default function CreatorLanding() {
             
             <div className="grid md:grid-cols-3 gap-8">
               {testimonials.map((testimonial, index) => (
-                <Card key={index} className="bg-black border-border">
+                <Card key={index} className="bg-background border-border">
                   <CardContent className="p-6">
                     <div className="flex gap-1 mb-4">
                       {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="w-4 h-4 fill-orange-500 text-orange-500" />
+                        <Star key={i} className="w-4 h-4 fill-orange-500 text-primary" />
                       ))}
                     </div>
                     
@@ -310,7 +310,7 @@ export default function CreatorLanding() {
                         {testimonial.avatar}
                       </div>
                       <div>
-                        <div className="font-medium text-white">{testimonial.author}</div>
+                        <div className="font-medium text-foreground">{testimonial.author}</div>
                         <div className="text-sm text-muted-foreground">{testimonial.role}</div>
                       </div>
                     </div>
@@ -324,24 +324,24 @@ export default function CreatorLanding() {
         {/* The Story */}
         <section className="py-20 bg-gradient-to-b from-transparent via-blue-500/5 to-transparent">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <Badge className="mb-6 bg-orange-500/20 text-orange-400 border-orange-500/30">
+            <Badge className="mb-6 bg-primary/20 text-primary border">
               <Globe className="w-3 h-3 mr-1" />
               Our Mission
             </Badge>
             
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-6">
               You Don't Need Silicon Valley
             </h2>
             
             <p className="text-xl text-muted-foreground mb-8">
               Built by a stroke survivor who went from 400lb bench press to wheelchair to recovery. 
-              If I can rebuild my life, <span className="text-white font-medium">you can build your creator empire</span>. 
+              If I can rebuild my life, <span className="text-foreground font-medium">you can build your creator empire</span>. 
               AI levels the playing field. Your small town is now the world stage.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/about">
-                <Button variant="outline" className="border-orange-500/30 text-white hover:bg-orange-500/10 gap-2">
+                <Button variant="outline" className="border text-foreground hover:bg-primary/10 gap-2">
                   Read the Full Story
                   <ArrowRight className="w-4 h-4" />
                 </Button>
@@ -353,9 +353,9 @@ export default function CreatorLanding() {
         {/* Final CTA */}
         <section className="py-20 lg:py-32">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <Card className="bg-gradient-to-br from-orange-500/20 to-blue-500/20 border-orange-500/30">
+            <Card className="bg-gradient-to-br from-orange-500/20 to-blue-500/20 border">
               <CardContent className="p-8 sm:p-12 text-center">
-                <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+                <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
                   Ready to Create?
                 </h2>
                 <p className="text-xl text-muted-foreground mb-8">

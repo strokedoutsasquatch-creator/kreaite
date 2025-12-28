@@ -366,15 +366,15 @@ export default function WorkspaceShell({ onExport, onPublish }: WorkspaceShellPr
             {/* Mobile Bottom Nav */}
             <div className="border-t bg-zinc-900 p-2 shrink-0">
               <TabsList className="grid grid-cols-3 w-full bg-zinc-800">
-                <TabsTrigger value="chapters" className="flex items-center gap-2 text-white data-[state=active]:bg-primary" data-testid="mobile-tab-chapters">
+                <TabsTrigger value="chapters" className="flex items-center gap-2 text-foreground data-[state=active]:bg-primary" data-testid="mobile-tab-chapters">
                   <List className="w-4 h-4" />
                   <span className="text-xs">Chapters</span>
                 </TabsTrigger>
-                <TabsTrigger value="editor" className="flex items-center gap-2 text-white data-[state=active]:bg-primary" data-testid="mobile-tab-editor">
+                <TabsTrigger value="editor" className="flex items-center gap-2 text-foreground data-[state=active]:bg-primary" data-testid="mobile-tab-editor">
                   <FileText className="w-4 h-4" />
                   <span className="text-xs">Write</span>
                 </TabsTrigger>
-                <TabsTrigger value="tools" className="flex items-center gap-2 text-white data-[state=active]:bg-primary" data-testid="mobile-tab-tools">
+                <TabsTrigger value="tools" className="flex items-center gap-2 text-foreground data-[state=active]:bg-primary" data-testid="mobile-tab-tools">
                   <Wand2 className="w-4 h-4" />
                   <span className="text-xs">AI Tools</span>
                 </TabsTrigger>

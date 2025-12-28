@@ -155,8 +155,8 @@ export default function RecoveryDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="animate-pulse text-orange-500 text-xl">Loading your command center...</div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse text-primary text-xl">Loading your command center...</div>
       </div>
     );
   }
@@ -170,7 +170,7 @@ export default function RecoveryDashboard() {
   const totalPoints = dashboard?.totalPoints || 0;
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <RecoveryHeader />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -178,7 +178,7 @@ export default function RecoveryDashboard() {
           <div className="grid md:grid-cols-3 gap-6 items-center">
             <div className="md:col-span-2">
               <h1 className="text-4xl md:text-5xl font-black mb-3" data-testid="text-dashboard-title">
-                Welcome back, <span className="text-orange-500">{user?.firstName || "Warrior"}</span>
+                Welcome back, <span className="text-primary">{user?.firstName || "Warrior"}</span>
               </h1>
               <p className="text-gray-400 text-lg italic" data-testid="text-quote">"{randomQuote}"</p>
             </div>
@@ -195,14 +195,14 @@ export default function RecoveryDashboard() {
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-3xl font-black text-white" data-testid="text-recovery-score">{recoveryScore}</span>
+                  <span className="text-3xl font-black text-foreground" data-testid="text-recovery-score">{recoveryScore}</span>
                   <span className="text-xs text-gray-500 uppercase">Recovery Score</span>
                 </div>
               </div>
               
               <div className="flex items-center gap-2 mt-4">
-                <Flame className="h-6 w-6 text-orange-500" />
-                <span className="text-2xl font-bold text-white" data-testid="text-streak">{streak.currentStreak}</span>
+                <Flame className="h-6 w-6 text-primary" />
+                <span className="text-2xl font-bold text-foreground" data-testid="text-streak">{streak.currentStreak}</span>
                 <span className="text-gray-400">day streak</span>
               </div>
             </div>
@@ -213,7 +213,7 @@ export default function RecoveryDashboard() {
           <Card className="bg-gray-900 border-gray-800 p-6" data-testid="card-checkin">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-orange-500" />
+                <Calendar className="h-5 w-5 text-primary" />
                 Today's Check-in
               </h2>
               {todayCheckin && (
@@ -227,17 +227,17 @@ export default function RecoveryDashboard() {
               <div className="space-y-3">
                 <div className="grid grid-cols-3 gap-4">
                   <div className="text-center">
-                    <Heart className="h-5 w-5 text-orange-500 mx-auto mb-1" />
+                    <Heart className="h-5 w-5 text-primary mx-auto mb-1" />
                     <div className="text-2xl font-bold">{todayCheckin.moodScore}/10</div>
                     <div className="text-xs text-gray-500">Mood</div>
                   </div>
                   <div className="text-center">
-                    <Zap className="h-5 w-5 text-orange-500 mx-auto mb-1" />
+                    <Zap className="h-5 w-5 text-primary mx-auto mb-1" />
                     <div className="text-2xl font-bold">{todayCheckin.energyScore}/10</div>
                     <div className="text-xs text-gray-500">Energy</div>
                   </div>
                   <div className="text-center">
-                    <Target className="h-5 w-5 text-orange-500 mx-auto mb-1" />
+                    <Target className="h-5 w-5 text-primary mx-auto mb-1" />
                     <div className="text-2xl font-bold">{todayCheckin.painScore}/10</div>
                     <div className="text-xs text-gray-500">Pain</div>
                   </div>
@@ -260,7 +260,7 @@ export default function RecoveryDashboard() {
                     className="my-2"
                     data-testid="slider-mood"
                   />
-                  <div className="text-right text-orange-500 font-bold">{checkinForm.moodScore}</div>
+                  <div className="text-right text-primary font-bold">{checkinForm.moodScore}</div>
                 </div>
                 
                 <div>
@@ -272,7 +272,7 @@ export default function RecoveryDashboard() {
                     className="my-2"
                     data-testid="slider-energy"
                   />
-                  <div className="text-right text-orange-500 font-bold">{checkinForm.energyScore}</div>
+                  <div className="text-right text-primary font-bold">{checkinForm.energyScore}</div>
                 </div>
                 
                 <div>
@@ -284,7 +284,7 @@ export default function RecoveryDashboard() {
                     className="my-2"
                     data-testid="slider-pain"
                   />
-                  <div className="text-right text-orange-500 font-bold">{checkinForm.painScore}</div>
+                  <div className="text-right text-primary font-bold">{checkinForm.painScore}</div>
                 </div>
                 
                 <div>
@@ -293,7 +293,7 @@ export default function RecoveryDashboard() {
                     placeholder="What victories did you have today?"
                     value={checkinForm.winsToday}
                     onChange={(e) => setCheckinForm({ ...checkinForm, winsToday: e.target.value })}
-                    className="bg-gray-800 border-gray-700 text-white"
+                    className="bg-gray-800 border-gray-700 text-foreground"
                     data-testid="input-wins"
                   />
                 </div>
@@ -304,7 +304,7 @@ export default function RecoveryDashboard() {
                     placeholder="What challenges did you face?"
                     value={checkinForm.challengesToday}
                     onChange={(e) => setCheckinForm({ ...checkinForm, challengesToday: e.target.value })}
-                    className="bg-gray-800 border-gray-700 text-white"
+                    className="bg-gray-800 border-gray-700 text-foreground"
                     data-testid="input-challenges"
                   />
                 </div>
@@ -315,7 +315,7 @@ export default function RecoveryDashboard() {
                     placeholder="One thing I'm grateful for..."
                     value={checkinForm.gratitude}
                     onChange={(e) => setCheckinForm({ ...checkinForm, gratitude: e.target.value })}
-                    className="bg-gray-800 border-gray-700 text-white"
+                    className="bg-gray-800 border-gray-700 text-foreground"
                     data-testid="input-gratitude"
                   />
                 </div>
@@ -323,7 +323,7 @@ export default function RecoveryDashboard() {
                 <Button 
                   onClick={handleCheckinSubmit}
                   disabled={checkinMutation.isPending}
-                  className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold"
+                  className="w-full bg-orange-500 hover:bg-orange-600 text-foreground font-bold"
                   data-testid="button-checkin-submit"
                 >
                   {checkinMutation.isPending ? "Saving..." : "Complete Check-in"}
@@ -335,7 +335,7 @@ export default function RecoveryDashboard() {
           <Card className="bg-gray-900 border-gray-800 p-6" data-testid="card-program">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-orange-500" />
+                <BookOpen className="h-5 w-5 text-primary" />
                 Program Progress
               </h2>
             </div>
@@ -344,8 +344,8 @@ export default function RecoveryDashboard() {
               <div className="space-y-4">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-semibold text-white">{enrollment.program?.name || "Recovery Program"}</span>
-                    <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">
+                    <span className="font-semibold text-foreground">{enrollment.program?.name || "Recovery Program"}</span>
+                    <Badge className="bg-primary/20 text-primary border">
                       {enrollment.program?.tier || "Active"}
                     </Badge>
                   </div>
@@ -359,7 +359,7 @@ export default function RecoveryDashboard() {
                 {enrollment.currentModule && (
                   <div className="bg-gray-800/50 rounded-lg p-4">
                     <div className="text-xs text-gray-400 uppercase mb-1">Current Module</div>
-                    <div className="font-semibold text-white">{enrollment.currentModule.title}</div>
+                    <div className="font-semibold text-foreground">{enrollment.currentModule.title}</div>
                     {enrollment.currentLesson && (
                       <div className="text-sm text-gray-400 mt-1">Lesson: {enrollment.currentLesson.title}</div>
                     )}
@@ -367,7 +367,7 @@ export default function RecoveryDashboard() {
                 )}
                 
                 <Link href="/recovery/academy">
-                  <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold" data-testid="button-continue-learning">
+                  <Button className="w-full bg-orange-500 hover:bg-orange-600 text-foreground font-bold" data-testid="button-continue-learning">
                     Continue Learning
                   </Button>
                 </Link>
@@ -377,7 +377,7 @@ export default function RecoveryDashboard() {
                 <Target className="h-12 w-12 text-gray-600 mx-auto mb-4" />
                 <p className="text-gray-400 mb-4">Start your personalized recovery journey</p>
                 <Link href="/recovery/builder">
-                  <Button className="bg-orange-500 hover:bg-orange-600 text-white font-bold" data-testid="button-start-program">
+                  <Button className="bg-orange-500 hover:bg-orange-600 text-foreground font-bold" data-testid="button-start-program">
                     Build Your Program
                   </Button>
                 </Link>
@@ -390,7 +390,7 @@ export default function RecoveryDashboard() {
           <Card className="bg-gray-900 border-gray-800 p-6" data-testid="card-habits">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-orange-500" />
+                <TrendingUp className="h-5 w-5 text-primary" />
                 66-Day Habit Tracker
               </h2>
               <Badge className="bg-gray-800 text-gray-300">{streak.totalActiveDays}/66 days</Badge>
@@ -434,12 +434,12 @@ export default function RecoveryDashboard() {
                         className="border-orange-500 data-[state=checked]:bg-orange-500"
                       />
                       <div className="flex-1">
-                        <div className={`font-medium ${isCompleted ? 'line-through text-gray-500' : 'text-white'}`}>
+                        <div className={`font-medium ${isCompleted ? 'line-through text-gray-500' : 'text-foreground'}`}>
                           {habit.customName || habit.habitName}
                         </div>
                         <div className="text-xs text-gray-500">{habit.totalCompletions} completions</div>
                       </div>
-                      <div className="text-sm text-orange-500">{habit.currentStreak} day streak</div>
+                      <div className="text-sm text-primary">{habit.currentStreak} day streak</div>
                     </div>
                   );
                 })}
@@ -448,7 +448,7 @@ export default function RecoveryDashboard() {
               <div className="text-center py-4">
                 <p className="text-gray-400 mb-3">No habits tracked yet</p>
                 <Link href="/recovery/builder">
-                  <Button variant="outline" className="border-orange-500 text-orange-500 hover:bg-orange-500/10" data-testid="button-add-habit">
+                  <Button variant="outline" className="border-orange-500 text-primary hover:bg-primary/10" data-testid="button-add-habit">
                     Add New Habit
                   </Button>
                 </Link>
@@ -459,10 +459,10 @@ export default function RecoveryDashboard() {
           <Card className="bg-gray-900 border-gray-800 p-6" data-testid="card-milestones">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-orange-500" />
+                <Trophy className="h-5 w-5 text-primary" />
                 Milestones & Achievements
               </h2>
-              <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">
+              <Badge className="bg-primary/20 text-primary border">
                 <Star className="h-3 w-3 mr-1" /> {totalPoints} pts
               </Badge>
             </div>
@@ -474,11 +474,11 @@ export default function RecoveryDashboard() {
                     key={milestone.id}
                     className="flex items-center gap-3 p-3 bg-gray-800/50 rounded-lg"
                   >
-                    <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
-                      <Trophy className="h-5 w-5 text-orange-500" />
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                      <Trophy className="h-5 w-5 text-primary" />
                     </div>
                     <div className="flex-1">
-                      <div className="font-medium text-white">{milestone.name}</div>
+                      <div className="font-medium text-foreground">{milestone.name}</div>
                       <div className="text-xs text-gray-500">{milestone.description}</div>
                     </div>
                     <Badge className="bg-gray-700 text-gray-300">+{milestone.pointsAwarded}</Badge>
@@ -487,7 +487,7 @@ export default function RecoveryDashboard() {
                 <Link href="/achievements">
                   <Button 
                     variant="outline" 
-                    className="w-full mt-4 border-orange-500 text-orange-500 hover:bg-orange-500/10"
+                    className="w-full mt-4 border-orange-500 text-primary hover:bg-primary/10"
                     data-testid="button-view-achievements"
                   >
                     View All Achievements
@@ -501,7 +501,7 @@ export default function RecoveryDashboard() {
                 <Link href="/achievements">
                   <Button 
                     variant="outline" 
-                    className="mt-4 border-orange-500 text-orange-500 hover:bg-orange-500/10"
+                    className="mt-4 border-orange-500 text-primary hover:bg-primary/10"
                     data-testid="button-view-achievements-empty"
                   >
                     View Achievement Center
@@ -516,11 +516,11 @@ export default function RecoveryDashboard() {
         <Card className="bg-gray-900 border-gray-800 p-6 mb-8" data-testid="card-accountability-pod">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold flex items-center gap-2">
-              <Users className="h-5 w-5 text-orange-500" />
+              <Users className="h-5 w-5 text-primary" />
               My Accountability Pod
             </h2>
             {userPod && (
-              <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">
+              <Badge className="bg-primary/20 text-primary border">
                 {userPod.memberCount}/{userPod.maxMembers} members
               </Badge>
             )}
@@ -529,7 +529,7 @@ export default function RecoveryDashboard() {
           {userPod ? (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold text-white mb-1" data-testid="text-pod-name">{userPod.name}</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-1" data-testid="text-pod-name">{userPod.name}</h3>
                 {userPod.description && (
                   <p className="text-sm text-gray-400 mb-3">{userPod.description}</p>
                 )}
@@ -550,14 +550,14 @@ export default function RecoveryDashboard() {
                     >
                       <Avatar className="h-8 w-8">
                         <AvatarImage src={member.profileImageUrl} />
-                        <AvatarFallback className="bg-orange-500/20 text-orange-400 text-xs">
+                        <AvatarFallback className="bg-primary/20 text-primary text-xs">
                           {member.firstName?.[0] || "?"}{member.lastName?.[0] || ""}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-sm text-white">
+                      <span className="text-sm text-foreground">
                         {member.firstName || "Member"}
                         {member.role === "leader" && (
-                          <Star className="h-3 w-3 inline ml-1 text-orange-500" />
+                          <Star className="h-3 w-3 inline ml-1 text-primary" />
                         )}
                       </span>
                     </div>
@@ -581,13 +581,13 @@ export default function RecoveryDashboard() {
                       >
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={activity.profileImageUrl} />
-                          <AvatarFallback className="bg-orange-500/20 text-orange-400 text-xs">
+                          <AvatarFallback className="bg-primary/20 text-primary text-xs">
                             {activity.firstName?.[0] || "?"}{activity.lastName?.[0] || ""}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-white">{activity.firstName || "Member"}</span>
+                            <span className="text-sm font-medium text-foreground">{activity.firstName || "Member"}</span>
                             {activity.type === "checkin" && (
                               <Badge className="bg-green-500/20 text-green-400 text-xs">
                                 <CheckCircle2 className="h-3 w-3 mr-1" />
@@ -617,7 +617,7 @@ export default function RecoveryDashboard() {
                 variant="outline" 
                 onClick={() => leavePodMutation.mutate(userPod.id)}
                 disabled={leavePodMutation.isPending}
-                className="border-gray-700 text-gray-400 hover:text-white hover:border-gray-500"
+                className="border-gray-700 text-gray-400 hover:text-foreground hover:border-gray-500"
                 data-testid="button-leave-pod"
               >
                 <DoorOpen className="h-4 w-4 mr-2" />
@@ -644,7 +644,7 @@ export default function RecoveryDashboard() {
                         data-testid={`open-pod-${pod.id}`}
                       >
                         <div>
-                          <div className="font-medium text-white">{pod.name}</div>
+                          <div className="font-medium text-foreground">{pod.name}</div>
                           <div className="text-xs text-gray-500">
                             {pod.memberCount}/{pod.maxMembers} members
                             {pod.focusArea && ` • ${pod.focusArea}`}
@@ -654,7 +654,7 @@ export default function RecoveryDashboard() {
                           size="sm"
                           onClick={() => joinPodMutation.mutate(pod.id)}
                           disabled={joinPodMutation.isPending}
-                          className="bg-orange-500 hover:bg-orange-600 text-white"
+                          className="bg-orange-500 hover:bg-orange-600 text-foreground"
                           data-testid={`button-join-pod-${pod.id}`}
                         >
                           <UserPlus className="h-4 w-4 mr-1" />
@@ -671,16 +671,16 @@ export default function RecoveryDashboard() {
                 <Dialog open={createPodOpen} onOpenChange={setCreatePodOpen}>
                   <DialogTrigger asChild>
                     <Button 
-                      className="bg-orange-500 hover:bg-orange-600 text-white"
+                      className="bg-orange-500 hover:bg-orange-600 text-foreground"
                       data-testid="button-create-pod"
                     >
                       <Plus className="h-4 w-4 mr-2" />
                       Create a Pod
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="bg-gray-900 border-gray-800 text-white">
+                  <DialogContent className="bg-gray-900 border-gray-800 text-foreground">
                     <DialogHeader>
-                      <DialogTitle className="text-white">Create Accountability Pod</DialogTitle>
+                      <DialogTitle className="text-foreground">Create Accountability Pod</DialogTitle>
                       <DialogDescription className="text-gray-400">
                         Start a pod and invite other warriors to join your recovery journey.
                       </DialogDescription>
@@ -692,7 +692,7 @@ export default function RecoveryDashboard() {
                           placeholder="e.g., Morning Warriors"
                           value={newPodName}
                           onChange={(e) => setNewPodName(e.target.value)}
-                          className="bg-gray-800 border-gray-700 text-white"
+                          className="bg-gray-800 border-gray-700 text-foreground"
                           data-testid="input-pod-name"
                         />
                       </div>
@@ -702,7 +702,7 @@ export default function RecoveryDashboard() {
                           placeholder="What's your pod about?"
                           value={newPodDescription}
                           onChange={(e) => setNewPodDescription(e.target.value)}
-                          className="bg-gray-800 border-gray-700 text-white"
+                          className="bg-gray-800 border-gray-700 text-foreground"
                           data-testid="input-pod-description"
                         />
                       </div>
@@ -712,14 +712,14 @@ export default function RecoveryDashboard() {
                           placeholder="e.g., Physical Therapy, Mindfulness"
                           value={newPodFocus}
                           onChange={(e) => setNewPodFocus(e.target.value)}
-                          className="bg-gray-800 border-gray-700 text-white"
+                          className="bg-gray-800 border-gray-700 text-foreground"
                           data-testid="input-pod-focus"
                         />
                       </div>
                       <Button
                         onClick={handleCreatePod}
                         disabled={createPodMutation.isPending || !newPodName.trim()}
-                        className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+                        className="w-full bg-orange-500 hover:bg-orange-600 text-foreground"
                         data-testid="button-confirm-create-pod"
                       >
                         {createPodMutation.isPending ? "Creating..." : "Create Pod"}
@@ -735,54 +735,54 @@ export default function RecoveryDashboard() {
         <Card className="bg-gray-900 border-gray-800 p-6 mb-8" data-testid="card-ai-coach">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold flex items-center gap-2">
-              <MessageCircle className="h-5 w-5 text-orange-500" />
+              <MessageCircle className="h-5 w-5 text-primary" />
               AI Coach Insight
             </h2>
           </div>
           
-          <div className="bg-gradient-to-r from-orange-500/10 to-gray-900 rounded-lg p-6 border border-orange-500/20">
+          <div className="bg-gradient-to-r from-orange-500/10 to-gray-900 rounded-lg p-6 border border">
             <p className="text-gray-300 mb-4">
               {todayCheckin 
                 ? `Great check-in today! Your mood is at ${todayCheckin.moodScore}/10 and energy at ${todayCheckin.energyScore}/10. ${todayCheckin.moodScore >= 7 ? "You're doing amazing - keep that momentum going!" : "Remember, recovery isn't linear. Every day you show up matters."}`
                 : "Hey warrior! Don't forget to complete your daily check-in. Tracking your progress is key to seeing how far you've come."}
             </p>
-            <Button variant="outline" className="border-orange-500 text-orange-500 hover:bg-orange-500/10" data-testid="button-chat-coach">
+            <Button variant="outline" className="border-orange-500 text-primary hover:bg-primary/10" data-testid="button-chat-coach">
               Chat with Sasquatch Coach
             </Button>
           </div>
         </Card>
 
         <section className="mb-8">
-          <h2 className="text-xl font-bold mb-4 text-white">Quick Actions</h2>
+          <h2 className="text-xl font-bold mb-4 text-foreground">Quick Actions</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Link href="/survival-grid">
               <Card className="bg-gray-900 border-gray-800 p-4 hover-elevate cursor-pointer" data-testid="action-survival-grid">
-                <Grid3X3 className="h-8 w-8 text-orange-500 mb-2" />
-                <div className="font-semibold text-white">Survival Grid</div>
+                <Grid3X3 className="h-8 w-8 text-primary mb-2" />
+                <div className="font-semibold text-foreground">Survival Grid</div>
                 <div className="text-xs text-gray-500">Exercises & Protocols</div>
               </Card>
             </Link>
             
             <Link href="/community">
               <Card className="bg-gray-900 border-gray-800 p-4 hover-elevate cursor-pointer" data-testid="action-community">
-                <Users className="h-8 w-8 text-orange-500 mb-2" />
-                <div className="font-semibold text-white">Community</div>
+                <Users className="h-8 w-8 text-primary mb-2" />
+                <div className="font-semibold text-foreground">Community</div>
                 <div className="text-xs text-gray-500">Connect with Warriors</div>
               </Card>
             </Link>
             
             <Link href="/recovery/academy">
               <Card className="bg-gray-900 border-gray-800 p-4 hover-elevate cursor-pointer" data-testid="action-academy">
-                <BookOpen className="h-8 w-8 text-orange-500 mb-2" />
-                <div className="font-semibold text-white">Academy</div>
+                <BookOpen className="h-8 w-8 text-primary mb-2" />
+                <div className="font-semibold text-foreground">Academy</div>
                 <div className="text-xs text-gray-500">Courses & Learning</div>
               </Card>
             </Link>
             
             <Link href="/marketplace">
               <Card className="bg-gray-900 border-gray-800 p-4 hover-elevate cursor-pointer" data-testid="action-marketplace">
-                <ShoppingBag className="h-8 w-8 text-orange-500 mb-2" />
-                <div className="font-semibold text-white">Marketplace</div>
+                <ShoppingBag className="h-8 w-8 text-primary mb-2" />
+                <div className="font-semibold text-foreground">Marketplace</div>
                 <div className="text-xs text-gray-500">Recovery Tools</div>
               </Card>
             </Link>

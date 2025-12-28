@@ -378,7 +378,7 @@ export default function CourseStudio() {
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-white mb-2" data-testid="text-step-title">
+              <h2 className="text-2xl font-bold text-foreground mb-2" data-testid="text-step-title">
                 Course Details
               </h2>
               <p className="text-gray-400">Start with the basics of your course</p>
@@ -393,7 +393,7 @@ export default function CourseStudio() {
                   value={courseTitle}
                   onChange={(e) => setCourseTitle(e.target.value)}
                   placeholder="e.g., Complete Stroke Recovery Protocol"
-                  className="bg-gray-900 border-gray-700 text-white mt-1"
+                  className="bg-gray-900 border-gray-700 text-foreground mt-1"
                 />
               </div>
 
@@ -405,7 +405,7 @@ export default function CourseStudio() {
                   value={courseDescription}
                   onChange={(e) => setCourseDescription(e.target.value)}
                   placeholder="Describe what students will learn..."
-                  className="bg-gray-900 border-gray-700 text-white mt-1 min-h-[120px]"
+                  className="bg-gray-900 border-gray-700 text-foreground mt-1 min-h-[120px]"
                 />
               </div>
 
@@ -413,12 +413,12 @@ export default function CourseStudio() {
                 <div>
                   <Label className="text-gray-300">Category</Label>
                   <Select value={courseCategory} onValueChange={setCourseCategory}>
-                    <SelectTrigger data-testid="select-category" className="bg-gray-900 border-gray-700 text-white mt-1">
+                    <SelectTrigger data-testid="select-category" className="bg-gray-900 border-gray-700 text-foreground mt-1">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-900 border-gray-700">
                       {categories.map((cat) => (
-                        <SelectItem key={cat.value} value={cat.value} className="text-white">
+                        <SelectItem key={cat.value} value={cat.value} className="text-foreground">
                           {cat.label}
                         </SelectItem>
                       ))}
@@ -429,12 +429,12 @@ export default function CourseStudio() {
                 <div>
                   <Label className="text-gray-300">Level</Label>
                   <Select value={courseLevel} onValueChange={setCourseLevel}>
-                    <SelectTrigger data-testid="select-level" className="bg-gray-900 border-gray-700 text-white mt-1">
+                    <SelectTrigger data-testid="select-level" className="bg-gray-900 border-gray-700 text-foreground mt-1">
                       <SelectValue placeholder="Select level" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-900 border-gray-700">
                       {levels.map((level) => (
-                        <SelectItem key={level.value} value={level.value} className="text-white">
+                        <SelectItem key={level.value} value={level.value} className="text-foreground">
                           {level.label}
                         </SelectItem>
                       ))}
@@ -471,7 +471,7 @@ export default function CourseStudio() {
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-white mb-2" data-testid="text-step-title">
+              <h2 className="text-2xl font-bold text-foreground mb-2" data-testid="text-step-title">
                 Course Structure
               </h2>
               <p className="text-gray-400">Organize your course into modules and lessons</p>
@@ -479,7 +479,7 @@ export default function CourseStudio() {
 
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4">
-                <Badge variant="outline" className="border-orange-500/50 text-orange-500">
+                <Badge variant="outline" className="border-orange-500/50 text-primary">
                   {modules.length} Modules
                 </Badge>
                 <Badge variant="outline" className="border-gray-600 text-gray-400">
@@ -497,7 +497,7 @@ export default function CourseStudio() {
                   data-testid="button-ai-generate"
                   onClick={generateAIOutline}
                   disabled={isGeneratingAI}
-                  className="border-orange-500/50 text-orange-500 hover:bg-orange-500/10"
+                  className="border-orange-500/50 text-primary hover:bg-primary/10"
                 >
                   {isGeneratingAI ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -534,7 +534,7 @@ export default function CourseStudio() {
                                 m.id === module.id ? { ...m, title: e.target.value } : m
                               ));
                             }}
-                            className="bg-transparent border-none text-white font-semibold text-lg p-0 h-auto focus-visible:ring-0"
+                            className="bg-transparent border-none text-foreground font-semibold text-lg p-0 h-auto focus-visible:ring-0"
                           />
                         </div>
                         <div className="flex items-center gap-1">
@@ -544,7 +544,7 @@ export default function CourseStudio() {
                             data-testid={`button-move-up-${module.id}`}
                             onClick={() => moveModule(moduleIndex, "up")}
                             disabled={moduleIndex === 0}
-                            className="h-8 w-8 text-gray-400 hover:text-white"
+                            className="h-8 w-8 text-gray-400 hover:text-foreground"
                           >
                             <ArrowUp className="w-4 h-4" />
                           </Button>
@@ -554,7 +554,7 @@ export default function CourseStudio() {
                             data-testid={`button-move-down-${module.id}`}
                             onClick={() => moveModule(moduleIndex, "down")}
                             disabled={moduleIndex === modules.length - 1}
-                            className="h-8 w-8 text-gray-400 hover:text-white"
+                            className="h-8 w-8 text-gray-400 hover:text-foreground"
                           >
                             <ArrowDown className="w-4 h-4" />
                           </Button>
@@ -563,7 +563,7 @@ export default function CourseStudio() {
                             size="icon"
                             data-testid={`button-toggle-module-${module.id}`}
                             onClick={() => toggleModuleExpand(module.id)}
-                            className="h-8 w-8 text-gray-400 hover:text-white"
+                            className="h-8 w-8 text-gray-400 hover:text-foreground"
                           >
                             <ChevronRight className={`w-4 h-4 transition-transform ${module.expanded ? "rotate-90" : ""}`} />
                           </Button>
@@ -602,7 +602,7 @@ export default function CourseStudio() {
                             >
                               <div className="flex items-center gap-3">
                                 <GripVertical className="w-4 h-4 text-gray-600 cursor-move opacity-0 group-hover:opacity-100 transition-opacity" />
-                                {lesson.type === "video" && <Video className="w-4 h-4 text-orange-500" />}
+                                {lesson.type === "video" && <Video className="w-4 h-4 text-primary" />}
                                 {lesson.type === "text" && <FileText className="w-4 h-4 text-blue-500" />}
                                 {lesson.type === "quiz" && <ListChecks className="w-4 h-4 text-green-500" />}
                                 <Input
@@ -621,7 +621,7 @@ export default function CourseStudio() {
                                       return m;
                                     }));
                                   }}
-                                  className="bg-transparent border-none text-white text-sm p-0 h-auto focus-visible:ring-0 w-auto"
+                                  className="bg-transparent border-none text-foreground text-sm p-0 h-auto focus-visible:ring-0 w-auto"
                                 />
                               </div>
                               <div className="flex items-center gap-2">
@@ -647,7 +647,7 @@ export default function CourseStudio() {
                               size="sm"
                               data-testid={`button-add-video-${module.id}`}
                               onClick={() => addLesson(module.id, "video")}
-                              className="border-gray-700 text-gray-400 hover:text-white hover:border-orange-500/50"
+                              className="border-gray-700 text-gray-400 hover:text-foreground hover:border-orange-500/50"
                             >
                               <Video className="w-3 h-3 mr-1" />
                               Video
@@ -657,7 +657,7 @@ export default function CourseStudio() {
                               size="sm"
                               data-testid={`button-add-text-${module.id}`}
                               onClick={() => addLesson(module.id, "text")}
-                              className="border-gray-700 text-gray-400 hover:text-white hover:border-blue-500/50"
+                              className="border-gray-700 text-gray-400 hover:text-foreground hover:border-blue-500/50"
                             >
                               <FileText className="w-3 h-3 mr-1" />
                               Text
@@ -667,7 +667,7 @@ export default function CourseStudio() {
                               size="sm"
                               data-testid={`button-add-quiz-${module.id}`}
                               onClick={() => addLesson(module.id, "quiz")}
-                              className="border-gray-700 text-gray-400 hover:text-white hover:border-green-500/50"
+                              className="border-gray-700 text-gray-400 hover:text-foreground hover:border-green-500/50"
                             >
                               <ListChecks className="w-3 h-3 mr-1" />
                               Quiz
@@ -687,7 +687,7 @@ export default function CourseStudio() {
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-white mb-2" data-testid="text-step-title">
+              <h2 className="text-2xl font-bold text-foreground mb-2" data-testid="text-step-title">
                 Content & Media
               </h2>
               <p className="text-gray-400">Upload videos and create content for your lessons</p>
@@ -714,7 +714,7 @@ export default function CourseStudio() {
                   <CardContent className="p-6">
                     <div className="border-2 border-dashed border-gray-700 rounded-lg p-12 text-center hover:border-orange-500/50 transition-colors cursor-pointer">
                       <Upload className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-                      <h3 className="text-xl font-semibold text-white mb-2">Upload Video Lessons</h3>
+                      <h3 className="text-xl font-semibold text-foreground mb-2">Upload Video Lessons</h3>
                       <p className="text-gray-400 mb-4">Drag and drop your video files or click to browse</p>
                       <p className="text-gray-500 text-sm">Supports MP4, MOV, WebM up to 2GB</p>
                       <Button
@@ -730,10 +730,10 @@ export default function CourseStudio() {
                       <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
                         <div className="flex items-center gap-3">
                           <div className="w-16 h-10 bg-gray-700 rounded flex items-center justify-center">
-                            <Play className="w-4 h-4 text-orange-500" />
+                            <Play className="w-4 h-4 text-primary" />
                           </div>
                           <div>
-                            <p className="text-white font-medium">welcome_video.mp4</p>
+                            <p className="text-foreground font-medium">welcome_video.mp4</p>
                             <p className="text-gray-500 text-sm">145 MB • Uploaded</p>
                           </div>
                         </div>
@@ -751,35 +751,35 @@ export default function CourseStudio() {
                 <Card className="bg-gray-900 border-gray-800">
                   <CardContent className="p-6">
                     <div className="flex items-center gap-2 mb-4 border-b border-gray-800 pb-4">
-                      <Button variant="ghost" size="sm" data-testid="button-bold" className="text-gray-400 hover:text-white">
+                      <Button variant="ghost" size="sm" data-testid="button-bold" className="text-gray-400 hover:text-foreground">
                         <span className="font-bold">B</span>
                       </Button>
-                      <Button variant="ghost" size="sm" data-testid="button-italic" className="text-gray-400 hover:text-white">
+                      <Button variant="ghost" size="sm" data-testid="button-italic" className="text-gray-400 hover:text-foreground">
                         <span className="italic">I</span>
                       </Button>
                       <Separator orientation="vertical" className="h-6 bg-gray-700" />
-                      <Button variant="ghost" size="sm" data-testid="button-heading" className="text-gray-400 hover:text-white">
+                      <Button variant="ghost" size="sm" data-testid="button-heading" className="text-gray-400 hover:text-foreground">
                         H1
                       </Button>
-                      <Button variant="ghost" size="sm" data-testid="button-list" className="text-gray-400 hover:text-white">
+                      <Button variant="ghost" size="sm" data-testid="button-list" className="text-gray-400 hover:text-foreground">
                         <ListChecks className="w-4 h-4" />
                       </Button>
                       <Separator orientation="vertical" className="h-6 bg-gray-700" />
-                      <Button variant="ghost" size="sm" data-testid="button-image" className="text-gray-400 hover:text-white">
+                      <Button variant="ghost" size="sm" data-testid="button-image" className="text-gray-400 hover:text-foreground">
                         <Image className="w-4 h-4" />
                       </Button>
                     </div>
                     <Textarea
                       data-testid="textarea-lesson-content"
                       placeholder="Write your lesson content here..."
-                      className="bg-gray-800 border-gray-700 text-white min-h-[300px]"
+                      className="bg-gray-800 border-gray-700 text-foreground min-h-[300px]"
                     />
                     <div className="flex justify-end mt-4">
                       <Button
                         variant="outline"
                         size="sm"
                         data-testid="button-ai-enhance"
-                        className="border-orange-500/50 text-orange-500 hover:bg-orange-500/10"
+                        className="border-orange-500/50 text-primary hover:bg-primary/10"
                       >
                         <Sparkles className="w-4 h-4 mr-2" />
                         AI Enhance Content
@@ -793,7 +793,7 @@ export default function CourseStudio() {
                 <Card className="bg-gray-900 border-gray-800">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-lg font-semibold text-white">Quiz Questions</h3>
+                      <h3 className="text-lg font-semibold text-foreground">Quiz Questions</h3>
                       <Button
                         size="sm"
                         data-testid="button-add-question"
@@ -812,7 +812,7 @@ export default function CourseStudio() {
                             <CardContent className="p-4">
                               <div className="flex items-start justify-between gap-4 mb-4">
                                 <div className="flex items-center gap-2">
-                                  <Badge className="bg-orange-500/20 text-orange-500 border-orange-500/30">
+                                  <Badge className="bg-primary/20 text-primary border">
                                     Q{qIndex + 1}
                                   </Badge>
                                 </div>
@@ -832,7 +832,7 @@ export default function CourseStudio() {
                                 data-testid={`input-question-${question.id}`}
                                 onChange={(e) => updateQuizQuestion(question.id, "question", e.target.value)}
                                 placeholder="Enter your question..."
-                                className="bg-gray-900 border-gray-700 text-white mb-4"
+                                className="bg-gray-900 border-gray-700 text-foreground mb-4"
                               />
 
                               <div className="space-y-2">
@@ -845,7 +845,7 @@ export default function CourseStudio() {
                                       onClick={() => updateQuizQuestion(question.id, "correctAnswer", optIndex)}
                                       className={`h-8 w-8 ${
                                         question.correctAnswer === optIndex
-                                          ? "bg-green-500 hover:bg-green-600 text-white"
+                                          ? "bg-green-500 hover:bg-green-600 text-foreground"
                                           : "border-gray-700 text-gray-500"
                                       }`}
                                     >
@@ -856,7 +856,7 @@ export default function CourseStudio() {
                                       data-testid={`input-option-${question.id}-${optIndex}`}
                                       onChange={(e) => updateQuizOption(question.id, optIndex, e.target.value)}
                                       placeholder={`Option ${String.fromCharCode(65 + optIndex)}`}
-                                      className="bg-gray-900 border-gray-700 text-white"
+                                      className="bg-gray-900 border-gray-700 text-foreground"
                                     />
                                   </div>
                                 ))}
@@ -869,7 +869,7 @@ export default function CourseStudio() {
                                   data-testid={`textarea-explanation-${question.id}`}
                                   onChange={(e) => updateQuizQuestion(question.id, "explanation", e.target.value)}
                                   placeholder="Explain why this answer is correct..."
-                                  className="bg-gray-900 border-gray-700 text-white mt-1 min-h-[60px]"
+                                  className="bg-gray-900 border-gray-700 text-foreground mt-1 min-h-[60px]"
                                 />
                               </div>
                             </CardContent>
@@ -888,7 +888,7 @@ export default function CourseStudio() {
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-white mb-2" data-testid="text-step-title">
+              <h2 className="text-2xl font-bold text-foreground mb-2" data-testid="text-step-title">
                 Pricing & Settings
               </h2>
               <p className="text-gray-400">Set your course price and configure options</p>
@@ -897,8 +897,8 @@ export default function CourseStudio() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card className="bg-gray-900 border-gray-800">
                 <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <DollarSign className="w-5 h-5 text-orange-500" />
+                  <CardTitle className="text-foreground flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-primary" />
                     Pricing
                   </CardTitle>
                 </CardHeader>
@@ -912,7 +912,7 @@ export default function CourseStudio() {
                         value={coursePrice}
                         data-testid="input-course-price"
                         onChange={(e) => setCoursePrice(Number(e.target.value))}
-                        className="bg-gray-800 border-gray-700 text-white pl-10 text-2xl font-bold"
+                        className="bg-gray-800 border-gray-700 text-foreground pl-10 text-2xl font-bold"
                       />
                     </div>
                   </div>
@@ -923,7 +923,7 @@ export default function CourseStudio() {
                       <span className="text-gray-400">-${(coursePrice * 0.1).toFixed(2)}</span>
                     </div>
                     <div className="flex items-center justify-between text-lg font-semibold mt-2">
-                      <span className="text-white">Your earnings</span>
+                      <span className="text-foreground">Your earnings</span>
                       <span className="text-green-500">${(coursePrice * 0.9).toFixed(2)}</span>
                     </div>
                   </div>
@@ -932,15 +932,15 @@ export default function CourseStudio() {
 
               <Card className="bg-gray-900 border-gray-800">
                 <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <Settings className="w-5 h-5 text-orange-500" />
+                  <CardTitle className="text-foreground flex items-center gap-2">
+                    <Settings className="w-5 h-5 text-primary" />
                     Course Settings
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
                     <div>
-                      <p className="text-white font-medium">Drip Content</p>
+                      <p className="text-foreground font-medium">Drip Content</p>
                       <p className="text-gray-500 text-sm">Release modules over time</p>
                     </div>
                     <Switch
@@ -953,7 +953,7 @@ export default function CourseStudio() {
 
                   <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
                     <div>
-                      <p className="text-white font-medium">Completion Certificate</p>
+                      <p className="text-foreground font-medium">Completion Certificate</p>
                       <p className="text-gray-500 text-sm">Award certificate on completion</p>
                     </div>
                     <Switch
@@ -969,8 +969,8 @@ export default function CourseStudio() {
 
             <Card className="bg-gray-900 border-gray-800">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Target className="w-5 h-5 text-orange-500" />
+                <CardTitle className="text-foreground flex items-center gap-2">
+                  <Target className="w-5 h-5 text-primary" />
                   Revenue Projection
                 </CardTitle>
               </CardHeader>
@@ -978,15 +978,15 @@ export default function CourseStudio() {
                 <div className="grid grid-cols-3 gap-6 text-center">
                   <div className="p-4 bg-gray-800 rounded-lg">
                     <p className="text-gray-400 text-sm mb-1">10 Students</p>
-                    <p className="text-2xl font-bold text-white">${(coursePrice * 10 * 0.9).toFixed(0)}</p>
+                    <p className="text-2xl font-bold text-foreground">${(coursePrice * 10 * 0.9).toFixed(0)}</p>
                   </div>
-                  <div className="p-4 bg-gray-800 rounded-lg border-2 border-orange-500/30">
+                  <div className="p-4 bg-gray-800 rounded-lg border-2 border">
                     <p className="text-gray-400 text-sm mb-1">100 Students</p>
-                    <p className="text-2xl font-bold text-orange-500">${(coursePrice * 100 * 0.9).toFixed(0)}</p>
+                    <p className="text-2xl font-bold text-primary">${(coursePrice * 100 * 0.9).toFixed(0)}</p>
                   </div>
                   <div className="p-4 bg-gray-800 rounded-lg">
                     <p className="text-gray-400 text-sm mb-1">1,000 Students</p>
-                    <p className="text-2xl font-bold text-white">${(coursePrice * 1000 * 0.9).toFixed(0)}</p>
+                    <p className="text-2xl font-bold text-foreground">${(coursePrice * 1000 * 0.9).toFixed(0)}</p>
                   </div>
                 </div>
               </CardContent>
@@ -998,7 +998,7 @@ export default function CourseStudio() {
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-white mb-2" data-testid="text-step-title">
+              <h2 className="text-2xl font-bold text-foreground mb-2" data-testid="text-step-title">
                 Preview & Publish
               </h2>
               <p className="text-gray-400">Review your course before publishing</p>
@@ -1021,7 +1021,7 @@ export default function CourseStudio() {
                 </div>
                 
                 <div className="p-6">
-                  <h3 className="text-2xl font-bold text-white mb-2" data-testid="text-preview-title">
+                  <h3 className="text-2xl font-bold text-foreground mb-2" data-testid="text-preview-title">
                     {courseTitle || "Your Course Title"}
                   </h3>
                   <p className="text-gray-400 mb-4">
@@ -1044,7 +1044,7 @@ export default function CourseStudio() {
 
                   <div className="flex items-center justify-between pt-4 border-t border-gray-800">
                     <div>
-                      <span className="text-3xl font-bold text-white">${coursePrice}</span>
+                      <span className="text-3xl font-bold text-foreground">${coursePrice}</span>
                       <span className="text-gray-500 ml-2">one-time</span>
                     </div>
                     <div className="flex gap-2">
@@ -1052,7 +1052,7 @@ export default function CourseStudio() {
                         variant="outline"
                         data-testid="button-preview-course"
                         onClick={() => setShowPreview(true)}
-                        className="border-gray-700 text-white"
+                        className="border-gray-700 text-foreground"
                       >
                         <Eye className="w-4 h-4 mr-2" />
                         Full Preview
@@ -1060,7 +1060,7 @@ export default function CourseStudio() {
                       <Button
                         data-testid="button-save-draft"
                         variant="outline"
-                        className="border-orange-500/50 text-orange-500"
+                        className="border-orange-500/50 text-primary"
                       >
                         <Save className="w-4 h-4 mr-2" />
                         Save Draft
@@ -1080,7 +1080,7 @@ export default function CourseStudio() {
 
             <Card className="bg-gray-900 border-gray-800">
               <CardHeader>
-                <CardTitle className="text-white">Course Checklist</CardTitle>
+                <CardTitle className="text-foreground">Course Checklist</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -1097,7 +1097,7 @@ export default function CourseStudio() {
                       ) : (
                         <AlertCircle className="w-5 h-5 text-gray-500" />
                       )}
-                      <span className={item.done ? "text-white" : "text-gray-500"}>
+                      <span className={item.done ? "text-foreground" : "text-gray-500"}>
                         {item.label}
                       </span>
                     </div>
@@ -1114,7 +1114,7 @@ export default function CourseStudio() {
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-background">
       <CreatorHeader />
 
       <section className="relative py-16 overflow-hidden">
@@ -1123,12 +1123,12 @@ export default function CourseStudio() {
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto">
-            <Badge className="bg-orange-500/20 text-orange-500 border-orange-500/30 mb-4" data-testid="badge-studio">
+            <Badge className="bg-primary/20 text-primary border mb-4" data-testid="badge-studio">
               <GraduationCap className="w-3 h-3 mr-1" />
               AI-Powered Course Creation
             </Badge>
-            <h1 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tight mb-4" data-testid="text-hero-title">
-              Course <span className="text-orange-500">Studio</span>
+            <h1 className="text-4xl md:text-6xl font-black text-foreground uppercase tracking-tight mb-4" data-testid="text-hero-title">
+              Course <span className="text-primary">Studio</span>
             </h1>
             <p className="text-lg text-gray-400 mb-8" data-testid="text-hero-description">
               Transform your expertise into profitable online courses. AI-powered content generation, 
@@ -1136,15 +1136,15 @@ export default function CourseStudio() {
             </p>
             <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-orange-500" />
+                <Sparkles className="w-4 h-4 text-primary" />
                 <span>AI Content Generation</span>
               </div>
               <div className="flex items-center gap-2">
-                <Video className="w-4 h-4 text-orange-500" />
+                <Video className="w-4 h-4 text-primary" />
                 <span>Video Lessons</span>
               </div>
               <div className="flex items-center gap-2">
-                <Trophy className="w-4 h-4 text-orange-500" />
+                <Trophy className="w-4 h-4 text-primary" />
                 <span>Certificates</span>
               </div>
             </div>
@@ -1204,7 +1204,7 @@ export default function CourseStudio() {
                     </Badge>
                   </div>
                   <CardContent className="p-4">
-                    <h3 className="font-semibold text-white mb-2" data-testid={`text-course-title-${course.id}`}>
+                    <h3 className="font-semibold text-foreground mb-2" data-testid={`text-course-title-${course.id}`}>
                       {course.title}
                     </h3>
                     <p className="text-gray-500 text-sm mb-4 line-clamp-2">{course.description}</p>
@@ -1216,13 +1216,13 @@ export default function CourseStudio() {
                           {course.students}
                         </div>
                         {course.rating > 0 && (
-                          <div className="flex items-center gap-1 text-orange-500">
+                          <div className="flex items-center gap-1 text-primary">
                             <Star className="w-4 h-4 fill-current" />
                             {course.rating}
                           </div>
                         )}
                       </div>
-                      <span className="font-semibold text-white">${course.price}</span>
+                      <span className="font-semibold text-foreground">${course.price}</span>
                     </div>
 
                     {course.revenue > 0 && (
@@ -1243,10 +1243,10 @@ export default function CourseStudio() {
                 data-testid="card-create-new"
               >
                 <CardContent className="flex flex-col items-center justify-center h-full min-h-[300px]">
-                  <div className="w-16 h-16 rounded-full bg-orange-500/20 flex items-center justify-center mb-4">
-                    <Plus className="w-8 h-8 text-orange-500" />
+                  <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-4">
+                    <Plus className="w-8 h-8 text-primary" />
                   </div>
-                  <h3 className="font-semibold text-white mb-2">Create New Course</h3>
+                  <h3 className="font-semibold text-foreground mb-2">Create New Course</h3>
                   <p className="text-gray-500 text-sm text-center">
                     Start building your next course with AI assistance
                   </p>
@@ -1266,7 +1266,7 @@ export default function CourseStudio() {
                           step === wizardStep
                             ? "bg-orange-500 text-black"
                             : step < wizardStep
-                            ? "bg-green-500 text-white"
+                            ? "bg-green-500 text-foreground"
                             : "bg-gray-800 text-gray-500"
                         }`}
                         data-testid={`step-indicator-${step}`}
@@ -1296,7 +1296,7 @@ export default function CourseStudio() {
                     data-testid="button-prev-step"
                     onClick={() => setWizardStep(Math.max(1, wizardStep - 1))}
                     disabled={wizardStep === 1}
-                    className="border-gray-700 text-white"
+                    className="border-gray-700 text-foreground"
                   >
                     <ChevronLeft className="w-4 h-4 mr-2" />
                     Previous
@@ -1336,15 +1336,15 @@ export default function CourseStudio() {
                 <Card key={index} className="bg-gray-900 border-gray-800" data-testid={`card-stat-${index}`}>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-4">
-                      <div className="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
-                        <stat.icon className="w-5 h-5 text-orange-500" />
+                      <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                        <stat.icon className="w-5 h-5 text-primary" />
                       </div>
                       <Badge className="bg-green-500/20 text-green-500 border-green-500/30">
                         {stat.change}
                       </Badge>
                     </div>
                     <p className="text-gray-500 text-sm mb-1">{stat.label}</p>
-                    <p className="text-2xl font-bold text-white">{stat.value}</p>
+                    <p className="text-2xl font-bold text-foreground">{stat.value}</p>
                   </CardContent>
                 </Card>
               ))}
@@ -1353,7 +1353,7 @@ export default function CourseStudio() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card className="bg-gray-900 border-gray-800">
                 <CardHeader>
-                  <CardTitle className="text-white">Revenue Over Time</CardTitle>
+                  <CardTitle className="text-foreground">Revenue Over Time</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="h-64 flex items-center justify-center text-gray-500">
@@ -1365,7 +1365,7 @@ export default function CourseStudio() {
 
               <Card className="bg-gray-900 border-gray-800">
                 <CardHeader>
-                  <CardTitle className="text-white">Top Performing Courses</CardTitle>
+                  <CardTitle className="text-foreground">Top Performing Courses</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -1374,11 +1374,11 @@ export default function CourseStudio() {
                       .map((course, index) => (
                         <div key={course.id} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-500 font-semibold">
+                            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold">
                               {index + 1}
                             </div>
                             <div>
-                              <p className="text-white font-medium">{course.title}</p>
+                              <p className="text-foreground font-medium">{course.title}</p>
                               <p className="text-gray-500 text-sm">{course.students} students</p>
                             </div>
                           </div>

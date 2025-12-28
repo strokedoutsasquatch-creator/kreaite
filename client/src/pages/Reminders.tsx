@@ -136,9 +136,9 @@ export default function Reminders() {
   };
 
   return (
-    <div className="min-h-screen bg-black p-6 text-white">
+    <div className="min-h-screen bg-background p-6 text-foreground">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8 text-orange-500">Wellness & Reminders</h1>
+        <h1 className="text-4xl font-bold mb-8 text-primary">Wellness & Reminders</h1>
         <p className="text-gray-400 mb-8">Stay active, hydrated, and on track with your recovery goals</p>
 
         {/* Wellness Trackers */}
@@ -146,7 +146,7 @@ export default function Reminders() {
           {/* Stand Goal */}
           <Card className="bg-gray-900 border-gray-800">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-orange-500">
+              <CardTitle className="flex items-center gap-2 text-primary">
                 <Clock className="w-5 h-5" />
                 Stand Reminder
               </CardTitle>
@@ -154,7 +154,7 @@ export default function Reminders() {
             <CardContent className="space-y-4">
               <div>
                 <p className="text-sm text-gray-400">Today: {standData?.todayCount || 0} stands</p>
-                <p className="text-2xl font-bold text-orange-500">{standData?.goal?.dailyStandTarget || 12} goal</p>
+                <p className="text-2xl font-bold text-primary">{standData?.goal?.dailyStandTarget || 12} goal</p>
               </div>
               <Button
                 onClick={() => logStandMutation.mutate()}
@@ -221,7 +221,7 @@ export default function Reminders() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
-                <Bell className="w-5 h-5 text-orange-500" />
+                <Bell className="w-5 h-5 text-primary" />
                 Medication & Appointment Reminders
               </CardTitle>
               <Button
@@ -281,7 +281,7 @@ export default function Reminders() {
                   <FormItem>
                     <FormLabel>Type</FormLabel>
                     <FormControl>
-                      <select {...field} className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white">
+                      <select {...field} className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-foreground">
                         <option value="medication">Medication</option>
                         <option value="appointment">Appointment</option>
                         <option value="stand">Stand</option>

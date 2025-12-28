@@ -108,12 +108,12 @@ export default function ContentScheduler({
   const scheduleStatus = getScheduleStatus();
 
   return (
-    <Card className="bg-black border-zinc-800" data-testid="content-scheduler">
+    <Card className="bg-background border-zinc-800" data-testid="content-scheduler">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <Timer className="w-5 h-5 text-orange-500" />
-            <CardTitle className="text-lg text-white">Content Scheduling</CardTitle>
+            <Timer className="w-5 h-5 text-primary" />
+            <CardTitle className="text-lg text-foreground">Content Scheduling</CardTitle>
           </div>
           <div className="flex items-center gap-2">
             <Label htmlFor="scheduling-toggle" className="text-sm text-muted-foreground">
@@ -139,8 +139,8 @@ export default function ContentScheduler({
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-white flex items-center gap-2">
-                <CalendarCheck className="w-4 h-4 text-orange-500" />
+              <Label className="text-foreground flex items-center gap-2">
+                <CalendarCheck className="w-4 h-4 text-primary" />
                 Publish Date & Time
               </Label>
               <div className="flex flex-col sm:flex-row gap-3">
@@ -155,7 +155,7 @@ export default function ContentScheduler({
                       disabled={disabled}
                       data-testid="button-publish-date"
                     >
-                      <Calendar className="mr-2 h-4 w-4 text-orange-500" />
+                      <Calendar className="mr-2 h-4 w-4 text-primary" />
                       {scheduledPublishAt
                         ? format(scheduledPublishAt, "PPP")
                         : "Select publish date"}
@@ -173,7 +173,7 @@ export default function ContentScheduler({
                   </PopoverContent>
                 </Popover>
                 <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-orange-500 shrink-0" />
+                  <Clock className="w-4 h-4 text-primary shrink-0" />
                   <Input
                     type="time"
                     value={publishTime}
@@ -201,8 +201,8 @@ export default function ContentScheduler({
 
             {hasUnpublishDate && (
               <div className="space-y-2">
-                <Label className="text-white flex items-center gap-2">
-                  <CalendarX className="w-4 h-4 text-orange-500" />
+                <Label className="text-foreground flex items-center gap-2">
+                  <CalendarX className="w-4 h-4 text-primary" />
                   Unpublish Date & Time
                 </Label>
                 <div className="flex flex-col sm:flex-row gap-3">
@@ -217,7 +217,7 @@ export default function ContentScheduler({
                         disabled={disabled}
                         data-testid="button-unpublish-date"
                       >
-                        <Calendar className="mr-2 h-4 w-4 text-orange-500" />
+                        <Calendar className="mr-2 h-4 w-4 text-primary" />
                         {scheduledUnpublishAt
                           ? format(scheduledUnpublishAt, "PPP")
                           : "Select unpublish date"}
@@ -240,7 +240,7 @@ export default function ContentScheduler({
                     </PopoverContent>
                   </Popover>
                   <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-orange-500 shrink-0" />
+                    <Clock className="w-4 h-4 text-primary shrink-0" />
                     <Input
                       type="time"
                       value={unpublishTime}
@@ -257,8 +257,8 @@ export default function ContentScheduler({
 
           {(scheduledPublishAt || scheduledUnpublishAt) && (
             <div className="pt-4 border-t border-zinc-800 space-y-3">
-              <h4 className="text-sm font-medium text-white flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-orange-500" />
+              <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-primary" />
                 Schedule Preview
               </h4>
               <div className="bg-zinc-900/50 rounded-lg p-4 space-y-3">
@@ -268,7 +268,7 @@ export default function ContentScheduler({
                       className={cn(
                         "text-xs",
                         scheduleStatus.status === "scheduled" &&
-                          "bg-orange-500/20 text-orange-500 border-orange-500/30",
+                          "bg-primary/20 text-primary border",
                         scheduleStatus.status === "live" &&
                           "bg-green-500/20 text-green-500 border-green-500/30",
                         scheduleStatus.status === "ended" &&
@@ -284,7 +284,7 @@ export default function ContentScheduler({
                   <div className="flex items-center gap-3 text-sm" data-testid="preview-publish">
                     <div className="w-3 h-3 rounded-full bg-green-500" />
                     <span className="text-muted-foreground">Goes live:</span>
-                    <span className="text-white font-medium">
+                    <span className="text-foreground font-medium">
                       {format(scheduledPublishAt, "PPP 'at' p")}
                     </span>
                   </div>
@@ -293,7 +293,7 @@ export default function ContentScheduler({
                   <div className="flex items-center gap-3 text-sm" data-testid="preview-unpublish">
                     <div className="w-3 h-3 rounded-full bg-red-500" />
                     <span className="text-muted-foreground">Ends:</span>
-                    <span className="text-white font-medium">
+                    <span className="text-foreground font-medium">
                       {format(scheduledUnpublishAt, "PPP 'at' p")}
                     </span>
                   </div>

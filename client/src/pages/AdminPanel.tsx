@@ -268,7 +268,7 @@ function UserRow({ user, onUpdate }: { user: UserWithCredits; onUpdate: () => vo
       <div className="flex-1 min-w-[200px]">
         <div className="font-medium text-sm">
           {user.firstName} {user.lastName}
-          {user.role === 'admin' && <Crown className="h-3 w-3 inline ml-1 text-orange-500" />}
+          {user.role === 'admin' && <Crown className="h-3 w-3 inline ml-1 text-primary" />}
         </div>
         <div className="text-xs text-muted-foreground">{user.email}</div>
       </div>
@@ -374,7 +374,7 @@ export default function AdminPanel() {
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto p-6 space-y-6">
         <div className="flex items-center gap-3">
-          <Shield className="h-8 w-8 text-orange-500" />
+          <Shield className="h-8 w-8 text-primary" />
           <h1 className="text-3xl font-bold">Admin Panel</h1>
         </div>
 

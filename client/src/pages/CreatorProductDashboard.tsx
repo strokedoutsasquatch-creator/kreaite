@@ -185,8 +185,8 @@ function StatCard({
               </div>
             )}
           </div>
-          <div className="p-3 rounded-full bg-orange-500/10">
-            <Icon className="w-5 h-5 text-orange-500" />
+          <div className="p-3 rounded-full bg-primary/10">
+            <Icon className="w-5 h-5 text-primary" />
           </div>
         </div>
       </CardContent>
@@ -402,7 +402,7 @@ function ProductAnalyticsDialog({
         <div className="grid grid-cols-3 gap-4 py-4">
           <Card>
             <CardContent className="p-4 text-center">
-              <Eye className="w-6 h-6 mx-auto text-orange-500 mb-2" />
+              <Eye className="w-6 h-6 mx-auto text-primary mb-2" />
               <p className="text-2xl font-bold">{product.views.toLocaleString()}</p>
               <p className="text-xs text-muted-foreground">Total Views</p>
             </CardContent>
@@ -533,7 +533,7 @@ export default function CreatorProductDashboard() {
         <main className="flex-1 container mx-auto px-4 py-8 flex items-center justify-center">
           <Card className="max-w-md w-full">
             <CardContent className="p-8 text-center">
-              <Package className="w-16 h-16 mx-auto text-orange-500/50 mb-4" />
+              <Package className="w-16 h-16 mx-auto text-primary/50 mb-4" />
               <h2 className="text-xl font-semibold mb-2">Sign In Required</h2>
               <p className="text-muted-foreground mb-4">
                 Please sign in to access your product dashboard.

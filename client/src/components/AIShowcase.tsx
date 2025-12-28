@@ -41,7 +41,7 @@ const aiCapabilities = [
 
 export default function AIShowcase() {
   return (
-    <section className="py-24 bg-black relative overflow-hidden" data-testid="section-ai-showcase">
+    <section className="py-24 bg-background relative overflow-hidden" data-testid="section-ai-showcase">
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#FF6B35]/5 to-transparent pointer-events-none" />
       
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -53,7 +53,7 @@ export default function AIShowcase() {
             POWERED BY NEXT-GEN AI
           </p>
           <h2 
-            className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6"
+            className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6"
             style={{ fontFamily: "'Playfair Display', serif" }}
             data-testid="text-ai-headline"
           >
@@ -83,13 +83,13 @@ export default function AIShowcase() {
                 <div className="flex items-start gap-5">
                   <div className="flex-shrink-0 p-3 rounded-lg bg-[#1A1A1A] group-hover:bg-[#FF6B35]/10 transition-colors duration-300">
                     <IconComponent 
-                      className="h-8 w-8 text-white group-hover:text-[#FF6B35] transition-colors duration-300" 
+                      className="h-8 w-8 text-foreground group-hover:text-[#FF6B35] transition-colors duration-300" 
                       strokeWidth={1.5}
                     />
                   </div>
                   <div className="flex-1">
                     <h3 
-                      className="text-xl font-semibold text-white mb-2 group-hover:text-[#FF6B35] transition-colors duration-300"
+                      className="text-xl font-semibold text-foreground mb-2 group-hover:text-[#FF6B35] transition-colors duration-300"
                       style={{ fontFamily: "'Playfair Display', serif" }}
                     >
                       {capability.title}
@@ -121,25 +121,25 @@ export default function AIShowcase() {
           <div className="flex flex-wrap items-center justify-center gap-8 lg:gap-12">
             <div className="flex items-center gap-2 text-[#D0D0D0] opacity-70 hover:opacity-100 transition-opacity">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center">
-                <span className="text-white text-xs font-bold">G</span>
+                <span className="text-foreground text-xs font-bold">G</span>
               </div>
               <span className="font-medium">Google Cloud</span>
             </div>
             <div className="flex items-center gap-2 text-[#D0D0D0] opacity-70 hover:opacity-100 transition-opacity">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center">
-                <span className="text-white text-xs font-bold">V</span>
+                <span className="text-foreground text-xs font-bold">V</span>
               </div>
               <span className="font-medium">Vertex AI</span>
             </div>
             <div className="flex items-center gap-2 text-[#D0D0D0] opacity-70 hover:opacity-100 transition-opacity">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center">
-                <span className="text-white text-xs font-bold">X</span>
+                <span className="text-foreground text-xs font-bold">X</span>
               </div>
               <span className="font-medium">xAI</span>
             </div>
             <div className="flex items-center gap-2 text-[#D0D0D0] opacity-70 hover:opacity-100 transition-opacity">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
-                <span className="text-white text-xs font-bold">G</span>
+                <span className="text-foreground text-xs font-bold">G</span>
               </div>
               <span className="font-medium">Gemini</span>
             </div>

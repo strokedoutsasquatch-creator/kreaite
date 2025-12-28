@@ -286,7 +286,7 @@ export function AvatarStudio() {
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8" data-testid="avatar-studio">
       <div className="text-center mb-12">
-        <h1 className="text-5xl font-serif font-bold tracking-tight text-white mb-3">
+        <h1 className="text-5xl font-serif font-bold tracking-tight text-foreground mb-3">
           AI Avatar Studio
         </h1>
         <p className="text-lg text-zinc-400 leading-relaxed">
@@ -302,19 +302,19 @@ export function AvatarStudio() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4 bg-zinc-900/50">
-          <TabsTrigger value="create" className="data-[state=active]:bg-orange-500/20" data-testid="tab-create">
+          <TabsTrigger value="create" className="data-[state=active]:bg-primary/20" data-testid="tab-create">
             <Sparkles className="w-4 h-4 mr-2" />
             Create
           </TabsTrigger>
-          <TabsTrigger value="presets" className="data-[state=active]:bg-orange-500/20" data-testid="tab-presets">
+          <TabsTrigger value="presets" className="data-[state=active]:bg-primary/20" data-testid="tab-presets">
             <Grid3X3 className="w-4 h-4 mr-2" />
             Presets
           </TabsTrigger>
-          <TabsTrigger value="voice" className="data-[state=active]:bg-orange-500/20" data-testid="tab-voice">
+          <TabsTrigger value="voice" className="data-[state=active]:bg-primary/20" data-testid="tab-voice">
             <Mic className="w-4 h-4 mr-2" />
             Voice
           </TabsTrigger>
-          <TabsTrigger value="videos" className="data-[state=active]:bg-orange-500/20" data-testid="tab-videos">
+          <TabsTrigger value="videos" className="data-[state=active]:bg-primary/20" data-testid="tab-videos">
             <Video className="w-4 h-4 mr-2" />
             Videos
             {generatedVideos.length > 0 && (
@@ -329,8 +329,8 @@ export function AvatarStudio() {
           <div className="grid lg:grid-cols-2 gap-6">
             <Card className="bg-zinc-950 border border-zinc-800/50 shadow-xl">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2 text-sm">
-                  <Camera className="w-4 h-4 text-orange-500" />
+                <CardTitle className="text-foreground flex items-center gap-2 text-sm">
+                  <Camera className="w-4 h-4 text-primary" />
                   Avatar Source
                 </CardTitle>
               </CardHeader>
@@ -423,7 +423,7 @@ export function AvatarStudio() {
                     onClick={() => generateAvatarMutation.mutate()}
                     disabled={!avatarDescription.trim() || generateAvatarMutation.isPending}
                     variant="outline"
-                    className="w-full border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+                    className="w-full border text-primary hover:bg-primary/10"
                     data-testid="button-generate-avatar"
                   >
                     {generateAvatarMutation.isPending ? (
@@ -444,8 +444,8 @@ export function AvatarStudio() {
 
             <Card className="bg-zinc-950 border border-zinc-800/50 shadow-xl">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2 text-sm">
-                  <FileText className="w-4 h-4 text-orange-500" />
+                <CardTitle className="text-foreground flex items-center gap-2 text-sm">
+                  <FileText className="w-4 h-4 text-primary" />
                   Script & Voice
                 </CardTitle>
               </CardHeader>
@@ -523,15 +523,15 @@ export function AvatarStudio() {
         <TabsContent value="presets" className="space-y-6">
           <Card className="bg-zinc-950 border border-zinc-800/50">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2 text-sm">
-                <Image className="w-4 h-4 text-orange-500" />
+              <CardTitle className="text-foreground flex items-center gap-2 text-sm">
+                <Image className="w-4 h-4 text-primary" />
                 Avatar Presets
               </CardTitle>
             </CardHeader>
             <CardContent>
               {presetsLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 </div>
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -560,7 +560,7 @@ export function AvatarStudio() {
                         />
                       </div>
                       <div className="p-2 bg-zinc-900/50">
-                        <p className="text-sm font-medium text-white truncate">{preset.name}</p>
+                        <p className="text-sm font-medium text-foreground truncate">{preset.name}</p>
                         <p className="text-xs text-zinc-500 truncate">{preset.description}</p>
                       </div>
                     </div>
@@ -575,8 +575,8 @@ export function AvatarStudio() {
           <div className="grid md:grid-cols-2 gap-6">
             <Card className="bg-zinc-950 border border-zinc-800/50">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2 text-sm">
-                  <Mic className="w-4 h-4 text-orange-500" />
+                <CardTitle className="text-foreground flex items-center gap-2 text-sm">
+                  <Mic className="w-4 h-4 text-primary" />
                   Voice Cloning (Beta)
                 </CardTitle>
               </CardHeader>
@@ -589,7 +589,7 @@ export function AvatarStudio() {
                   <Button
                     onClick={isRecording ? stopRecording : startRecording}
                     variant={isRecording ? "destructive" : "outline"}
-                    className={isRecording ? "" : "border-orange-500/30"}
+                    className={isRecording ? "" : "border"}
                     data-testid="button-record-voice"
                   >
                     {isRecording ? (
@@ -616,11 +616,11 @@ export function AvatarStudio() {
                   <audio controls src={voiceSample} className="w-full mt-4" data-testid="audio-voice-sample" />
                 )}
 
-                <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                <div className="bg-primary/10 border border rounded-lg p-3">
                   <div className="flex items-start gap-2">
-                    <AlertCircle className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                    <AlertCircle className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
                     <div className="text-xs text-zinc-400">
-                      <p className="font-medium text-orange-400 mb-1">Tips for best results:</p>
+                      <p className="font-medium text-primary mb-1">Tips for best results:</p>
                       <ul className="space-y-1 list-disc list-inside">
                         <li>Speak clearly at a consistent volume</li>
                         <li>Use a quiet environment</li>
@@ -634,8 +634,8 @@ export function AvatarStudio() {
 
             <Card className="bg-zinc-950 border border-zinc-800/50">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2 text-sm">
-                  <Volume2 className="w-4 h-4 text-orange-500" />
+                <CardTitle className="text-foreground flex items-center gap-2 text-sm">
+                  <Volume2 className="w-4 h-4 text-primary" />
                   Available Voices
                 </CardTitle>
               </CardHeader>
@@ -651,18 +651,18 @@ export function AvatarStudio() {
                         }}
                         className={`p-3 rounded-lg cursor-pointer transition-all ${
                           selectedVoice === voice.id
-                            ? "bg-orange-500/20 border border-orange-500/30"
+                            ? "bg-primary/20 border border"
                             : "bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700"
                         }`}
                         data-testid={`voice-option-${voice.id}`}
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-medium text-white">{voice.name}</p>
+                            <p className="text-sm font-medium text-foreground">{voice.name}</p>
                             <p className="text-xs text-zinc-500">{voice.lang}</p>
                           </div>
                           {selectedVoice === voice.id && (
-                            <CheckCircle className="w-4 h-4 text-orange-500" />
+                            <CheckCircle className="w-4 h-4 text-primary" />
                           )}
                         </div>
                       </div>
@@ -677,8 +677,8 @@ export function AvatarStudio() {
         <TabsContent value="videos" className="space-y-6">
           <Card className="bg-zinc-950 border border-zinc-800/50">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2 text-sm">
-                <Video className="w-4 h-4 text-orange-500" />
+              <CardTitle className="text-foreground flex items-center gap-2 text-sm">
+                <Video className="w-4 h-4 text-primary" />
                 Generated Videos
                 <Badge variant="secondary" className="ml-2">
                   {generatedVideos.length}
@@ -695,7 +695,7 @@ export function AvatarStudio() {
                   </p>
                   <Button
                     variant="outline"
-                    className="mt-4 border-orange-500/30"
+                    className="mt-4 border"
                     onClick={() => setActiveTab("create")}
                     data-testid="button-go-to-create"
                   >
@@ -711,7 +711,7 @@ export function AvatarStudio() {
                       className="bg-zinc-900/50 border-zinc-800 overflow-hidden"
                       data-testid={`video-card-${video.id}`}
                     >
-                      <div className="aspect-video bg-black relative flex items-center justify-center">
+                      <div className="aspect-video bg-background relative flex items-center justify-center">
                         {video.status === "completed" && video.resultUrl ? (
                           <video
                             ref={videoRef}
@@ -722,7 +722,7 @@ export function AvatarStudio() {
                           />
                         ) : video.status === "processing" || video.status === "started" || video.status === "created" ? (
                           <div className="text-center">
-                            <Loader2 className="w-10 h-10 animate-spin text-orange-500 mx-auto mb-3" />
+                            <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-3" />
                             <p className="text-sm text-zinc-400">Processing...</p>
                             <p className="text-xs text-zinc-500 mt-1">This may take 2-5 minutes</p>
                           </div>
@@ -810,12 +810,12 @@ export function AvatarStudio() {
         </TabsContent>
       </Tabs>
 
-      <Card className="bg-orange-500/5 border-orange-500/20">
+      <Card className="bg-orange-500/5 border">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
+            <AlertCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm text-white font-medium">About AI Avatar Generation</p>
+              <p className="text-sm text-foreground font-medium">About AI Avatar Generation</p>
               <p className="text-xs text-zinc-400 mt-1">
                 AI avatars use advanced neural rendering to create realistic talking head videos.
               </p>

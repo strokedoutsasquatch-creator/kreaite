@@ -18,7 +18,7 @@ export default function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-black border-b border-border">
+    <header className="sticky top-0 z-50 bg-background border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href="/" data-testid="link-home">
@@ -49,8 +49,8 @@ export default function Header() {
                   data-testid={`link-${link.label.toLowerCase().replace(" ", "-")}`}
                   className={`font-medium text-xs tracking-wide ${
                     location === link.href 
-                      ? "text-white" 
-                      : "text-muted-foreground hover:text-white"
+                      ? "text-foreground" 
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {link.label}
@@ -73,7 +73,7 @@ export default function Header() {
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden text-white"
+            className="lg:hidden text-foreground"
             data-testid="button-menu"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
@@ -87,7 +87,7 @@ export default function Header() {
               <Link key={link.href} href={link.href}>
                 <Button
                   variant={location === link.href ? "secondary" : "ghost"}
-                  className="w-full justify-start text-white"
+                  className="w-full justify-start text-foreground"
                   onClick={() => setMobileMenuOpen(false)}
                   data-testid={`mobile-link-${link.label.toLowerCase().replace(" ", "-")}`}
                 >

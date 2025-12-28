@@ -201,22 +201,22 @@ export function BatchGenerationPanel({ studioType, onComplete }: BatchGeneration
   const failedCount = results.filter(r => r.status === 'failed').length;
 
   return (
-    <Card className="bg-black border-zinc-800">
+    <Card className="bg-background border-zinc-800">
       <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-orange-500/10 border border-orange-500/30">
-            <Layers className="w-5 h-5 text-orange-500" />
+          <div className="p-2 rounded-lg bg-primary/10 border border">
+            <Layers className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <CardTitle className="text-xl text-white">Batch Generation</CardTitle>
+            <CardTitle className="text-xl text-foreground">Batch Generation</CardTitle>
             <CardDescription className="text-zinc-400">
               Generate multiple {studioType} assets at once
             </CardDescription>
           </div>
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 rounded-full border border-zinc-800">
-          <Coins className="w-4 h-4 text-orange-500" />
-          <span className="text-sm font-bold text-white" data-testid="text-credit-balance">
+          <Coins className="w-4 h-4 text-primary" />
+          <span className="text-sm font-bold text-foreground" data-testid="text-credit-balance">
             {userBalance}
           </span>
           <span className="text-xs text-zinc-500">credits</span>
@@ -235,7 +235,7 @@ export function BatchGenerationPanel({ studioType, onComplete }: BatchGeneration
                   data-testid="select-content-type"
                 >
                   <SelectTrigger 
-                    className="bg-zinc-900 border-zinc-700 text-white"
+                    className="bg-zinc-900 border-zinc-700 text-foreground"
                     data-testid="select-content-type-trigger"
                   >
                     <SelectValue placeholder="Select content type" />
@@ -245,7 +245,7 @@ export function BatchGenerationPanel({ studioType, onComplete }: BatchGeneration
                       <SelectItem 
                         key={type.value} 
                         value={type.value}
-                        className="text-white hover:bg-zinc-800"
+                        className="text-foreground hover:bg-zinc-800"
                       >
                         {type.label}
                       </SelectItem>
@@ -264,7 +264,7 @@ export function BatchGenerationPanel({ studioType, onComplete }: BatchGeneration
                   max={50}
                   value={quantity}
                   onChange={(e) => setQuantity(Math.min(50, Math.max(1, parseInt(e.target.value) || 1)))}
-                  className="bg-zinc-900 border-zinc-700 text-white"
+                  className="bg-zinc-900 border-zinc-700 text-foreground"
                   data-testid="input-quantity"
                 />
               </div>
@@ -291,14 +291,14 @@ export function BatchGenerationPanel({ studioType, onComplete }: BatchGeneration
                       } ${!tierAffordable ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover-elevate'}`}
                     >
                       <div className="flex items-center gap-2 mb-1">
-                        <Icon className={`w-4 h-4 ${isSelected ? 'text-orange-500' : 'text-zinc-400'}`} />
-                        <span className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-zinc-300'}`}>
+                        <Icon className={`w-4 h-4 ${isSelected ? 'text-primary' : 'text-zinc-400'}`} />
+                        <span className={`text-sm font-medium ${isSelected ? 'text-foreground' : 'text-zinc-300'}`}>
                           {tier.name}
                         </span>
                       </div>
                       <Badge 
                         variant="secondary" 
-                        className={`text-xs ${isSelected ? 'bg-orange-500/20 text-orange-400' : 'bg-zinc-800 text-zinc-400'}`}
+                        className={`text-xs ${isSelected ? 'bg-primary/20 text-primary' : 'bg-zinc-800 text-zinc-400'}`}
                       >
                         {tier.creditCost}c each
                       </Badge>
@@ -317,7 +317,7 @@ export function BatchGenerationPanel({ studioType, onComplete }: BatchGeneration
                 onValueChange={(val) => setSelectedVoice(val ? parseInt(val) : null)}
               >
                 <SelectTrigger 
-                  className="bg-zinc-900 border-zinc-700 text-white"
+                  className="bg-zinc-900 border-zinc-700 text-foreground"
                   data-testid="select-voice-preset-trigger"
                 >
                   <SelectValue placeholder="Select voice preset (optional)" />
@@ -330,7 +330,7 @@ export function BatchGenerationPanel({ studioType, onComplete }: BatchGeneration
                     <SelectItem 
                       key={voice.id} 
                       value={voice.id.toString()}
-                      className="text-white hover:bg-zinc-800"
+                      className="text-foreground hover:bg-zinc-800"
                     >
                       {voice.name}
                     </SelectItem>
@@ -345,7 +345,7 @@ export function BatchGenerationPanel({ studioType, onComplete }: BatchGeneration
                 placeholder={`Describe what you want to generate. Use {index} for item numbers.\n\nExample: "Write chapter {index} of a recovery guide focusing on..."`}
                 value={template}
                 onChange={(e) => setTemplate(e.target.value)}
-                className="min-h-[120px] bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500"
+                className="min-h-[120px] bg-zinc-900 border-zinc-700 text-foreground placeholder:text-zinc-500"
                 data-testid="input-template"
               />
             </div>
@@ -354,8 +354,8 @@ export function BatchGenerationPanel({ studioType, onComplete }: BatchGeneration
               <div className="flex items-center justify-between">
                 <span className="text-sm text-zinc-400">Estimated Cost</span>
                 <div className="flex items-center gap-2">
-                  <Coins className="w-4 h-4 text-orange-500" />
-                  <span className="text-lg font-bold text-white" data-testid="text-estimated-cost">
+                  <Coins className="w-4 h-4 text-primary" />
+                  <span className="text-lg font-bold text-foreground" data-testid="text-estimated-cost">
                     {estimatedCredits}
                   </span>
                   <span className="text-sm text-zinc-500">credits</span>
@@ -377,7 +377,7 @@ export function BatchGenerationPanel({ studioType, onComplete }: BatchGeneration
             <Button
               onClick={handleStartGeneration}
               disabled={!canAfford || !template.trim() || createJob.isPending}
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold"
+              className="w-full bg-orange-500 hover:bg-orange-600 text-foreground font-semibold"
               data-testid="button-start-generation"
             >
               {createJob.isPending ? (
@@ -399,11 +399,11 @@ export function BatchGenerationPanel({ studioType, onComplete }: BatchGeneration
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-orange-500/20">
-                  <Loader2 className="w-5 h-5 text-orange-500 animate-spin" />
+                <div className="p-2 rounded-full bg-primary/20">
+                  <Loader2 className="w-5 h-5 text-primary animate-spin" />
                 </div>
                 <div>
-                  <p className="font-medium text-white" data-testid="text-progress-status">
+                  <p className="font-medium text-foreground" data-testid="text-progress-status">
                     Generating...
                   </p>
                   <p className="text-sm text-zinc-500">
@@ -421,7 +421,7 @@ export function BatchGenerationPanel({ studioType, onComplete }: BatchGeneration
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-zinc-400">Progress</span>
-                <span className="text-white font-medium" data-testid="text-progress-percentage">
+                <span className="text-foreground font-medium" data-testid="text-progress-percentage">
                   {Math.round(progress)}%
                 </span>
               </div>
@@ -435,7 +435,7 @@ export function BatchGenerationPanel({ studioType, onComplete }: BatchGeneration
             {job?.data?.currentItem && (
               <div className="p-3 rounded-lg bg-zinc-900 border border-zinc-800">
                 <p className="text-sm text-zinc-400">Currently generating:</p>
-                <p className="text-white font-medium" data-testid="text-current-item">
+                <p className="text-foreground font-medium" data-testid="text-current-item">
                   Item {job.data.currentItem} of {quantity}
                 </p>
               </div>
@@ -481,7 +481,7 @@ export function BatchGenerationPanel({ studioType, onComplete }: BatchGeneration
                   <CheckCircle2 className="w-5 h-5 text-green-500" />
                 </div>
                 <div>
-                  <p className="font-medium text-white" data-testid="text-completion-status">
+                  <p className="font-medium text-foreground" data-testid="text-completion-status">
                     Generation Complete
                   </p>
                   <p className="text-sm text-zinc-500">
@@ -523,7 +523,7 @@ export function BatchGenerationPanel({ studioType, onComplete }: BatchGeneration
                             ) : (
                               <XCircle className="w-4 h-4 text-red-500" />
                             )}
-                            <span className="font-medium text-white">
+                            <span className="font-medium text-foreground">
                               Item {result.index + 1}
                             </span>
                             <Badge 
@@ -589,7 +589,7 @@ export function BatchGenerationPanel({ studioType, onComplete }: BatchGeneration
                 Download All
               </Button>
               <Button
-                className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
+                className="flex-1 bg-orange-500 hover:bg-orange-600 text-foreground"
                 data-testid="button-publish-all"
               >
                 <Store className="w-4 h-4 mr-2" />

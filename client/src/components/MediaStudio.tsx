@@ -742,7 +742,7 @@ export default function MediaStudio({
           <div
             key={clip.id}
             className={`absolute top-1 bottom-1 rounded cursor-pointer transition-all ${
-              isSelected ? 'ring-2 ring-orange-500 z-10' : ''
+              isSelected ? 'ring-2 ring-primary z-10' : ''
             }`}
             style={{
               left,
@@ -759,7 +759,7 @@ export default function MediaStudio({
                 setResizingClip({ id: clip.id, edge: 'left' });
               }}
             />
-            <div className="px-2 py-1 truncate text-xs font-medium text-white">
+            <div className="px-2 py-1 truncate text-xs font-medium text-foreground">
               {clip.text || clip.name}
             </div>
             <div
@@ -775,7 +775,7 @@ export default function MediaStudio({
   };
 
   return (
-    <div className="flex flex-col h-screen bg-black text-white" data-testid="media-studio">
+    <div className="flex flex-col h-screen bg-background text-foreground" data-testid="media-studio">
       <input
         type="file"
         ref={fileInputRef}
@@ -788,7 +788,7 @@ export default function MediaStudio({
       <header className="flex items-center justify-between h-12 px-3 bg-[#1a1a1a] border-b border-gray-800">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <Film className="w-5 h-5 text-orange-500" />
+            <Film className="w-5 h-5 text-primary" />
             <span className="font-semibold text-sm">MediaStudio</span>
           </div>
           <Separator orientation="vertical" className="h-6 bg-gray-700" />
@@ -797,7 +797,7 @@ export default function MediaStudio({
             <Button
               size="sm"
               variant={mode === 'image' ? 'secondary' : 'ghost'}
-              className={`h-7 px-3 text-xs ${mode === 'image' ? 'bg-orange-500 text-black' : ''}`}
+              className={`h-7 px-3 text-xs ${mode === 'image' ? 'bg-primary text-primary-foreground' : ''}`}
               onClick={() => setMode('image')}
               data-testid="button-mode-image"
             >
@@ -807,7 +807,7 @@ export default function MediaStudio({
             <Button
               size="sm"
               variant={mode === 'video' ? 'secondary' : 'ghost'}
-              className={`h-7 px-3 text-xs ${mode === 'video' ? 'bg-orange-500 text-black' : ''}`}
+              className={`h-7 px-3 text-xs ${mode === 'video' ? 'bg-primary text-primary-foreground' : ''}`}
               onClick={() => setMode('video')}
               data-testid="button-mode-video"
             >
@@ -865,7 +865,7 @@ export default function MediaStudio({
           </Button>
           <Button
             size="sm"
-            className="bg-orange-500 hover:bg-orange-600 text-black gap-1"
+            className="bg-primary hover:bg-primary/80 text-primary-foreground gap-1"
             onClick={() => setIsExportDialogOpen(true)}
             data-testid="button-export"
           >
@@ -898,7 +898,7 @@ export default function MediaStudio({
                 <Button
                   size="icon"
                   variant={selectedTool === tool.id ? 'secondary' : 'ghost'}
-                  className={`h-10 w-10 ${selectedTool === tool.id ? 'bg-orange-500/20 text-orange-500' : ''}`}
+                  className={`h-10 w-10 ${selectedTool === tool.id ? 'bg-primary/20 text-primary' : ''}`}
                   onClick={() => setSelectedTool(tool.id)}
                   data-testid={`button-tool-${tool.id}`}
                 >
@@ -942,7 +942,7 @@ export default function MediaStudio({
           </Tooltip>
         </aside>
 
-        <main className="flex-1 flex flex-col bg-black overflow-hidden">
+        <main className="flex-1 flex flex-col bg-background overflow-hidden">
           <div className="flex-1 flex items-center justify-center p-4 overflow-auto">
             {mode === 'video' ? (
               <div
@@ -981,7 +981,7 @@ export default function MediaStudio({
                   className="absolute bottom-0 left-0 right-0 h-1 bg-gray-700"
                 >
                   <div
-                    className="h-full bg-orange-500"
+                    className="h-full bg-primary"
                     style={{ width: `${(currentTime / duration) * 100}%` }}
                   />
                 </div>
@@ -1045,7 +1045,7 @@ export default function MediaStudio({
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-9 w-9 bg-orange-500 text-black hover:bg-orange-600"
+                    className="h-9 w-9 bg-primary text-primary-foreground hover:bg-primary/80"
                     onClick={togglePlayPause}
                     data-testid="button-play-pause"
                   >
@@ -1106,7 +1106,7 @@ export default function MediaStudio({
                   <Button
                     size="sm"
                     variant={snapToGrid ? 'secondary' : 'ghost'}
-                    className={`gap-1 h-7 ${snapToGrid ? 'bg-orange-500/20 text-orange-500' : ''}`}
+                    className={`gap-1 h-7 ${snapToGrid ? 'bg-primary/20 text-primary' : ''}`}
                     onClick={() => setSnapToGrid(!snapToGrid)}
                     data-testid="button-snap"
                   >
@@ -1186,10 +1186,10 @@ export default function MediaStudio({
                 </div>
 
                 <div
-                  className="absolute top-0 bottom-0 w-0.5 bg-orange-500 pointer-events-none z-20"
+                  className="absolute top-0 bottom-0 w-0.5 bg-primary pointer-events-none z-20"
                   style={{ left: 128 + currentTime * pixelsPerSecond }}
                 >
-                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-orange-500 rotate-45" />
+                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-primary rotate-45" />
                 </div>
               </ScrollArea>
 
@@ -1273,26 +1273,26 @@ export default function MediaStudio({
             <TabsList className="w-full justify-start rounded-none border-b border-gray-800 bg-transparent h-10 px-2">
               {mode === 'video' ? (
                 <>
-                  <TabsTrigger value="clips" className="text-xs data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-500">
+                  <TabsTrigger value="clips" className="text-xs data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
                     <Film className="w-3.5 h-3.5 mr-1" />
                     Clips
                   </TabsTrigger>
-                  <TabsTrigger value="assets" className="text-xs data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-500">
+                  <TabsTrigger value="assets" className="text-xs data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
                     <Layers className="w-3.5 h-3.5 mr-1" />
                     Assets
                   </TabsTrigger>
                 </>
               ) : (
-                <TabsTrigger value="layers" className="text-xs data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-500">
+                <TabsTrigger value="layers" className="text-xs data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
                   <Layers className="w-3.5 h-3.5 mr-1" />
                   Layers
                 </TabsTrigger>
               )}
-              <TabsTrigger value="adjust" className="text-xs data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-500">
+              <TabsTrigger value="adjust" className="text-xs data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
                 <SunMedium className="w-3.5 h-3.5 mr-1" />
                 Adjust
               </TabsTrigger>
-              <TabsTrigger value="ai" className="text-xs data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-500">
+              <TabsTrigger value="ai" className="text-xs data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
                 <Sparkles className="w-3.5 h-3.5 mr-1" />
                 AI
               </TabsTrigger>
@@ -1521,7 +1521,7 @@ export default function MediaStudio({
                       <div
                         key={layer.id}
                         className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${
-                          activeLayerId === layer.id ? 'bg-orange-500/20 ring-1 ring-orange-500' : 'bg-gray-800 hover:bg-gray-700'
+                          activeLayerId === layer.id ? 'bg-primary/20 ring-1 ring-primary' : 'bg-gray-800 hover:bg-gray-700'
                         }`}
                         onClick={() => setActiveLayerId(layer.id)}
                         data-testid={`layer-${layer.id}`}
@@ -1722,7 +1722,7 @@ export default function MediaStudio({
 
               <TabsContent value="ai" className="m-0 p-3 space-y-3">
                 <h3 className="text-sm font-medium flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-orange-500" />
+                  <Sparkles className="w-4 h-4 text-primary" />
                   AI Tools
                 </h3>
                 
@@ -1805,7 +1805,7 @@ export default function MediaStudio({
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsSaveDialogOpen(false)}>Cancel</Button>
-            <Button className="bg-orange-500 hover:bg-orange-600 text-black" onClick={handleSaveProject}>
+            <Button className="bg-primary hover:bg-primary/80 text-primary-foreground" onClick={handleSaveProject}>
               <Save className="w-4 h-4 mr-2" />
               Save Project
             </Button>
@@ -1874,7 +1874,7 @@ export default function MediaStudio({
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsExportDialogOpen(false)}>Cancel</Button>
-            <Button className="bg-orange-500 hover:bg-orange-600 text-black" onClick={handleExport}>
+            <Button className="bg-primary hover:bg-primary/80 text-primary-foreground" onClick={handleExport}>
               <Download className="w-4 h-4 mr-2" />
               Export
             </Button>

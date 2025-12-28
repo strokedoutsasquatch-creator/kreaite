@@ -94,10 +94,10 @@ export function WritingCoachOverlay({
         onClick={onToggle}
         variant="outline"
         size="sm"
-        className="fixed bottom-4 right-4 z-50 bg-black border-orange-500/30 hover:bg-orange-500/10"
+        className="fixed bottom-4 right-4 z-50 bg-background border hover:bg-primary/10"
         data-testid="button-enable-coach"
       >
-        <Lightbulb className="w-4 h-4 mr-2 text-orange-500" />
+        <Lightbulb className="w-4 h-4 mr-2 text-primary" />
         Writing Coach
       </Button>
     );
@@ -105,16 +105,16 @@ export function WritingCoachOverlay({
 
   return (
     <Card
-      className="fixed bottom-4 right-4 z-50 w-80 bg-black border-orange-500/30 shadow-xl"
+      className="fixed bottom-4 right-4 z-50 w-80 bg-background border shadow-xl"
       data-testid="writing-coach-overlay"
     >
-      <div className="p-3 border-b border-orange-500/20">
+      <div className="p-3 border-b border">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Lightbulb className="w-4 h-4 text-orange-500" />
-            <span className="text-sm font-medium text-white">Writing Coach</span>
+            <Lightbulb className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium text-foreground">Writing Coach</span>
             {suggestions.length > 0 && (
-              <Badge className="bg-orange-500/20 text-orange-400 text-xs">
+              <Badge className="bg-primary/20 text-primary text-xs">
                 {suggestions.length}
               </Badge>
             )}
@@ -134,7 +134,7 @@ export function WritingCoachOverlay({
       <div className="p-3">
         {analyzeMutation.isPending ? (
           <div className="text-center py-4">
-            <Loader2 className="w-6 h-6 animate-spin mx-auto text-orange-500" />
+            <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
             <p className="text-xs text-gray-400 mt-2">Analyzing your writing...</p>
           </div>
         ) : suggestions.length === 0 ? (
@@ -189,7 +189,7 @@ export function WritingCoachOverlay({
                 variant="outline"
                 onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
                 disabled={currentIndex === 0}
-                className="h-8 w-8 border-orange-500/30"
+                className="h-8 w-8 border"
                 data-testid="button-prev-suggestion"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -218,7 +218,7 @@ export function WritingCoachOverlay({
                 variant="outline"
                 onClick={() => setCurrentIndex(Math.min(suggestions.length - 1, currentIndex + 1))}
                 disabled={currentIndex === suggestions.length - 1}
-                className="h-8 w-8 border-orange-500/30"
+                className="h-8 w-8 border"
                 data-testid="button-next-suggestion"
               >
                 <ChevronRight className="w-4 h-4" />
@@ -243,7 +243,7 @@ export function WritingCoachOverlay({
               onClick={() => analyzeMutation.mutate()}
               variant="outline"
               size="sm"
-              className="mt-3 border-orange-500/30"
+              className="mt-3 border"
               data-testid="button-analyze-again"
             >
               Analyze again

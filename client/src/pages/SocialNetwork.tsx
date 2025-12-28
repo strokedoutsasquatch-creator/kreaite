@@ -189,7 +189,7 @@ export default function SocialNetwork() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -277,7 +277,7 @@ export default function SocialNetwork() {
                           <div className="flex-1">
                             <div className="flex items-center justify-between">
                               <div>
-                                <p className="text-white font-medium">
+                                <p className="text-foreground font-medium">
                                   {post.author?.firstName} {post.author?.lastName}
                                 </p>
                                 <p className="text-gray-500 text-sm">{formatTimeAgo(post.createdAt)}</p>
@@ -286,7 +286,7 @@ export default function SocialNetwork() {
                                 <MoreHorizontal className="w-4 h-4" />
                               </Button>
                             </div>
-                            <p className="text-white mt-3">{post.content}</p>
+                            <p className="text-foreground mt-3">{post.content}</p>
                             {post.media && post.media.length > 0 && (
                               <div className="mt-4 rounded-xl overflow-hidden">
                                 {post.media[0].mediaType === "video" ? (
@@ -347,7 +347,7 @@ export default function SocialNetwork() {
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="text-white font-medium">
+                              <p className="text-foreground font-medium">
                                 {follower.firstName} {follower.lastName}
                               </p>
                               <p className="text-gray-400 text-sm">
@@ -389,7 +389,7 @@ export default function SocialNetwork() {
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="text-white font-medium">
+                              <p className="text-foreground font-medium">
                                 {followed.firstName} {followed.lastName}
                               </p>
                               <p className="text-gray-400 text-sm">
@@ -423,7 +423,7 @@ export default function SocialNetwork() {
           <div className="space-y-6">
             <Card className="bg-gray-900 border-gray-800">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-foreground flex items-center gap-2">
                   <Search className="w-5 h-5" />
                   Find Survivors
                 </CardTitle>
@@ -447,7 +447,7 @@ export default function SocialNetwork() {
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="text-white text-sm font-medium">
+                          <p className="text-foreground text-sm font-medium">
                             {u.firstName} {u.lastName}
                           </p>
                           <p className="text-gray-500 text-xs">
@@ -487,7 +487,7 @@ export default function SocialNetwork() {
 
             <Card className="bg-gray-900 border-gray-800">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-foreground flex items-center gap-2">
                   <Trophy className="w-5 h-5 text-yellow-500" />
                   Top Recoverers
                 </CardTitle>
@@ -499,7 +499,7 @@ export default function SocialNetwork() {
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
                         rank === 1 ? "bg-yellow-500/20 text-yellow-500" :
                         rank === 2 ? "bg-gray-400/20 text-gray-400" :
-                        "bg-orange-500/20 text-orange-500"
+                        "bg-primary/20 text-primary"
                       }`}>
                         {rank}
                       </div>
@@ -509,7 +509,7 @@ export default function SocialNetwork() {
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
-                        <p className="text-white text-sm font-medium">Top Survivor {rank}</p>
+                        <p className="text-foreground text-sm font-medium">Top Survivor {rank}</p>
                         <div className="flex items-center gap-1 text-primary text-xs">
                           <Flame className="w-3 h-3" />
                           {100 - rank * 10} day streak
@@ -526,7 +526,7 @@ export default function SocialNetwork() {
         <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
           <DialogContent className="bg-gray-900 border-gray-800">
             <DialogHeader>
-              <DialogTitle className="text-white">Share to Social Media</DialogTitle>
+              <DialogTitle className="text-foreground">Share to Social Media</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
               <Button

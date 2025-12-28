@@ -269,23 +269,23 @@ export default function Pricing() {
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-background">
       <Header />
       
       <main>
         <section className="relative overflow-hidden py-20 px-4">
           <div className="absolute inset-0">
-            <div className="absolute top-20 left-10 w-72 h-72 bg-orange-500/20 rounded-full blur-3xl" />
+            <div className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl" />
             <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
           </div>
           
           <div className="relative max-w-7xl mx-auto text-center">
-            <Badge className="mb-6 bg-orange-500/20 text-orange-400 border-orange-500/30" data-testid="badge-pricing">
+            <Badge className="mb-6 bg-primary/20 text-primary border" data-testid="badge-pricing">
               <Sparkles className="w-3 h-3 mr-1" />
               Simple, Transparent Pricing
             </Badge>
             
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 text-white" data-testid="heading-pricing">
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 text-foreground" data-testid="heading-pricing">
               Create Without
               <span className="bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent"> Limits</span>
             </h1>
@@ -296,7 +296,7 @@ export default function Pricing() {
             </p>
             
             <div className="flex items-center justify-center gap-4 mb-12">
-              <Label htmlFor="billing-toggle" className={!isAnnual ? "text-white" : "text-muted-foreground"}>
+              <Label htmlFor="billing-toggle" className={!isAnnual ? "text-foreground" : "text-muted-foreground"}>
                 Monthly
               </Label>
               <Switch
@@ -305,7 +305,7 @@ export default function Pricing() {
                 onCheckedChange={setIsAnnual}
                 data-testid="switch-billing-toggle"
               />
-              <Label htmlFor="billing-toggle" className={isAnnual ? "text-white" : "text-muted-foreground"}>
+              <Label htmlFor="billing-toggle" className={isAnnual ? "text-foreground" : "text-muted-foreground"}>
                 Annual
               </Label>
               {isAnnual && (
@@ -341,10 +341,10 @@ export default function Pricing() {
                     )}
                     
                     <CardHeader className="text-center pb-4">
-                      <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-orange-500/10 flex items-center justify-center">
-                        <TierIcon className="w-8 h-8 text-orange-500" />
+                      <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                        <TierIcon className="w-8 h-8 text-primary" />
                       </div>
-                      <CardTitle className="text-2xl text-white" data-testid={`text-tier-name-${tier.name}`}>
+                      <CardTitle className="text-2xl text-foreground" data-testid={`text-tier-name-${tier.name}`}>
                         {tier.displayName}
                       </CardTitle>
                       <CardDescription data-testid={`text-tier-description-${tier.name}`}>
@@ -355,7 +355,7 @@ export default function Pricing() {
                     <CardContent className="flex-1">
                       <div className="text-center mb-6">
                         <div className="flex items-baseline justify-center gap-1">
-                          <span className="text-4xl font-black text-white" data-testid={`text-tier-price-${tier.name}`}>
+                          <span className="text-4xl font-black text-foreground" data-testid={`text-tier-price-${tier.name}`}>
                             {formatPrice(price)}
                           </span>
                           {price > 0 && (
@@ -386,7 +386,7 @@ export default function Pricing() {
                             data-testid={`feature-${tier.name}-${featureIndex}`}
                           >
                             {feature.included ? (
-                              <Check className="w-4 h-4 text-orange-500 mt-0.5 shrink-0" />
+                              <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                             ) : (
                               <X className="w-4 h-4 text-zinc-600 mt-0.5 shrink-0" />
                             )}
@@ -422,8 +422,8 @@ export default function Pricing() {
 
         <section className="py-20 px-4 border-t border-zinc-800">
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-4 text-white" data-testid="heading-studio-comparison">
-              Studio Features <span className="text-orange-500">Comparison</span>
+            <h2 className="text-3xl font-bold text-center mb-4 text-foreground" data-testid="heading-studio-comparison">
+              Studio Features <span className="text-primary">Comparison</span>
             </h2>
             <p className="text-center text-muted-foreground mb-12">
               See exactly what you get with each plan across all six creative studios
@@ -433,10 +433,10 @@ export default function Pricing() {
               <table className="w-full" data-testid="table-feature-comparison">
                 <thead>
                   <tr className="border-b border-zinc-800">
-                    <th className="text-left py-4 px-4 text-white font-medium">Studio</th>
+                    <th className="text-left py-4 px-4 text-foreground font-medium">Studio</th>
                     <th className="text-center py-4 px-4 text-muted-foreground">Free</th>
                     <th className="text-center py-4 px-4 text-muted-foreground">Creator</th>
-                    <th className="text-center py-4 px-4 text-orange-500 font-bold">Pro</th>
+                    <th className="text-center py-4 px-4 text-primary font-bold">Pro</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -446,18 +446,18 @@ export default function Pricing() {
                       <tr key={index} className="border-b border-zinc-800/50" data-testid={`row-studio-${index}`}>
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                              <StudioIcon className="w-5 h-5 text-orange-500" />
+                            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                              <StudioIcon className="w-5 h-5 text-primary" />
                             </div>
                             <div>
-                              <p className="text-white font-medium">{studio.title}</p>
+                              <p className="text-foreground font-medium">{studio.title}</p>
                               <p className="text-xs text-muted-foreground">{studio.description}</p>
                             </div>
                           </div>
                         </td>
                         <td className="text-center py-4 px-4 text-sm text-muted-foreground">{studio.free}</td>
                         <td className="text-center py-4 px-4 text-sm text-zinc-300">{studio.creator}</td>
-                        <td className="text-center py-4 px-4 text-sm text-orange-400 font-medium">{studio.pro}</td>
+                        <td className="text-center py-4 px-4 text-sm text-primary font-medium">{studio.pro}</td>
                       </tr>
                     );
                   })}
@@ -469,8 +469,8 @@ export default function Pricing() {
 
         <section className="py-20 px-4 bg-zinc-900/50">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-4 text-white" data-testid="heading-api-costs">
-              Transparent <span className="text-orange-500">API Costs</span>
+            <h2 className="text-3xl font-bold text-center mb-4 text-foreground" data-testid="heading-api-costs">
+              Transparent <span className="text-primary">API Costs</span>
             </h2>
             <p className="text-center text-muted-foreground mb-12">
               We use enterprise-grade Google Cloud APIs. Here's exactly what powers your creations.
@@ -481,12 +481,12 @@ export default function Pricing() {
                 <Card key={index} className="bg-zinc-900 border-zinc-800" data-testid={`card-api-cost-${index}`}>
                   <CardContent className="flex items-center justify-between p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                        <DollarSign className="w-5 h-5 text-orange-500" />
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <DollarSign className="w-5 h-5 text-primary" />
                       </div>
-                      <span className="text-white font-medium">{item.service}</span>
+                      <span className="text-foreground font-medium">{item.service}</span>
                     </div>
-                    <Badge variant="outline" className="border-orange-500/30 text-orange-400">
+                    <Badge variant="outline" className="border text-primary">
                       {item.cost}
                     </Badge>
                   </CardContent>
@@ -494,15 +494,15 @@ export default function Pricing() {
               ))}
             </div>
             
-            <div className="mt-8 p-6 rounded-xl bg-gradient-to-r from-orange-500/10 to-transparent border border-orange-500/20">
+            <div className="mt-8 p-6 rounded-xl bg-gradient-to-r from-orange-500/10 to-transparent border border">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center shrink-0">
-                  <Shield className="w-6 h-6 text-orange-500" />
+                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                  <Shield className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white mb-2">Creator-First Revenue Share</h3>
+                  <h3 className="text-lg font-bold text-foreground mb-2">Creator-First Revenue Share</h3>
                   <p className="text-muted-foreground">
-                    When you sell on our marketplace, you keep <span className="text-orange-500 font-bold">85%</span> of every sale. 
+                    When you sell on our marketplace, you keep <span className="text-primary font-bold">85%</span> of every sale. 
                     We only take 15% to cover platform costs. Your creativity, your earnings.
                   </p>
                 </div>
@@ -513,27 +513,27 @@ export default function Pricing() {
 
         <section className="py-20 px-4 border-t border-zinc-800">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-4 text-white">
-              Powered by <span className="text-orange-500">Enterprise AI</span>
+            <h2 className="text-3xl font-bold mb-4 text-foreground">
+              Powered by <span className="text-primary">Enterprise AI</span>
             </h2>
             <p className="text-muted-foreground mb-8">
               We use the same AI infrastructure as Fortune 500 companies
             </p>
             
             <div className="flex flex-wrap justify-center gap-8 opacity-60">
-              <div className="flex items-center gap-2 text-white">
+              <div className="flex items-center gap-2 text-foreground">
                 <Globe className="w-5 h-5" />
                 <span>Google Cloud</span>
               </div>
-              <div className="flex items-center gap-2 text-white">
+              <div className="flex items-center gap-2 text-foreground">
                 <Sparkles className="w-5 h-5" />
                 <span>Vertex AI</span>
               </div>
-              <div className="flex items-center gap-2 text-white">
+              <div className="flex items-center gap-2 text-foreground">
                 <Music className="w-5 h-5" />
                 <span>Lyria Music</span>
               </div>
-              <div className="flex items-center gap-2 text-white">
+              <div className="flex items-center gap-2 text-foreground">
                 <Mic className="w-5 h-5" />
                 <span>Cloud TTS</span>
               </div>
@@ -543,8 +543,8 @@ export default function Pricing() {
 
         <section className="py-20 px-4">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-6 text-white">
-              Ready to <span className="text-orange-500">Start Creating</span>?
+            <h2 className="text-3xl font-bold mb-6 text-foreground">
+              Ready to <span className="text-primary">Start Creating</span>?
             </h2>
             <p className="text-xl text-muted-foreground mb-8">
               Join thousands of creators who are building their empires with AI.
@@ -565,7 +565,7 @@ export default function Pricing() {
                 <Button 
                   size="lg" 
                   variant="outline"
-                  className="border-orange-500/30 text-white hover:bg-orange-500/10 font-semibold text-lg px-8"
+                  className="border text-foreground hover:bg-primary/10 font-semibold text-lg px-8"
                   data-testid="button-explore-studios"
                 >
                   Explore Studios

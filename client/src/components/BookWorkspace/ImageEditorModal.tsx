@@ -250,13 +250,13 @@ export default function ImageEditorModal({
             {/* AI Analysis Results */}
             {analysis && (
               <div className="space-y-3">
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                  <p className="text-sm font-medium text-orange-800 flex items-center gap-2 mb-2">
+                <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
+                  <p className="text-sm font-medium text-primary flex items-center gap-2 mb-2">
                     <Lightbulb className="w-4 h-4" />
                     Placement Recommendation
                   </p>
-                  <p className="text-sm text-orange-700">{analysis.placement.recommendation}</p>
-                  <p className="text-xs text-orange-600 mt-1">
+                  <p className="text-sm text-primary/80">{analysis.placement.recommendation}</p>
+                  <p className="text-xs text-primary mt-1">
                     Suggested: {analysis.placement.suggestedChapter} ({analysis.placement.position})
                   </p>
                 </div>

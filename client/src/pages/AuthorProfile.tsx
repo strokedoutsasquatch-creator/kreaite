@@ -107,8 +107,8 @@ function StatCard({
             <p className="text-sm text-muted-foreground">{title}</p>
             <p className="text-2xl font-bold">{value}</p>
           </div>
-          <div className="p-3 rounded-full bg-orange-500/10">
-            <Icon className="w-5 h-5 text-orange-500" />
+          <div className="p-3 rounded-full bg-primary/10">
+            <Icon className="w-5 h-5 text-primary" />
           </div>
         </div>
       </CardContent>
@@ -461,7 +461,7 @@ export default function AuthorProfile() {
                             className="w-full h-full object-cover"
                           />
                         )}
-                        <div className="absolute inset-0 bg-black/30" />
+                        <div className="absolute inset-0 bg-card/80" />
                         <div className="absolute bottom-4 right-4">
                           <FormField
                             control={form.control}
@@ -472,7 +472,7 @@ export default function AuthorProfile() {
                                   <div className="flex items-center gap-2">
                                     <Input
                                       placeholder="Banner image URL"
-                                      className="w-64 bg-black/50 backdrop-blur"
+                                      className="w-64 bg-card backdrop-blur"
                                       {...field}
                                       data-testid="input-banner-url"
                                     />
@@ -489,7 +489,7 @@ export default function AuthorProfile() {
                           <div className="relative">
                             <Avatar className="w-24 h-24 border-4 border-background">
                               <AvatarImage src={form.watch("photoUrl")} />
-                              <AvatarFallback className="text-2xl bg-orange-500/20">
+                              <AvatarFallback className="text-2xl bg-primary/20">
                                 {form.watch("penName")?.charAt(0) || "A"}
                               </AvatarFallback>
                             </Avatar>
@@ -897,7 +897,7 @@ export default function AuthorProfile() {
                             className={`cursor-pointer transition-colors ${
                               selectedGenres.includes(genre)
                                 ? "bg-orange-500 hover:bg-orange-600"
-                                : "hover:bg-orange-500/10"
+                                : "hover:bg-primary/10"
                             }`}
                             onClick={() => toggleGenre(genre)}
                             data-testid={`badge-genre-${genre.toLowerCase().replace(/\s+/g, "-")}`}
@@ -945,7 +945,7 @@ export default function AuthorProfile() {
                               data-testid={`achievement-${index}`}
                             >
                               <div className="flex items-center gap-2">
-                                <Award className="w-4 h-4 text-orange-500" />
+                                <Award className="w-4 h-4 text-primary" />
                                 <span>{achievement}</span>
                               </div>
                               <Button

@@ -86,15 +86,15 @@ export function ReportModal({ isOpen, onClose, listingId, listingTitle }: Report
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="bg-black border-gray-800 text-white max-w-md" data-testid="modal-report-content">
+      <DialogContent className="bg-background border-gray-800 text-foreground max-w-md" data-testid="modal-report-content">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-white">
+          <DialogTitle className="flex items-center gap-2 text-foreground">
             <Flag className="w-5 h-5 text-[#FF6B35]" />
             Report Content
           </DialogTitle>
           <DialogDescription className="text-gray-400">
             {listingTitle ? (
-              <>Report: <span className="text-white">{listingTitle}</span></>
+              <>Report: <span className="text-foreground">{listingTitle}</span></>
             ) : (
               "Help us maintain community standards by reporting inappropriate content."
             )}
@@ -109,7 +109,7 @@ export function ReportModal({ isOpen, onClose, listingId, listingTitle }: Report
             <Select value={reason} onValueChange={setReason}>
               <SelectTrigger
                 id="reason"
-                className="bg-gray-900 border-gray-700 text-white focus:border-[#FF6B35] focus:ring-[#FF6B35]"
+                className="bg-gray-900 border-gray-700 text-foreground focus:border-[#FF6B35] focus:ring-[#FF6B35]"
                 data-testid="select-report-reason"
               >
                 <SelectValue placeholder="Select a reason" />
@@ -119,7 +119,7 @@ export function ReportModal({ isOpen, onClose, listingId, listingTitle }: Report
                   <SelectItem
                     key={option.value}
                     value={option.value}
-                    className="text-white hover:bg-gray-800 focus:bg-gray-800"
+                    className="text-foreground hover:bg-gray-800 focus:bg-gray-800"
                     data-testid={`option-reason-${option.value}`}
                   >
                     {option.label}
@@ -138,7 +138,7 @@ export function ReportModal({ isOpen, onClose, listingId, listingTitle }: Report
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Please provide any additional context that might help us review this content..."
-              className="bg-gray-900 border-gray-700 text-white placeholder:text-gray-500 focus:border-[#FF6B35] focus:ring-[#FF6B35] min-h-[100px]"
+              className="bg-gray-900 border-gray-700 text-foreground placeholder:text-gray-500 focus:border-[#FF6B35] focus:ring-[#FF6B35] min-h-[100px]"
               data-testid="textarea-report-description"
             />
           </div>
@@ -164,7 +164,7 @@ export function ReportModal({ isOpen, onClose, listingId, listingTitle }: Report
           <Button
             onClick={handleSubmit}
             disabled={!reason || submitReportMutation.isPending}
-            className="bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white"
+            className="bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-foreground"
             data-testid="button-submit-report"
           >
             {submitReportMutation.isPending ? (

@@ -150,12 +150,12 @@ export default function VideoSessions() {
 
   if (inCall && activeSession) {
     return (
-      <div className="fixed inset-0 bg-black z-50 flex flex-col">
+      <div className="fixed inset-0 bg-background z-50 flex flex-col">
         <div className="flex items-center justify-between p-4 bg-gray-900">
           <div className="flex items-center gap-3">
             <Video className="w-6 h-6 text-primary" />
             <div>
-              <p className="text-white font-medium">{activeSession.title}</p>
+              <p className="text-foreground font-medium">{activeSession.title}</p>
               <p className="text-gray-400 text-sm">{getSessionTypeLabel(activeSession.sessionType)}</p>
             </div>
           </div>
@@ -181,7 +181,7 @@ export default function VideoSessions() {
                   {user?.firstName?.[0]}{user?.lastName?.[0]}
                 </AvatarFallback>
               </Avatar>
-              <p className="text-white font-medium">{user?.firstName} {user?.lastName}</p>
+              <p className="text-foreground font-medium">{user?.firstName} {user?.lastName}</p>
               <p className="text-gray-400 text-sm">You</p>
             </div>
             {!videoEnabled && (
@@ -199,7 +199,7 @@ export default function VideoSessions() {
                   {activeSession.host?.firstName?.[0]}{activeSession.host?.lastName?.[0]}
                 </AvatarFallback>
               </Avatar>
-              <p className="text-white font-medium">
+              <p className="text-foreground font-medium">
                 {activeSession.host?.firstName} {activeSession.host?.lastName}
               </p>
               <p className="text-gray-400 text-sm">Host</p>
@@ -251,7 +251,7 @@ export default function VideoSessions() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -271,7 +271,7 @@ export default function VideoSessions() {
             </DialogTrigger>
             <DialogContent className="bg-gray-900 border-gray-800 max-w-md">
               <DialogHeader>
-                <DialogTitle className="text-white">Schedule Video Session</DialogTitle>
+                <DialogTitle className="text-foreground">Schedule Video Session</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div>
@@ -365,7 +365,7 @@ export default function VideoSessions() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-xl font-semibold text-white">{liveSessions[0].title}</h3>
+                      <h3 className="text-xl font-semibold text-foreground">{liveSessions[0].title}</h3>
                       <Badge className="bg-green-500/20 text-green-400 animate-pulse">Live Now</Badge>
                     </div>
                     <p className="text-gray-400">{getSessionTypeLabel(liveSessions[0].sessionType)}</p>
@@ -410,7 +410,7 @@ export default function VideoSessions() {
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="text-lg font-semibold text-white">{session.title}</h3>
+                            <h3 className="text-lg font-semibold text-foreground">{session.title}</h3>
                             {getStatusBadge(session.status)}
                           </div>
                           <p className="text-gray-400 text-sm">{getSessionTypeLabel(session.sessionType)}</p>
@@ -470,7 +470,7 @@ export default function VideoSessions() {
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="text-lg font-semibold text-white">{session.title}</h3>
+                            <h3 className="text-lg font-semibold text-foreground">{session.title}</h3>
                             {getStatusBadge(session.status)}
                           </div>
                           <p className="text-gray-400 text-sm">{getSessionTypeLabel(session.sessionType)}</p>

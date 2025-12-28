@@ -40,8 +40,8 @@ const noteTypes = [
 
 const priorities = [
   { value: "low", label: "Low", color: "text-gray-400" },
-  { value: "normal", label: "Normal", color: "text-white" },
-  { value: "high", label: "High", color: "text-orange-500" },
+  { value: "normal", label: "Normal", color: "text-foreground" },
+  { value: "high", label: "High", color: "text-primary" },
   { value: "urgent", label: "Urgent", color: "text-red-500" },
 ];
 
@@ -118,11 +118,11 @@ export function NotesPanel({ projectId, chapterId, isOpen, onClose }: NotesPanel
   });
 
   return (
-    <Card className="w-80 h-full bg-black border-orange-500/20 flex flex-col" data-testid="notes-panel">
-      <CardHeader className="pb-2 border-b border-orange-500/20">
+    <Card className="w-80 h-full bg-background border flex flex-col" data-testid="notes-panel">
+      <CardHeader className="pb-2 border-b border">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-white flex items-center gap-2 text-sm">
-            <StickyNote className="w-4 h-4 text-orange-500" />
+          <CardTitle className="text-foreground flex items-center gap-2 text-sm">
+            <StickyNote className="w-4 h-4 text-primary" />
             Notes {filteredNotes.length > 0 && `(${filteredNotes.length})`}
           </CardTitle>
           <Button
@@ -138,7 +138,7 @@ export function NotesPanel({ projectId, chapterId, isOpen, onClose }: NotesPanel
 
         <div className="flex gap-2 mt-2">
           <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="h-7 text-xs bg-black/50 border-orange-500/30" data-testid="select-note-type-filter">
+            <SelectTrigger className="h-7 text-xs bg-card border" data-testid="select-note-type-filter">
               <SelectValue placeholder="Type" />
             </SelectTrigger>
             <SelectContent>
@@ -149,7 +149,7 @@ export function NotesPanel({ projectId, chapterId, isOpen, onClose }: NotesPanel
             </SelectContent>
           </Select>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="h-7 text-xs bg-black/50 border-orange-500/30" data-testid="select-note-status-filter">
+            <SelectTrigger className="h-7 text-xs bg-card border" data-testid="select-note-status-filter">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -164,7 +164,7 @@ export function NotesPanel({ projectId, chapterId, isOpen, onClose }: NotesPanel
       <ScrollArea className="flex-1">
         <CardContent className="p-2 space-y-2">
           {isAdding && (
-            <Card className="bg-black/50 border-orange-500/30 p-2" data-testid="card-new-note">
+            <Card className="bg-card border p-2" data-testid="card-new-note">
               <div className="space-y-2">
                 <div className="flex gap-2">
                   <Select value={newNote.noteType} onValueChange={(v) => setNewNote({ ...newNote, noteType: v })}>
@@ -192,7 +192,7 @@ export function NotesPanel({ projectId, chapterId, isOpen, onClose }: NotesPanel
                   value={newNote.content}
                   onChange={(e) => setNewNote({ ...newNote, content: e.target.value })}
                   placeholder="Write your note..."
-                  className="min-h-[80px] text-sm bg-black/30 border-orange-500/20"
+                  className="min-h-[80px] text-sm bg-card/80 border"
                   data-testid="textarea-new-note"
                 />
                 <div className="flex gap-2">
@@ -237,12 +237,12 @@ export function NotesPanel({ projectId, chapterId, isOpen, onClose }: NotesPanel
               return (
                 <Card
                   key={note.id}
-                  className={`bg-black/30 border-orange-500/20 p-2 ${isResolved ? 'opacity-60' : ''}`}
+                  className={`bg-card/80 border p-2 ${isResolved ? 'opacity-60' : ''}`}
                   data-testid={`card-note-${note.id}`}
                 >
                   <div className="flex items-start gap-2">
                     <div className={`w-6 h-6 rounded flex items-center justify-center ${typeInfo.color}`}>
-                      <Icon className="w-3 h-3 text-white" />
+                      <Icon className="w-3 h-3 text-foreground" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1 mb-1">
@@ -267,7 +267,7 @@ export function NotesPanel({ projectId, chapterId, isOpen, onClose }: NotesPanel
                       {note.content.length > 100 && (
                         <button
                           onClick={() => toggleExpand(note.id)}
-                          className="text-[10px] text-orange-500 hover:text-orange-400 mt-1 flex items-center gap-1"
+                          className="text-[10px] text-primary hover:text-primary mt-1 flex items-center gap-1"
                           data-testid={`button-expand-note-${note.id}`}
                         >
                           {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
@@ -306,10 +306,10 @@ export function NotesPanel({ projectId, chapterId, isOpen, onClose }: NotesPanel
       </ScrollArea>
 
       {!isAdding && (
-        <div className="p-2 border-t border-orange-500/20">
+        <div className="p-2 border-t border">
           <Button
             onClick={() => setIsAdding(true)}
-            className="w-full bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 border border-orange-500/30"
+            className="w-full bg-primary/10 hover:bg-primary/20 text-primary border border"
             data-testid="button-add-note"
           >
             <Plus className="w-4 h-4 mr-2" />

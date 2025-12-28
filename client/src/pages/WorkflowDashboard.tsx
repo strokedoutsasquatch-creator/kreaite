@@ -98,7 +98,7 @@ export default function WorkflowDashboard() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed": return "bg-green-500/20 text-green-400";
-      case "running": return "bg-orange-500/20 text-orange-400";
+      case "running": return "bg-primary/20 text-primary";
       case "pending": return "bg-blue-500/20 text-blue-400";
       case "failed": return "bg-red-500/20 text-red-400";
       default: return "bg-zinc-500/20 text-zinc-400";
@@ -115,7 +115,7 @@ export default function WorkflowDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <CreatorHeader />
       
       <main className="container mx-auto px-4 py-8">
@@ -126,26 +126,26 @@ export default function WorkflowDashboard() {
             </Button>
           </Link>
           <div className="p-3 rounded-xl bg-gradient-to-br from-slate-500 to-zinc-600">
-            <GitBranch className="w-8 h-8 text-white" />
+            <GitBranch className="w-8 h-8 text-foreground" />
           </div>
           <div>
             <h1 className="text-3xl font-bold">Workflow Orchestration</h1>
             <p className="text-zinc-400">Automate content creation across studios</p>
           </div>
-          <Badge className="ml-auto bg-orange-500/20 text-orange-400 border-orange-500/30">
+          <Badge className="ml-auto bg-primary/20 text-primary border">
             <Sparkles className="w-3 h-3 mr-1" /> Ultra-Premium
           </Badge>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-zinc-900 border border-zinc-800">
-            <TabsTrigger value="active" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400">
+            <TabsTrigger value="active" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
               <Zap className="w-4 h-4 mr-2" /> Active ({activeWorkflows.length})
             </TabsTrigger>
-            <TabsTrigger value="templates" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400">
+            <TabsTrigger value="templates" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
               <GitBranch className="w-4 h-4 mr-2" /> Templates
             </TabsTrigger>
-            <TabsTrigger value="history" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400">
+            <TabsTrigger value="history" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
               <Clock className="w-4 h-4 mr-2" /> History
             </TabsTrigger>
           </TabsList>
@@ -160,8 +160,8 @@ export default function WorkflowDashboard() {
                       <CardHeader className="pb-3">
                         <div className="flex items-start justify-between">
                           <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-orange-500/20">
-                              <Icon className="w-5 h-5 text-orange-400" />
+                            <div className="p-2 rounded-lg bg-primary/20">
+                              <Icon className="w-5 h-5 text-primary" />
                             </div>
                             <div>
                               <CardTitle className="text-lg">{workflow.type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</CardTitle>
@@ -236,8 +236,8 @@ export default function WorkflowDashboard() {
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="p-3 rounded-lg bg-orange-500/20">
-                            <Icon className="w-6 h-6 text-orange-400" />
+                          <div className="p-3 rounded-lg bg-primary/20">
+                            <Icon className="w-6 h-6 text-primary" />
                           </div>
                           <div>
                             <CardTitle className="text-lg">{template.name}</CardTitle>
@@ -245,7 +245,7 @@ export default function WorkflowDashboard() {
                           </div>
                         </div>
                         {selectedTemplate === template.type && (
-                          <Check className="w-5 h-5 text-orange-400" />
+                          <Check className="w-5 h-5 text-primary" />
                         )}
                       </div>
                     </CardHeader>
@@ -276,7 +276,7 @@ export default function WorkflowDashboard() {
             </div>
 
             {selectedTemplate && (
-              <Card className="bg-gradient-to-r from-orange-500/20 to-rose-500/20 border-orange-500/30">
+              <Card className="bg-gradient-to-r from-orange-500/20 to-rose-500/20 border">
                 <CardContent className="flex items-center justify-between py-6">
                   <div>
                     <h3 className="text-xl font-bold">Ready to Start</h3>

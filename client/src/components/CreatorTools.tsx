@@ -77,7 +77,7 @@ export default function CreatorTools({
       <Card className={`bg-zinc-900/50 border-zinc-800 ${className}`}>
         {showHeader && (
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-white flex items-center gap-2">
+            <CardTitle className="text-sm font-medium text-foreground flex items-center gap-2">
               <Package className="w-4 h-4 text-[#FF6B35]" />
               Creator Tools
             </CardTitle>
@@ -112,7 +112,7 @@ export default function CreatorTools({
         {showHeader && (
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-[#FF6B35]" />
-            <h3 className="font-semibold text-white">Tools for Your Success</h3>
+            <h3 className="font-semibold text-foreground">Tools for Your Success</h3>
           </div>
         )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -171,7 +171,7 @@ function ProductCardCompact({ product }: { product: Product }) {
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-white truncate group-hover:text-[#FF6B35] transition-colors">
+        <p className="text-xs font-medium text-foreground truncate group-hover:text-[#FF6B35] transition-colors">
           {product.title}
         </p>
         {product.priceDisplay && (
@@ -210,7 +210,7 @@ function ProductCardFull({ product }: { product: Product }) {
           </div>
         )}
         {product.isFeatured && (
-          <Badge className="absolute top-2 left-2 bg-[#FF6B35] text-white text-[10px]">
+          <Badge className="absolute top-2 left-2 bg-[#FF6B35] text-foreground text-[10px]">
             Creator's Choice
           </Badge>
         )}
@@ -221,7 +221,7 @@ function ProductCardFull({ product }: { product: Product }) {
             {product.brand}
           </p>
         )}
-        <h4 className="text-sm font-medium text-white line-clamp-2 group-hover:text-[#FF6B35] transition-colors">
+        <h4 className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-[#FF6B35] transition-colors">
           {product.title}
         </h4>
         <div className="flex items-center justify-between">
@@ -244,7 +244,7 @@ function ProductCardFull({ product }: { product: Product }) {
         </div>
         <Button
           asChild
-          className="w-full mt-2 bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white"
+          className="w-full mt-2 bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-foreground"
         >
           <a
             href={product.amazonUrl}

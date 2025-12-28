@@ -99,7 +99,7 @@ export default function Settings() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="p-8 text-center">
           <p className="text-gray-400">Please sign in to access settings</p>
         </Card>
@@ -108,10 +108,10 @@ export default function Settings() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2" data-testid="text-settings-title">
+          <h1 className="text-3xl font-bold text-foreground mb-2" data-testid="text-settings-title">
             Settings
           </h1>
           <p className="text-gray-400">
@@ -157,7 +157,7 @@ export default function Settings() {
 
           <TabsContent value="profile" className="space-y-6">
             <Card className="bg-gray-900 border-gray-800 p-6">
-              <h2 className="text-xl font-semibold text-white mb-6">Profile Picture</h2>
+              <h2 className="text-xl font-semibold text-foreground mb-6">Profile Picture</h2>
               <div className="flex items-center gap-6">
                 <div className="relative">
                   <Avatar className="w-24 h-24 border-2 border-primary">
@@ -170,11 +170,11 @@ export default function Settings() {
                     className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center hover-elevate"
                     data-testid="button-change-avatar"
                   >
-                    <Camera className="w-4 h-4 text-white" />
+                    <Camera className="w-4 h-4 text-foreground" />
                   </button>
                 </div>
                 <div>
-                  <p className="text-white font-medium">{user.firstName} {user.lastName}</p>
+                  <p className="text-foreground font-medium">{user.firstName} {user.lastName}</p>
                   <p className="text-gray-400 text-sm">{user.email}</p>
                   <p className="text-primary text-sm mt-1">
                     @{settings?.username || "set-username"}
@@ -184,7 +184,7 @@ export default function Settings() {
             </Card>
 
             <Card className="bg-gray-900 border-gray-800 p-6">
-              <h2 className="text-xl font-semibold text-white mb-6">Username</h2>
+              <h2 className="text-xl font-semibold text-foreground mb-6">Username</h2>
               <div className="space-y-4">
                 <p className="text-gray-400 text-sm">
                   Choose a unique username for your profile. This will be visible to other members.
@@ -197,7 +197,7 @@ export default function Settings() {
                       onChange={(e) => handleUsernameChange(e.target.value)}
                       onBlur={() => checkUsername(usernameInput)}
                       placeholder="your-username"
-                      className="pl-8 bg-gray-800 border-gray-700 text-white"
+                      className="pl-8 bg-gray-800 border-gray-700 text-foreground"
                       data-testid="input-username"
                     />
                     {checkingUsername && (
@@ -230,11 +230,11 @@ export default function Settings() {
             </Card>
 
             <Card className="bg-gray-900 border-gray-800 p-6">
-              <h2 className="text-xl font-semibold text-white mb-6">Display Name</h2>
+              <h2 className="text-xl font-semibold text-foreground mb-6">Display Name</h2>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-white">Use display name instead of real name</Label>
+                    <Label className="text-foreground">Use display name instead of real name</Label>
                     <p className="text-gray-400 text-sm">Hide your real name from other members</p>
                   </div>
                   <Switch
@@ -249,15 +249,15 @@ export default function Settings() {
             </Card>
 
             <Card className="bg-gray-900 border-gray-800 p-6">
-              <h2 className="text-xl font-semibold text-white mb-6">Language & Region</h2>
+              <h2 className="text-xl font-semibold text-foreground mb-6">Language & Region</h2>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label className="text-white">Language</Label>
+                  <Label className="text-foreground">Language</Label>
                   <Select 
                     defaultValue={settings?.language || "en"}
                     onValueChange={(value) => handleSaveSetting("language", value)}
                   >
-                    <SelectTrigger className="bg-gray-800 border-gray-700 text-white" data-testid="select-language">
+                    <SelectTrigger className="bg-gray-800 border-gray-700 text-foreground" data-testid="select-language">
                       <SelectValue placeholder="Select language" />
                     </SelectTrigger>
                     <SelectContent>
@@ -269,12 +269,12 @@ export default function Settings() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-white">Timezone</Label>
+                  <Label className="text-foreground">Timezone</Label>
                   <Select 
                     defaultValue={settings?.timezone || "America/New_York"}
                     onValueChange={(value) => handleSaveSetting("timezone", value)}
                   >
-                    <SelectTrigger className="bg-gray-800 border-gray-700 text-white" data-testid="select-timezone">
+                    <SelectTrigger className="bg-gray-800 border-gray-700 text-foreground" data-testid="select-timezone">
                       <SelectValue placeholder="Select timezone" />
                     </SelectTrigger>
                     <SelectContent>
@@ -293,11 +293,11 @@ export default function Settings() {
 
           <TabsContent value="notifications" className="space-y-6">
             <Card className="bg-gray-900 border-gray-800 p-6">
-              <h2 className="text-xl font-semibold text-white mb-6">Email Notifications</h2>
+              <h2 className="text-xl font-semibold text-foreground mb-6">Email Notifications</h2>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-white">Recovery Reminders</Label>
+                    <Label className="text-foreground">Recovery Reminders</Label>
                     <p className="text-gray-400 text-sm">Daily check-in and exercise reminders</p>
                   </div>
                   <Switch
@@ -309,7 +309,7 @@ export default function Settings() {
                 <Separator className="bg-gray-800" />
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-white">Pod Activity</Label>
+                    <Label className="text-foreground">Pod Activity</Label>
                     <p className="text-gray-400 text-sm">Updates from your accountability pod</p>
                   </div>
                   <Switch
@@ -321,7 +321,7 @@ export default function Settings() {
                 <Separator className="bg-gray-800" />
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-white">Achievement Alerts</Label>
+                    <Label className="text-foreground">Achievement Alerts</Label>
                     <p className="text-gray-400 text-sm">Celebrate your milestones</p>
                   </div>
                   <Switch
@@ -333,7 +333,7 @@ export default function Settings() {
                 <Separator className="bg-gray-800" />
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-white">Weekly Progress Report</Label>
+                    <Label className="text-foreground">Weekly Progress Report</Label>
                     <p className="text-gray-400 text-sm">Summary of your weekly recovery progress</p>
                   </div>
                   <Switch
@@ -346,11 +346,11 @@ export default function Settings() {
             </Card>
 
             <Card className="bg-gray-900 border-gray-800 p-6">
-              <h2 className="text-xl font-semibold text-white mb-6">Push Notifications</h2>
+              <h2 className="text-xl font-semibold text-foreground mb-6">Push Notifications</h2>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-white">Enable Push Notifications</Label>
+                    <Label className="text-foreground">Enable Push Notifications</Label>
                     <p className="text-gray-400 text-sm">Get real-time updates on your device</p>
                   </div>
                   <Switch
@@ -362,7 +362,7 @@ export default function Settings() {
                 <Separator className="bg-gray-800" />
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-white">Sound Effects</Label>
+                    <Label className="text-foreground">Sound Effects</Label>
                     <p className="text-gray-400 text-sm">Play sounds for notifications</p>
                   </div>
                   <Switch
@@ -377,11 +377,11 @@ export default function Settings() {
 
           <TabsContent value="privacy" className="space-y-6">
             <Card className="bg-gray-900 border-gray-800 p-6">
-              <h2 className="text-xl font-semibold text-white mb-6">Profile Visibility</h2>
+              <h2 className="text-xl font-semibold text-foreground mb-6">Profile Visibility</h2>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-white">Public Profile</Label>
+                    <Label className="text-foreground">Public Profile</Label>
                     <p className="text-gray-400 text-sm">Allow others to view your profile</p>
                   </div>
                   <Switch
@@ -393,7 +393,7 @@ export default function Settings() {
                 <Separator className="bg-gray-800" />
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-white">Show Progress Stats</Label>
+                    <Label className="text-foreground">Show Progress Stats</Label>
                     <p className="text-gray-400 text-sm">Display your recovery stats on your profile</p>
                   </div>
                   <Switch
@@ -405,7 +405,7 @@ export default function Settings() {
                 <Separator className="bg-gray-800" />
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-white">Show Achievements</Label>
+                    <Label className="text-foreground">Show Achievements</Label>
                     <p className="text-gray-400 text-sm">Display your badges and milestones</p>
                   </div>
                   <Switch
@@ -418,11 +418,11 @@ export default function Settings() {
             </Card>
 
             <Card className="bg-gray-900 border-gray-800 p-6">
-              <h2 className="text-xl font-semibold text-white mb-6">Community Settings</h2>
+              <h2 className="text-xl font-semibold text-foreground mb-6">Community Settings</h2>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-white">Allow Direct Messages</Label>
+                    <Label className="text-foreground">Allow Direct Messages</Label>
                     <p className="text-gray-400 text-sm">Let other members message you directly</p>
                   </div>
                   <Switch
@@ -434,14 +434,14 @@ export default function Settings() {
                 <Separator className="bg-gray-800" />
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-white">Activity Feed Visibility</Label>
+                    <Label className="text-foreground">Activity Feed Visibility</Label>
                     <p className="text-gray-400 text-sm">Who can see your activity posts</p>
                   </div>
                   <Select 
                     defaultValue={settings?.activityFeedVisibility || "public"}
                     onValueChange={(value) => handleSaveSetting("activityFeedVisibility", value)}
                   >
-                    <SelectTrigger className="w-32 bg-gray-800 border-gray-700 text-white" data-testid="select-activity-visibility">
+                    <SelectTrigger className="w-32 bg-gray-800 border-gray-700 text-foreground" data-testid="select-activity-visibility">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -457,11 +457,11 @@ export default function Settings() {
 
           <TabsContent value="accessibility" className="space-y-6">
             <Card className="bg-gray-900 border-gray-800 p-6">
-              <h2 className="text-xl font-semibold text-white mb-6">Visual Settings</h2>
+              <h2 className="text-xl font-semibold text-foreground mb-6">Visual Settings</h2>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-white">High Contrast Mode</Label>
+                    <Label className="text-foreground">High Contrast Mode</Label>
                     <p className="text-gray-400 text-sm">Increase contrast for better visibility</p>
                   </div>
                   <Switch
@@ -473,7 +473,7 @@ export default function Settings() {
                 <Separator className="bg-gray-800" />
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-white">Reduce Motion</Label>
+                    <Label className="text-foreground">Reduce Motion</Label>
                     <p className="text-gray-400 text-sm">Minimize animations and transitions</p>
                   </div>
                   <Switch
@@ -484,12 +484,12 @@ export default function Settings() {
                 </div>
                 <Separator className="bg-gray-800" />
                 <div className="space-y-2">
-                  <Label className="text-white">Text Size</Label>
+                  <Label className="text-foreground">Text Size</Label>
                   <Select 
                     defaultValue={settings?.textSize || "medium"}
                     onValueChange={(value) => handleSaveSetting("textSize", value)}
                   >
-                    <SelectTrigger className="bg-gray-800 border-gray-700 text-white" data-testid="select-text-size">
+                    <SelectTrigger className="bg-gray-800 border-gray-700 text-foreground" data-testid="select-text-size">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -504,11 +504,11 @@ export default function Settings() {
             </Card>
 
             <Card className="bg-gray-900 border-gray-800 p-6">
-              <h2 className="text-xl font-semibold text-white mb-6">Audio Settings</h2>
+              <h2 className="text-xl font-semibold text-foreground mb-6">Audio Settings</h2>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-white">Screen Reader Optimized</Label>
+                    <Label className="text-foreground">Screen Reader Optimized</Label>
                     <p className="text-gray-400 text-sm">Optimize content for screen readers</p>
                   </div>
                   <Switch
@@ -520,7 +520,7 @@ export default function Settings() {
                 <Separator className="bg-gray-800" />
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-white">Audio Descriptions</Label>
+                    <Label className="text-foreground">Audio Descriptions</Label>
                     <p className="text-gray-400 text-sm">Enable audio descriptions for videos</p>
                   </div>
                   <Switch
@@ -533,11 +533,11 @@ export default function Settings() {
             </Card>
 
             <Card className="bg-gray-900 border-gray-800 p-6">
-              <h2 className="text-xl font-semibold text-white mb-6">Motor Accessibility</h2>
+              <h2 className="text-xl font-semibold text-foreground mb-6">Motor Accessibility</h2>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-white">Keyboard Navigation</Label>
+                    <Label className="text-foreground">Keyboard Navigation</Label>
                     <p className="text-gray-400 text-sm">Enhanced keyboard controls</p>
                   </div>
                   <Switch
@@ -549,7 +549,7 @@ export default function Settings() {
                 <Separator className="bg-gray-800" />
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-white">One-Handed Mode</Label>
+                    <Label className="text-foreground">One-Handed Mode</Label>
                     <p className="text-gray-400 text-sm">Optimize controls for one-handed use</p>
                   </div>
                   <Switch
@@ -561,7 +561,7 @@ export default function Settings() {
                 <Separator className="bg-gray-800" />
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-white">Large Touch Targets</Label>
+                    <Label className="text-foreground">Large Touch Targets</Label>
                     <p className="text-gray-400 text-sm">Increase size of buttons and controls</p>
                   </div>
                   <Switch

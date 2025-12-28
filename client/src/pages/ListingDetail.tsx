@@ -59,7 +59,7 @@ function StarRating({ rating, size = "sm" }: { rating: number; size?: "sm" | "lg
     stars.push(
       <Star
         key={i}
-        className={`${sizeClass} ${i <= Math.round(rating) ? "fill-orange-500 text-orange-500" : "text-zinc-600"}`}
+        className={`${sizeClass} ${i <= Math.round(rating) ? "fill-orange-500 text-primary" : "text-zinc-600"}`}
       />
     );
   }
@@ -72,14 +72,14 @@ function ReviewCard({ review }: { review: MarketplaceReview }) {
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10 border border-orange-500/30">
+            <Avatar className="h-10 w-10 border border">
               <AvatarImage src={review.user?.profileImageUrl || undefined} />
-              <AvatarFallback className="bg-orange-500/20 text-orange-500">
+              <AvatarFallback className="bg-primary/20 text-primary">
                 {review.user?.firstName?.[0] || "U"}
               </AvatarFallback>
             </Avatar>
             <div>
-              <div className="font-medium text-white">
+              <div className="font-medium text-foreground">
                 {review.user?.firstName || "Anonymous"} {review.user?.lastName?.[0] || ""}
               </div>
               <div className="flex items-center gap-2">
@@ -98,7 +98,7 @@ function ReviewCard({ review }: { review: MarketplaceReview }) {
           </span>
         </div>
         {review.title && (
-          <h4 className="font-semibold text-white">{review.title}</h4>
+          <h4 className="font-semibold text-foreground">{review.title}</h4>
         )}
         {review.content && (
           <p className="text-sm text-muted-foreground">{review.content}</p>
@@ -168,7 +168,7 @@ export default function ListingDetail() {
 
   if (listingLoading) {
     return (
-      <div className="min-h-screen bg-black">
+      <div className="min-h-screen bg-background">
         <CreatorHeader />
         <main className="max-w-6xl mx-auto px-4 py-8">
           <div className="grid md:grid-cols-2 gap-8">
@@ -188,10 +188,10 @@ export default function ListingDetail() {
 
   if (!listing) {
     return (
-      <div className="min-h-screen bg-black">
+      <div className="min-h-screen bg-background">
         <CreatorHeader />
         <main className="max-w-6xl mx-auto px-4 py-16 text-center">
-          <h1 className="text-2xl font-bold text-white mb-4">Listing Not Found</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-4">Listing Not Found</h1>
           <p className="text-muted-foreground mb-8">This content may have been removed or is unavailable.</p>
           <Link href="/marketplace">
             <Button className="bg-orange-500 hover:bg-orange-600 text-black">
@@ -214,7 +214,7 @@ export default function ListingDetail() {
   ];
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-background">
       <CreatorHeader />
 
       <main className="max-w-6xl mx-auto px-4 py-8">
@@ -253,28 +253,28 @@ export default function ListingDetail() {
             </div>
 
             <div className="space-y-4">
-              <h2 className="text-xl font-bold text-white">About This {contentTypeLabels[listing.genre] || "Content"}</h2>
+              <h2 className="text-xl font-bold text-foreground">About This {contentTypeLabels[listing.genre] || "Content"}</h2>
               <p className="text-muted-foreground leading-relaxed">{listing.description}</p>
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
                 {listing.pageCount && (
                   <div className="text-center p-4 bg-zinc-900/50 rounded-lg">
-                    <div className="text-2xl font-bold text-white">{listing.pageCount}</div>
+                    <div className="text-2xl font-bold text-foreground">{listing.pageCount}</div>
                     <div className="text-xs text-muted-foreground">Pages</div>
                   </div>
                 )}
                 {listing.wordCount && (
                   <div className="text-center p-4 bg-zinc-900/50 rounded-lg">
-                    <div className="text-2xl font-bold text-white">{(listing.wordCount / 1000).toFixed(0)}K</div>
+                    <div className="text-2xl font-bold text-foreground">{(listing.wordCount / 1000).toFixed(0)}K</div>
                     <div className="text-xs text-muted-foreground">Words</div>
                   </div>
                 )}
                 <div className="text-center p-4 bg-zinc-900/50 rounded-lg">
-                  <div className="text-2xl font-bold text-white">{listing.totalSales}</div>
+                  <div className="text-2xl font-bold text-foreground">{listing.totalSales}</div>
                   <div className="text-xs text-muted-foreground">Sales</div>
                 </div>
                 <div className="text-center p-4 bg-zinc-900/50 rounded-lg">
-                  <div className="text-2xl font-bold text-white">{listing.reviewCount}</div>
+                  <div className="text-2xl font-bold text-foreground">{listing.reviewCount}</div>
                   <div className="text-xs text-muted-foreground">Reviews</div>
                 </div>
               </div>
@@ -284,10 +284,10 @@ export default function ListingDetail() {
 
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-white">Customer Reviews</h2>
+                <h2 className="text-xl font-bold text-foreground">Customer Reviews</h2>
                 <div className="flex items-center gap-2">
                   <StarRating rating={listing.averageRating || 0} size="lg" />
-                  <span className="text-lg font-bold text-white">{(listing.averageRating || 0).toFixed(1)}</span>
+                  <span className="text-lg font-bold text-foreground">{(listing.averageRating || 0).toFixed(1)}</span>
                   <span className="text-muted-foreground">({listing.reviewCount} reviews)</span>
                 </div>
               </div>
@@ -297,7 +297,7 @@ export default function ListingDetail() {
                   {ratingDistribution.map((item) => (
                     <div key={item.stars} className="flex items-center gap-2">
                       <span className="text-sm text-muted-foreground w-6">{item.stars}</span>
-                      <Star className="w-4 h-4 fill-orange-500 text-orange-500" />
+                      <Star className="w-4 h-4 fill-orange-500 text-primary" />
                       <Progress value={item.percent} className="h-2 flex-1" />
                       <span className="text-sm text-muted-foreground w-10">{item.percent}%</span>
                     </div>
@@ -331,18 +331,18 @@ export default function ListingDetail() {
             <Card className="bg-zinc-900/50 border-zinc-800">
               <CardContent className="p-6 space-y-4">
                 <div className="flex items-center gap-2">
-                  <Badge className="bg-orange-500/20 text-orange-500 border-orange-500/30">
+                  <Badge className="bg-primary/20 text-primary border">
                     <ContentIcon className="w-3 h-3 mr-1" />
                     {contentTypeLabels[listing.genre] || listing.genre}
                   </Badge>
                   {listing.isFeatured && (
-                    <Badge variant="outline" className="border-orange-500/50 text-orange-500">
+                    <Badge variant="outline" className="border-orange-500/50 text-primary">
                       Featured
                     </Badge>
                   )}
                 </div>
 
-                <h1 className="text-2xl font-bold text-white" data-testid="text-listing-title">{listing.title}</h1>
+                <h1 className="text-2xl font-bold text-foreground" data-testid="text-listing-title">{listing.title}</h1>
                 {listing.subtitle && (
                   <p className="text-muted-foreground">{listing.subtitle}</p>
                 )}
@@ -357,7 +357,7 @@ export default function ListingDetail() {
                 <Separator className="bg-zinc-800" />
 
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-bold text-white" data-testid="text-listing-price">
+                  <span className="text-3xl font-bold text-foreground" data-testid="text-listing-price">
                     {formatCurrency(listing.totalRevenue > 0 ? listing.totalRevenue / listing.totalSales : 9.99)}
                   </span>
                   {listing.isDigitalOnly && (
@@ -404,15 +404,15 @@ export default function ListingDetail() {
 
                 <div className="pt-4 space-y-2 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-orange-500" />
+                    <Globe className="w-4 h-4 text-primary" />
                     <span>Available worldwide</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Download className="w-4 h-4 text-orange-500" />
+                    <Download className="w-4 h-4 text-primary" />
                     <span>Instant digital delivery</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-orange-500" />
+                    <CheckCircle className="w-4 h-4 text-primary" />
                     <span>Secure checkout via Stripe</span>
                   </div>
                 </div>
@@ -426,7 +426,7 @@ export default function ListingDetail() {
                   <div className="flex-1">
                     <Progress value={85} className="h-2" />
                   </div>
-                  <span className="text-sm font-medium text-orange-500">85%</span>
+                  <span className="text-sm font-medium text-primary">85%</span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
                   Creators keep 85% of every sale. You support independent creators directly.

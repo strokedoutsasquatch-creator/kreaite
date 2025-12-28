@@ -293,7 +293,7 @@ export default function CoverDesigner({
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold flex items-center gap-2">
-            <Book className="w-5 h-5 text-orange-500" />
+            <Book className="w-5 h-5 text-primary" />
             Cover Preview
           </h3>
           <div className="flex items-center gap-2">
@@ -322,7 +322,7 @@ export default function CoverDesigner({
             data-testid="cover-preview"
           >
             {coverData.backgroundUrl && (
-              <div className="absolute inset-0 bg-black/40" />
+              <div className="absolute inset-0 bg-card" />
             )}
 
             <div className="absolute inset-0 flex flex-col justify-between p-6 text-center">
@@ -413,13 +413,13 @@ export default function CoverDesigner({
                       key={template.id}
                       onClick={() => applyTemplate(template.id)}
                       className={`relative aspect-[2/3] rounded-md overflow-hidden border-2 transition-all ${
-                        selectedTemplate === template.id ? 'border-orange-500 ring-2 ring-orange-500/30' : 'border-transparent hover:border-gray-300'
+                        selectedTemplate === template.id ? 'border-primary ring-2 ring-primary/30' : 'border-transparent hover:border-gray-300'
                       }`}
                       style={{ background: template.preview }}
                       title={template.name}
                       data-testid={`button-template-${template.id}`}
                     >
-                      <span className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[10px] py-0.5 text-center">
+                      <span className="absolute bottom-0 inset-x-0 bg-black/60 text-foreground text-[10px] py-0.5 text-center">
                         {template.name}
                       </span>
                     </button>

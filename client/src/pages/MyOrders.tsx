@@ -55,7 +55,7 @@ function OrderCard({ order }: { order: BookOrder }) {
                 <Icon className="w-5 h-5" />
               </div>
               <div>
-                <p className="font-medium text-white" data-testid={`text-order-number-${order.id}`}>
+                <p className="font-medium text-foreground" data-testid={`text-order-number-${order.id}`}>
                   {order.orderNumber}
                 </p>
                 <p className="text-sm text-gray-400">{date}</p>
@@ -64,7 +64,7 @@ function OrderCard({ order }: { order: BookOrder }) {
             
             <div className="flex items-center gap-4">
               <Badge className={`${config.color}`}>{config.label}</Badge>
-              <span className="font-semibold text-white">
+              <span className="font-semibold text-foreground">
                 ${(order.total / 100).toFixed(2)}
               </span>
               <ChevronRight className="w-5 h-5 text-gray-500" />
@@ -86,7 +86,7 @@ export default function MyOrders() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen bg-black flex flex-col">
+      <div className="min-h-screen bg-background flex flex-col">
         <CreatorHeader />
         <main className="flex-1 container mx-auto px-4 py-12">
           <div className="max-w-2xl mx-auto space-y-4">
@@ -103,13 +103,13 @@ export default function MyOrders() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-black flex flex-col">
+      <div className="min-h-screen bg-background flex flex-col">
         <CreatorHeader />
         <main className="flex-1 container mx-auto px-4 py-12 flex items-center justify-center">
           <Card className="max-w-md w-full bg-gray-950 border-gray-800">
             <CardContent className="p-6 text-center">
-              <AlertCircle className="w-12 h-12 text-orange-500 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-white mb-2">Sign in Required</h2>
+              <AlertCircle className="w-12 h-12 text-primary mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-foreground mb-2">Sign in Required</h2>
               <p className="text-gray-400 mb-4">Please sign in to view your orders.</p>
               <Button className="bg-orange-500 hover:bg-orange-600" asChild>
                 <Link href="/auth">Sign In</Link>
@@ -123,13 +123,13 @@ export default function MyOrders() {
   }
 
   return (
-    <div className="min-h-screen bg-black flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       <CreatorHeader />
       
       <main className="flex-1 container mx-auto px-4 py-12">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-serif font-bold text-white" data-testid="text-page-title">
+            <h1 className="text-3xl font-serif font-bold text-foreground" data-testid="text-page-title">
               My Orders
             </h1>
             <Button className="bg-orange-500 hover:bg-orange-600" asChild>
@@ -144,7 +144,7 @@ export default function MyOrders() {
             <Card className="bg-gray-950 border-gray-800">
               <CardContent className="p-12 text-center">
                 <Package className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                <h2 className="text-xl font-semibold text-white mb-2">No orders yet</h2>
+                <h2 className="text-xl font-semibold text-foreground mb-2">No orders yet</h2>
                 <p className="text-gray-400 mb-6">
                   Start exploring our marketplace to find amazing books!
                 </p>

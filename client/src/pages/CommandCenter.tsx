@@ -173,14 +173,14 @@ export default function CommandCenter() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -206,7 +206,7 @@ export default function CommandCenter() {
               </DialogTrigger>
               <DialogContent className="bg-gray-900 border-gray-800 max-w-lg">
                 <DialogHeader>
-                  <DialogTitle className="text-white">Daily Check-in</DialogTitle>
+                  <DialogTitle className="text-foreground">Daily Check-in</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-6 py-4">
                   <div>
@@ -392,7 +392,7 @@ export default function CommandCenter() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <Card className="bg-gray-900 border-gray-800">
                 <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
+                  <CardTitle className="text-foreground flex items-center gap-2">
                     <Droplets className="w-5 h-5 text-blue-400" />
                     Hydration
                   </CardTitle>
@@ -422,7 +422,7 @@ export default function CommandCenter() {
 
               <Card className="bg-gray-900 border-gray-800">
                 <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
+                  <CardTitle className="text-foreground flex items-center gap-2">
                     <Activity className="w-5 h-5 text-green-400" />
                     Exercise
                   </CardTitle>
@@ -467,7 +467,7 @@ export default function CommandCenter() {
 
               <Card className="bg-gray-900 border-gray-800">
                 <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
+                  <CardTitle className="text-foreground flex items-center gap-2">
                     <Footprints className="w-5 h-5 text-primary" />
                     Stand Breaks
                   </CardTitle>
@@ -498,7 +498,7 @@ export default function CommandCenter() {
 
             <Card className="bg-gray-900 border-gray-800">
               <CardHeader>
-                <CardTitle className="text-white flex items-center justify-between">
+                <CardTitle className="text-foreground flex items-center justify-between">
                   <span className="flex items-center gap-2">
                     <Bell className="w-5 h-5 text-primary" />
                     Upcoming Reminders
@@ -522,7 +522,7 @@ export default function CommandCenter() {
                           {reminder.type === "appointment" && <Calendar className="w-5 h-5 text-purple-400" />}
                           {reminder.type === "stand" && <Footprints className="w-5 h-5 text-primary" />}
                           <div>
-                            <p className="text-white font-medium">{reminder.title}</p>
+                            <p className="text-foreground font-medium">{reminder.title}</p>
                             <p className="text-gray-400 text-sm">{reminder.time}</p>
                           </div>
                         </div>
@@ -549,7 +549,7 @@ export default function CommandCenter() {
                 </DialogTrigger>
                 <DialogContent className="bg-gray-900 border-gray-800">
                   <DialogHeader>
-                    <DialogTitle className="text-white">Log Vital Signs</DialogTitle>
+                    <DialogTitle className="text-foreground">Log Vital Signs</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4 py-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -606,7 +606,7 @@ export default function CommandCenter() {
                     <Badge className="bg-green-500/20 text-green-400">Normal</Badge>
                   </div>
                   <p className="text-gray-400 text-sm">Blood Pressure</p>
-                  <p className="text-2xl font-bold text-white">120/80</p>
+                  <p className="text-2xl font-bold text-foreground">120/80</p>
                   <p className="text-gray-500 text-xs mt-1">Last: Today 9:00 AM</p>
                 </CardContent>
               </Card>
@@ -618,7 +618,7 @@ export default function CommandCenter() {
                     <Badge className="bg-green-500/20 text-green-400">Normal</Badge>
                   </div>
                   <p className="text-gray-400 text-sm">Heart Rate</p>
-                  <p className="text-2xl font-bold text-white">72 BPM</p>
+                  <p className="text-2xl font-bold text-foreground">72 BPM</p>
                   <p className="text-gray-500 text-xs mt-1">Resting</p>
                 </CardContent>
               </Card>
@@ -630,7 +630,7 @@ export default function CommandCenter() {
                     <Badge className="bg-green-500/20 text-green-400">Normal</Badge>
                   </div>
                   <p className="text-gray-400 text-sm">Oxygen Level</p>
-                  <p className="text-2xl font-bold text-white">98%</p>
+                  <p className="text-2xl font-bold text-foreground">98%</p>
                   <p className="text-gray-500 text-xs mt-1">SpO2</p>
                 </CardContent>
               </Card>
@@ -642,7 +642,7 @@ export default function CommandCenter() {
                     <Badge className="bg-green-500/20 text-green-400">Normal</Badge>
                   </div>
                   <p className="text-gray-400 text-sm">Temperature</p>
-                  <p className="text-2xl font-bold text-white">98.6°F</p>
+                  <p className="text-2xl font-bold text-foreground">98.6°F</p>
                   <p className="text-gray-500 text-xs mt-1">Body temp</p>
                 </CardContent>
               </Card>
@@ -650,21 +650,21 @@ export default function CommandCenter() {
 
             <Card className="bg-gray-900 border-gray-800">
               <CardHeader>
-                <CardTitle className="text-white">Stroke Prevention Alerts</CardTitle>
+                <CardTitle className="text-foreground">Stroke Prevention Alerts</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
                     <CheckCircle2 className="w-6 h-6 text-green-500" />
                     <div>
-                      <p className="text-white font-medium">Blood Pressure in Range</p>
+                      <p className="text-foreground font-medium">Blood Pressure in Range</p>
                       <p className="text-gray-400 text-sm">Your readings are within healthy limits</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                     <Eye className="w-6 h-6 text-blue-500" />
                     <div>
-                      <p className="text-white font-medium">Stay Hydrated</p>
+                      <p className="text-foreground font-medium">Stay Hydrated</p>
                       <p className="text-gray-400 text-sm">Proper hydration helps maintain healthy blood flow</p>
                     </div>
                   </div>
@@ -677,35 +677,35 @@ export default function CommandCenter() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card className="bg-gray-900 border-gray-800">
                 <CardHeader>
-                  <CardTitle className="text-white">Weekly Progress</CardTitle>
+                  <CardTitle className="text-foreground">Weekly Progress</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div>
                       <div className="flex justify-between mb-2">
                         <span className="text-gray-400">Hydration</span>
-                        <span className="text-white">85%</span>
+                        <span className="text-foreground">85%</span>
                       </div>
                       <Progress value={85} className="h-2" />
                     </div>
                     <div>
                       <div className="flex justify-between mb-2">
                         <span className="text-gray-400">Exercise</span>
-                        <span className="text-white">70%</span>
+                        <span className="text-foreground">70%</span>
                       </div>
                       <Progress value={70} className="h-2" />
                     </div>
                     <div>
                       <div className="flex justify-between mb-2">
                         <span className="text-gray-400">Sleep Quality</span>
-                        <span className="text-white">75%</span>
+                        <span className="text-foreground">75%</span>
                       </div>
                       <Progress value={75} className="h-2" />
                     </div>
                     <div>
                       <div className="flex justify-between mb-2">
                         <span className="text-gray-400">Check-in Streak</span>
-                        <span className="text-white">100%</span>
+                        <span className="text-foreground">100%</span>
                       </div>
                       <Progress value={100} className="h-2" />
                     </div>
@@ -715,13 +715,13 @@ export default function CommandCenter() {
 
               <Card className="bg-gray-900 border-gray-800">
                 <CardHeader>
-                  <CardTitle className="text-white">Recovery Score</CardTitle>
+                  <CardTitle className="text-foreground">Recovery Score</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-center">
                     <div className="relative inline-block">
                       <div className="w-32 h-32 rounded-full border-8 border-primary flex items-center justify-center">
-                        <span className="text-4xl font-bold text-white">{dashboard?.enrollment?.recoveryScore || 75}</span>
+                        <span className="text-4xl font-bold text-foreground">{dashboard?.enrollment?.recoveryScore || 75}</span>
                       </div>
                     </div>
                     <p className="text-gray-400 mt-4">Your overall recovery score based on consistency, vitals, and progress</p>
@@ -738,7 +738,7 @@ export default function CommandCenter() {
           <TabsContent value="habits" className="space-y-6">
             <Card className="bg-gray-900 border-gray-800">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-foreground flex items-center gap-2">
                   <Target className="w-5 h-5 text-primary" />
                   66-Day Habit Tracker
                 </CardTitle>
@@ -750,7 +750,7 @@ export default function CommandCenter() {
                       <div key={habit.id} className="p-4 bg-gray-800 rounded-lg">
                         <div className="flex items-center justify-between mb-3">
                           <div>
-                            <p className="text-white font-medium">{habit.habitName}</p>
+                            <p className="text-foreground font-medium">{habit.habitName}</p>
                             <p className="text-gray-400 text-sm">{habit.habitDescription}</p>
                           </div>
                           <div className="text-right">

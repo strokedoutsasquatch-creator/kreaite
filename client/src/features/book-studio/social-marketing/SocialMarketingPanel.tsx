@@ -25,11 +25,11 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 const platforms = [
-  { id: "twitter", label: "Twitter/X", icon: SiX, maxLength: 280, color: "bg-black" },
+  { id: "twitter", label: "Twitter/X", icon: SiX, maxLength: 280, color: "bg-background" },
   { id: "linkedin", label: "LinkedIn", icon: SiLinkedin, maxLength: 3000, color: "bg-blue-700" },
   { id: "instagram", label: "Instagram", icon: SiInstagram, maxLength: 2200, color: "bg-gradient-to-r from-purple-500 to-pink-500" },
   { id: "facebook", label: "Facebook", icon: SiFacebook, maxLength: 63206, color: "bg-blue-600" },
-  { id: "tiktok", label: "TikTok", icon: SiTiktok, maxLength: 2200, color: "bg-black" },
+  { id: "tiktok", label: "TikTok", icon: SiTiktok, maxLength: 2200, color: "bg-background" },
 ];
 
 interface SocialMarketingPanelProps {
@@ -137,11 +137,11 @@ Return the full blog post.`,
   const PlatformIcon = currentPlatform.icon;
 
   return (
-    <Card className="w-96 h-full bg-black border-orange-500/20 flex flex-col" data-testid="social-marketing-panel">
-      <CardHeader className="pb-2 border-b border-orange-500/20">
+    <Card className="w-96 h-full bg-background border flex flex-col" data-testid="social-marketing-panel">
+      <CardHeader className="pb-2 border-b border">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-white flex items-center gap-2 text-sm">
-            <Megaphone className="w-4 h-4 text-orange-500" />
+          <CardTitle className="text-foreground flex items-center gap-2 text-sm">
+            <Megaphone className="w-4 h-4 text-primary" />
             Marketing Generator
           </CardTitle>
           <Button size="icon" variant="ghost" onClick={onClose} className="h-6 w-6" data-testid="button-close-marketing">
@@ -151,7 +151,7 @@ Return the full blog post.`,
       </CardHeader>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <TabsList className="grid grid-cols-2 m-2 bg-black/50">
+        <TabsList className="grid grid-cols-2 m-2 bg-card">
           <TabsTrigger value="social" className="text-xs" data-testid="tab-social">
             <Share2 className="w-3 h-3 mr-1" />
             Social Posts
@@ -175,14 +175,14 @@ Return the full blog post.`,
                     onClick={() => setActivePlatform(platform.id)}
                     className={`flex-1 p-2 rounded-lg transition-all ${
                       isActive
-                        ? "bg-orange-500/20 border border-orange-500"
-                        : "bg-black/30 border border-transparent hover:border-orange-500/30"
+                        ? "bg-primary/20 border border-orange-500"
+                        : "bg-card/80 border border-transparent hover:border"
                     }`}
                     data-testid={`button-platform-${platform.id}`}
                   >
                     <div className="flex flex-col items-center gap-1">
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center ${platform.color}`}>
-                        <Icon className="w-3 h-3 text-white" />
+                        <Icon className="w-3 h-3 text-foreground" />
                       </div>
                       {hasContent && (
                         <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
@@ -193,13 +193,13 @@ Return the full blog post.`,
               })}
             </div>
 
-            <div className="bg-black/30 rounded-lg p-3 border border-orange-500/20">
+            <div className="bg-card/80 rounded-lg p-3 border border">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center ${currentPlatform.color}`}>
-                    <PlatformIcon className="w-3 h-3 text-white" />
+                    <PlatformIcon className="w-3 h-3 text-foreground" />
                   </div>
-                  <span className="text-sm text-white">{currentPlatform.label}</span>
+                  <span className="text-sm text-foreground">{currentPlatform.label}</span>
                 </div>
                 <Badge variant="outline" className="text-[10px]">
                   Max {currentPlatform.maxLength} chars
@@ -235,7 +235,7 @@ Return the full blog post.`,
                         [activePlatform]: e.target.value,
                       }))
                     }
-                    className="min-h-[150px] bg-black/50 border-orange-500/20 text-sm"
+                    className="min-h-[150px] bg-card border text-sm"
                     data-testid="textarea-social-content"
                   />
                   <div className="flex items-center justify-between">
@@ -246,7 +246,7 @@ Return the full blog post.`,
                       size="sm"
                       variant="outline"
                       onClick={() => copyToClipboard(activePlatform, generatedContent[activePlatform])}
-                      className="border-orange-500/30"
+                      className="border"
                       data-testid="button-copy-social"
                     >
                       {copiedPlatform === activePlatform ? (
@@ -274,9 +274,9 @@ Return the full blog post.`,
           </TabsContent>
 
           <TabsContent value="blog" className="m-0 p-3 space-y-3">
-            <div className="bg-black/30 rounded-lg p-3 border border-orange-500/20">
-              <h4 className="text-sm font-medium text-white mb-2 flex items-center gap-2">
-                <FileText className="w-4 h-4 text-orange-500" />
+            <div className="bg-card/80 rounded-lg p-3 border border">
+              <h4 className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-primary" />
                 Blog Post Generator
               </h4>
               <p className="text-xs text-gray-400 mb-3">
@@ -311,7 +311,7 @@ Return the full blog post.`,
                     size="sm"
                     variant="outline"
                     onClick={() => copyToClipboard("blog", blogPost)}
-                    className="border-orange-500/30"
+                    className="border"
                     data-testid="button-copy-blog"
                   >
                     {copiedPlatform === "blog" ? (
@@ -330,7 +330,7 @@ Return the full blog post.`,
                 <Textarea
                   value={blogPost}
                   onChange={(e) => setBlogPost(e.target.value)}
-                  className="min-h-[300px] bg-black/50 border-orange-500/20 text-sm font-mono"
+                  className="min-h-[300px] bg-card border text-sm font-mono"
                   data-testid="textarea-blog-content"
                 />
                 <p className="text-xs text-gray-500">

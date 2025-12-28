@@ -143,7 +143,7 @@ export default function CreatorScribeWidget() {
         >
           <div className="relative">
             <div className="absolute inset-0 bg-[#FF6B35]/30 rounded-full blur-xl group-hover:bg-[#FF6B35]/50 transition-all duration-300 animate-pulse" />
-            <div className="relative w-16 h-16 rounded-full flex items-center justify-center bg-black border-2 border-[#FF6B35] shadow-lg shadow-[#FF6B35]/30 hover:scale-110 transition-transform duration-200">
+            <div className="relative w-16 h-16 rounded-full flex items-center justify-center bg-background border-2 border-[#FF6B35] shadow-lg shadow-[#FF6B35]/30 hover:scale-110 transition-transform duration-200">
               <PenLine className="w-8 h-8 text-[#FF6B35]" />
             </div>
             <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#FF6B35] rounded-full border-2 border-black animate-pulse" />
@@ -152,16 +152,16 @@ export default function CreatorScribeWidget() {
       )}
 
       {isOpen && (
-        <Card className="fixed bottom-6 right-6 z-50 w-[380px] h-[520px] flex flex-col shadow-2xl border-[#FF6B35]/20 overflow-hidden bg-black text-white font-serif">
+        <Card className="fixed bottom-6 right-6 z-50 w-[380px] h-[520px] flex flex-col shadow-2xl border-[#FF6B35]/20 overflow-hidden bg-background text-foreground font-serif">
           {!isAuthenticated ? (
             <div className="flex flex-col items-center justify-center h-full p-8 text-center space-y-6">
               <BookOpen className="w-16 h-16 text-[#FF6B35]" />
               <div className="space-y-2">
-                <h3 className="text-xl font-bold text-white">Your Creative Partner Awaits</h3>
+                <h3 className="text-xl font-bold text-foreground">Your Creative Partner Awaits</h3>
                 <p className="text-sm text-gray-400">Sign in to access AI-powered content generation. I can write chapters, design courses, compose music, and more.</p>
               </div>
               <Button 
-                className="w-full bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white font-bold"
+                className="w-full bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-foreground font-bold"
                 onClick={() => window.location.href = "/api/auth/login"}
                 data-testid="creator-scribe-button-login"
               >
@@ -171,7 +171,7 @@ export default function CreatorScribeWidget() {
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setIsOpen(false)}
-                className="text-gray-500 hover:text-white"
+                className="text-gray-500 hover:text-foreground"
               >
                 Close
               </Button>
@@ -180,13 +180,13 @@ export default function CreatorScribeWidget() {
             <>
               <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-[#FF6B35]/20 to-black border-b border-[#FF6B35]/30">
                 <div className="relative">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center bg-black border-2 border-[#FF6B35]">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center bg-background border-2 border-[#FF6B35]">
                     <PenLine className="w-6 h-6 text-[#FF6B35]" />
                   </div>
                   <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-black" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-white flex items-center gap-2 tracking-tight">
+                  <h3 className="font-bold text-foreground flex items-center gap-2 tracking-tight">
                     Creative Partner
                     <Sparkles className="w-4 h-4 text-[#FF6B35]" />
                   </h3>
@@ -198,7 +198,7 @@ export default function CreatorScribeWidget() {
                   onClick={() => setIsOpen(false)}
                   data-testid="creator-scribe-button-close"
                   aria-label="Close chat"
-                  className="text-gray-400 hover:text-white"
+                  className="text-gray-400 hover:text-foreground"
                 >
                   <X className="w-5 h-5" />
                 </Button>
@@ -214,7 +214,7 @@ export default function CreatorScribeWidget() {
                       <div
                         className={`max-w-[85%] rounded-lg px-4 py-2.5 ${
                           message.role === "user"
-                            ? "bg-[#FF6B35] text-white rounded-br-none shadow-md"
+                            ? "bg-[#FF6B35] text-foreground rounded-br-none shadow-md"
                             : "bg-[#1A1A1A] text-gray-200 rounded-bl-none border border-[#FF6B35]/10 shadow-sm"
                         }`}
                         data-testid={`creator-scribe-message-${message.role}`}
@@ -243,7 +243,7 @@ export default function CreatorScribeWidget() {
                 </div>
               </ScrollArea>
 
-              <div className="p-4 border-t border-[#FF6B35]/20 bg-black">
+              <div className="p-4 border-t border-[#FF6B35]/20 bg-background">
                 <div className="flex gap-2">
                   <Input
                     ref={inputRef}
@@ -251,7 +251,7 @@ export default function CreatorScribeWidget() {
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="Describe your creative vision..."
-                    className="flex-1 bg-[#1A1A1A] border-[#FF6B35]/20 text-white placeholder:text-gray-600 focus-visible:ring-[#FF6B35] font-sans"
+                    className="flex-1 bg-[#1A1A1A] border-[#FF6B35]/20 text-foreground placeholder:text-gray-600 focus-visible:ring-[#FF6B35] font-sans"
                     disabled={chatMutation.isPending}
                     data-testid="creator-scribe-input"
                   />
@@ -260,7 +260,7 @@ export default function CreatorScribeWidget() {
                     onClick={handleSend}
                     disabled={!inputValue.trim() || chatMutation.isPending}
                     data-testid="creator-scribe-button-send"
-                    className="bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white"
+                    className="bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-foreground"
                   >
                     <Send className="w-4 h-4" />
                   </Button>

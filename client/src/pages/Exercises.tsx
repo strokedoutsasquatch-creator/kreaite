@@ -144,11 +144,11 @@ export default function Exercises() {
   );
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <RecoveryHeader />
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2" data-testid="text-exercises-title">
+          <h1 className="text-4xl font-bold text-foreground mb-2" data-testid="text-exercises-title">
             Therapeutic Exercise Games
           </h1>
           <p className="text-gray-400 text-lg">
@@ -163,7 +163,7 @@ export default function Exercises() {
                 <Trophy className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{userScores?.length || 0}</p>
+                <p className="text-2xl font-bold text-foreground">{userScores?.length || 0}</p>
                 <p className="text-gray-400 text-sm">Exercises Played</p>
               </div>
             </div>
@@ -174,7 +174,7 @@ export default function Exercises() {
                 <BarChart3 className="w-6 h-6 text-purple-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{calculateTotalProgress()}%</p>
+                <p className="text-2xl font-bold text-foreground">{calculateTotalProgress()}%</p>
                 <p className="text-gray-400 text-sm">Overall Progress</p>
               </div>
             </div>
@@ -185,7 +185,7 @@ export default function Exercises() {
                 <Flame className="w-6 h-6 text-green-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{calculateStreak()}</p>
+                <p className="text-2xl font-bold text-foreground">{calculateStreak()}</p>
                 <p className="text-gray-400 text-sm">Best Streak</p>
               </div>
             </div>
@@ -196,7 +196,7 @@ export default function Exercises() {
                 <Clock className="w-6 h-6 text-blue-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-2xl font-bold text-foreground">
                   {userScores ? Math.round(userScores.reduce((sum, s) => sum + s.totalTime, 0) / 60) : 0}m
                 </p>
                 <p className="text-gray-400 text-sm">Total Time</p>
@@ -260,7 +260,7 @@ export default function Exercises() {
                       </Badge>
                     </div>
                     
-                    <h3 className="text-xl font-semibold text-white mb-2">{exercise.name}</h3>
+                    <h3 className="text-xl font-semibold text-foreground mb-2">{exercise.name}</h3>
                     <p className="text-gray-400 text-sm mb-4 line-clamp-2">{exercise.description}</p>
                     
                     <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
@@ -282,7 +282,7 @@ export default function Exercises() {
                         </div>
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-gray-400">Sessions</span>
-                          <span className="text-white">{score.totalSessions}</span>
+                          <span className="text-foreground">{score.totalSessions}</span>
                         </div>
                       </div>
                     )}
@@ -303,7 +303,7 @@ export default function Exercises() {
         ) : (
           <Card className="bg-gray-900 border-gray-800 p-12 text-center">
             <Brain className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">No exercises found</h3>
+            <h3 className="text-xl font-semibold text-foreground mb-2">No exercises found</h3>
             <p className="text-gray-400">
               {selectedCategory !== "all" 
                 ? "Try selecting a different category"
@@ -315,7 +315,7 @@ export default function Exercises() {
         <Dialog open={gameActive} onOpenChange={setGameActive}>
           <DialogContent className="bg-gray-900 border-gray-800 max-w-3xl">
             <DialogHeader>
-              <DialogTitle className="text-2xl text-white">
+              <DialogTitle className="text-2xl text-foreground">
                 {selectedExercise?.name}
               </DialogTitle>
               <DialogDescription className="text-gray-400">
@@ -340,7 +340,7 @@ export default function Exercises() {
                 {!["finger_tap", "memory"].includes(selectedExercise?.gameType || "") && (
                   <div className="text-center">
                     <Zap className="w-16 h-16 text-primary mx-auto mb-4" />
-                    <p className="text-xl text-white mb-4">Exercise Demo</p>
+                    <p className="text-xl text-foreground mb-4">Exercise Demo</p>
                     <p className="text-gray-400 mb-6">
                       Follow the on-screen instructions to complete this exercise.
                     </p>
@@ -392,7 +392,7 @@ function FingerTapGame({ onComplete, pointsValue }: { onComplete: (score: number
     return (
       <div className="text-center">
         <Trophy className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
-        <p className="text-3xl font-bold text-white mb-2">{taps} Taps!</p>
+        <p className="text-3xl font-bold text-foreground mb-2">{taps} Taps!</p>
         <p className="text-gray-400 mb-4">Score: {score} | Accuracy: {accuracy}%</p>
         <Button onClick={() => onComplete(score, accuracy)} className="bg-primary hover:bg-primary/90">
           Save Results
@@ -405,7 +405,7 @@ function FingerTapGame({ onComplete, pointsValue }: { onComplete: (score: number
     return (
       <div className="text-center">
         <Hand className="w-16 h-16 text-primary mx-auto mb-4" />
-        <p className="text-xl text-white mb-4">Finger Tap Challenge</p>
+        <p className="text-xl text-foreground mb-4">Finger Tap Challenge</p>
         <p className="text-gray-400 mb-6">Tap the button as many times as you can in 30 seconds!</p>
         <Button onClick={startGame} className="bg-primary hover:bg-primary/90">
           Start Game
@@ -417,10 +417,10 @@ function FingerTapGame({ onComplete, pointsValue }: { onComplete: (score: number
   return (
     <div className="text-center">
       <p className="text-5xl font-bold text-primary mb-2">{timeLeft}s</p>
-      <p className="text-2xl text-white mb-6">Taps: {taps}</p>
+      <p className="text-2xl text-foreground mb-6">Taps: {taps}</p>
       <button
         onClick={handleTap}
-        className="w-32 h-32 rounded-full bg-gradient-to-br from-primary to-primary/80 text-white text-2xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-transform"
+        className="w-32 h-32 rounded-full bg-gradient-to-br from-primary to-primary/80 text-foreground text-2xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-transform"
       >
         TAP!
       </button>
@@ -483,7 +483,7 @@ function MemoryGame({ onComplete, pointsValue }: { onComplete: (score: number, a
     return (
       <div className="text-center">
         <Brain className="w-16 h-16 text-purple-500 mx-auto mb-4" />
-        <p className="text-3xl font-bold text-white mb-2">Round {round - 1} Complete!</p>
+        <p className="text-3xl font-bold text-foreground mb-2">Round {round - 1} Complete!</p>
         <p className="text-gray-400 mb-4">Score: {score} | Accuracy: {accuracy}%</p>
         <Button onClick={() => onComplete(score, accuracy)} className="bg-primary hover:bg-primary/90">
           Save Results
@@ -496,7 +496,7 @@ function MemoryGame({ onComplete, pointsValue }: { onComplete: (score: number, a
     return (
       <div className="text-center">
         <Brain className="w-16 h-16 text-purple-500 mx-auto mb-4" />
-        <p className="text-xl text-white mb-4">Memory Sequence Game</p>
+        <p className="text-xl text-foreground mb-4">Memory Sequence Game</p>
         <p className="text-gray-400 mb-6">Watch the sequence and repeat it back!</p>
         <Button onClick={startRound} className="bg-primary hover:bg-primary/90">
           Start Game
@@ -507,7 +507,7 @@ function MemoryGame({ onComplete, pointsValue }: { onComplete: (score: number, a
 
   return (
     <div className="text-center">
-      <p className="text-xl text-white mb-4">Round {round}</p>
+      <p className="text-xl text-foreground mb-4">Round {round}</p>
       <p className="text-gray-400 mb-6">
         {showingSequence ? "Watch the sequence..." : "Repeat the sequence!"}
       </p>

@@ -54,7 +54,7 @@ export default function RecoveryHeader() {
   const { user, isLoading } = useAuth();
 
   return (
-    <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-sm border-b border-emerald-700/30">
+    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-emerald-700/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-4">
@@ -95,7 +95,7 @@ export default function RecoveryHeader() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="font-medium text-xs tracking-wide text-white gap-1"
+                  className="font-medium text-xs tracking-wide text-foreground gap-1"
                   data-testid="dropdown-features"
                 >
                   <Sparkles className="w-4 h-4 text-emerald-500" />
@@ -103,14 +103,14 @@ export default function RecoveryHeader() {
                   <ChevronDown className="w-3 h-3" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-72 bg-black border-emerald-700/30">
+              <DropdownMenuContent align="start" className="w-72 bg-background border-emerald-700/30">
                 {quickFeatures.map((feature) => (
                   <DropdownMenuItem key={feature.href} asChild>
                     <Link href={feature.href}>
                       <div className="flex items-start gap-3 py-1 cursor-pointer w-full" data-testid={`link-feature-${feature.label.toLowerCase().replace(" ", "-")}`}>
                         <feature.icon className="w-5 h-5 text-emerald-500 mt-0.5" />
                         <div className="flex-1">
-                          <div className="font-medium text-white">
+                          <div className="font-medium text-foreground">
                             {feature.label}
                           </div>
                           <div className="text-xs text-muted-foreground">{feature.description}</div>
@@ -131,7 +131,7 @@ export default function RecoveryHeader() {
                   className={`font-medium text-xs tracking-wide gap-1 ${
                     location === link.href 
                       ? "text-emerald-400" 
-                      : "text-muted-foreground hover:text-white"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <link.icon className="w-4 h-4" />
@@ -157,9 +157,9 @@ export default function RecoveryHeader() {
                     <ChevronDown className="w-3 h-3 text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-black border-emerald-700/30">
+                <DropdownMenuContent align="end" className="w-56 bg-background border-emerald-700/30">
                   <div className="px-3 py-2 border-b border-emerald-700/30">
-                    <div className="font-medium text-white">{user.firstName || 'Survivor'}</div>
+                    <div className="font-medium text-foreground">{user.firstName || 'Survivor'}</div>
                     <div className="text-xs text-muted-foreground">{user.email}</div>
                     <Badge variant="outline" className="mt-2 text-[10px] border-emerald-500/50 text-emerald-400">
                       <Heart className="w-3 h-3 mr-1" />
@@ -193,7 +193,7 @@ export default function RecoveryHeader() {
                 size="sm"
                 data-testid="button-join"
                 onClick={() => window.location.href = '/api/login'}
-                className="font-semibold text-xs tracking-wide bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="font-semibold text-xs tracking-wide bg-emerald-600 hover:bg-emerald-700 text-foreground"
               >
                 JOIN RECOVERY
               </Button>
@@ -203,7 +203,7 @@ export default function RecoveryHeader() {
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden text-white"
+            className="lg:hidden text-foreground"
             data-testid="button-menu"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
@@ -222,7 +222,7 @@ export default function RecoveryHeader() {
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <div className="font-medium text-white">{user.firstName || 'Survivor'}</div>
+                  <div className="font-medium text-foreground">{user.firstName || 'Survivor'}</div>
                   <div className="text-xs text-muted-foreground">{user.email}</div>
                 </div>
               </div>
@@ -249,7 +249,7 @@ export default function RecoveryHeader() {
               <Link key={link.href} href={link.href}>
                 <Button
                   variant={location === link.href ? "secondary" : "ghost"}
-                  className="w-full justify-start text-white gap-3"
+                  className="w-full justify-start text-foreground gap-3"
                   onClick={() => setMobileMenuOpen(false)}
                   data-testid={`mobile-link-${link.label.toLowerCase()}`}
                 >
@@ -268,7 +268,7 @@ export default function RecoveryHeader() {
                   <Link href="/settings">
                     <Button
                       variant="outline"
-                      className="w-full border-emerald-500/30 text-white gap-2"
+                      className="w-full border-emerald-500/30 text-foreground gap-2"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       <Settings className="w-4 h-4" />
@@ -286,7 +286,7 @@ export default function RecoveryHeader() {
                 </>
               ) : (
                 <Button
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-foreground"
                   data-testid="mobile-button-join"
                   onClick={() => window.location.href = '/api/login'}
                 >

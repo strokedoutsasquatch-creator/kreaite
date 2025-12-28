@@ -114,15 +114,15 @@ export default function GenerateStep() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <Card className="bg-black/50 border-orange-500/20 h-fit">
+        <Card className="bg-card border h-fit">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm flex items-center justify-between text-white">
+            <CardTitle className="text-sm flex items-center justify-between text-foreground">
               Chapters
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={addChapter}
-                className="text-orange-400 hover:bg-orange-500/10"
+                className="text-primary hover:bg-primary/10"
               >
                 <Plus className="w-4 h-4" />
               </Button>
@@ -137,8 +137,8 @@ export default function GenerateStep() {
                     onClick={() => setSelectedChapterId(chapter.id)}
                     className={`w-full p-3 rounded-lg text-left transition-all
                       ${selectedChapterId === chapter.id 
-                        ? 'bg-orange-500/20 border-orange-500 border' 
-                        : 'bg-black/30 hover:bg-black/50 border border-transparent'
+                        ? 'bg-primary/20 border-primary border' 
+                        : 'bg-card/80 hover:bg-card border border-transparent'
                       }`}
                     data-testid={`button-select-chapter-${chapter.id}`}
                   >
@@ -152,7 +152,7 @@ export default function GenerateStep() {
                           chapter.status === "complete"
                             ? "bg-green-500/20 text-green-400"
                             : chapter.status === "generating"
-                            ? "bg-orange-500/20 text-orange-400"
+                            ? "bg-primary/20 text-primary"
                             : "bg-muted text-muted-foreground"
                         }`}
                       >
@@ -162,7 +162,7 @@ export default function GenerateStep() {
                         {chapter.status}
                       </Badge>
                     </div>
-                    <div className="font-medium text-sm truncate text-white">
+                    <div className="font-medium text-sm truncate text-foreground">
                       {chapter.title}
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
@@ -173,19 +173,19 @@ export default function GenerateStep() {
               </div>
             </ScrollArea>
 
-            <div className="mt-4 p-3 bg-black/30 rounded-lg border border-orange-500/20">
+            <div className="mt-4 p-3 bg-card/80 rounded-lg border border">
               <div className="text-xs text-muted-foreground space-y-1">
                 <div className="flex justify-between">
                   <span>Total chapters:</span>
-                  <span className="font-medium text-white">{chapters.length}</span>
+                  <span className="font-medium text-foreground">{chapters.length}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Total words:</span>
-                  <span className="font-medium text-white">{totalWords.toLocaleString()}</span>
+                  <span className="font-medium text-foreground">{totalWords.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Est. pages:</span>
-                  <span className="font-medium text-white">~{Math.ceil(totalWords / 250)}</span>
+                  <span className="font-medium text-foreground">~{Math.ceil(totalWords / 250)}</span>
                 </div>
               </div>
             </div>
@@ -194,7 +194,7 @@ export default function GenerateStep() {
               <Button
                 onClick={handleGenerateAll}
                 disabled={generationProgress.isGenerating}
-                className="w-full mt-4 bg-orange-500 hover:bg-orange-600"
+                className="w-full mt-4 bg-primary hover:bg-primary/80"
                 data-testid="button-generate-all"
               >
                 {generationProgress.isGenerating ? (
@@ -214,10 +214,10 @@ export default function GenerateStep() {
         </Card>
 
         <div className="lg:col-span-3">
-          <Card className="bg-black/50 border-orange-500/20 shadow-lg">
+          <Card className="bg-card border shadow-lg">
             {selectedChapter ? (
               <>
-                <div className="px-6 pt-4 pb-2 border-b border-orange-500/20">
+                <div className="px-6 pt-4 pb-2 border-b border">
                   <div className="flex items-center justify-between gap-4 flex-wrap">
                     <Input
                       value={selectedChapter.title}
@@ -230,7 +230,7 @@ export default function GenerateStep() {
                         );
                         setBookOutline({ ...bookOutline, chapters: updatedChapters });
                       }}
-                      className="text-xl font-bold border-0 px-0 focus-visible:ring-0 bg-transparent flex-1 text-white"
+                      className="text-xl font-bold border-0 px-0 focus-visible:ring-0 bg-transparent flex-1 text-foreground"
                       placeholder="Chapter Title"
                       data-testid="input-chapter-title-editor"
                     />
@@ -240,7 +240,7 @@ export default function GenerateStep() {
                         disabled={generationProgress.isGenerating}
                         size="sm"
                         variant="outline"
-                        className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+                        className="border text-primary hover:bg-primary/10"
                         data-testid="button-generate-chapter"
                       >
                         {selectedChapter.status === "generating" ? (
@@ -252,7 +252,7 @@ export default function GenerateStep() {
                       </Button>
                       <Select value={editingPass} onValueChange={(v: any) => setEditingPass(v)}>
                         <SelectTrigger
-                          className="w-[130px] h-8 text-xs bg-transparent border-orange-500/20 text-white"
+                          className="w-[130px] h-8 text-xs bg-transparent border text-foreground"
                           data-testid="select-editing-pass"
                         >
                           <SelectValue />
@@ -268,7 +268,7 @@ export default function GenerateStep() {
                         onClick={() => toast({ title: "Edit feature", description: "Coming soon!" })}
                         disabled={!selectedChapter.content}
                         size="sm"
-                        className="bg-orange-500 hover:bg-orange-600"
+                        className="bg-primary hover:bg-primary/80"
                         data-testid="button-run-edit"
                       >
                         <Edit3 className="w-3 h-3 mr-1" />
@@ -283,7 +283,7 @@ export default function GenerateStep() {
                     value={selectedChapter.content || ""}
                     onChange={(e) => updateChapterContent(e.target.value)}
                     placeholder="Start writing your chapter here, or click 'AI Write' to generate content..."
-                    className="min-h-[500px] bg-black/30 border-orange-500/20 text-gray-200 text-base leading-relaxed"
+                    className="min-h-[500px] bg-card/80 border text-gray-200 text-base leading-relaxed"
                     data-testid="textarea-chapter-content"
                   />
                   <div className="flex justify-between mt-3 text-xs text-muted-foreground">
@@ -312,14 +312,14 @@ export default function GenerateStep() {
         <Button
           variant="outline"
           onClick={() => setCurrentStep('plan')}
-          className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+          className="border text-primary hover:bg-primary/10"
           data-testid="button-back-step-generate"
         >
           <ChevronLeft className="w-4 h-4 mr-2" /> Back
         </Button>
         <Button
           onClick={() => setCurrentStep('build')}
-          className="bg-orange-500 hover:bg-orange-600"
+          className="bg-primary hover:bg-primary/80"
           data-testid="button-next-step-generate"
         >
           Next: Build & Images

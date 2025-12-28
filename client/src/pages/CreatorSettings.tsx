@@ -215,7 +215,7 @@ export default function CreatorSettings() {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white p-6" data-testid="page-creator-settings">
+    <div className="min-h-screen bg-background text-foreground p-6" data-testid="page-creator-settings">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
           <Settings className="h-8 w-8 text-[#FF6B35]" />
@@ -227,23 +227,23 @@ export default function CreatorSettings() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-zinc-900 border border-zinc-800 p-1">
-            <TabsTrigger value="profiles" className="data-[state=active]:bg-[#FF6B35] data-[state=active]:text-white" data-testid="tab-profiles">
+            <TabsTrigger value="profiles" className="data-[state=active]:bg-[#FF6B35] data-[state=active]:text-foreground" data-testid="tab-profiles">
               <User className="h-4 w-4 mr-2" />
               Author Profiles
             </TabsTrigger>
-            <TabsTrigger value="publishing" className="data-[state=active]:bg-[#FF6B35] data-[state=active]:text-white" data-testid="tab-publishing">
+            <TabsTrigger value="publishing" className="data-[state=active]:bg-[#FF6B35] data-[state=active]:text-foreground" data-testid="tab-publishing">
               <BookOpen className="h-4 w-4 mr-2" />
               Publishing Presets
             </TabsTrigger>
-            <TabsTrigger value="courses" className="data-[state=active]:bg-[#FF6B35] data-[state=active]:text-white" data-testid="tab-courses">
+            <TabsTrigger value="courses" className="data-[state=active]:bg-[#FF6B35] data-[state=active]:text-foreground" data-testid="tab-courses">
               <GraduationCap className="h-4 w-4 mr-2" />
               Course Presets
             </TabsTrigger>
-            <TabsTrigger value="inspiration" className="data-[state=active]:bg-[#FF6B35] data-[state=active]:text-white" data-testid="tab-inspiration">
+            <TabsTrigger value="inspiration" className="data-[state=active]:bg-[#FF6B35] data-[state=active]:text-foreground" data-testid="tab-inspiration">
               <Image className="h-4 w-4 mr-2" />
               Inspiration Library
             </TabsTrigger>
-            <TabsTrigger value="brand" className="data-[state=active]:bg-[#FF6B35] data-[state=active]:text-white" data-testid="tab-brand">
+            <TabsTrigger value="brand" className="data-[state=active]:bg-[#FF6B35] data-[state=active]:text-foreground" data-testid="tab-brand">
               <Palette className="h-4 w-4 mr-2" />
               Brand Kit
             </TabsTrigger>
@@ -262,7 +262,7 @@ export default function CreatorSettings() {
                     New Profile
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-lg">
+                <DialogContent className="bg-zinc-900 border-zinc-800 text-foreground max-w-lg">
                   <DialogHeader>
                     <DialogTitle>{editingProfile ? "Edit Profile" : "Create Author Profile"}</DialogTitle>
                     <DialogDescription className="text-zinc-400">
@@ -389,7 +389,7 @@ export default function CreatorSettings() {
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-4">
-                          <div className="h-12 w-12 rounded-full bg-gradient-to-br from-[#FF6B35] to-orange-600 flex items-center justify-center text-white font-bold text-lg">
+                          <div className="h-12 w-12 rounded-full bg-gradient-to-br from-[#FF6B35] to-orange-600 flex items-center justify-center text-foreground font-bold text-lg">
                             {profile.penName.charAt(0).toUpperCase()}
                           </div>
                           <div>
@@ -447,7 +447,7 @@ export default function CreatorSettings() {
                     New Preset
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-lg">
+                <DialogContent className="bg-zinc-900 border-zinc-800 text-foreground max-w-lg">
                   <DialogHeader>
                     <DialogTitle>Create Publishing Preset</DialogTitle>
                     <DialogDescription className="text-zinc-400">
@@ -630,19 +630,19 @@ export default function CreatorSettings() {
                       <div className="space-y-2 text-sm text-zinc-400">
                         <div className="flex justify-between">
                           <span>Trim Size:</span>
-                          <span className="text-white">{preset.trimSize}"</span>
+                          <span className="text-foreground">{preset.trimSize}"</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Font:</span>
-                          <span className="text-white">{preset.fontFamily} {preset.fontSize}pt</span>
+                          <span className="text-foreground">{preset.fontFamily} {preset.fontSize}pt</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Paper:</span>
-                          <span className="text-white capitalize">{preset.paperType}</span>
+                          <span className="text-foreground capitalize">{preset.paperType}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Binding:</span>
-                          <span className="text-white capitalize">{preset.binding}</span>
+                          <span className="text-foreground capitalize">{preset.binding}</span>
                         </div>
                       </div>
                       <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-zinc-800">
@@ -670,7 +670,7 @@ export default function CreatorSettings() {
                     New Preset
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-lg">
+                <DialogContent className="bg-zinc-900 border-zinc-800 text-foreground max-w-lg">
                   <DialogHeader>
                     <DialogTitle>Create Course Preset</DialogTitle>
                     <DialogDescription className="text-zinc-400">
@@ -808,15 +808,15 @@ export default function CreatorSettings() {
                       <div className="space-y-2 text-sm text-zinc-400">
                         <div className="flex justify-between">
                           <span>Quiz Type:</span>
-                          <span className="text-white capitalize">{preset.defaultQuizType?.replace("_", " ")}</span>
+                          <span className="text-foreground capitalize">{preset.defaultQuizType?.replace("_", " ")}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Passing Score:</span>
-                          <span className="text-white">{preset.passingScore}%</span>
+                          <span className="text-foreground">{preset.passingScore}%</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Structure:</span>
-                          <span className="text-white capitalize">{preset.lessonStructure?.replace(/-/g, " → ")}</span>
+                          <span className="text-foreground capitalize">{preset.lessonStructure?.replace(/-/g, " → ")}</span>
                         </div>
                       </div>
                       <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-zinc-800">
@@ -870,7 +870,7 @@ export default function CreatorSettings() {
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                    <Badge className="absolute bottom-2 left-2 bg-black/80">{item.category}</Badge>
+                    <Badge className="absolute bottom-2 left-2 bg-background/80">{item.category}</Badge>
                   </div>
                 ))}
               </div>
@@ -901,7 +901,7 @@ export default function CreatorSettings() {
                       <span className="text-xs text-zinc-400 mt-1 block">Primary</span>
                     </div>
                     <div className="text-center">
-                      <div className="h-12 w-12 mx-auto rounded-lg bg-black border border-zinc-700"></div>
+                      <div className="h-12 w-12 mx-auto rounded-lg bg-background border border-zinc-700"></div>
                       <span className="text-xs text-zinc-400 mt-1 block">Background</span>
                     </div>
                     <div className="text-center">

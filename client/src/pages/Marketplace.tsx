@@ -282,7 +282,7 @@ function MusicPlayer({ track, onClose }: { track: CreatorContent | null; onClose
   if (!track) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-black/95 border-t border-orange-500/30 p-4 z-50 backdrop-blur-lg">
+    <div className="fixed bottom-0 left-0 right-0 bg-background/95 border-t border p-4 z-50 backdrop-blur-lg">
       {hasStreamUrl && (
         <audio
           ref={audioRef}
@@ -298,10 +298,10 @@ function MusicPlayer({ track, onClose }: { track: CreatorContent | null; onClose
       <div className="container mx-auto flex items-center gap-4">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-purple-500 rounded-lg flex items-center justify-center shrink-0">
-            <Music className="w-6 h-6 text-white" />
+            <Music className="w-6 h-6 text-foreground" />
           </div>
           <div className="min-w-0">
-            <p className="font-medium text-white truncate">{track.title}</p>
+            <p className="font-medium text-foreground truncate">{track.title}</p>
             <p className="text-sm text-muted-foreground truncate">{track.creator}</p>
             {!hasStreamUrl && <p className="text-xs text-yellow-500">Preview only - streaming unavailable</p>}
           </div>
@@ -458,16 +458,16 @@ function VideoPlayer({ video, onClose }: { video: CreatorContent | null; onClose
   if (!video) return null;
 
   return (
-    <div ref={containerRef} className="fixed inset-0 bg-black z-50 flex flex-col">
+    <div ref={containerRef} className="fixed inset-0 bg-background z-50 flex flex-col">
       <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
         <div>
-          <h2 className="text-xl font-bold text-white">{video.title}</h2>
-          <p className="text-sm text-white/70">{video.creator}</p>
+          <h2 className="text-xl font-bold text-foreground">{video.title}</h2>
+          <p className="text-sm text-foreground/70">{video.creator}</p>
           {!hasStreamUrl && <p className="text-xs text-yellow-500">Preview only - streaming unavailable</p>}
         </div>
         <Button 
           variant="ghost" 
-          className="text-white hover:bg-white/20" 
+          className="text-foreground hover:bg-white/20" 
           onClick={onClose}
           data-testid="button-close-video"
         >
@@ -476,7 +476,7 @@ function VideoPlayer({ video, onClose }: { video: CreatorContent | null; onClose
       </div>
       
       <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-gray-900 to-black">
-        <div className="relative w-full max-w-4xl aspect-video bg-black rounded-lg overflow-hidden shadow-2xl">
+        <div className="relative w-full max-w-4xl aspect-video bg-background rounded-lg overflow-hidden shadow-2xl">
           <video
             ref={videoRef}
             src={video?.streamUrl || ''}
@@ -497,18 +497,18 @@ function VideoPlayer({ video, onClose }: { video: CreatorContent | null; onClose
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
                 {video.type === 'movie' ? (
-                  <Film className="w-24 h-24 text-orange-500/50 mx-auto mb-4" />
+                  <Film className="w-24 h-24 text-primary/50 mx-auto mb-4" />
                 ) : (
                   <Video className="w-24 h-24 text-blue-500/50 mx-auto mb-4" />
                 )}
-                <p className="text-white/50 text-sm">Preview only - streaming unavailable</p>
-                <p className="text-white/30 text-xs mt-2">Purchase to unlock full streaming</p>
+                <p className="text-foreground/50 text-sm">Preview only - streaming unavailable</p>
+                <p className="text-foreground/30 text-xs mt-2">Purchase to unlock full streaming</p>
               </div>
             </div>
           )}
           
           {!isPlaying && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+            <div className="absolute inset-0 flex items-center justify-center bg-card">
               <Button 
                 size="lg" 
                 className={`rounded-full w-20 h-20 shadow-xl ${hasStreamUrl ? 'bg-orange-500 hover:bg-orange-600' : 'bg-gray-600 cursor-not-allowed'}`}
@@ -523,10 +523,10 @@ function VideoPlayer({ video, onClose }: { video: CreatorContent | null; onClose
         </div>
       </div>
       
-      <div className="p-4 bg-black/90 backdrop-blur border-t border-white/10">
+      <div className="p-4 bg-background/90 backdrop-blur border-t border-white/10">
         <div className="container mx-auto max-w-4xl">
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-xs text-white/60 w-12 text-right">
+            <span className="text-xs text-foreground/60 w-12 text-right">
               {formatTime(currentTime)}
             </span>
             <Slider 
@@ -538,12 +538,12 @@ function VideoPlayer({ video, onClose }: { video: CreatorContent | null; onClose
               className="flex-1"
               data-testid="slider-video-progress"
             />
-            <span className="text-xs text-white/60 w-12">{duration ? formatTime(duration) : video.duration || "0:00"}</span>
+            <span className="text-xs text-foreground/60 w-12">{duration ? formatTime(duration) : video.duration || "0:00"}</span>
           </div>
           
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Button size="icon" variant="ghost" className="text-white" onClick={() => handleSkip(-10)} disabled={!hasStreamUrl} data-testid="button-rewind">
+              <Button size="icon" variant="ghost" className="text-foreground" onClick={() => handleSkip(-10)} disabled={!hasStreamUrl} data-testid="button-rewind">
                 <SkipBack className="w-5 h-5" />
               </Button>
               <Button 
@@ -555,14 +555,14 @@ function VideoPlayer({ video, onClose }: { video: CreatorContent | null; onClose
               >
                 {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-0.5" />}
               </Button>
-              <Button size="icon" variant="ghost" className="text-white" onClick={() => handleSkip(10)} disabled={!hasStreamUrl} data-testid="button-forward">
+              <Button size="icon" variant="ghost" className="text-foreground" onClick={() => handleSkip(10)} disabled={!hasStreamUrl} data-testid="button-forward">
                 <SkipForward className="w-5 h-5" />
               </Button>
             </div>
             
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
-                <Button size="icon" variant="ghost" className="text-white" onClick={() => setIsMuted(!isMuted)} disabled={!hasStreamUrl} data-testid="button-video-mute">
+                <Button size="icon" variant="ghost" className="text-foreground" onClick={() => setIsMuted(!isMuted)} disabled={!hasStreamUrl} data-testid="button-video-mute">
                   {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                 </Button>
                 <Slider 
@@ -575,7 +575,7 @@ function VideoPlayer({ video, onClose }: { video: CreatorContent | null; onClose
                   data-testid="slider-video-volume"
                 />
               </div>
-              <Button size="icon" variant="ghost" className="text-white" onClick={toggleFullscreen} disabled={!hasStreamUrl} data-testid="button-fullscreen">
+              <Button size="icon" variant="ghost" className="text-foreground" onClick={toggleFullscreen} disabled={!hasStreamUrl} data-testid="button-fullscreen">
                 <Maximize className="w-4 h-4" />
               </Button>
             </div>
@@ -614,10 +614,10 @@ function ContentCard({ content, onPlay }: { content: CreatorContent; onPlay: (co
   return (
     <Card className="group hover-elevate overflow-hidden" data-testid={`card-content-${content.id}`}>
       <div className={`relative aspect-square bg-gradient-to-br ${getGradient()} flex items-center justify-center`}>
-        <div className="text-white opacity-50">
+        <div className="text-foreground opacity-50">
           {getIcon()}
         </div>
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-card transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
           <Button 
             size="lg"
             className="rounded-full bg-orange-500 shadow-xl"
@@ -658,7 +658,7 @@ function ContentCard({ content, onPlay }: { content: CreatorContent; onPlay: (co
         </div>
       </CardContent>
       <CardFooter className="p-4 pt-0 flex items-center justify-between">
-        <span className="font-bold text-orange-500" data-testid={`text-price-${content.id}`}>
+        <span className="font-bold text-primary" data-testid={`text-price-${content.id}`}>
           {content.price === 0 ? "FREE" : `$${content.price.toFixed(2)}`}
         </span>
         <div className="flex gap-2">
@@ -685,13 +685,13 @@ function FeaturedCarousel({ items, onPlay }: { items: CreatorContent[]; onPlay: 
   return (
     <div className="mb-8">
       <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-        <Crown className="w-6 h-6 text-orange-500" /> Featured Creators
+        <Crown className="w-6 h-6 text-primary" /> Featured Creators
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {featured.slice(0, 3).map(item => (
           <Card key={item.id} className="overflow-hidden group cursor-pointer hover-elevate" onClick={() => onPlay(item)}>
             <div className={`relative h-48 bg-gradient-to-br from-orange-500 via-purple-500 to-pink-500 flex items-center justify-center`}>
-              <div className="text-white">
+              <div className="text-foreground">
                 <Music className="w-16 h-16 opacity-30" />
               </div>
               <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -699,7 +699,7 @@ function FeaturedCarousel({ items, onPlay }: { items: CreatorContent[]; onPlay: 
                   <Play className="w-8 h-8 ml-1" />
                 </Button>
               </div>
-              <Badge className="absolute top-4 left-4 bg-black/50 backdrop-blur">
+              <Badge className="absolute top-4 left-4 bg-card backdrop-blur">
                 <Crown className="w-3 h-3 mr-1" /> Featured
               </Badge>
             </div>
@@ -724,23 +724,23 @@ function FeaturedCarousel({ items, onPlay }: { items: CreatorContent[]; onPlay: 
 
 function CreatorStats() {
   return (
-    <Card className="mb-8 bg-gradient-to-r from-orange-500/10 via-purple-500/10 to-pink-500/10 border-orange-500/20">
+    <Card className="mb-8 bg-gradient-to-r from-orange-500/10 via-purple-500/10 to-pink-500/10 border">
       <CardContent className="py-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           <div>
-            <div className="text-3xl font-bold text-orange-500">15K+</div>
+            <div className="text-3xl font-bold text-primary">15K+</div>
             <div className="text-sm text-muted-foreground">Creators</div>
           </div>
           <div>
-            <div className="text-3xl font-bold text-orange-500">250K+</div>
+            <div className="text-3xl font-bold text-primary">250K+</div>
             <div className="text-sm text-muted-foreground">Content Items</div>
           </div>
           <div>
-            <div className="text-3xl font-bold text-orange-500">$2.5M+</div>
+            <div className="text-3xl font-bold text-primary">$2.5M+</div>
             <div className="text-sm text-muted-foreground">Creator Earnings</div>
           </div>
           <div>
-            <div className="text-3xl font-bold text-orange-500">85%</div>
+            <div className="text-3xl font-bold text-primary">85%</div>
             <div className="text-sm text-muted-foreground">To Creators</div>
           </div>
         </div>
@@ -751,7 +751,7 @@ function CreatorStats() {
 
 function BecomeCreatorCTA() {
   return (
-    <Card className="bg-gradient-to-r from-orange-500 to-purple-600 border-0 text-white overflow-hidden relative">
+    <Card className="bg-gradient-to-r from-orange-500 to-purple-600 border-0 text-foreground overflow-hidden relative">
       <div className="absolute inset-0 bg-black/20" />
       <CardContent className="py-12 relative z-10">
         <div className="text-center max-w-2xl mx-auto">
@@ -761,10 +761,10 @@ function BecomeCreatorCTA() {
             then sell or stream them to the world. Keep 85% of every sale.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Button size="lg" className="bg-white text-orange-500 hover:bg-white/90" data-testid="button-start-creating">
+            <Button size="lg" className="bg-white text-primary hover:bg-white/90" data-testid="button-start-creating">
               <Sparkles className="w-5 h-5 mr-2" /> Start Creating
             </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10" data-testid="button-learn-more">
+            <Button size="lg" variant="outline" className="border-white text-foreground hover:bg-white/10" data-testid="button-learn-more">
               Learn More
             </Button>
           </div>
@@ -936,7 +936,7 @@ export default function Marketplace() {
 
           <TabsContent value="music" className="mt-8">
             <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-              <Music className="w-6 h-6 text-orange-500" /> Music
+              <Music className="w-6 h-6 text-primary" /> Music
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {sampleMusicContent.map(content => (
@@ -1041,29 +1041,29 @@ export default function Marketplace() {
         <section className="mt-12 py-8 border-t border-border">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div>
-              <div className="w-12 h-12 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Sparkles className="w-6 h-6 text-orange-500" />
+              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Sparkles className="w-6 h-6 text-primary" />
               </div>
               <h3 className="font-semibold mb-1">AI-Powered Creation</h3>
               <p className="text-sm text-muted-foreground">Create with cutting-edge AI tools</p>
             </div>
             <div>
-              <div className="w-12 h-12 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                <DollarSign className="w-6 h-6 text-orange-500" />
+              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                <DollarSign className="w-6 h-6 text-primary" />
               </div>
               <h3 className="font-semibold mb-1">85% Creator Earnings</h3>
               <p className="text-sm text-muted-foreground">Industry-leading revenue share</p>
             </div>
             <div>
-              <div className="w-12 h-12 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Radio className="w-6 h-6 text-orange-500" />
+              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Radio className="w-6 h-6 text-primary" />
               </div>
               <h3 className="font-semibold mb-1">Global Distribution</h3>
               <p className="text-sm text-muted-foreground">Reach audiences worldwide</p>
             </div>
             <div>
-              <div className="w-12 h-12 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Zap className="w-6 h-6 text-orange-500" />
+              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Zap className="w-6 h-6 text-primary" />
               </div>
               <h3 className="font-semibold mb-1">Instant Publishing</h3>
               <p className="text-sm text-muted-foreground">Go live in minutes</p>

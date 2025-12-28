@@ -46,13 +46,13 @@ function BookStudioContent() {
 function LoadingState() {
   return (
     <div className="flex items-center justify-center h-screen p-4" data-testid="loading-state">
-      <Card className="w-full max-w-md p-8 bg-black/50 border-orange-500/20">
+      <Card className="w-full max-w-md p-8 bg-card border">
         <div className="flex flex-col items-center gap-6">
-          <Loader2 className="h-12 w-12 animate-spin text-orange-500" data-testid="spinner" />
+          <Loader2 className="h-12 w-12 animate-spin text-primary" data-testid="spinner" />
           <div className="w-full space-y-3">
-            <Skeleton className="h-4 w-full bg-orange-500/10" />
-            <Skeleton className="h-4 w-3/4 bg-orange-500/10" />
-            <Skeleton className="h-4 w-5/6 bg-orange-500/10" />
+            <Skeleton className="h-4 w-full bg-primary/10" />
+            <Skeleton className="h-4 w-3/4 bg-primary/10" />
+            <Skeleton className="h-4 w-5/6 bg-primary/10" />
           </div>
           <div className="text-sm font-medium text-muted-foreground">
             Loading Book Studio...
@@ -69,11 +69,11 @@ function LoginPrompt() {
 
   return (
     <div className="flex items-center justify-center h-screen p-4" data-testid="login-prompt">
-      <Card className="w-full max-w-md p-8 bg-black/50 border-orange-500/20 text-center">
+      <Card className="w-full max-w-md p-8 bg-card border text-center">
         <div className="flex flex-col items-center gap-6">
-          <LogIn className="h-12 w-12 text-orange-500" />
+          <LogIn className="h-12 w-12 text-primary" />
           <div>
-            <h2 className="text-xl font-bold text-white mb-2">Sign In Required</h2>
+            <h2 className="text-xl font-bold text-foreground mb-2">Sign In Required</h2>
             <p className="text-muted-foreground">
               {isRecovery 
                 ? "Sign in to start writing your recovery story"
@@ -83,7 +83,7 @@ function LoginPrompt() {
           </div>
           <Button 
             onClick={() => window.location.href = '/api/login'}
-            className="bg-orange-500 hover:bg-orange-600 text-white"
+            className="bg-orange-500 hover:bg-orange-600 text-foreground"
             data-testid="button-login"
           >
             <LogIn className="w-4 h-4 mr-2" />
@@ -111,7 +111,7 @@ export default function BookStudioV3() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black">
+      <div className="min-h-screen bg-background">
         <Header />
         <LoadingState />
       </div>
@@ -120,7 +120,7 @@ export default function BookStudioV3() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-black">
+      <div className="min-h-screen bg-background">
         <SEO 
           title={seoTitle}
           description={seoDescription}
@@ -133,7 +133,7 @@ export default function BookStudioV3() {
   }
 
   return (
-    <div className="min-h-screen bg-black flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       <SEO 
         title={seoTitle}
         description={seoDescription}

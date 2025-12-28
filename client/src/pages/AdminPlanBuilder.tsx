@@ -217,7 +217,7 @@ export default function AdminPlanBuilder() {
 
   if (user?.role !== "admin") {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
@@ -228,7 +228,7 @@ export default function AdminPlanBuilder() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -248,7 +248,7 @@ export default function AdminPlanBuilder() {
             </DialogTrigger>
             <DialogContent className="bg-gray-900 border-gray-800 max-w-2xl max-h-[80vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-white">Create Recovery Plan</DialogTitle>
+                <DialogTitle className="text-foreground">Create Recovery Plan</DialogTitle>
               </DialogHeader>
               <div className="space-y-6 py-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -349,7 +349,7 @@ export default function AdminPlanBuilder() {
                     {planForm.goals.map((goal, i) => (
                       <Badge key={i} variant="outline" className="py-1 px-3">
                         {goal}
-                        <button onClick={() => removeGoal(i)} className="ml-2 text-gray-400 hover:text-white">
+                        <button onClick={() => removeGoal(i)} className="ml-2 text-gray-400 hover:text-foreground">
                           ×
                         </button>
                       </Badge>
@@ -419,7 +419,7 @@ export default function AdminPlanBuilder() {
                           </Badge>
                         </div>
                       </div>
-                      <h3 className="text-lg font-semibold text-white mb-2">{plan.name}</h3>
+                      <h3 className="text-lg font-semibold text-foreground mb-2">{plan.name}</h3>
                       <p className="text-gray-400 text-sm line-clamp-2 mb-4">{plan.description}</p>
                       <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
                         <span className="flex items-center gap-1">
@@ -479,7 +479,7 @@ export default function AdminPlanBuilder() {
           <TabsContent value="templates" className="space-y-6">
             <Card className="bg-gray-900 border-gray-800">
               <CardHeader>
-                <CardTitle className="text-white">Pre-built Templates</CardTitle>
+                <CardTitle className="text-foreground">Pre-built Templates</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -495,7 +495,7 @@ export default function AdminPlanBuilder() {
                           <div className="flex items-center gap-3">
                             {getCategoryIcon(template.category)}
                             <div>
-                              <p className="text-white font-medium">{template.name}</p>
+                              <p className="text-foreground font-medium">{template.name}</p>
                               <p className="text-gray-400 text-sm">{template.duration} weeks</p>
                             </div>
                           </div>
@@ -515,7 +515,7 @@ export default function AdminPlanBuilder() {
           <TabsContent value="assignments" className="space-y-6">
             <Card className="bg-gray-900 border-gray-800">
               <CardHeader>
-                <CardTitle className="text-white">Active Assignments</CardTitle>
+                <CardTitle className="text-foreground">Active Assignments</CardTitle>
               </CardHeader>
               <CardContent>
                 {users && users.length > 0 ? (
@@ -530,7 +530,7 @@ export default function AdminPlanBuilder() {
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="text-white font-medium">{u.firstName} {u.lastName}</p>
+                            <p className="text-foreground font-medium">{u.firstName} {u.lastName}</p>
                             <p className="text-gray-400 text-sm">{u.email}</p>
                           </div>
                         </div>
@@ -554,7 +554,7 @@ export default function AdminPlanBuilder() {
         <Dialog open={assignPlanOpen} onOpenChange={setAssignPlanOpen}>
           <DialogContent className="bg-gray-900 border-gray-800 max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-white">
+              <DialogTitle className="text-foreground">
                 Assign: {selectedPlan?.name}
               </DialogTitle>
             </DialogHeader>
@@ -574,7 +574,7 @@ export default function AdminPlanBuilder() {
                       </AvatarFallback>
                     </Avatar>
                     <label htmlFor={`user-${u.id}`} className="flex-1 cursor-pointer">
-                      <p className="text-white text-sm">{u.firstName} {u.lastName}</p>
+                      <p className="text-foreground text-sm">{u.firstName} {u.lastName}</p>
                       <p className="text-gray-400 text-xs">{u.email}</p>
                     </label>
                   </div>

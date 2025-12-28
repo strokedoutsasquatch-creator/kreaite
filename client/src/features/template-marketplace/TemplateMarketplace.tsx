@@ -148,12 +148,12 @@ export function TemplateMarketplace() {
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8" data-testid="template-marketplace">
       <div className="text-center mb-12">
-        <h1 className="text-5xl font-serif font-bold tracking-tight text-white mb-3">Template Gallery</h1>
+        <h1 className="text-5xl font-serif font-bold tracking-tight text-foreground mb-3">Template Gallery</h1>
         <p className="text-lg text-zinc-400 leading-relaxed">Curated Templates from Fellow Creators</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-3 bg-black/50">
+        <TabsList className="grid grid-cols-3 bg-card">
           <TabsTrigger value="browse" data-testid="tab-browse">
             <Search className="w-4 h-4 mr-2" />
             Browse
@@ -176,12 +176,12 @@ export function TemplateMarketplace() {
                 placeholder="Search templates..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-black/50 border-orange-500/30"
+                className="pl-10 bg-card border"
                 data-testid="input-search-templates"
               />
             </div>
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-48 bg-black/50 border-orange-500/30" data-testid="select-category">
+              <SelectTrigger className="w-48 bg-card border" data-testid="select-category">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -199,7 +199,7 @@ export function TemplateMarketplace() {
 
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -215,7 +215,7 @@ export function TemplateMarketplace() {
                       <img src={listing.coverImageUrl} alt={listing.title} className="h-32 w-full object-cover" />
                     ) : (
                       <div className="h-32 bg-gradient-to-br from-orange-500/20 to-purple-500/20 flex items-center justify-center">
-                        <CategoryIcon className="w-12 h-12 text-orange-500/50" />
+                        <CategoryIcon className="w-12 h-12 text-primary/50" />
                       </div>
                     )}
                     <CardContent className="p-4">
@@ -230,7 +230,7 @@ export function TemplateMarketplace() {
                           </div>
                         )}
                       </div>
-                      <h3 className="text-sm font-medium text-white mb-1">{listing.title}</h3>
+                      <h3 className="text-sm font-medium text-foreground mb-1">{listing.title}</h3>
                       <p className="text-xs text-zinc-400 line-clamp-2 mb-3">{listing.description}</p>
                       {listing.tags && listing.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mb-3">
@@ -243,7 +243,7 @@ export function TemplateMarketplace() {
                       )}
                       <div className="flex items-center justify-between">
                         <div>
-                          <span className="text-lg font-bold text-orange-500">
+                          <span className="text-lg font-bold text-primary">
                             ${(listing.totalRevenue / 100).toFixed(2)}
                           </span>
                           <span className="text-xs text-zinc-500 ml-2">
@@ -285,7 +285,7 @@ export function TemplateMarketplace() {
         </TabsContent>
 
         <TabsContent value="my-templates" className="space-y-4">
-          <Card className="bg-black border-orange-500/20">
+          <Card className="bg-background border">
             <CardContent className="p-8 text-center">
               <Download className="w-12 h-12 mx-auto mb-3 text-gray-600" />
               <p className="text-gray-400">No purchased templates yet</p>
@@ -304,10 +304,10 @@ export function TemplateMarketplace() {
         </TabsContent>
 
         <TabsContent value="sell" className="space-y-4">
-          <Card className="bg-black border-orange-500/20">
+          <Card className="bg-background border">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2 text-sm">
-                <Plus className="w-4 h-4 text-orange-500" />
+              <CardTitle className="text-foreground flex items-center gap-2 text-sm">
+                <Plus className="w-4 h-4 text-primary" />
                 Create New Template
               </CardTitle>
             </CardHeader>
@@ -316,7 +316,7 @@ export function TemplateMarketplace() {
                 <label className="text-xs text-gray-400 mb-1 block">Template Title</label>
                 <Input
                   placeholder="e.g., Professional Memoir Outline"
-                  className="bg-black/50 border-orange-500/30"
+                  className="bg-card border"
                   data-testid="input-template-title"
                 />
               </div>
@@ -324,7 +324,7 @@ export function TemplateMarketplace() {
                 <label className="text-xs text-gray-400 mb-1 block">Description</label>
                 <Textarea
                   placeholder="Describe what's included in your template..."
-                  className="min-h-[100px] bg-black/50 border-orange-500/30"
+                  className="min-h-[100px] bg-card border"
                   data-testid="textarea-template-description"
                 />
               </div>
@@ -332,7 +332,7 @@ export function TemplateMarketplace() {
                 <div>
                   <label className="text-xs text-gray-400 mb-1 block">Category</label>
                   <Select>
-                    <SelectTrigger className="bg-black/50 border-orange-500/30" data-testid="select-template-category">
+                    <SelectTrigger className="bg-card border" data-testid="select-template-category">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
@@ -349,7 +349,7 @@ export function TemplateMarketplace() {
                   <Input
                     type="number"
                     placeholder="0.00"
-                    className="bg-black/50 border-orange-500/30"
+                    className="bg-card border"
                     data-testid="input-template-price"
                   />
                 </div>
@@ -358,13 +358,13 @@ export function TemplateMarketplace() {
                 <label className="text-xs text-gray-400 mb-1 block">Tags (comma separated)</label>
                 <Input
                   placeholder="e.g., business, non-fiction, how-to"
-                  className="bg-black/50 border-orange-500/30"
+                  className="bg-card border"
                   data-testid="input-template-tags"
                 />
               </div>
-              <div className="bg-orange-500/5 rounded p-3 border border-orange-500/20">
+              <div className="bg-orange-500/5 rounded p-3 border border">
                 <p className="text-xs text-gray-400">
-                  <strong className="text-orange-500">85% revenue share</strong> - You keep 85% of every sale.
+                  <strong className="text-primary">85% revenue share</strong> - You keep 85% of every sale.
                   Templates are reviewed before publishing.
                 </p>
               </div>

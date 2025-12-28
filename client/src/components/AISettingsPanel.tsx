@@ -106,7 +106,7 @@ export function AISettingsPanel({
     return (
       <div className="flex flex-wrap items-center gap-2 p-2 bg-zinc-900/50 rounded-lg border border-zinc-800">
         <div className="flex items-center gap-2">
-          <Coins className="w-4 h-4 text-orange-500" />
+          <Coins className="w-4 h-4 text-primary" />
           <span className="text-sm font-medium" data-testid="text-credit-balance">{userCredits} credits</span>
         </div>
         <div className="h-4 w-px bg-zinc-700" />
@@ -116,7 +116,7 @@ export function AISettingsPanel({
             return <Icon className="w-3 h-3" />;
           })()}
           {selectedTierData?.name || 'Standard'}
-          <span className="text-orange-500">({selectedTierData?.creditCost || 3}c)</span>
+          <span className="text-primary">({selectedTierData?.creditCost || 3}c)</span>
         </Badge>
         {selectedVoiceData && selectedVoiceData.name !== 'Custom' && (
           <Badge variant="secondary" className="gap-1">
@@ -140,11 +140,11 @@ export function AISettingsPanel({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Settings2 className="w-5 h-5 text-orange-500" />
+          <Settings2 className="w-5 h-5 text-primary" />
           <span className="font-semibold">AI Settings</span>
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 rounded-full border border-zinc-800">
-          <Coins className="w-4 h-4 text-orange-500" />
+          <Coins className="w-4 h-4 text-primary" />
           <span className="text-sm font-bold" data-testid="text-credit-balance">{userCredits}</span>
           <span className="text-xs text-muted-foreground">credits</span>
         </div>
@@ -154,7 +154,7 @@ export function AISettingsPanel({
         <CollapsibleTrigger asChild>
           <Button variant="ghost" className="w-full justify-between p-3 h-auto hover-elevate">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-orange-500" />
+              <Sparkles className="w-4 h-4 text-primary" />
               <span className="font-medium">Quality Tier</span>
               {selectedTierData && (
                 <Badge variant="outline" className="ml-2" data-testid="text-credit-cost">
@@ -185,7 +185,7 @@ export function AISettingsPanel({
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <Icon className={`w-5 h-5 ${tier.name === 'Ultra' ? 'text-orange-500' : ''}`} />
+                      <Icon className={`w-5 h-5 ${tier.name === 'Ultra' ? 'text-primary' : ''}`} />
                       <span className="font-semibold">{tier.name}</span>
                     </div>
                     {isSelected && <Check className="w-4 h-4 text-green-500" />}
@@ -193,7 +193,7 @@ export function AISettingsPanel({
                   <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{tier.description}</p>
                   <Badge 
                     variant={tier.name === 'Ultra' ? 'default' : 'secondary'}
-                    className={tier.name === 'Ultra' ? 'bg-orange-500/20 text-orange-500 border-orange-500/50' : ''}
+                    className={tier.name === 'Ultra' ? 'bg-primary/20 text-primary border-orange-500/50' : ''}
                   >
                     {tier.creditCost} credit{tier.creditCost !== 1 ? 's' : ''}
                   </Badge>
@@ -208,7 +208,7 @@ export function AISettingsPanel({
         <CollapsibleTrigger asChild>
           <Button variant="ghost" className="w-full justify-between p-3 h-auto hover-elevate">
             <div className="flex items-center gap-2">
-              <Mic2 className="w-4 h-4 text-orange-500" />
+              <Mic2 className="w-4 h-4 text-primary" />
               <span className="font-medium">Voice & Tone</span>
               {selectedVoiceData && selectedVoiceData.name !== 'Custom' && (
                 <Badge variant="secondary" className="ml-2">{selectedVoiceData.name}</Badge>
@@ -237,7 +237,7 @@ export function AISettingsPanel({
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{voice.name}</span>
-                          {isSelected && <Check className="w-4 h-4 text-orange-500" />}
+                          {isSelected && <Check className="w-4 h-4 text-primary" />}
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">{voice.description}</p>
                         {voice.exampleOutput && (
@@ -264,7 +264,7 @@ export function AISettingsPanel({
                   <div className="flex items-center gap-2 mb-2">
                     <Pencil className="w-4 h-4" />
                     <span className="font-medium">Custom Voice</span>
-                    {selectedVoice === customVoicePreset.id && <Check className="w-4 h-4 text-orange-500" />}
+                    {selectedVoice === customVoicePreset.id && <Check className="w-4 h-4 text-primary" />}
                   </div>
                   <p className="text-xs text-muted-foreground mb-2">Define your own unique voice and style</p>
                   {selectedVoice === customVoicePreset.id && setCustomVoice && (
@@ -288,7 +288,7 @@ export function AISettingsPanel({
           <CollapsibleTrigger asChild>
             <Button variant="ghost" className="w-full justify-between p-3 h-auto hover-elevate">
               <div className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-orange-500" />
+                <BookOpen className="w-4 h-4 text-primary" />
                 <span className="font-medium">Genre / Format</span>
               </div>
               {genreOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -312,7 +312,7 @@ export function AISettingsPanel({
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium">{genre.name}</span>
-                        {isSelected && <Check className="w-3 h-3 text-orange-500" />}
+                        {isSelected && <Check className="w-3 h-3 text-primary" />}
                       </div>
                     </Card>
                   );

@@ -148,7 +148,7 @@ export default function Activity() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="p-8 text-center">
           <p className="text-gray-400">Please sign in to view the activity feed</p>
         </Card>
@@ -157,10 +157,10 @@ export default function Activity() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2" data-testid="text-activity-title">
+          <h1 className="text-3xl font-bold text-foreground mb-2" data-testid="text-activity-title">
             Activity Wall
           </h1>
           <p className="text-gray-400">
@@ -181,13 +181,13 @@ export default function Activity() {
                 value={newPostContent}
                 onChange={(e) => setNewPostContent(e.target.value)}
                 placeholder="Share your recovery win, set a goal, or ask the community..."
-                className="bg-gray-800 border-gray-700 text-white resize-none min-h-[100px]"
+                className="bg-gray-800 border-gray-700 text-foreground resize-none min-h-[100px]"
                 data-testid="input-new-post"
               />
               <div className="flex items-center justify-between flex-wrap gap-3">
                 <div className="flex items-center gap-3">
                   <Select value={postType} onValueChange={setPostType}>
-                    <SelectTrigger className="w-40 bg-gray-800 border-gray-700 text-white" data-testid="select-post-type">
+                    <SelectTrigger className="w-40 bg-gray-800 border-gray-700 text-foreground" data-testid="select-post-type">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -202,7 +202,7 @@ export default function Activity() {
                     </SelectContent>
                   </Select>
                   <Select value={visibility} onValueChange={setVisibility}>
-                    <SelectTrigger className="w-32 bg-gray-800 border-gray-700 text-white" data-testid="select-visibility">
+                    <SelectTrigger className="w-32 bg-gray-800 border-gray-700 text-foreground" data-testid="select-visibility">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -228,13 +228,13 @@ export default function Activity() {
                   </Select>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button size="icon" variant="ghost" className="text-gray-400 hover:text-white" data-testid="button-add-image">
+                  <Button size="icon" variant="ghost" className="text-gray-400 hover:text-foreground" data-testid="button-add-image">
                     <Image className="w-5 h-5" />
                   </Button>
-                  <Button size="icon" variant="ghost" className="text-gray-400 hover:text-white" data-testid="button-add-gif">
+                  <Button size="icon" variant="ghost" className="text-gray-400 hover:text-foreground" data-testid="button-add-gif">
                     <Smile className="w-5 h-5" />
                   </Button>
-                  <Button size="icon" variant="ghost" className="text-gray-400 hover:text-white" data-testid="button-add-video">
+                  <Button size="icon" variant="ghost" className="text-gray-400 hover:text-foreground" data-testid="button-add-video">
                     <Video className="w-5 h-5" />
                   </Button>
                   <Button 
@@ -262,28 +262,28 @@ export default function Activity() {
           <TabsList className="bg-gray-900 border border-gray-800">
             <TabsTrigger 
               value="all" 
-              className="data-[state=active]:bg-primary data-[state=active]:text-white"
+              className="data-[state=active]:bg-primary data-[state=active]:text-foreground"
               data-testid="tab-all"
             >
               All Posts
             </TabsTrigger>
             <TabsTrigger 
               value="victories"
-              className="data-[state=active]:bg-primary data-[state=active]:text-white"
+              className="data-[state=active]:bg-primary data-[state=active]:text-foreground"
               data-testid="tab-victories"
             >
               Victories
             </TabsTrigger>
             <TabsTrigger 
               value="milestones"
-              className="data-[state=active]:bg-primary data-[state=active]:text-white"
+              className="data-[state=active]:bg-primary data-[state=active]:text-foreground"
               data-testid="tab-milestones"
             >
               Milestones
             </TabsTrigger>
             <TabsTrigger 
               value="questions"
-              className="data-[state=active]:bg-primary data-[state=active]:text-white"
+              className="data-[state=active]:bg-primary data-[state=active]:text-foreground"
               data-testid="tab-questions"
             >
               Questions
@@ -322,7 +322,7 @@ export default function Activity() {
                       <div className="flex-1">
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-semibold text-white">Warrior</span>
+                            <span className="font-semibold text-foreground">Warrior</span>
                             <Badge 
                               variant="outline" 
                               className={`text-xs ${getPostTypeBadgeColor(post.postType)}`}
@@ -342,7 +342,7 @@ export default function Activity() {
                           </div>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button size="icon" variant="ghost" className="text-gray-400 hover:text-white" data-testid={`button-post-menu-${post.id}`}>
+                              <Button size="icon" variant="ghost" className="text-gray-400 hover:text-foreground" data-testid={`button-post-menu-${post.id}`}>
                                 <MoreHorizontal className="w-4 h-4" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -436,7 +436,7 @@ export default function Activity() {
                                   value={commentText}
                                   onChange={(e) => setCommentText(e.target.value)}
                                   placeholder="Write a comment..."
-                                  className="bg-gray-800 border-gray-700 text-white resize-none min-h-[60px]"
+                                  className="bg-gray-800 border-gray-700 text-foreground resize-none min-h-[60px]"
                                   data-testid={`input-comment-${post.id}`}
                                 />
                                 <Button
@@ -464,7 +464,7 @@ export default function Activity() {
                                     </Avatar>
                                     <div className="flex-1 bg-gray-800 rounded-lg p-3">
                                       <div className="flex items-center gap-2 mb-1">
-                                        <span className="font-medium text-white text-sm">Warrior</span>
+                                        <span className="font-medium text-foreground text-sm">Warrior</span>
                                         <span className="text-gray-500 text-xs">
                                           {format(new Date(comment.createdAt), "MMM d, h:mm a")}
                                         </span>
@@ -486,7 +486,7 @@ export default function Activity() {
         ) : (
           <Card className="bg-gray-900 border-gray-800 p-12 text-center">
             <MessageCircle className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">No posts yet</h3>
+            <h3 className="text-xl font-semibold text-foreground mb-2">No posts yet</h3>
             <p className="text-gray-400 mb-6">
               Be the first to share your recovery journey with the community!
             </p>

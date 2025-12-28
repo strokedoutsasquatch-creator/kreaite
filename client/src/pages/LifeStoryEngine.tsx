@@ -94,10 +94,10 @@ function StoryListSidebar({
   return (
     <div className="w-72 border-r border-gray-800 bg-gray-950 flex flex-col h-full">
       <div className="p-4 border-b border-gray-800">
-        <h2 className="text-lg font-semibold text-white mb-3">Life Stories</h2>
+        <h2 className="text-lg font-semibold text-foreground mb-3">Life Stories</h2>
         <Button
           onClick={onCreateNew}
-          className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+          className="w-full bg-orange-500 hover:bg-orange-600 text-foreground"
           data-testid="button-create-story"
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -121,15 +121,15 @@ function StoryListSidebar({
                 onClick={() => onSelect(story.id)}
                 className={`w-full text-left p-3 rounded-md transition-colors ${
                   selectedId === story.id
-                    ? "bg-orange-500/20 border border-orange-500/30"
+                    ? "bg-primary/20 border border"
                     : "hover-elevate"
                 }`}
                 data-testid={`button-story-${story.id}`}
               >
                 <div className="flex items-start gap-2">
-                  <BookOpen className="w-4 h-4 text-orange-400 mt-0.5 flex-shrink-0" />
+                  <BookOpen className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-white font-medium truncate text-sm">
+                    <p className="text-foreground font-medium truncate text-sm">
                       {story.title}
                     </p>
                     <p className="text-gray-500 text-xs truncate">
@@ -197,7 +197,7 @@ function StoryHeader({
               onChange={(e) => setTitle(e.target.value)}
               onBlur={handleTitleBlur}
               placeholder="My Life Story"
-              className="mt-1 bg-gray-900 border-gray-700 text-white text-xl font-semibold"
+              className="mt-1 bg-gray-900 border-gray-700 text-foreground text-xl font-semibold"
               data-testid="input-story-title"
             />
           </div>
@@ -211,7 +211,7 @@ function StoryHeader({
               onChange={(e) => setSubtitle(e.target.value)}
               onBlur={handleSubtitleBlur}
               placeholder="A journey of growth and discovery..."
-              className="mt-1 bg-gray-900 border-gray-700 text-white"
+              className="mt-1 bg-gray-900 border-gray-700 text-foreground"
               data-testid="input-story-subtitle"
             />
           </div>
@@ -222,7 +222,7 @@ function StoryHeader({
                 <Badge
                   key={theme}
                   variant="outline"
-                  className="bg-orange-500/10 border-orange-500/30 text-orange-400"
+                  className="bg-primary/10 border text-primary"
                 >
                   {theme}
                   <button
@@ -241,7 +241,7 @@ function StoryHeader({
                 onChange={(e) => setThemeInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAddTheme()}
                 placeholder="Add theme (e.g., triumph, love, growth)"
-                className="bg-gray-900 border-gray-700 text-white"
+                className="bg-gray-900 border-gray-700 text-foreground"
                 data-testid="input-theme"
               />
               <Button
@@ -293,7 +293,7 @@ function TimelineSection({
     <Card className="bg-gray-950 border-gray-800">
       <CardHeader className="flex flex-row items-center justify-between gap-4 pb-4">
         <div>
-          <CardTitle className="text-white text-lg">Life Timeline</CardTitle>
+          <CardTitle className="text-foreground text-lg">Life Timeline</CardTitle>
           <CardDescription className="text-gray-400">
             Key milestones and events in your journey
           </CardDescription>
@@ -310,7 +310,7 @@ function TimelineSection({
           </DialogTrigger>
           <DialogContent className="bg-gray-950 border-gray-800">
             <DialogHeader>
-              <DialogTitle className="text-white">Add Life Milestone</DialogTitle>
+              <DialogTitle className="text-foreground">Add Life Milestone</DialogTitle>
               <DialogDescription className="text-gray-400">
                 Document a significant moment in your life story.
               </DialogDescription>
@@ -328,7 +328,7 @@ function TimelineSection({
                       setNewMilestone({ ...newMilestone, year: e.target.value })
                     }
                     placeholder="1990 or June 2020"
-                    className="mt-1 bg-gray-900 border-gray-700 text-white"
+                    className="mt-1 bg-gray-900 border-gray-700 text-foreground"
                     data-testid="input-milestone-year"
                   />
                 </div>
@@ -344,7 +344,7 @@ function TimelineSection({
                   >
                     <SelectTrigger
                       id="milestone-type"
-                      className="mt-1 bg-gray-900 border-gray-700 text-white"
+                      className="mt-1 bg-gray-900 border-gray-700 text-foreground"
                       data-testid="select-milestone-type"
                     >
                       <SelectValue />
@@ -354,7 +354,7 @@ function TimelineSection({
                         <SelectItem
                           key={type.value}
                           value={type.value}
-                          className="text-white"
+                          className="text-foreground"
                         >
                           <div className="flex items-center gap-2">
                             <type.icon className="w-4 h-4" />
@@ -377,7 +377,7 @@ function TimelineSection({
                     setNewMilestone({ ...newMilestone, title: e.target.value })
                   }
                   placeholder="What happened?"
-                  className="mt-1 bg-gray-900 border-gray-700 text-white"
+                  className="mt-1 bg-gray-900 border-gray-700 text-foreground"
                   data-testid="input-milestone-title"
                 />
               </div>
@@ -392,7 +392,7 @@ function TimelineSection({
                     setNewMilestone({ ...newMilestone, description: e.target.value })
                   }
                   placeholder="Tell the story of this moment..."
-                  className="mt-1 bg-gray-900 border-gray-700 text-white min-h-[100px]"
+                  className="mt-1 bg-gray-900 border-gray-700 text-foreground min-h-[100px]"
                   data-testid="input-milestone-description"
                 />
               </div>
@@ -454,7 +454,7 @@ function TimelineSection({
                                 {milestone.year}
                               </span>
                             </div>
-                            <h4 className="text-white font-medium">
+                            <h4 className="text-foreground font-medium">
                               {milestone.title}
                             </h4>
                             {milestone.description && (
@@ -527,8 +527,8 @@ function ChapterGenerator({
   return (
     <Card className="bg-gray-950 border-gray-800">
       <CardHeader>
-        <CardTitle className="text-white text-lg flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-orange-400" />
+        <CardTitle className="text-foreground text-lg flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-primary" />
           Chapter Generator
         </CardTitle>
         <CardDescription className="text-gray-400">
@@ -545,7 +545,7 @@ function ChapterGenerator({
             value={chapterTitle}
             onChange={(e) => setChapterTitle(e.target.value)}
             placeholder="e.g., The Day Everything Changed"
-            className="mt-1 bg-gray-900 border-gray-700 text-white"
+            className="mt-1 bg-gray-900 border-gray-700 text-foreground"
             data-testid="input-chapter-title"
           />
         </div>
@@ -558,7 +558,7 @@ function ChapterGenerator({
             value={chapterContext}
             onChange={(e) => setChapterContext(e.target.value)}
             placeholder="Describe what this chapter should cover, the emotions, events, and lessons..."
-            className="mt-1 bg-gray-900 border-gray-700 text-white min-h-[120px]"
+            className="mt-1 bg-gray-900 border-gray-700 text-foreground min-h-[120px]"
             data-testid="input-chapter-context"
           />
         </div>
@@ -585,7 +585,7 @@ function ChapterGenerator({
           <>
             <Separator className="bg-gray-800 my-4" />
             <div>
-              <h4 className="text-white font-medium mb-3">Generated Chapters</h4>
+              <h4 className="text-foreground font-medium mb-3">Generated Chapters</h4>
               <div className="space-y-2">
                 {chapters.map((chapter) => (
                   <div
@@ -594,9 +594,9 @@ function ChapterGenerator({
                     data-testid={`chapter-item-${chapter.id}`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <FileText className="w-4 h-4 text-orange-400 flex-shrink-0" />
+                      <FileText className="w-4 h-4 text-primary flex-shrink-0" />
                       <div className="min-w-0">
-                        <p className="text-white text-sm font-medium truncate">
+                        <p className="text-foreground text-sm font-medium truncate">
                           {chapter.title}
                         </p>
                         <p className="text-gray-500 text-xs">
@@ -628,7 +628,7 @@ function ChapterGenerator({
         >
           <DialogContent className="bg-gray-950 border-gray-800 max-w-3xl max-h-[80vh]">
             <DialogHeader>
-              <DialogTitle className="text-white">
+              <DialogTitle className="text-foreground">
                 {selectedChapter?.title}
               </DialogTitle>
             </DialogHeader>
@@ -656,7 +656,7 @@ function AttachmentsSection({
   return (
     <Card className="bg-gray-950 border-gray-800">
       <CardHeader>
-        <CardTitle className="text-white text-lg">Attachments</CardTitle>
+        <CardTitle className="text-foreground text-lg">Attachments</CardTitle>
         <CardDescription className="text-gray-400">
           Add photos and documents to enrich your story
         </CardDescription>
@@ -799,7 +799,7 @@ export default function LifeStoryEngine() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex flex-col" data-testid="life-story-engine-page">
+    <div className="min-h-screen bg-background flex flex-col" data-testid="life-story-engine-page">
       <CreatorHeader />
       <div className="flex-1 flex">
         <StoryListSidebar
@@ -815,7 +815,7 @@ export default function LifeStoryEngine() {
             <div className="flex items-center justify-center h-full">
               <div className="text-center max-w-md">
                 <BookOpen className="w-16 h-16 text-gray-700 mx-auto mb-4" />
-                <h2 className="text-2xl font-serif text-white mb-2">
+                <h2 className="text-2xl font-serif text-foreground mb-2">
                   Life Story Engine
                 </h2>
                 <p className="text-gray-400 mb-6">
@@ -840,13 +840,13 @@ export default function LifeStoryEngine() {
           ) : (
             <div className="p-6 max-w-4xl mx-auto space-y-6">
               <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-serif text-white">
+                <h1 className="text-2xl font-serif text-foreground">
                   {selectedStory.title}
                 </h1>
                 <Link href="/book-studio">
                   <Button
                     variant="outline"
-                    className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+                    className="border text-primary hover:bg-primary/10"
                     data-testid="button-export-to-book"
                   >
                     <ExternalLink className="w-4 h-4 mr-2" />

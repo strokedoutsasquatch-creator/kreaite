@@ -102,7 +102,7 @@ export default function TherapistDashboard() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="p-8 text-center">
           <p className="text-gray-400">Please sign in to access the therapist dashboard</p>
         </Card>
@@ -112,7 +112,7 @@ export default function TherapistDashboard() {
 
   if (profileLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
@@ -120,14 +120,14 @@ export default function TherapistDashboard() {
 
   if (!therapistProfile) {
     return (
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen bg-background text-foreground">
         <div className="max-w-2xl mx-auto px-4 py-12">
           <Card className="bg-gray-900 border-gray-800 p-8">
             <div className="text-center mb-8">
               <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
                 <Users className="w-10 h-10 text-primary" />
               </div>
-              <h1 className="text-2xl font-bold text-white mb-2">Create Therapist Profile</h1>
+              <h1 className="text-2xl font-bold text-foreground mb-2">Create Therapist Profile</h1>
               <p className="text-gray-400">
                 Set up your professional profile to start managing patients
               </p>
@@ -147,11 +147,11 @@ export default function TherapistDashboard() {
   const activePatients = patients?.filter(p => p.status === "active") || [];
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2" data-testid="text-therapist-title">
+            <h1 className="text-3xl font-bold text-foreground mb-2" data-testid="text-therapist-title">
               Therapist Dashboard
             </h1>
             <p className="text-gray-400">
@@ -176,7 +176,7 @@ export default function TherapistDashboard() {
                 <Users className="w-6 h-6 text-blue-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{activePatients.length}</p>
+                <p className="text-2xl font-bold text-foreground">{activePatients.length}</p>
                 <p className="text-gray-400 text-sm">Active Patients</p>
               </div>
             </div>
@@ -187,7 +187,7 @@ export default function TherapistDashboard() {
                 <Calendar className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{upcomingSessions?.length || 0}</p>
+                <p className="text-2xl font-bold text-foreground">{upcomingSessions?.length || 0}</p>
                 <p className="text-gray-400 text-sm">Upcoming Sessions</p>
               </div>
             </div>
@@ -198,7 +198,7 @@ export default function TherapistDashboard() {
                 <CheckCircle2 className="w-6 h-6 text-green-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-2xl font-bold text-foreground">
                   {sessions?.filter(s => s.status === "completed").length || 0}
                 </p>
                 <p className="text-gray-400 text-sm">Sessions Complete</p>
@@ -211,7 +211,7 @@ export default function TherapistDashboard() {
                 <TrendingUp className="w-6 h-6 text-purple-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-2xl font-bold text-foreground">
                   {therapistProfile.yearsExperience || 0}+
                 </p>
                 <p className="text-gray-400 text-sm">Years Experience</p>
@@ -224,7 +224,7 @@ export default function TherapistDashboard() {
           <TabsList className="bg-gray-900 border border-gray-800 p-1">
             <TabsTrigger 
               value="patients" 
-              className="data-[state=active]:bg-primary data-[state=active]:text-white"
+              className="data-[state=active]:bg-primary data-[state=active]:text-foreground"
               data-testid="tab-patients"
             >
               <Users className="w-4 h-4 mr-2" />
@@ -232,7 +232,7 @@ export default function TherapistDashboard() {
             </TabsTrigger>
             <TabsTrigger 
               value="sessions" 
-              className="data-[state=active]:bg-primary data-[state=active]:text-white"
+              className="data-[state=active]:bg-primary data-[state=active]:text-foreground"
               data-testid="tab-sessions"
             >
               <Calendar className="w-4 h-4 mr-2" />
@@ -240,7 +240,7 @@ export default function TherapistDashboard() {
             </TabsTrigger>
             <TabsTrigger 
               value="prescriptions" 
-              className="data-[state=active]:bg-primary data-[state=active]:text-white"
+              className="data-[state=active]:bg-primary data-[state=active]:text-foreground"
               data-testid="tab-prescriptions"
             >
               <ClipboardList className="w-4 h-4 mr-2" />
@@ -248,7 +248,7 @@ export default function TherapistDashboard() {
             </TabsTrigger>
             <TabsTrigger 
               value="analytics" 
-              className="data-[state=active]:bg-primary data-[state=active]:text-white"
+              className="data-[state=active]:bg-primary data-[state=active]:text-foreground"
               data-testid="tab-analytics"
             >
               <BarChart3 className="w-4 h-4 mr-2" />
@@ -258,7 +258,7 @@ export default function TherapistDashboard() {
 
           <TabsContent value="patients" className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-white">Your Patients</h2>
+              <h2 className="text-xl font-semibold text-foreground">Your Patients</h2>
               <Button className="bg-primary hover:bg-primary/90" data-testid="button-add-patient">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Patient
@@ -285,7 +285,7 @@ export default function TherapistDashboard() {
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <h3 className="font-semibold text-white">Patient #{patient.patientId.slice(0, 8)}</h3>
+                          <h3 className="font-semibold text-foreground">Patient #{patient.patientId.slice(0, 8)}</h3>
                           <div className="flex items-center gap-2 text-sm text-gray-400">
                             <Clock className="w-3 h-3" />
                             {patient.sessionFrequency || "Weekly"} sessions
@@ -295,7 +295,7 @@ export default function TherapistDashboard() {
                       <div className="flex items-center gap-4">
                         <div className="text-right">
                           <p className="text-sm text-gray-400">Started</p>
-                          <p className="text-white">{format(new Date(patient.createdAt), "MMM d, yyyy")}</p>
+                          <p className="text-foreground">{format(new Date(patient.createdAt), "MMM d, yyyy")}</p>
                         </div>
                         <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
                           {patient.status}
@@ -323,7 +323,7 @@ export default function TherapistDashboard() {
             ) : (
               <Card className="bg-gray-900 border-gray-800 p-12 text-center">
                 <Users className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">No patients yet</h3>
+                <h3 className="text-xl font-semibold text-foreground mb-2">No patients yet</h3>
                 <p className="text-gray-400 mb-6">
                   Add patients to start managing their recovery journey.
                 </p>
@@ -337,7 +337,7 @@ export default function TherapistDashboard() {
 
           <TabsContent value="sessions" className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-white">Therapy Sessions</h2>
+              <h2 className="text-xl font-semibold text-foreground">Therapy Sessions</h2>
               <Dialog open={newSessionOpen} onOpenChange={setNewSessionOpen}>
                 <DialogTrigger asChild>
                   <Button className="bg-primary hover:bg-primary/90" data-testid="button-schedule-session">
@@ -347,16 +347,16 @@ export default function TherapistDashboard() {
                 </DialogTrigger>
                 <DialogContent className="bg-gray-900 border-gray-800">
                   <DialogHeader>
-                    <DialogTitle className="text-white">Schedule New Session</DialogTitle>
+                    <DialogTitle className="text-foreground">Schedule New Session</DialogTitle>
                     <DialogDescription className="text-gray-400">
                       Create a new therapy session with a patient.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 py-4">
                     <div className="space-y-2">
-                      <Label className="text-white">Patient</Label>
+                      <Label className="text-foreground">Patient</Label>
                       <Select onValueChange={setSelectedPatient}>
-                        <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                        <SelectTrigger className="bg-gray-800 border-gray-700 text-foreground">
                           <SelectValue placeholder="Select patient" />
                         </SelectTrigger>
                         <SelectContent>
@@ -369,9 +369,9 @@ export default function TherapistDashboard() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-white">Session Type</Label>
+                      <Label className="text-foreground">Session Type</Label>
                       <Select>
-                        <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                        <SelectTrigger className="bg-gray-800 border-gray-700 text-foreground">
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
                         <SelectContent>
@@ -382,8 +382,8 @@ export default function TherapistDashboard() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-white">Date & Time</Label>
-                      <Input type="datetime-local" className="bg-gray-800 border-gray-700 text-white" />
+                      <Label className="text-foreground">Date & Time</Label>
+                      <Input type="datetime-local" className="bg-gray-800 border-gray-700 text-foreground" />
                     </div>
                   </div>
                   <div className="flex justify-end gap-3">
@@ -419,7 +419,7 @@ export default function TherapistDashboard() {
                           )}
                         </div>
                         <div>
-                          <h3 className="font-semibold text-white">
+                          <h3 className="font-semibold text-foreground">
                             {session.sessionType === "video" ? "Video Session" : "In-Person Session"}
                           </h3>
                           <p className="text-gray-400 text-sm">
@@ -445,7 +445,7 @@ export default function TherapistDashboard() {
             ) : (
               <Card className="bg-gray-900 border-gray-800 p-12 text-center">
                 <Calendar className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">No upcoming sessions</h3>
+                <h3 className="text-xl font-semibold text-foreground mb-2">No upcoming sessions</h3>
                 <p className="text-gray-400">
                   Schedule a session with a patient to get started.
                 </p>
@@ -454,10 +454,10 @@ export default function TherapistDashboard() {
           </TabsContent>
 
           <TabsContent value="prescriptions" className="space-y-6">
-            <h2 className="text-xl font-semibold text-white">Exercise Prescriptions</h2>
+            <h2 className="text-xl font-semibold text-foreground">Exercise Prescriptions</h2>
             <Card className="bg-gray-900 border-gray-800 p-12 text-center">
               <ClipboardList className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-white mb-2">Prescribe Exercises</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-2">Prescribe Exercises</h3>
               <p className="text-gray-400 mb-6">
                 Create custom exercise programs for your patients.
               </p>
@@ -469,10 +469,10 @@ export default function TherapistDashboard() {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
-            <h2 className="text-xl font-semibold text-white">Patient Analytics</h2>
+            <h2 className="text-xl font-semibold text-foreground">Patient Analytics</h2>
             <Card className="bg-gray-900 border-gray-800 p-12 text-center">
               <BarChart3 className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-white mb-2">Coming Soon</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-2">Coming Soon</h3>
               <p className="text-gray-400">
                 Patient progress tracking and outcome analytics will be available here.
               </p>
@@ -503,53 +503,53 @@ function TherapistProfileForm({ onSave }: { onSave: (data: any) => void }) {
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label className="text-white">License Number</Label>
+          <Label className="text-foreground">License Number</Label>
           <Input
             value={formData.licenseNumber}
             onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
-            className="bg-gray-800 border-gray-700 text-white"
+            className="bg-gray-800 border-gray-700 text-foreground"
             placeholder="Enter license number"
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-white">License State</Label>
+          <Label className="text-foreground">License State</Label>
           <Input
             value={formData.licenseState}
             onChange={(e) => setFormData({ ...formData, licenseState: e.target.value })}
-            className="bg-gray-800 border-gray-700 text-white"
+            className="bg-gray-800 border-gray-700 text-foreground"
             placeholder="e.g., CA, NY, TX"
           />
         </div>
       </div>
       
       <div className="space-y-2">
-        <Label className="text-white">Years of Experience</Label>
+        <Label className="text-foreground">Years of Experience</Label>
         <Input
           type="number"
           value={formData.yearsExperience}
           onChange={(e) => setFormData({ ...formData, yearsExperience: e.target.value })}
-          className="bg-gray-800 border-gray-700 text-white"
+          className="bg-gray-800 border-gray-700 text-foreground"
           placeholder="Years"
         />
       </div>
       
       <div className="space-y-2">
-        <Label className="text-white">Education & Credentials</Label>
+        <Label className="text-foreground">Education & Credentials</Label>
         <Textarea
           value={formData.education}
           onChange={(e) => setFormData({ ...formData, education: e.target.value })}
-          className="bg-gray-800 border-gray-700 text-white"
+          className="bg-gray-800 border-gray-700 text-foreground"
           placeholder="List your degrees, certifications, and credentials"
           rows={3}
         />
       </div>
       
       <div className="space-y-2">
-        <Label className="text-white">Professional Bio</Label>
+        <Label className="text-foreground">Professional Bio</Label>
         <Textarea
           value={formData.bio}
           onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-          className="bg-gray-800 border-gray-700 text-white"
+          className="bg-gray-800 border-gray-700 text-foreground"
           placeholder="Tell patients about your experience and approach to therapy"
           rows={4}
         />

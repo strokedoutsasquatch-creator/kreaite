@@ -1090,9 +1090,9 @@ export default function MusicStudio() {
               <TabsContent value="melody-magic" className="flex-1 overflow-auto">
                 <div className="space-y-6">
                   {/* Hero Section with Mode Selector */}
-                  <div className="text-center py-6 bg-gradient-to-r from-orange-500/10 via-purple-500/10 to-pink-500/10 rounded-xl border border-orange-500/20">
+                  <div className="text-center py-6 bg-gradient-to-r from-orange-500/10 via-purple-500/10 to-pink-500/10 rounded-xl border border">
                     <div className="flex items-center justify-center gap-2 mb-2">
-                      <Sparkles className="w-8 h-8 text-orange-500 animate-pulse" />
+                      <Sparkles className="w-8 h-8 text-primary animate-pulse" />
                       <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-purple-500 bg-clip-text text-transparent">
                         MELODY MAGIC STUDIO
                       </h2>
@@ -1142,7 +1142,7 @@ export default function MusicStudio() {
                        "Completely reimagine a song as if it was born in a different genre and era!"}
                     </p>
                     <div className="flex items-center justify-center gap-4 mt-4 text-sm text-muted-foreground flex-wrap">
-                      <Badge variant="outline" className="bg-orange-500/10">Rapid-Fire Rap → Country Ballad</Badge>
+                      <Badge variant="outline" className="bg-primary/10">Rapid-Fire Rap → Country Ballad</Badge>
                       <Badge variant="outline" className="bg-purple-500/10">Pop Hit + Rock Anthem = Epic Mashup</Badge>
                       <Badge variant="outline" className="bg-pink-500/10">Any Voice + Any Genre = Magic</Badge>
                     </div>
@@ -1348,13 +1348,13 @@ export default function MusicStudio() {
                         <button
                           onClick={() => setMelodyMagicStep(s.step)}
                           className={`w-12 h-12 rounded-full flex items-center justify-center font-bold transition-all
-                            ${melodyMagicStep === s.step ? 'bg-gradient-to-r from-orange-500 to-purple-500 text-white shadow-lg shadow-orange-500/30' : 
-                              melodyMagicStep > s.step ? 'bg-green-500/80 text-white' : 'bg-muted text-muted-foreground'}`}
+                            ${melodyMagicStep === s.step ? 'bg-gradient-to-r from-orange-500 to-purple-500 text-foreground shadow-lg shadow-orange-500/30' : 
+                              melodyMagicStep > s.step ? 'bg-green-500/80 text-foreground' : 'bg-muted text-muted-foreground'}`}
                           data-testid={`button-melody-step-${s.step}`}
                         >
                           <s.icon className="w-5 h-5" />
                         </button>
-                        <span className={`ml-2 text-sm hidden md:block ${melodyMagicStep === s.step ? 'text-orange-500 font-bold' : 'text-muted-foreground'}`}>
+                        <span className={`ml-2 text-sm hidden md:block ${melodyMagicStep === s.step ? 'text-primary font-bold' : 'text-muted-foreground'}`}>
                           {s.label}
                         </span>
                         {i < 3 && <div className={`w-12 md:w-24 h-1 mx-2 rounded ${melodyMagicStep > s.step ? 'bg-gradient-to-r from-green-500 to-green-400' : 'bg-muted'}`} />}
@@ -1364,22 +1364,22 @@ export default function MusicStudio() {
 
                   {/* Step 1: Record Melody */}
                   {melodyMagicStep === 1 && (
-                    <Card className="border-orange-500/20">
+                    <Card className="border">
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                          <Mic className="w-6 h-6 text-orange-500" /> Step 1: Record Your Melody
+                          <Mic className="w-6 h-6 text-primary" /> Step 1: Record Your Melody
                         </CardTitle>
                         <CardDescription>
                           Hum, sing, whistle, or play any melody. Even "Jingle Bells" can become a Death Metal anthem!
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-6">
-                        <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-orange-500/30 rounded-xl bg-orange-500/5">
+                        <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border rounded-xl bg-orange-500/5">
                           {!recordedMelodyUrl ? (
                             <>
                               <div className={`w-32 h-32 rounded-full flex items-center justify-center mb-4 transition-all
-                                ${isRecordingMelody ? 'bg-red-500 animate-pulse shadow-lg shadow-red-500/50' : 'bg-orange-500/20 hover:bg-orange-500/30'}`}>
-                                <Mic className={`w-16 h-16 ${isRecordingMelody ? 'text-white' : 'text-orange-500'}`} />
+                                ${isRecordingMelody ? 'bg-red-500 animate-pulse shadow-lg shadow-red-500/50' : 'bg-primary/20 hover:bg-orange-500/30'}`}>
+                                <Mic className={`w-16 h-16 ${isRecordingMelody ? 'text-foreground' : 'text-primary'}`} />
                               </div>
                               {isRecordingMelody ? (
                                 <div className="text-center">
@@ -1402,7 +1402,7 @@ export default function MusicStudio() {
                             <div className="w-full space-y-4">
                               <div className="flex items-center justify-center gap-4">
                                 <div className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center">
-                                  <Music className="w-8 h-8 text-white" />
+                                  <Music className="w-8 h-8 text-foreground" />
                                 </div>
                                 <div>
                                   <p className="font-bold text-green-500">Melody Recorded!</p>
@@ -1425,7 +1425,7 @@ export default function MusicStudio() {
                         
                         <div className="grid grid-cols-3 gap-4 text-center text-sm">
                           <div className="p-3 bg-muted/50 rounded-lg">
-                            <Music className="w-6 h-6 mx-auto mb-1 text-orange-500" />
+                            <Music className="w-6 h-6 mx-auto mb-1 text-primary" />
                             <p className="font-medium">Hum a Tune</p>
                           </div>
                           <div className="p-3 bg-muted/50 rounded-lg">
@@ -1461,7 +1461,7 @@ export default function MusicStudio() {
                             </h4>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                               <div className="text-center p-3 bg-background/50 rounded">
-                                <p className="text-2xl font-bold text-orange-500">{melodyAnalysis.detectedBpm}</p>
+                                <p className="text-2xl font-bold text-primary">{melodyAnalysis.detectedBpm}</p>
                                 <p className="text-xs text-muted-foreground">BPM</p>
                               </div>
                               <div className="text-center p-3 bg-background/50 rounded">
@@ -1499,7 +1499,7 @@ export default function MusicStudio() {
                                 onClick={() => setTargetGenre(genre.value)}
                                 className={`p-4 rounded-xl border-2 transition-all text-left
                                   ${targetGenre === genre.value 
-                                    ? `border-transparent bg-gradient-to-r ${genre.color} text-white shadow-lg` 
+                                    ? `border-transparent bg-gradient-to-r ${genre.color} text-foreground shadow-lg` 
                                     : 'border-muted hover:border-primary/50 bg-muted/30'}`}
                                 data-testid={`button-genre-${genre.value}`}
                               >
@@ -1529,7 +1529,7 @@ export default function MusicStudio() {
                                 onClick={() => setTargetVoiceStyle(voice.value)}
                                 className={`p-3 rounded-lg border-2 transition-all text-left
                                   ${targetVoiceStyle === voice.value 
-                                    ? 'border-orange-500 bg-orange-500/10' 
+                                    ? 'border-orange-500 bg-primary/10' 
                                     : 'border-muted hover:border-primary/50'}`}
                                 data-testid={`button-voice-${voice.value}`}
                               >
@@ -1587,7 +1587,7 @@ export default function MusicStudio() {
                             <div className="p-3 bg-muted/50 rounded-lg text-sm">
                               <p className="font-medium mb-1">🎵 Transformation Preview:</p>
                               <p className="text-muted-foreground">
-                                Your melody in <span className="text-orange-500 font-bold">{melodyAnalysis?.detectedKey} {melodyAnalysis?.detectedScale}</span> at{' '}
+                                Your melody in <span className="text-primary font-bold">{melodyAnalysis?.detectedKey} {melodyAnalysis?.detectedScale}</span> at{' '}
                                 <span className="text-purple-500 font-bold">{melodyAnalysis?.detectedBpm} BPM</span> → 
                                 <span className="text-pink-500 font-bold"> {targetGenre.toUpperCase()}</span> with{' '}
                                 <span className="text-blue-500 font-bold">{targetVoiceStyle}</span> vocals
@@ -1643,7 +1643,7 @@ export default function MusicStudio() {
                         {isRecomposing ? (
                           <div className="flex flex-col items-center justify-center py-12">
                             <div className="w-24 h-24 rounded-full bg-gradient-to-r from-orange-500 to-purple-500 flex items-center justify-center animate-pulse mb-4">
-                              <Sparkles className="w-12 h-12 text-white animate-spin" />
+                              <Sparkles className="w-12 h-12 text-foreground animate-spin" />
                             </div>
                             <p className="text-xl font-bold">Creating Magic...</p>
                             <p className="text-muted-foreground">AI is recomposing your melody as {targetGenre}</p>
@@ -1653,7 +1653,7 @@ export default function MusicStudio() {
                           <div className="space-y-6">
                             <div className="p-6 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20 text-center">
                               <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-r from-orange-500 to-purple-500 flex items-center justify-center mb-4">
-                                <Music className="w-10 h-10 text-white" />
+                                <Music className="w-10 h-10 text-foreground" />
                               </div>
                               <h3 className="text-2xl font-bold">{recomposedTrack.title}</h3>
                               <p className="text-muted-foreground">
@@ -1800,7 +1800,7 @@ export default function MusicStudio() {
                           <div className="space-y-3">
                             {[
                               { name: "Vocals", icon: Mic, color: "text-pink-500", stem: separatedStems.vocals },
-                              { name: "Drums", icon: Drum, color: "text-orange-500", stem: separatedStems.drums },
+                              { name: "Drums", icon: Drum, color: "text-primary", stem: separatedStems.drums },
                               { name: "Bass", icon: Waves, color: "text-purple-500", stem: separatedStems.bass },
                               { name: "Other (Guitar/Keys)", icon: Guitar, color: "text-yellow-500", stem: separatedStems.other },
                               { name: "Instrumental", icon: Music, color: "text-green-500", stem: separatedStems.instrumental },
@@ -2133,23 +2133,23 @@ export default function MusicStudio() {
               {/* DISTRIBUTION HUB TAB */}
               <TabsContent value="distribution" className="flex-1 overflow-auto">
                 <div className="space-y-6">
-                  <div className="text-center py-6 bg-gradient-to-r from-red-500/10 via-orange-500/10 to-yellow-500/10 rounded-xl border border-orange-500/20">
+                  <div className="text-center py-6 bg-gradient-to-r from-red-500/10 via-orange-500/10 to-yellow-500/10 rounded-xl border border">
                     <div className="flex items-center justify-center gap-2 mb-2">
                       <Radio className="w-8 h-8 text-red-500 animate-pulse" />
                       <h2 className="text-3xl font-bold bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">
                         DISTRIBUTION HUB
                       </h2>
-                      <Radio className="w-8 h-8 text-orange-500 animate-pulse" />
+                      <Radio className="w-8 h-8 text-primary animate-pulse" />
                     </div>
                     <p className="text-muted-foreground">Publish to 150+ streaming platforms worldwide</p>
-                    <p className="text-sm text-orange-400 mt-2">Keep 85% of royalties | No annual fees</p>
+                    <p className="text-sm text-primary mt-2">Keep 85% of royalties | No annual fees</p>
                   </div>
                   
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                          <Globe className="w-5 h-5 text-orange-500" /> Select Platforms
+                          <Globe className="w-5 h-5 text-primary" /> Select Platforms
                         </CardTitle>
                         <CardDescription>Choose where to publish your music</CardDescription>
                       </CardHeader>
@@ -2170,7 +2170,7 @@ export default function MusicStudio() {
                               key={platform.id}
                               className={`p-3 rounded-lg border-2 text-center transition-all ${
                                 distributionPlatforms.includes(platform.id)
-                                  ? 'border-orange-500 bg-orange-500/10'
+                                  ? 'border-orange-500 bg-primary/10'
                                   : 'border-border hover:border-orange-500/50'
                               }`}
                               onClick={() => {
@@ -2183,7 +2183,7 @@ export default function MusicStudio() {
                               data-testid={`button-platform-${platform.id}`}
                             >
                               <div className={`w-10 h-10 ${platform.color} rounded-full mx-auto mb-2 flex items-center justify-center`}>
-                                <Music className="w-5 h-5 text-white" />
+                                <Music className="w-5 h-5 text-foreground" />
                               </div>
                               <div className="text-sm font-medium">{platform.name}</div>
                             </button>
@@ -2203,7 +2203,7 @@ export default function MusicStudio() {
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                          <FileText className="w-5 h-5 text-orange-500" /> Track Metadata
+                          <FileText className="w-5 h-5 text-primary" /> Track Metadata
                         </CardTitle>
                         <CardDescription>Fill in your release information</CardDescription>
                       </CardHeader>
@@ -2293,19 +2293,19 @@ export default function MusicStudio() {
                     <CardContent className="py-6">
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
                         <div>
-                          <div className="text-3xl font-bold text-orange-500">150+</div>
+                          <div className="text-3xl font-bold text-primary">150+</div>
                           <div className="text-sm text-muted-foreground">Platforms</div>
                         </div>
                         <div>
-                          <div className="text-3xl font-bold text-orange-500">85%</div>
+                          <div className="text-3xl font-bold text-primary">85%</div>
                           <div className="text-sm text-muted-foreground">Royalties Kept</div>
                         </div>
                         <div>
-                          <div className="text-3xl font-bold text-orange-500">$0</div>
+                          <div className="text-3xl font-bold text-primary">$0</div>
                           <div className="text-sm text-muted-foreground">Annual Fees</div>
                         </div>
                         <div>
-                          <div className="text-3xl font-bold text-orange-500">24hr</div>
+                          <div className="text-3xl font-bold text-primary">24hr</div>
                           <div className="text-sm text-muted-foreground">Review Time</div>
                         </div>
                       </div>
@@ -2331,7 +2331,7 @@ export default function MusicStudio() {
                           onClick={() => setCreatorStep(s.step)}
                           className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all
                             ${creatorStep === s.step ? 'bg-primary text-primary-foreground' : 
-                              creatorStep > s.step ? 'bg-primary/50 text-white' : 'bg-muted text-muted-foreground'}`}
+                              creatorStep > s.step ? 'bg-primary/50 text-foreground' : 'bg-muted text-muted-foreground'}`}
                           data-testid={`button-step-${s.step}`}
                         >
                           {s.step}
@@ -3316,7 +3316,7 @@ Repeat the hook...`}
                           { step: "4", title: "Score Generation", desc: "Creates custom soundtrack", icon: Music },
                         ].map((item) => (
                           <div key={item.step} className="p-4 bg-muted/30 rounded-lg text-center">
-                            <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center mx-auto mb-2 text-white font-bold">
+                            <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center mx-auto mb-2 text-foreground font-bold">
                               {item.step}
                             </div>
                             <item.icon className="w-6 h-6 mx-auto mb-2 text-indigo-500" />
@@ -3339,7 +3339,7 @@ Repeat the hook...`}
                       <h2 className="text-3xl font-bold bg-gradient-to-r from-pink-500 via-red-500 to-orange-500 bg-clip-text text-transparent">
                         LIVE ADAPTIVE MUSIC
                       </h2>
-                      <Zap className="w-8 h-8 text-orange-500 animate-pulse" />
+                      <Zap className="w-8 h-8 text-primary animate-pulse" />
                     </div>
                     <p className="text-muted-foreground">Real-time music that adapts to your content</p>
                     <p className="text-sm text-pink-400 mt-2">Gaming | Streaming | Meditation | Workouts</p>
@@ -3360,7 +3360,7 @@ Repeat the hook...`}
                               { id: "gaming", name: "Gaming", desc: "Reacts to gameplay intensity", IconComponent: Zap, color: "text-purple-500" },
                               { id: "streaming", name: "Streaming", desc: "Matches chat energy", IconComponent: Radio, color: "text-pink-500" },
                               { id: "meditation", name: "Meditation", desc: "Calming ambient sounds", IconComponent: Sparkles, color: "text-green-500" },
-                              { id: "workout", name: "Workout", desc: "Pumps up intensity", IconComponent: Activity, color: "text-orange-500" },
+                              { id: "workout", name: "Workout", desc: "Pumps up intensity", IconComponent: Activity, color: "text-primary" },
                             ].map((mode) => (
                               <button
                                 key={mode.id}
@@ -3448,7 +3448,7 @@ Repeat the hook...`}
                                   <div className="text-xs text-muted-foreground">Current BPM</div>
                                 </div>
                                 <div className="p-3 bg-muted/50 rounded-lg text-center">
-                                  <div className="text-xl font-bold text-orange-500">High</div>
+                                  <div className="text-xl font-bold text-primary">High</div>
                                   <div className="text-xs text-muted-foreground">Energy Level</div>
                                 </div>
                               </div>
@@ -3479,20 +3479,20 @@ Repeat the hook...`}
                       <Card>
                         <CardHeader>
                           <CardTitle className="flex items-center gap-2">
-                            <Headphones className="w-5 h-5 text-orange-500" /> Integration
+                            <Headphones className="w-5 h-5 text-primary" /> Integration
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
                           <Button variant="outline" className="w-full justify-start gap-2" data-testid="button-connect-obs">
-                            <span className="w-6 h-6 bg-purple-500 rounded flex items-center justify-center text-white text-xs">OBS</span>
+                            <span className="w-6 h-6 bg-purple-500 rounded flex items-center justify-center text-foreground text-xs">OBS</span>
                             Connect to OBS
                           </Button>
                           <Button variant="outline" className="w-full justify-start gap-2" data-testid="button-connect-discord">
-                            <span className="w-6 h-6 bg-indigo-500 rounded flex items-center justify-center text-white text-xs">DC</span>
+                            <span className="w-6 h-6 bg-indigo-500 rounded flex items-center justify-center text-foreground text-xs">DC</span>
                             Discord Bot
                           </Button>
                           <Button variant="outline" className="w-full justify-start gap-2" data-testid="button-connect-twitch">
-                            <span className="w-6 h-6 bg-purple-600 rounded flex items-center justify-center text-white text-xs">TV</span>
+                            <span className="w-6 h-6 bg-purple-600 rounded flex items-center justify-center text-foreground text-xs">TV</span>
                             Twitch Integration
                           </Button>
                         </CardContent>

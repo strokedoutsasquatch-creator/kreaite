@@ -463,13 +463,13 @@ export function ProMediaPlayer({
   return (
     <Card 
       ref={containerRef}
-      className="bg-black border-orange-500/20 overflow-hidden relative" 
+      className="bg-background border overflow-hidden relative" 
       data-testid="pro-media-player"
       onMouseMove={handleMouseMove}
       onMouseLeave={() => type === "video" && isPlaying && setShowControls(false)}
     >
       {type === "video" ? (
-        <div className="relative aspect-video bg-black">
+        <div className="relative aspect-video bg-background">
           <video
             ref={mediaRef as React.RefObject<HTMLVideoElement>}
             src={effectiveSrc}
@@ -480,24 +480,24 @@ export function ProMediaPlayer({
           />
           
           {isBuffering && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+            <div className="absolute inset-0 flex items-center justify-center bg-card/80">
               <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
             </div>
           )}
 
           {showLockedOverlay && !isOwned && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm z-10">
-              <div className="w-20 h-20 rounded-full bg-orange-500/20 flex items-center justify-center mb-4">
-                <Lock className="w-10 h-10 text-orange-500" />
+              <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mb-4">
+                <Lock className="w-10 h-10 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Premium Content</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-2">Premium Content</h3>
               <p className="text-gray-400 mb-4 text-center max-w-xs">
                 {isPreviewMode 
                   ? `Preview ended. Purchase to continue watching.`
                   : `This content requires purchase to access.`}
               </p>
               {price !== undefined && (
-                <p className="text-2xl font-bold text-orange-500 mb-4">${price.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-primary mb-4">${price.toFixed(2)}</p>
               )}
               <div className="flex gap-3">
                 {isPreviewMode && !trailerSrc && (
@@ -531,11 +531,11 @@ export function ProMediaPlayer({
           {!isPlaying && !showLockedOverlay && (
             <button
               onClick={togglePlay}
-              className={`absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 transition-colors ${showControls ? "opacity-100" : "opacity-0"}`}
+              className={`absolute inset-0 flex items-center justify-center bg-card/80 hover:bg-card transition-colors ${showControls ? "opacity-100" : "opacity-0"}`}
               data-testid="button-play-overlay"
             >
               <div className="w-16 h-16 rounded-full bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
-                <Play className="w-8 h-8 text-white ml-1" />
+                <Play className="w-8 h-8 text-foreground ml-1" />
               </div>
             </button>
           )}
@@ -545,7 +545,7 @@ export function ProMediaPlayer({
               size="icon"
               variant="ghost"
               onClick={toggleFullscreen}
-              className={`absolute top-3 right-3 h-8 w-8 bg-black/50 hover:bg-black/70 transition-opacity ${showControls ? "opacity-100" : "opacity-0"}`}
+              className={`absolute top-3 right-3 h-8 w-8 bg-card hover:bg-black/70 transition-opacity ${showControls ? "opacity-100" : "opacity-0"}`}
               data-testid="button-fullscreen"
             >
               {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
@@ -554,7 +554,7 @@ export function ProMediaPlayer({
 
           {isPreviewMode && !showLockedOverlay && (
             <Badge 
-              className="absolute top-3 left-3 bg-orange-500/90 text-white"
+              className="absolute top-3 left-3 bg-orange-500/90 text-foreground"
               data-testid="badge-preview-mode"
             >
               <Eye className="w-3 h-3 mr-1" />
@@ -565,13 +565,13 @@ export function ProMediaPlayer({
       ) : (
         <div className={`p-4 flex items-center gap-4 ${showLockedOverlay && !isOwned ? "relative" : ""}`}>
           {showLockedOverlay && !isOwned && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm z-10 rounded-t-lg">
-              <Lock className="w-8 h-8 text-orange-500 mb-2" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm z-10 rounded-t-lg">
+              <Lock className="w-8 h-8 text-primary mb-2" />
               <p className="text-sm text-gray-400 mb-2">
                 {isPreviewMode ? "Preview ended" : "Locked content"}
               </p>
               {price !== undefined && (
-                <p className="text-lg font-bold text-orange-500 mb-2">${price.toFixed(2)}</p>
+                <p className="text-lg font-bold text-primary mb-2">${price.toFixed(2)}</p>
               )}
               <div className="flex gap-2">
                 {isPreviewMode && (
@@ -613,17 +613,17 @@ export function ProMediaPlayer({
               />
             ) : (
               <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-orange-500 to-orange-700 flex items-center justify-center">
-                <Music className="w-8 h-8 text-white" />
+                <Music className="w-8 h-8 text-foreground" />
               </div>
             )}
             {!isOwned && isLocked && !showLockedOverlay && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
-                <Lock className="w-6 h-6 text-orange-500" />
+              <div className="absolute inset-0 flex items-center justify-center bg-card rounded-lg">
+                <Lock className="w-6 h-6 text-primary" />
               </div>
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-medium text-white truncate">
+            <h3 className="text-sm font-medium text-foreground truncate">
               {currentPlaylistItem?.title || title || "Untitled"}
             </h3>
             {(currentPlaylistItem?.artist || artist) && (
@@ -637,7 +637,7 @@ export function ProMediaPlayer({
               </Badge>
             )}
             {isPreviewMode && !showLockedOverlay && (
-              <Badge className="text-[10px] mt-1 bg-orange-500/20 text-orange-400 border-orange-500/30">
+              <Badge className="text-[10px] mt-1 bg-primary/20 text-primary border">
                 <Eye className="w-2 h-2 mr-1" />
                 Preview ({formatTime(Math.max(0, effectivePreviewDuration - currentTime))})
               </Badge>
@@ -712,7 +712,7 @@ export function ProMediaPlayer({
                   size="icon"
                   variant="ghost"
                   onClick={() => setShuffleEnabled(!shuffleEnabled)}
-                  className={`h-7 w-7 ${shuffleEnabled ? "text-orange-500" : ""}`}
+                  className={`h-7 w-7 ${shuffleEnabled ? "text-primary" : ""}`}
                   data-testid="button-shuffle"
                 >
                   <Shuffle className="w-3 h-3" />
@@ -770,7 +770,7 @@ export function ProMediaPlayer({
                   size="icon"
                   variant="ghost"
                   onClick={toggleRepeat}
-                  className={`h-7 w-7 ${repeatMode !== "none" ? "text-orange-500" : ""}`}
+                  className={`h-7 w-7 ${repeatMode !== "none" ? "text-primary" : ""}`}
                   data-testid="button-repeat"
                 >
                   {repeatMode === "one" ? <Repeat1 className="w-3 h-3" /> : <Repeat className="w-3 h-3" />}
@@ -876,7 +876,7 @@ export function ProMediaPlayer({
         </div>
 
         {showChapters && chapters.length > 0 && (
-          <div className="border-t border-orange-500/20 pt-2 mt-2">
+          <div className="border-t border pt-2 mt-2">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-medium text-gray-400">Chapters</span>
               <Button
@@ -895,7 +895,7 @@ export function ProMediaPlayer({
                   onClick={() => goToChapter(chapter)}
                   className={`w-full text-left p-2 rounded text-xs flex items-center justify-between ${
                     currentChapter?.id === chapter.id
-                      ? "bg-orange-500/20 text-orange-400"
+                      ? "bg-primary/20 text-primary"
                       : "hover:bg-gray-800 text-gray-300"
                   }`}
                   data-testid={`chapter-${chapter.id}`}
@@ -909,7 +909,7 @@ export function ProMediaPlayer({
         )}
 
         {showPlaylist && playlist.length > 0 && (
-          <div className="border-t border-orange-500/20 pt-2 mt-2">
+          <div className="border-t border pt-2 mt-2">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-medium text-gray-400">
                 Playlist ({playlist.length} items)
@@ -931,7 +931,7 @@ export function ProMediaPlayer({
                   disabled={item.isLocked && !isOwned}
                   className={`w-full text-left p-2 rounded text-xs flex items-center gap-2 ${
                     currentPlaylistIndex === index
-                      ? "bg-orange-500/20 text-orange-400"
+                      ? "bg-primary/20 text-primary"
                       : item.isLocked && !isOwned
                       ? "opacity-50 cursor-not-allowed text-gray-500"
                       : "hover:bg-gray-800 text-gray-300"
@@ -961,7 +961,7 @@ export function ProMediaPlayer({
                     <span className="text-gray-500">{formatTime(item.duration)}</span>
                   )}
                   {currentPlaylistIndex === index && (
-                    <Check className="w-4 h-4 text-orange-500" />
+                    <Check className="w-4 h-4 text-primary" />
                   )}
                 </button>
               ))}
@@ -970,7 +970,7 @@ export function ProMediaPlayer({
         )}
 
         {bookmarks.length > 0 && (
-          <div className="border-t border-orange-500/20 pt-2 mt-2">
+          <div className="border-t border pt-2 mt-2">
             <span className="text-xs font-medium text-gray-400 mb-1 block">Bookmarks</span>
             <div className="flex flex-wrap gap-1">
               {bookmarks.map((bookmark) => (

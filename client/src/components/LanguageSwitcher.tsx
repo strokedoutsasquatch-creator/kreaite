@@ -31,13 +31,13 @@ export function LanguageSwitcher() {
       <Globe className="h-4 w-4 text-muted-foreground" />
       <Select value={locale} onValueChange={setLocale}>
         <SelectTrigger 
-          className="w-auto min-w-[120px] border-zinc-800 bg-black hover-elevate"
+          className="w-auto min-w-[120px] border-zinc-800 bg-background hover-elevate"
           data-testid="language-select-trigger"
         >
           <SelectValue>
             <span className="flex items-center gap-2">
               {currentLanguage?.nativeName || locale}
-              {isRTL && <span className="text-xs text-orange-500">RTL</span>}
+              {isRTL && <span className="text-xs text-primary">RTL</span>}
             </span>
           </SelectValue>
         </SelectTrigger>

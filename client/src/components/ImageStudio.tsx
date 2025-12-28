@@ -518,7 +518,7 @@ export default function ImageStudio({ initialImage, onSave, onClose }: ImageStud
             <div className="flex items-center gap-2">
               <Label className="text-xs text-gray-400">Font</Label>
               <Select value={fontFamily} onValueChange={setFontFamily}>
-                <SelectTrigger className="w-32 h-8 bg-gray-800 border-gray-700 text-white">
+                <SelectTrigger className="w-32 h-8 bg-gray-800 border-gray-700 text-foreground">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -591,7 +591,7 @@ export default function ImageStudio({ initialImage, onSave, onClose }: ImageStud
   };
 
   return (
-    <div className="flex flex-col h-screen bg-black text-white" data-testid="image-studio">
+    <div className="flex flex-col h-screen bg-background text-foreground" data-testid="image-studio">
       <input
         type="file"
         ref={fileInputRef}
@@ -603,7 +603,7 @@ export default function ImageStudio({ initialImage, onSave, onClose }: ImageStud
       <header className="flex items-center justify-between h-12 px-3 bg-gray-900 border-b border-gray-800">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <ImageIcon className="w-5 h-5 text-orange-500" />
+            <ImageIcon className="w-5 h-5 text-primary" />
             <span className="font-semibold text-sm">ImageStudio</span>
           </div>
           <Separator orientation="vertical" className="h-6 bg-gray-700" />
@@ -654,7 +654,7 @@ export default function ImageStudio({ initialImage, onSave, onClose }: ImageStud
           </Button>
           <Button
             size="sm"
-            className="bg-orange-500 hover:bg-orange-600 text-black gap-1"
+            className="bg-primary hover:bg-primary/80 text-primary-foreground gap-1"
             onClick={() => setIsExportDialogOpen(true)}
             data-testid="button-export"
           >
@@ -707,14 +707,14 @@ export default function ImageStudio({ initialImage, onSave, onClose }: ImageStud
                 <Button
                   size="icon"
                   variant={selectedTool === tool.id ? 'secondary' : 'ghost'}
-                  className={`h-9 w-9 ${selectedTool === tool.id ? 'bg-orange-500/20 text-orange-500 border border-orange-500/50' : ''}`}
+                  className={`h-9 w-9 ${selectedTool === tool.id ? 'bg-primary/20 text-primary border border-primary/50' : ''}`}
                   onClick={() => setSelectedTool(tool.id)}
                   data-testid={`button-tool-${tool.id}`}
                 >
                   <tool.icon className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="right" className="bg-gray-800 text-white border-gray-700">
+              <TooltipContent side="right" className="bg-gray-800 text-foreground border-gray-700">
                 <p>{tool.label} ({tool.shortcut})</p>
               </TooltipContent>
             </Tooltip>
@@ -893,7 +893,7 @@ export default function ImageStudio({ initialImage, onSave, onClose }: ImageStud
                       key={layer.id}
                       className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
                         activeLayerId === layer.id 
-                          ? 'bg-orange-500/20 border border-orange-500/50' 
+                          ? 'bg-primary/20 border border-primary/50' 
                           : 'bg-gray-800 border border-transparent hover:border-gray-700'
                       }`}
                       onClick={() => setActiveLayerId(layer.id)}
@@ -913,7 +913,7 @@ export default function ImageStudio({ initialImage, onSave, onClose }: ImageStud
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium truncate text-white">{layer.name}</p>
+                        <p className="text-xs font-medium truncate text-foreground">{layer.name}</p>
                         <p className="text-[10px] text-gray-500">{layer.opacity}% • {layer.blendMode}</p>
                       </div>
                       
@@ -1131,7 +1131,7 @@ export default function ImageStudio({ initialImage, onSave, onClose }: ImageStud
                         onClick={() => setSelectedPresetFilter(filter.id)}
                         className={`p-2 rounded text-xs transition-colors ${
                           selectedPresetFilter === filter.id
-                            ? 'bg-orange-500/20 border border-orange-500 text-orange-500'
+                            ? 'bg-primary/20 border border-primary text-primary'
                             : 'bg-gray-800 border border-gray-700 text-gray-300 hover:border-gray-600'
                         }`}
                         data-testid={`button-filter-${filter.id}`}
@@ -1154,7 +1154,7 @@ export default function ImageStudio({ initialImage, onSave, onClose }: ImageStud
                   disabled={isProcessing || !activeLayer?.imageData}
                   data-testid="button-remove-background"
                 >
-                  {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eraser className="w-4 h-4 text-orange-500" />}
+                  {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eraser className="w-4 h-4 text-primary" />}
                   Remove Background
                 </Button>
 
@@ -1164,7 +1164,7 @@ export default function ImageStudio({ initialImage, onSave, onClose }: ImageStud
                   disabled={isProcessing || !activeLayer?.imageData}
                   data-testid="button-auto-enhance"
                 >
-                  {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4 text-orange-500" />}
+                  {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4 text-primary" />}
                   Auto Enhance
                 </Button>
 
@@ -1174,7 +1174,7 @@ export default function ImageStudio({ initialImage, onSave, onClose }: ImageStud
                   disabled={isProcessing}
                   data-testid="button-generate-ai"
                 >
-                  <Sparkles className="w-4 h-4 text-orange-500" />
+                  <Sparkles className="w-4 h-4 text-primary" />
                   Generate with AI
                 </Button>
 
@@ -1212,7 +1212,7 @@ export default function ImageStudio({ initialImage, onSave, onClose }: ImageStud
                         onClick={() => goToHistoryState(index)}
                         className={`w-full text-left px-2 py-1.5 rounded text-xs transition-colors ${
                           index === historyIndex
-                            ? 'bg-orange-500/20 text-orange-500'
+                            ? 'bg-primary/20 text-primary'
                             : index < historyIndex
                             ? 'text-gray-400 hover:bg-gray-800'
                             : 'text-gray-600'
@@ -1255,7 +1255,7 @@ export default function ImageStudio({ initialImage, onSave, onClose }: ImageStud
       </footer>
 
       <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
-        <DialogContent className="bg-gray-900 border-gray-800 text-white">
+        <DialogContent className="bg-gray-900 border-gray-800 text-foreground">
           <DialogHeader>
             <DialogTitle>Export Image</DialogTitle>
             <DialogDescription className="text-gray-400">
@@ -1320,7 +1320,7 @@ export default function ImageStudio({ initialImage, onSave, onClose }: ImageStud
             <Button variant="ghost" onClick={() => setIsExportDialogOpen(false)}>
               Cancel
             </Button>
-            <Button className="bg-orange-500 hover:bg-orange-600 text-black" onClick={handleExport} data-testid="button-confirm-export">
+            <Button className="bg-primary hover:bg-primary/80 text-primary-foreground" onClick={handleExport} data-testid="button-confirm-export">
               <Download className="w-4 h-4 mr-2" />
               Export
             </Button>

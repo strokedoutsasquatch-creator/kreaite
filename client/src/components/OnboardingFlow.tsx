@@ -191,26 +191,25 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ backgroundColor: "#000000" }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background"
       data-testid="onboarding-container"
     >
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-[#FF6B35]/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-[#FF6B35]/5 rounded-full blur-3xl" />
+        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
       </div>
 
       <div className="relative w-full max-w-2xl mx-4">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <Sparkles className="w-6 h-6 text-[#FF6B35]" />
-            <span className="text-white font-bold text-xl">KreAIte</span>
+            <Sparkles className="w-6 h-6 text-primary" />
+            <span className="text-foreground font-bold text-xl">KreAIte</span>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleSkip}
-            className="text-gray-400 hover:text-white"
+            className="text-muted-foreground hover:text-foreground"
             data-testid="button-skip-onboarding"
           >
             <X className="w-4 h-4 mr-1" />
@@ -224,7 +223,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               <div
                 key={i}
                 className={`h-1 flex-1 rounded-full transition-colors ${
-                  i + 1 <= step ? "bg-[#FF6B35]" : "bg-gray-800"
+                  i + 1 <= step ? "bg-primary" : "bg-muted"
                 }`}
                 data-testid={`progress-step-${i + 1}`}
               />
@@ -247,19 +246,19 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           >
             {step === 1 && (
               <div className="text-center" data-testid="step-welcome">
-                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-[#FF6B35]/20 flex items-center justify-center">
-                  <Sparkles className="w-10 h-10 text-[#FF6B35]" />
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Sparkles className="w-10 h-10 text-primary" />
                 </div>
-                <h1 className="text-4xl font-black text-white mb-4" data-testid="text-welcome-title">
+                <h1 className="text-4xl font-black text-foreground mb-4" data-testid="text-welcome-title">
                   Welcome to KreAIte
                 </h1>
-                <p className="text-xl text-gray-400 mb-8 max-w-md mx-auto" data-testid="text-welcome-subtitle">
+                <p className="text-xl text-muted-foreground mb-8 max-w-md mx-auto" data-testid="text-welcome-subtitle">
                   Your AI-powered creative studio. Let's set up your experience in just a few steps.
                 </p>
                 <Button
                   size="lg"
                   onClick={handleNext}
-                  className="bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white px-8"
+                  className="bg-primary hover:bg-primary/90 text-foreground px-8"
                   data-testid="button-get-started"
                 >
                   Get Started
@@ -270,10 +269,10 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
             {step === 2 && (
               <div data-testid="step-content-type">
-                <h2 className="text-3xl font-bold text-white mb-2 text-center" data-testid="text-content-type-title">
+                <h2 className="text-3xl font-bold text-foreground mb-2 text-center" data-testid="text-content-type-title">
                   What do you want to create?
                 </h2>
-                <p className="text-gray-400 mb-8 text-center" data-testid="text-content-type-subtitle">
+                <p className="text-muted-foreground mb-8 text-center" data-testid="text-content-type-subtitle">
                   Choose your primary content type. You can always explore others later.
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -285,7 +284,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                         key={type.id}
                         className={`p-4 cursor-pointer transition-all border-2 ${
                           isSelected
-                            ? "border-[#FF6B35] bg-[#FF6B35]/10"
+                            ? "border-primary bg-primary/10"
                             : "border-gray-800 bg-gray-900/50 hover:border-gray-700"
                         }`}
                         onClick={() => handleSelectContentType(type.id)}
@@ -294,18 +293,18 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                         <div className="flex flex-col items-center text-center">
                           <div
                             className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${
-                              isSelected ? "bg-[#FF6B35]/20" : "bg-gray-800"
+                              isSelected ? "bg-primary/20" : "bg-muted"
                             }`}
                           >
                             <Icon
-                              className={`w-6 h-6 ${isSelected ? "text-[#FF6B35]" : "text-gray-400"}`}
+                              className={`w-6 h-6 ${isSelected ? "text-primary" : "text-muted-foreground"}`}
                             />
                           </div>
-                          <h3 className="font-semibold text-white mb-1">{type.title}</h3>
+                          <h3 className="font-semibold text-foreground mb-1">{type.title}</h3>
                           <p className="text-xs text-gray-500">{type.description}</p>
                           {isSelected && (
                             <div className="mt-2">
-                              <Check className="w-5 h-5 text-[#FF6B35]" />
+                              <Check className="w-5 h-5 text-primary" />
                             </div>
                           )}
                         </div>
@@ -317,7 +316,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                   <Button
                     variant="ghost"
                     onClick={handleBack}
-                    className="text-gray-400 hover:text-white"
+                    className="text-muted-foreground hover:text-foreground"
                     data-testid="button-back-step-2"
                   >
                     <ArrowLeft className="w-4 h-4 mr-2" />
@@ -326,7 +325,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                   <Button
                     onClick={handleNext}
                     disabled={!data.contentType}
-                    className="bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white"
+                    className="bg-primary hover:bg-primary/90 text-foreground"
                     data-testid="button-next-step-2"
                   >
                     Continue
@@ -338,10 +337,10 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
             {step === 3 && (
               <div data-testid="step-profile">
-                <h2 className="text-3xl font-bold text-white mb-2 text-center" data-testid="text-profile-title">
+                <h2 className="text-3xl font-bold text-foreground mb-2 text-center" data-testid="text-profile-title">
                   Set up your creator profile
                 </h2>
-                <p className="text-gray-400 mb-8 text-center" data-testid="text-profile-subtitle">
+                <p className="text-muted-foreground mb-8 text-center" data-testid="text-profile-subtitle">
                   Tell us a bit about yourself. This helps personalize your experience.
                 </p>
                 <div className="space-y-6">
@@ -349,16 +348,16 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                     <div className="relative">
                       <Avatar className="w-24 h-24 border-2 border-gray-700">
                         <AvatarImage src={data.photoUrl} />
-                        <AvatarFallback className="bg-gray-800 text-gray-400">
+                        <AvatarFallback className="bg-muted text-muted-foreground">
                           <User className="w-10 h-10" />
                         </AvatarFallback>
                       </Avatar>
                       <label
                         htmlFor="photo-upload"
-                        className="absolute bottom-0 right-0 w-8 h-8 bg-[#FF6B35] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#FF6B35]/90 transition-colors"
+                        className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors"
                         data-testid="button-upload-photo"
                       >
-                        <Camera className="w-4 h-4 text-white" />
+                        <Camera className="w-4 h-4 text-foreground" />
                       </label>
                       <input
                         id="photo-upload"
@@ -384,7 +383,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                       placeholder="How should we call you?"
                       value={data.creatorName}
                       onChange={(e) => setData({ ...data, creatorName: e.target.value })}
-                      className="bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
+                      className="bg-gray-900 border-gray-700 text-foreground placeholder:text-gray-500"
                       data-testid="input-creator-name"
                     />
                   </div>
@@ -396,7 +395,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                       placeholder="Tell us about yourself and what you create..."
                       value={data.bio}
                       onChange={(e) => setData({ ...data, bio: e.target.value })}
-                      className="bg-gray-900 border-gray-700 text-white placeholder:text-gray-500 min-h-[100px]"
+                      className="bg-gray-900 border-gray-700 text-foreground placeholder:text-gray-500 min-h-[100px]"
                       data-testid="input-creator-bio"
                     />
                   </div>
@@ -405,7 +404,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                   <Button
                     variant="ghost"
                     onClick={handleBack}
-                    className="text-gray-400 hover:text-white"
+                    className="text-muted-foreground hover:text-foreground"
                     data-testid="button-back-step-3"
                   >
                     <ArrowLeft className="w-4 h-4 mr-2" />
@@ -413,7 +412,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                   </Button>
                   <Button
                     onClick={handleNext}
-                    className="bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white"
+                    className="bg-primary hover:bg-primary/90 text-foreground"
                     data-testid="button-next-step-3"
                   >
                     Continue
@@ -426,13 +425,13 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             {step === 4 && (
               <div data-testid="step-tips">
                 <div className="text-center mb-8">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#FF6B35]/20 flex items-center justify-center">
-                    <Lightbulb className="w-8 h-8 text-[#FF6B35]" />
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/20 flex items-center justify-center">
+                    <Lightbulb className="w-8 h-8 text-primary" />
                   </div>
-                  <h2 className="text-3xl font-bold text-white mb-2" data-testid="text-tips-title">
+                  <h2 className="text-3xl font-bold text-foreground mb-2" data-testid="text-tips-title">
                     Quick Start Tips
                   </h2>
-                  <p className="text-gray-400" data-testid="text-tips-subtitle">
+                  <p className="text-muted-foreground" data-testid="text-tips-subtitle">
                     Here's how to get the most out of your{" "}
                     {contentTypes.find((t) => t.id === data.contentType)?.title || "creative"} studio
                   </p>
@@ -445,12 +444,12 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                       data-testid={`card-tip-${index + 1}`}
                     >
                       <div className="flex items-start gap-4">
-                        <div className="w-8 h-8 rounded-full bg-[#FF6B35]/20 flex items-center justify-center flex-shrink-0">
-                          <span className="text-[#FF6B35] font-bold">{index + 1}</span>
+                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                          <span className="text-primary font-bold">{index + 1}</span>
                         </div>
                         <div>
-                          <h3 className="font-semibold text-white mb-1">{tip.title}</h3>
-                          <p className="text-sm text-gray-400">{tip.description}</p>
+                          <h3 className="font-semibold text-foreground mb-1">{tip.title}</h3>
+                          <p className="text-sm text-muted-foreground">{tip.description}</p>
                         </div>
                       </div>
                     </Card>
@@ -460,7 +459,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                   <Button
                     variant="ghost"
                     onClick={handleBack}
-                    className="text-gray-400 hover:text-white"
+                    className="text-muted-foreground hover:text-foreground"
                     data-testid="button-back-step-4"
                   >
                     <ArrowLeft className="w-4 h-4 mr-2" />
@@ -468,7 +467,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                   </Button>
                   <Button
                     onClick={handleNext}
-                    className="bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white"
+                    className="bg-primary hover:bg-primary/90 text-foreground"
                     data-testid="button-next-step-4"
                   >
                     Almost Done
@@ -480,13 +479,13 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
             {step === 5 && (
               <div className="text-center" data-testid="step-final">
-                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-[#FF6B35]/20 flex items-center justify-center">
-                  <Rocket className="w-10 h-10 text-[#FF6B35]" />
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Rocket className="w-10 h-10 text-primary" />
                 </div>
-                <h1 className="text-4xl font-black text-white mb-4" data-testid="text-final-title">
+                <h1 className="text-4xl font-black text-foreground mb-4" data-testid="text-final-title">
                   You're All Set!
                 </h1>
-                <p className="text-xl text-gray-400 mb-2" data-testid="text-final-subtitle">
+                <p className="text-xl text-muted-foreground mb-2" data-testid="text-final-subtitle">
                   {data.creatorName ? `Welcome, ${data.creatorName}!` : "Welcome to KreAIte!"}
                 </p>
                 <p className="text-gray-500 mb-8 max-w-md mx-auto">
@@ -497,7 +496,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 <Button
                   size="lg"
                   onClick={handleStartCreating}
-                  className="bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white px-8"
+                  className="bg-primary hover:bg-primary/90 text-foreground px-8"
                   data-testid="button-start-creating"
                 >
                   Start Creating

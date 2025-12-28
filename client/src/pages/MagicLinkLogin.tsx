@@ -96,8 +96,8 @@ export default function MagicLinkLogin() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-orange-500/10 flex items-center justify-center">
-            <Mail className="h-6 w-6 text-orange-500" />
+          <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+            <Mail className="h-6 w-6 text-primary" />
           </div>
           <CardTitle data-testid="text-login-title">Sign in with Magic Link</CardTitle>
           <CardDescription data-testid="text-login-description">
@@ -206,8 +206,8 @@ export function MagicLinkVerify() {
         <CardHeader className="text-center">
           {status === "verifying" && (
             <>
-              <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-orange-500/10 flex items-center justify-center">
-                <Loader2 className="h-6 w-6 text-orange-500 animate-spin" />
+              <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <Loader2 className="h-6 w-6 text-primary animate-spin" />
               </div>
               <CardTitle data-testid="text-verifying-title">Verifying magic link...</CardTitle>
               <CardDescription>Please wait while we sign you in.</CardDescription>

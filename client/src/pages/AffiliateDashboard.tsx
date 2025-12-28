@@ -81,10 +81,10 @@ export default function AffiliateDashboard() {
   const isLoading = codeLoading || statsLoading;
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2" data-testid="text-affiliate-title">
+          <h1 className="text-4xl font-bold text-foreground mb-2" data-testid="text-affiliate-title">
             Affiliate Dashboard
           </h1>
           <p className="text-gray-400" data-testid="text-affiliate-description">
@@ -94,7 +94,7 @@ export default function AffiliateDashboard() {
 
         <Card className="mb-8 bg-gray-900 border-gray-800">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-foreground flex items-center gap-2">
               <Share2 className="w-5 h-5 text-[#FF6B35]" />
               Your Referral Link
             </CardTitle>
@@ -116,7 +116,7 @@ export default function AffiliateDashboard() {
                   </div>
                   <div className="flex-[2] bg-gray-800 rounded-lg px-4 py-3 border border-gray-700 overflow-hidden">
                     <p className="text-sm text-gray-400 mb-1">Referral Link</p>
-                    <p className="text-sm text-white font-mono truncate" data-testid="text-referral-link">
+                    <p className="text-sm text-foreground font-mono truncate" data-testid="text-referral-link">
                       {referralLink || 'Loading...'}
                     </p>
                   </div>
@@ -125,7 +125,7 @@ export default function AffiliateDashboard() {
                 <div className="flex flex-wrap gap-3">
                   <Button
                     onClick={() => copyToClipboard(referralLink)}
-                    className="bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white"
+                    className="bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-foreground"
                     data-testid="button-copy-link"
                   >
                     {copied ? (
@@ -144,7 +144,7 @@ export default function AffiliateDashboard() {
                   <Button
                     variant="outline"
                     onClick={shareOnTwitter}
-                    className="border-gray-700 text-white hover:bg-gray-800"
+                    className="border-gray-700 text-foreground hover:bg-gray-800"
                     data-testid="button-share-twitter"
                   >
                     <Twitter className="w-4 h-4 mr-2" />
@@ -154,7 +154,7 @@ export default function AffiliateDashboard() {
                   <Button
                     variant="outline"
                     onClick={shareOnFacebook}
-                    className="border-gray-700 text-white hover:bg-gray-800"
+                    className="border-gray-700 text-foreground hover:bg-gray-800"
                     data-testid="button-share-facebook"
                   >
                     <Facebook className="w-4 h-4 mr-2" />
@@ -164,7 +164,7 @@ export default function AffiliateDashboard() {
                   <Button
                     variant="outline"
                     onClick={shareOnLinkedIn}
-                    className="border-gray-700 text-white hover:bg-gray-800"
+                    className="border-gray-700 text-foreground hover:bg-gray-800"
                     data-testid="button-share-linkedin"
                   >
                     <Linkedin className="w-4 h-4 mr-2" />
@@ -188,7 +188,7 @@ export default function AffiliateDashboard() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Total Referrals</p>
-                    <p className="text-3xl font-bold text-white" data-testid="text-total-referrals">
+                    <p className="text-3xl font-bold text-foreground" data-testid="text-total-referrals">
                       {stats?.totalReferrals || 0}
                     </p>
                   </div>
@@ -208,7 +208,7 @@ export default function AffiliateDashboard() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Pending Commissions</p>
-                    <p className="text-3xl font-bold text-white" data-testid="text-pending-commissions">
+                    <p className="text-3xl font-bold text-foreground" data-testid="text-pending-commissions">
                       {formatCurrency(stats?.pendingCommissions || 0)}
                     </p>
                   </div>
@@ -228,7 +228,7 @@ export default function AffiliateDashboard() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Paid Out</p>
-                    <p className="text-3xl font-bold text-white" data-testid="text-paid-commissions">
+                    <p className="text-3xl font-bold text-foreground" data-testid="text-paid-commissions">
                       {formatCurrency(stats?.paidCommissions || 0)}
                     </p>
                   </div>
@@ -240,7 +240,7 @@ export default function AffiliateDashboard() {
 
         <Card className="bg-gray-900 border-gray-800">
           <CardHeader>
-            <CardTitle className="text-white">Recent Conversions</CardTitle>
+            <CardTitle className="text-foreground">Recent Conversions</CardTitle>
             <CardDescription className="text-gray-400">
               Track your referral activity and commissions
             </CardDescription>
@@ -265,7 +265,7 @@ export default function AffiliateDashboard() {
                         <Users className="w-5 h-5 text-[#FF6B35]" />
                       </div>
                       <div>
-                        <p className="text-white font-medium">
+                        <p className="text-foreground font-medium">
                           Referral #{conversion.id}
                         </p>
                         <p className="text-sm text-gray-400">
@@ -275,7 +275,7 @@ export default function AffiliateDashboard() {
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right">
-                        <p className="text-white font-bold">
+                        <p className="text-foreground font-bold">
                           {formatCurrency(conversion.commission)}
                         </p>
                         <p className="text-xs text-gray-400">Commission</p>
@@ -308,7 +308,7 @@ export default function AffiliateDashboard() {
 
         <Card className="mt-8 bg-gray-900 border-gray-800">
           <CardHeader>
-            <CardTitle className="text-white">How It Works</CardTitle>
+            <CardTitle className="text-foreground">How It Works</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -316,7 +316,7 @@ export default function AffiliateDashboard() {
                 <div className="w-12 h-12 bg-[#FF6B35]/10 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-[#FF6B35] font-bold text-lg">1</span>
                 </div>
-                <h3 className="text-white font-semibold mb-2">Share Your Link</h3>
+                <h3 className="text-foreground font-semibold mb-2">Share Your Link</h3>
                 <p className="text-gray-400 text-sm">
                   Copy your unique referral link and share it with friends, family, or your audience.
                 </p>
@@ -325,7 +325,7 @@ export default function AffiliateDashboard() {
                 <div className="w-12 h-12 bg-[#FF6B35]/10 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-[#FF6B35] font-bold text-lg">2</span>
                 </div>
-                <h3 className="text-white font-semibold mb-2">They Sign Up</h3>
+                <h3 className="text-foreground font-semibold mb-2">They Sign Up</h3>
                 <p className="text-gray-400 text-sm">
                   When someone clicks your link and creates an account, they become your referral.
                 </p>
@@ -334,7 +334,7 @@ export default function AffiliateDashboard() {
                 <div className="w-12 h-12 bg-[#FF6B35]/10 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-[#FF6B35] font-bold text-lg">3</span>
                 </div>
-                <h3 className="text-white font-semibold mb-2">Earn 10%</h3>
+                <h3 className="text-foreground font-semibold mb-2">Earn 10%</h3>
                 <p className="text-gray-400 text-sm">
                   You earn 10% commission on their first purchase. Commissions are paid monthly.
                 </p>

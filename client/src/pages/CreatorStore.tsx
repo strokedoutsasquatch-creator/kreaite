@@ -87,7 +87,7 @@ export default function CreatorStore() {
   });
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <CreatorHeader />
 
       <main className="container mx-auto px-4 py-8">
@@ -106,7 +106,7 @@ export default function CreatorStore() {
           {featuredProducts && featuredProducts.length > 0 && (
             <section className="space-y-4">
               <div className="flex items-center gap-2">
-                <Badge className="bg-[#FF6B35] text-white">Featured</Badge>
+                <Badge className="bg-[#FF6B35] text-foreground">Featured</Badge>
                 <h2 className="text-xl font-semibold">Creator's Choice</h2>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -124,7 +124,7 @@ export default function CreatorStore() {
                 placeholder="Search tools..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-500"
+                className="pl-10 bg-zinc-900 border-zinc-800 text-foreground placeholder:text-zinc-500"
                 data-testid="input-search-products"
               />
             </div>
@@ -134,7 +134,7 @@ export default function CreatorStore() {
             <TabsList className="bg-zinc-900 border-zinc-800 flex-wrap h-auto gap-1 p-1">
               <TabsTrigger
                 value="all"
-                className="data-[state=active]:bg-[#FF6B35] data-[state=active]:text-white"
+                className="data-[state=active]:bg-[#FF6B35] data-[state=active]:text-foreground"
                 data-testid="tab-category-all"
               >
                 All Tools
@@ -146,7 +146,7 @@ export default function CreatorStore() {
                   <TabsTrigger
                     key={category.id}
                     value={category.id.toString()}
-                    className="data-[state=active]:bg-[#FF6B35] data-[state=active]:text-white"
+                    className="data-[state=active]:bg-[#FF6B35] data-[state=active]:text-foreground"
                     data-testid={`tab-category-${category.slug}`}
                   >
                     {category.name}
@@ -174,7 +174,7 @@ export default function CreatorStore() {
                 <Card className="bg-zinc-900 border-zinc-800">
                   <CardContent className="py-12 text-center">
                     <Package className="w-12 h-12 text-zinc-600 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-white mb-2">
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
                       No products found
                     </h3>
                     <p className="text-zinc-400 text-sm">
@@ -190,7 +190,7 @@ export default function CreatorStore() {
 
           <Card className="bg-zinc-900/50 border-zinc-800">
             <CardContent className="py-8 text-center space-y-4">
-              <h3 className="text-xl font-semibold text-white">
+              <h3 className="text-xl font-semibold text-foreground">
                 Why These Tools?
               </h3>
               <p className="text-zinc-400 max-w-2xl mx-auto">
@@ -227,12 +227,12 @@ function FeaturedProductCard({ product }: { product: Product }) {
             <Package className="w-12 h-12 text-zinc-600" />
           </div>
         )}
-        <Badge className="absolute top-2 left-2 bg-[#FF6B35] text-white text-[10px]">
+        <Badge className="absolute top-2 left-2 bg-[#FF6B35] text-foreground text-[10px]">
           Creator's Choice
         </Badge>
       </div>
       <CardContent className="p-4 space-y-2">
-        <h4 className="text-sm font-medium text-white line-clamp-2">
+        <h4 className="text-sm font-medium text-foreground line-clamp-2">
           {product.title}
         </h4>
         <div className="flex items-center justify-between">
@@ -251,7 +251,7 @@ function FeaturedProductCard({ product }: { product: Product }) {
         <Button
           asChild
           size="sm"
-          className="w-full bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white"
+          className="w-full bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-foreground"
         >
           <a href={product.amazonUrl} target="_blank" rel="noopener noreferrer">
             <ExternalLink className="w-3 h-3 mr-1" />
@@ -282,7 +282,7 @@ function ProductCard({ product }: { product: Product }) {
           </div>
         )}
         {product.isFeatured && (
-          <Badge className="absolute top-2 left-2 bg-[#FF6B35] text-white text-[10px]">
+          <Badge className="absolute top-2 left-2 bg-[#FF6B35] text-foreground text-[10px]">
             Featured
           </Badge>
         )}
@@ -293,7 +293,7 @@ function ProductCard({ product }: { product: Product }) {
             {product.brand}
           </p>
         )}
-        <h4 className="text-sm font-medium text-white line-clamp-2 group-hover:text-[#FF6B35] transition-colors">
+        <h4 className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-[#FF6B35] transition-colors">
           {product.title}
         </h4>
         <div className="flex items-center justify-between">
@@ -316,7 +316,7 @@ function ProductCard({ product }: { product: Product }) {
         </div>
         <Button
           asChild
-          className="w-full mt-2 bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white"
+          className="w-full mt-2 bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-foreground"
         >
           <a href={product.amazonUrl} target="_blank" rel="noopener noreferrer">
             <ExternalLink className="w-4 h-4 mr-2" />

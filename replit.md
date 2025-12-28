@@ -11,16 +11,16 @@ KreAIte.xyz is an ultra-premium AI-powered creator platform offering six profess
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
-Design mandate: Pure black (#000000) background, orange (#FF6B35) accent
+Design mandate: Literary warm palette - cream background (#FAF8F3), antique gold accent (#C9941A)
 Icons: lucide-react only (no emoji)
 
 ## System Architecture
 
 ### Frontend Architecture
 - **Framework & Build System**: React 18 with TypeScript, Vite for fast HMR, Wouter for routing, TailwindCSS for styling.
-- **UI Component System**: Shadcn/ui built on Radix UI, pure black background (#000000), vibrant orange accent (#FF6B35), Inter and Space Grotesk fonts.
+- **UI Component System**: Shadcn/ui built on Radix UI, warm cream background (#FAF8F3), antique gold accent (#C9941A), Crimson Pro/Playfair Display/Inter fonts.
 - **State Management**: TanStack Query for server state, custom hooks for authentication and shared logic.
-- **Key Design Decisions**: Dark theme default, mobile-first responsive design, accessibility-first approach.
+- **Key Design Decisions**: Literary warm theme, mobile-first responsive design, accessibility-first approach.
 
 ### Backend Architecture
 - **Server Framework**: Express.js with TypeScript.
@@ -41,9 +41,10 @@ Icons: lucide-react only (no emoji)
 - **Analytics**: Per-studio usage tracking, daily token consumption, feature usage breakdown.
 
 ### UI/UX Decisions
-- Consistent dark theme and accent color across all studios and components.
+- Literary warm theme with cream backgrounds and gold accents across all studios and components.
 - Intuitive interfaces for professional tools like the TipTap book editor, MediaStudio (Photoshop-like layers for images, multi-track timeline for video), and Cover Designer.
 - Emphasis on responsive design to ensure functionality across devices.
+- Book Studio uses auto-sync state management with 500ms debouncing for persistent user inputs across step navigation.
 
 ### Feature Specifications
 - **The 6 Studios**: Book, Video, Music, Course, Image, Doctrine Engine, each with specialized tools and AI integration.

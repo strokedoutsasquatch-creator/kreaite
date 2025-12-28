@@ -200,23 +200,23 @@ export default function QuickCreate() {
     : quickActions.filter(a => a.category === activeCategory);
 
   return (
-    <div className="min-h-screen bg-black flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       <CreatorHeader />
       
       <main className="flex-1">
         <section className="relative overflow-hidden py-16 px-4">
           <div className="absolute inset-0">
-            <div className="absolute top-20 left-10 w-72 h-72 bg-orange-500/20 rounded-full blur-3xl" />
+            <div className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl" />
             <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
           </div>
           
           <div className="relative max-w-6xl mx-auto text-center mb-12">
-            <Badge className="mb-6 bg-orange-500/20 text-orange-400 border-orange-500/30" data-testid="badge-quick-create">
+            <Badge className="mb-6 bg-primary/20 text-primary border" data-testid="badge-quick-create">
               <Zap className="w-3 h-3 mr-1" />
               Quick Create
             </Badge>
             
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-white" data-testid="heading-quick-create">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-foreground" data-testid="heading-quick-create">
               1-Click
               <span className="bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent"> Magic</span>
             </h1>
@@ -228,7 +228,7 @@ export default function QuickCreate() {
 
           <div className="relative max-w-6xl mx-auto">
             <Tabs value={activeCategory} onValueChange={setActiveCategory} className="mb-8">
-              <TabsList className="bg-zinc-900 border border-orange-500/20 mx-auto w-fit">
+              <TabsList className="bg-zinc-900 border border mx-auto w-fit">
                 {categories.map(cat => (
                   <TabsTrigger 
                     key={cat.id} 
@@ -261,10 +261,10 @@ export default function QuickCreate() {
                     data-testid={`card-action-${action.id}`}
                   >
                     <CardHeader className="pb-2">
-                      <div className="w-12 h-12 rounded-lg bg-orange-500/10 flex items-center justify-center mb-3">
-                        <ActionIcon className="w-6 h-6 text-orange-500" />
+                      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+                        <ActionIcon className="w-6 h-6 text-primary" />
                       </div>
-                      <CardTitle className="text-lg text-white">{action.title}</CardTitle>
+                      <CardTitle className="text-lg text-foreground">{action.title}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <CardDescription className="text-sm">
@@ -277,14 +277,14 @@ export default function QuickCreate() {
             </div>
 
             {selectedAction && (
-              <Card className="bg-zinc-900 border-orange-500/30" data-testid="card-action-input">
+              <Card className="bg-zinc-900 border" data-testid="card-action-input">
                 <CardHeader>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                      <selectedAction.icon className="w-5 h-5 text-orange-500" />
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <selectedAction.icon className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <CardTitle className="text-xl text-white">{selectedAction.title}</CardTitle>
+                      <CardTitle className="text-xl text-foreground">{selectedAction.title}</CardTitle>
                       <CardDescription>{selectedAction.description}</CardDescription>
                     </div>
                   </div>
@@ -302,8 +302,8 @@ export default function QuickCreate() {
                   />
                   
                   {selectedAction.id === "hum-to-song" || selectedAction.id === "voice-clone" ? (
-                    <div className="flex flex-col items-center gap-4 p-8 border-2 border-dashed border-orange-500/30 rounded-lg">
-                      <Mic className="w-12 h-12 text-orange-500" />
+                    <div className="flex flex-col items-center gap-4 p-8 border-2 border-dashed border rounded-lg">
+                      <Mic className="w-12 h-12 text-primary" />
                       <Button className="bg-orange-500 hover:bg-orange-600 text-black gap-2">
                         <Mic className="w-4 h-4" />
                         Start Recording
@@ -318,8 +318,8 @@ export default function QuickCreate() {
                       />
                     </div>
                   ) : selectedAction.id === "remove-bg" ? (
-                    <div className="flex flex-col items-center gap-4 p-8 border-2 border-dashed border-orange-500/30 rounded-lg">
-                      <Image className="w-12 h-12 text-orange-500" />
+                    <div className="flex flex-col items-center gap-4 p-8 border-2 border-dashed border rounded-lg">
+                      <Image className="w-12 h-12 text-primary" />
                       <Button className="bg-orange-500 hover:bg-orange-600 text-black gap-2">
                         <Image className="w-4 h-4" />
                         Upload Image
@@ -340,7 +340,7 @@ export default function QuickCreate() {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">Generating...</span>
-                        <span className="text-orange-500">{progress}%</span>
+                        <span className="text-primary">{progress}%</span>
                       </div>
                       <Progress value={progress} className="h-2" />
                     </div>
@@ -349,14 +349,14 @@ export default function QuickCreate() {
                   {generatedContent && (
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-white flex items-center gap-2">
-                          <Sparkles className="w-4 h-4 text-orange-500" />
+                        <h3 className="font-semibold text-foreground flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-primary" />
                           Generated Content
                         </h3>
                         <Button 
                           size="sm" 
                           variant="outline" 
-                          className="border-orange-500/30 gap-1"
+                          className="border gap-1"
                           onClick={() => {
                             navigator.clipboard.writeText(generatedContent);
                             toast({ title: "Copied!", description: "Content copied to clipboard" });
@@ -367,7 +367,7 @@ export default function QuickCreate() {
                           Copy
                         </Button>
                       </div>
-                      <div className="bg-zinc-900 border border-orange-500/20 rounded-lg p-4 max-h-96 overflow-y-auto">
+                      <div className="bg-zinc-900 border border rounded-lg p-4 max-h-96 overflow-y-auto">
                         <pre className="text-sm text-gray-300 whitespace-pre-wrap font-sans" data-testid="text-generated-content">
                           {generatedContent}
                         </pre>
@@ -376,7 +376,7 @@ export default function QuickCreate() {
                         <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
                           Saved to Asset Library
                         </Badge>
-                        <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">
+                        <Badge className="bg-primary/20 text-primary border">
                           {selectedAction?.category?.toUpperCase()} Studio Ready
                         </Badge>
                       </div>
@@ -386,7 +386,7 @@ export default function QuickCreate() {
                   <div className="flex justify-end gap-3">
                     <Button
                       variant="outline"
-                      className="border-orange-500/30"
+                      className="border"
                       onClick={() => {
                         setSelectedAction(null);
                         setInputValue("");
@@ -413,7 +413,7 @@ export default function QuickCreate() {
                           <Wand2 className="w-4 h-4" />
                           Generate Now
                           {selectedTierData && (
-                            <Badge variant="secondary" className="ml-1 bg-black/20 text-white">
+                            <Badge variant="secondary" className="ml-1 bg-black/20 text-foreground">
                               {selectedTierData.creditCost}c
                             </Badge>
                           )}
@@ -429,7 +429,7 @@ export default function QuickCreate() {
 
         <section className="py-16 px-4 bg-zinc-950">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-2xl font-bold text-white mb-4">
+            <h2 className="text-2xl font-bold text-foreground mb-4">
               Want More Control?
             </h2>
             <p className="text-muted-foreground mb-8">
@@ -437,19 +437,19 @@ export default function QuickCreate() {
               visit our professional studios.
             </p>
             <div className="flex flex-wrap justify-center gap-3">
-              <Button variant="outline" className="border-orange-500/30 gap-2" asChild>
+              <Button variant="outline" className="border gap-2" asChild>
                 <a href="/book-studio">
                   <BookOpen className="w-4 h-4" />
                   Book Studio
                 </a>
               </Button>
-              <Button variant="outline" className="border-orange-500/30 gap-2" asChild>
+              <Button variant="outline" className="border gap-2" asChild>
                 <a href="/music-studio">
                   <Music className="w-4 h-4" />
                   Music Studio
                 </a>
               </Button>
-              <Button variant="outline" className="border-orange-500/30 gap-2" asChild>
+              <Button variant="outline" className="border gap-2" asChild>
                 <a href="/course-studio">
                   <GraduationCap className="w-4 h-4" />
                   Course Studio

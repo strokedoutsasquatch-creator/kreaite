@@ -415,7 +415,7 @@ function MyProjectsSection() {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-3xl font-bold text-white">My Projects</h2>
+            <h2 className="text-3xl font-bold text-foreground">My Projects</h2>
             <p className="text-muted-foreground mt-1">Your book writing projects</p>
           </div>
           <Button onClick={() => setDialogOpen(true)} data-testid="button-create-project">
@@ -492,7 +492,7 @@ function HeroSection() {
         </div>
         
         <h1 
-          className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 tracking-tight"
+          className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground mb-6 tracking-tight"
           data-testid="text-hero-headline"
         >
           Turn Your Recovery Story Into a Legacy
@@ -531,7 +531,7 @@ function FeaturesSection() {
     <section id="features-section" className="py-20 px-4 sm:px-6 lg:px-8 bg-card/30" data-testid="section-features">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Everything You Need to Publish
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -566,7 +566,7 @@ function HowItWorksSection() {
     <section className="py-20 px-4 sm:px-6 lg:px-8" data-testid="section-how-it-works">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             How It Works
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto">
@@ -585,7 +585,7 @@ function HowItWorksSection() {
                   {step.step}
                 </span>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">{step.title}</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-2">{step.title}</h3>
               <p className="text-muted-foreground">{step.description}</p>
               
               {index < steps.length - 1 && (

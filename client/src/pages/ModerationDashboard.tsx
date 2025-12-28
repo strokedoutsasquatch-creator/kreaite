@@ -90,7 +90,7 @@ const MODERATION_STATUS_BADGES: Record<string, { className: string; label: strin
   pending: { className: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30", label: "Pending" },
   approved: { className: "bg-green-500/20 text-green-400 border-green-500/30", label: "Approved" },
   rejected: { className: "bg-red-500/20 text-red-400 border-red-500/30", label: "Rejected" },
-  flagged: { className: "bg-orange-500/20 text-orange-400 border-orange-500/30", label: "Flagged" },
+  flagged: { className: "bg-primary/20 text-primary border", label: "Flagged" },
 };
 
 export default function ModerationDashboard() {
@@ -174,7 +174,7 @@ export default function ModerationDashboard() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-black p-6">
+      <div className="min-h-screen bg-background p-6">
         <div className="max-w-7xl mx-auto">
           <Skeleton className="h-10 w-64 bg-gray-800 mb-8" />
           <div className="grid gap-4">
@@ -189,11 +189,11 @@ export default function ModerationDashboard() {
 
   if (!user || user.role !== "admin") {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center" data-testid="access-denied">
+      <div className="min-h-screen bg-background flex items-center justify-center" data-testid="access-denied">
         <Card className="bg-gray-900 border-gray-800 max-w-md">
           <CardContent className="p-8 text-center">
             <Shield className="w-12 h-12 text-[#FF6B35] mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-white mb-2">Access Denied</h2>
+            <h2 className="text-xl font-bold text-foreground mb-2">Access Denied</h2>
             <p className="text-gray-400 mb-4">
               You don't have permission to access the moderation dashboard. This area is restricted to administrators.
             </p>
@@ -215,13 +215,13 @@ export default function ModerationDashboard() {
   const resolvedCount = reports?.filter((r) => r.report.status === "resolved").length || 0;
 
   return (
-    <div className="min-h-screen bg-black" data-testid="page-moderation-dashboard">
+    <div className="min-h-screen bg-background" data-testid="page-moderation-dashboard">
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-3">
             <Shield className="w-8 h-8 text-[#FF6B35]" />
             <div>
-              <h1 className="text-2xl font-bold text-white" data-testid="text-page-title">
+              <h1 className="text-2xl font-bold text-foreground" data-testid="text-page-title">
                 Moderation Dashboard
               </h1>
               <p className="text-gray-400 text-sm">Review and manage content reports</p>
@@ -232,16 +232,16 @@ export default function ModerationDashboard() {
             <Filter className="w-4 h-4 text-gray-400" />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger
-                className="w-[180px] bg-gray-900 border-gray-700 text-white"
+                className="w-[180px] bg-gray-900 border-gray-700 text-foreground"
                 data-testid="select-status-filter"
               >
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent className="bg-gray-900 border-gray-700">
-                <SelectItem value="all" className="text-white">All Reports</SelectItem>
-                <SelectItem value="pending" className="text-white">Pending</SelectItem>
-                <SelectItem value="reviewed" className="text-white">Reviewed</SelectItem>
-                <SelectItem value="resolved" className="text-white">Resolved</SelectItem>
+                <SelectItem value="all" className="text-foreground">All Reports</SelectItem>
+                <SelectItem value="pending" className="text-foreground">Pending</SelectItem>
+                <SelectItem value="reviewed" className="text-foreground">Reviewed</SelectItem>
+                <SelectItem value="resolved" className="text-foreground">Resolved</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -254,7 +254,7 @@ export default function ModerationDashboard() {
                 <Clock className="w-6 h-6 text-yellow-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white" data-testid="text-pending-count">{pendingCount}</p>
+                <p className="text-2xl font-bold text-foreground" data-testid="text-pending-count">{pendingCount}</p>
                 <p className="text-sm text-gray-400">Pending Reports</p>
               </div>
             </CardContent>
@@ -265,7 +265,7 @@ export default function ModerationDashboard() {
                 <Eye className="w-6 h-6 text-blue-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white" data-testid="text-reviewed-count">{reviewedCount}</p>
+                <p className="text-2xl font-bold text-foreground" data-testid="text-reviewed-count">{reviewedCount}</p>
                 <p className="text-sm text-gray-400">Under Review</p>
               </div>
             </CardContent>
@@ -276,7 +276,7 @@ export default function ModerationDashboard() {
                 <Check className="w-6 h-6 text-green-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white" data-testid="text-resolved-count">{resolvedCount}</p>
+                <p className="text-2xl font-bold text-foreground" data-testid="text-resolved-count">{resolvedCount}</p>
                 <p className="text-sm text-gray-400">Resolved</p>
               </div>
             </CardContent>
@@ -319,7 +319,7 @@ export default function ModerationDashboard() {
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-white truncate">
+                            <h3 className="font-semibold text-foreground truncate">
                               {item.listing?.title || "Unknown Listing"}
                             </h3>
                             {statusBadge && (
@@ -360,7 +360,7 @@ export default function ModerationDashboard() {
                             <Button
                               size="sm"
                               onClick={() => handleQuickAction(item.listing!.id, "approve")}
-                              className="bg-green-600 hover:bg-green-700 text-white"
+                              className="bg-green-600 hover:bg-green-700 text-foreground"
                               disabled={updateListingMutation.isPending}
                               data-testid={`button-approve-${item.report.id}`}
                             >
@@ -372,7 +372,7 @@ export default function ModerationDashboard() {
                               size="sm"
                               variant="outline"
                               onClick={() => handleQuickAction(item.listing!.id, "flag")}
-                              className="border-orange-600 text-orange-400 hover:bg-orange-600/20"
+                              className="border-orange-600 text-primary hover:bg-orange-600/20"
                               disabled={updateListingMutation.isPending}
                               data-testid={`button-flag-${item.report.id}`}
                             >
@@ -399,7 +399,7 @@ export default function ModerationDashboard() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="text-gray-400 hover:text-white"
+                              className="text-gray-400 hover:text-foreground"
                               data-testid={`button-more-${item.report.id}`}
                             >
                               <ChevronDown className="w-4 h-4" />
@@ -408,7 +408,7 @@ export default function ModerationDashboard() {
                           <DropdownMenuContent className="bg-gray-900 border-gray-700">
                             {item.listing && (
                               <DropdownMenuItem
-                                className="text-white hover:bg-gray-800"
+                                className="text-foreground hover:bg-gray-800"
                                 onClick={() => setLocation(`/listing/${item.listing!.id}`)}
                               >
                                 <ExternalLink className="w-4 h-4 mr-2" />
@@ -416,7 +416,7 @@ export default function ModerationDashboard() {
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuItem
-                              className="text-white hover:bg-gray-800"
+                              className="text-foreground hover:bg-gray-800"
                               onClick={() => updateReportMutation.mutate({ 
                                 reportId: item.report.id, 
                                 status: "reviewed" 
@@ -426,7 +426,7 @@ export default function ModerationDashboard() {
                               Mark as Reviewed
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              className="text-white hover:bg-gray-800"
+                              className="text-foreground hover:bg-gray-800"
                               onClick={() => updateReportMutation.mutate({ 
                                 reportId: item.report.id, 
                                 status: "resolved" 
@@ -448,7 +448,7 @@ export default function ModerationDashboard() {
           <Card className="bg-gray-900 border-gray-800">
             <CardContent className="p-12 text-center">
               <Shield className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-white mb-2">No Reports Found</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-2">No Reports Found</h3>
               <p className="text-gray-400">
                 {statusFilter === "all"
                   ? "There are no content reports to review at this time."
@@ -465,7 +465,7 @@ export default function ModerationDashboard() {
       >
         <DialogContent className="bg-gray-900 border-gray-800" data-testid="modal-moderation-action">
           <DialogHeader>
-            <DialogTitle className="text-white flex items-center gap-2">
+            <DialogTitle className="text-foreground flex items-center gap-2">
               {moderationDialog.action === "reject" ? (
                 <>
                   <X className="w-5 h-5 text-red-400" />
@@ -473,7 +473,7 @@ export default function ModerationDashboard() {
                 </>
               ) : (
                 <>
-                  <AlertTriangle className="w-5 h-5 text-orange-400" />
+                  <AlertTriangle className="w-5 h-5 text-primary" />
                   Flag for Review
                 </>
               )}
@@ -494,7 +494,7 @@ export default function ModerationDashboard() {
               value={moderationDialog.notes}
               onChange={(e) => setModerationDialog((prev) => ({ ...prev, notes: e.target.value }))}
               placeholder="Add notes about this moderation action..."
-              className="bg-gray-800 border-gray-700 text-white mt-2"
+              className="bg-gray-800 border-gray-700 text-foreground mt-2"
               data-testid="textarea-moderation-notes"
             />
           </div>

@@ -49,7 +49,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-black border-t border-orange-500/20">
+    <footer className="bg-background border-t border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-10 mb-12">
           <div className="lg:col-span-2">
@@ -61,7 +61,7 @@ export default function Footer() {
                 data-testid="img-footer-logo"
               />
             </div>
-            <p className="text-lg font-bold text-orange-500 mb-2">
+            <p className="text-lg font-bold text-primary mb-2">
               CREATE. PUBLISH. EARN.
             </p>
             <p className="text-muted-foreground mb-6 leading-relaxed">
@@ -69,18 +69,18 @@ export default function Footer() {
               and the KreAItorverse marketplace. Keep 85% of everything you earn.
             </p>
             <div className="space-y-3">
-              <div className="text-sm font-semibold uppercase tracking-wide text-orange-500">
+              <div className="text-sm font-semibold uppercase tracking-wide text-primary">
                 Join 50,000+ Creators
               </div>
               <div className="flex gap-2">
                 <Input
                   type="email"
                   placeholder="your@email.com"
-                  className="flex-1 bg-zinc-900 border-orange-500/30 focus:border-orange-500"
+                  className="flex-1 bg-zinc-900 border focus:border-orange-500"
                   data-testid="input-newsletter-email"
                 />
                 <Button 
-                  className="bg-orange-500 hover:bg-orange-600 text-black font-semibold"
+                  className="bg-primary hover:bg-primary/80 text-primary-foreground font-semibold"
                   data-testid="button-newsletter-subscribe"
                 >
                   <Mail className="h-4 w-4 mr-2" />
@@ -91,7 +91,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="font-bold mb-4 text-sm uppercase tracking-wide text-orange-500 flex items-center gap-2">
+            <h3 className="font-bold mb-4 text-sm uppercase tracking-wide text-primary flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
               Studios
             </h3>
@@ -100,10 +100,10 @@ export default function Footer() {
                 <li key={link.href}>
                   <Link 
                     href={link.href}
-                    className="text-muted-foreground hover:text-orange-500 transition-colors flex items-center gap-2 group"
+                    className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
                     data-testid={`footer-link-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
                   >
-                    <link.icon className="w-4 h-4 group-hover:text-orange-500" />
+                    <link.icon className="w-4 h-4 group-hover:text-primary" />
                     {link.label}
                   </Link>
                 </li>
@@ -112,7 +112,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="font-bold mb-4 text-sm uppercase tracking-wide text-orange-500 flex items-center gap-2">
+            <h3 className="font-bold mb-4 text-sm uppercase tracking-wide text-primary flex items-center gap-2">
               <Store className="w-4 h-4" />
               Platform
             </h3>
@@ -121,10 +121,10 @@ export default function Footer() {
                 <li key={link.href}>
                   <Link 
                     href={link.href}
-                    className="text-muted-foreground hover:text-orange-500 transition-colors flex items-center gap-2 group"
+                    className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
                     data-testid={`footer-link-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
                   >
-                    <link.icon className="w-4 h-4 group-hover:text-orange-500" />
+                    <link.icon className="w-4 h-4 group-hover:text-primary" />
                     {link.label}
                   </Link>
                 </li>
@@ -133,13 +133,13 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="font-bold mb-4 text-sm uppercase tracking-wide text-orange-500">Company</h3>
+            <h3 className="font-bold mb-4 text-sm uppercase tracking-wide text-primary">Company</h3>
             <ul className="space-y-2">
               {footerLinks.company.map((link) => (
                 <li key={link.href}>
                   <Link 
                     href={link.href}
-                    className="text-muted-foreground hover:text-orange-500 transition-colors block"
+                    className="text-muted-foreground hover:text-primary transition-colors block"
                     data-testid={`footer-link-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
                   >
                     {link.label}
@@ -150,7 +150,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <Separator className="mb-8 bg-orange-500/20" />
+        <Separator className="mb-8 bg-primary/20" />
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex flex-col md:flex-row items-center gap-4">
@@ -159,7 +159,7 @@ export default function Footer() {
             </div>
             <a 
               href="mailto:hello@kreaite.xyz" 
-              className="text-sm text-muted-foreground hover:text-orange-500 transition-colors flex items-center gap-1"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
               data-testid="link-contact-email"
             >
               <Mail className="h-3 w-3" />
@@ -172,7 +172,7 @@ export default function Footer() {
               href="https://twitter.com/kreaite"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover-elevate active-elevate-2 p-2 rounded-md text-muted-foreground hover:text-orange-500"
+              className="hover-elevate active-elevate-2 p-2 rounded-md text-muted-foreground hover:text-primary"
               data-testid="social-link-x"
             >
               <SiX className="h-5 w-5" />
@@ -181,7 +181,7 @@ export default function Footer() {
               href="https://www.tiktok.com/@kreaite"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover-elevate active-elevate-2 p-2 rounded-md text-muted-foreground hover:text-orange-500"
+              className="hover-elevate active-elevate-2 p-2 rounded-md text-muted-foreground hover:text-primary"
               data-testid="social-link-tiktok"
             >
               <SiTiktok className="h-5 w-5" />
@@ -190,7 +190,7 @@ export default function Footer() {
               href="https://instagram.com/kreaite"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover-elevate active-elevate-2 p-2 rounded-md text-muted-foreground hover:text-orange-500"
+              className="hover-elevate active-elevate-2 p-2 rounded-md text-muted-foreground hover:text-primary"
               data-testid="social-link-instagram"
             >
               <SiInstagram className="h-5 w-5" />
@@ -199,7 +199,7 @@ export default function Footer() {
               href="https://youtube.com/@kreaite"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover-elevate active-elevate-2 p-2 rounded-md text-muted-foreground hover:text-orange-500"
+              className="hover-elevate active-elevate-2 p-2 rounded-md text-muted-foreground hover:text-primary"
               data-testid="social-link-youtube"
             >
               <SiYoutube className="h-5 w-5" />
@@ -207,7 +207,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <Separator className="my-8 bg-orange-500/20" />
+        <Separator className="my-8 bg-primary/20" />
 
         <div className="flex flex-col items-center gap-4">
           <div className="flex flex-col items-center gap-2" data-testid="powered-by-kremersx">

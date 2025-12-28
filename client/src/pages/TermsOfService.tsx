@@ -26,13 +26,13 @@ export default function TermsOfService() {
   };
 
   return (
-    <div className="min-h-screen bg-black" data-testid="page-terms-of-service">
+    <div className="min-h-screen bg-background" data-testid="page-terms-of-service">
       <CreatorHeader />
       
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="flex items-center justify-between mb-8 print:hidden">
           <Link href="/">
-            <Button variant="ghost" className="text-muted-foreground hover:text-white" data-testid="button-back-home">
+            <Button variant="ghost" className="text-muted-foreground hover:text-foreground" data-testid="button-back-home">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Home
             </Button>
@@ -44,7 +44,7 @@ export default function TermsOfService() {
         </div>
 
         <header className="mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4" data-testid="heading-terms-title">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4" data-testid="heading-terms-title">
             Terms of Service
           </h1>
           <p className="text-lg text-muted-foreground" data-testid="text-last-updated">
@@ -53,13 +53,13 @@ export default function TermsOfService() {
         </header>
 
         <nav className="mb-12 p-6 bg-zinc-900/50 rounded-lg border border-zinc-800" data-testid="nav-table-of-contents">
-          <h2 className="text-lg font-semibold text-white mb-4">Table of Contents</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Table of Contents</h2>
           <ul className="space-y-2">
             {sections.map((section) => (
               <li key={section.id}>
                 <a 
                   href={`#${section.id}`}
-                  className="text-muted-foreground hover:text-orange-500 transition-colors"
+                  className="text-muted-foreground hover:text-primary transition-colors"
                   data-testid={`link-toc-${section.id}`}
                 >
                   {section.title}
@@ -79,7 +79,7 @@ export default function TermsOfService() {
           <Separator className="my-8 bg-zinc-800" />
 
           <section id="acceptance" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold text-white mb-4">1. Acceptance of Terms</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">1. Acceptance of Terms</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               By creating an account, accessing, or using the KreAIte platform, you acknowledge that you have read, 
               understood, and agree to be bound by these Terms of Service and our Privacy Policy. If you do not agree 
@@ -94,7 +94,7 @@ export default function TermsOfService() {
           <Separator className="my-8 bg-zinc-800" />
 
           <section id="accounts" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold text-white mb-4">2. User Accounts and Registration</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">2. User Accounts and Registration</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               To access certain features of the Service, you must create an account. When creating an account, you agree to:
             </p>
@@ -114,19 +114,19 @@ export default function TermsOfService() {
           <Separator className="my-8 bg-zinc-800" />
 
           <section id="content-rights" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold text-white mb-4">3. Creator Content and Rights</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">3. Creator Content and Rights</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              <strong className="text-white">Ownership:</strong> You retain full ownership of all content you create, 
+              <strong className="text-foreground">Ownership:</strong> You retain full ownership of all content you create, 
               upload, or publish on KreAIte ("Creator Content"). KreAIte does not claim ownership of your original works.
             </p>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              <strong className="text-white">License Grant:</strong> By publishing content on KreAIte, you grant us a 
+              <strong className="text-foreground">License Grant:</strong> By publishing content on KreAIte, you grant us a 
               non-exclusive, worldwide, royalty-free license to display, distribute, reproduce, and promote your 
               Creator Content solely for the purpose of operating and improving the Service, and facilitating sales 
               through our marketplace.
             </p>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              <strong className="text-white">Your Responsibilities:</strong> You represent and warrant that:
+              <strong className="text-foreground">Your Responsibilities:</strong> You represent and warrant that:
             </p>
             <ul className="list-disc pl-6 text-muted-foreground space-y-2">
               <li>You own or have the necessary rights to all content you upload</li>
@@ -139,14 +139,14 @@ export default function TermsOfService() {
           <Separator className="my-8 bg-zinc-800" />
 
           <section id="revenue-share" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold text-white mb-4">4. Revenue Share</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">4. Revenue Share</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               KreAIte operates on a creator-first revenue model:
             </p>
             <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 mb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold text-orange-500">85%</p>
+                  <p className="text-2xl font-bold text-primary">85%</p>
                   <p className="text-muted-foreground">Creator Earnings</p>
                 </div>
                 <div className="text-right">
@@ -169,7 +169,7 @@ export default function TermsOfService() {
           <Separator className="my-8 bg-zinc-800" />
 
           <section id="prohibited-content" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold text-white mb-4">5. Prohibited Content</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">5. Prohibited Content</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               You may not upload, create, or distribute content that:
             </p>
@@ -193,13 +193,13 @@ export default function TermsOfService() {
           <Separator className="my-8 bg-zinc-800" />
 
           <section id="payment-terms" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold text-white mb-4">6. Payment Terms</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">6. Payment Terms</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              <strong className="text-white">Payment Processing:</strong> All payments are processed through 
+              <strong className="text-foreground">Payment Processing:</strong> All payments are processed through 
               Stripe, our third-party payment processor. By using KreAIte, you agree to Stripe's terms of service.
             </p>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              <strong className="text-white">Creator Payouts:</strong>
+              <strong className="text-foreground">Creator Payouts:</strong>
             </p>
             <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
               <li>Minimum payout threshold: $25 USD</li>
@@ -208,12 +208,12 @@ export default function TermsOfService() {
               <li>Creators are responsible for providing accurate payment information</li>
             </ul>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              <strong className="text-white">Refunds:</strong> Our refund policy allows customers to request 
+              <strong className="text-foreground">Refunds:</strong> Our refund policy allows customers to request 
               refunds within 14 days of purchase for digital products that have not been substantially consumed. 
               Creators acknowledge that refunds may affect their earnings.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              <strong className="text-white">Taxes:</strong> Creators are responsible for reporting and paying 
+              <strong className="text-foreground">Taxes:</strong> Creators are responsible for reporting and paying 
               all applicable taxes on their earnings. KreAIte may provide tax documentation as required by law.
             </p>
           </section>
@@ -221,13 +221,13 @@ export default function TermsOfService() {
           <Separator className="my-8 bg-zinc-800" />
 
           <section id="dmca" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold text-white mb-4">7. DMCA / Copyright Policy</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">7. DMCA / Copyright Policy</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               KreAIte respects the intellectual property rights of others and expects users to do the same. 
               We comply with the Digital Millennium Copyright Act (DMCA) and will respond to valid takedown notices.
             </p>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              <strong className="text-white">Filing a DMCA Notice:</strong> If you believe your copyrighted work 
+              <strong className="text-foreground">Filing a DMCA Notice:</strong> If you believe your copyrighted work 
               has been infringed, please submit a notice to our designated agent containing:
             </p>
             <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
@@ -239,11 +239,11 @@ export default function TermsOfService() {
               <li>A statement under penalty of perjury that the information is accurate</li>
             </ul>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              <strong className="text-white">Counter-Notification:</strong> If you believe your content was 
+              <strong className="text-foreground">Counter-Notification:</strong> If you believe your content was 
               wrongfully removed, you may file a counter-notification with the required information.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              <strong className="text-white">Repeat Infringers:</strong> We maintain a policy of terminating 
+              <strong className="text-foreground">Repeat Infringers:</strong> We maintain a policy of terminating 
               accounts of users who are repeat copyright infringers.
             </p>
           </section>
@@ -251,7 +251,7 @@ export default function TermsOfService() {
           <Separator className="my-8 bg-zinc-800" />
 
           <section id="limitation" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold text-white mb-4">8. Limitation of Liability</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">8. Limitation of Liability</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               TO THE MAXIMUM EXTENT PERMITTED BY LAW, KREAITE AND ITS AFFILIATES, OFFICERS, DIRECTORS, EMPLOYEES, 
               AND AGENTS SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE 
@@ -272,14 +272,14 @@ export default function TermsOfService() {
           <Separator className="my-8 bg-zinc-800" />
 
           <section id="termination" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold text-white mb-4">9. Termination</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">9. Termination</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              <strong className="text-white">By You:</strong> You may terminate your account at any time by 
+              <strong className="text-foreground">By You:</strong> You may terminate your account at any time by 
               contacting us or using the account deletion feature. Upon termination, you will receive any 
               outstanding earnings above the minimum payout threshold.
             </p>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              <strong className="text-white">By Us:</strong> We may suspend or terminate your account if you:
+              <strong className="text-foreground">By Us:</strong> We may suspend or terminate your account if you:
             </p>
             <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
               <li>Violate these Terms of Service</li>
@@ -289,7 +289,7 @@ export default function TermsOfService() {
               <li>Fail to maintain accurate account information</li>
             </ul>
             <p className="text-muted-foreground leading-relaxed">
-              <strong className="text-white">Effect of Termination:</strong> Upon termination, your right to 
+              <strong className="text-foreground">Effect of Termination:</strong> Upon termination, your right to 
               use the Service will immediately cease. Your content may be removed from the platform. Provisions 
               that by their nature should survive termination will remain in effect.
             </p>
@@ -298,7 +298,7 @@ export default function TermsOfService() {
           <Separator className="my-8 bg-zinc-800" />
 
           <section id="modifications" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold text-white mb-4">10. Modifications to Terms</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">10. Modifications to Terms</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               We reserve the right to modify these Terms at any time. We will notify users of material changes 
               by email or through a prominent notice on the Service at least 30 days before the changes take effect.
@@ -313,7 +313,7 @@ export default function TermsOfService() {
           <Separator className="my-8 bg-zinc-800" />
 
           <section id="governing-law" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold text-white mb-4">11. Governing Law</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">11. Governing Law</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               These Terms shall be governed by and construed in accordance with the laws of the United States, 
               without regard to its conflict of law provisions.
@@ -328,14 +328,14 @@ export default function TermsOfService() {
           <Separator className="my-8 bg-zinc-800" />
 
           <section id="contact" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold text-white mb-4">12. Contact Information</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">12. Contact Information</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               If you have any questions about these Terms of Service, please contact us:
             </p>
             <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
-              <p className="text-white font-semibold mb-2">KreAIte Legal Team</p>
+              <p className="text-foreground font-semibold mb-2">KreAIte Legal Team</p>
               <p className="text-muted-foreground">
-                Email: <a href="mailto:hello@kreaite.xyz" className="text-orange-500 hover:underline" data-testid="link-contact-email">hello@kreaite.xyz</a>
+                Email: <a href="mailto:hello@kreaite.xyz" className="text-primary hover:underline" data-testid="link-contact-email">hello@kreaite.xyz</a>
               </p>
             </div>
           </section>
@@ -383,10 +383,10 @@ export default function TermsOfService() {
             background: #f5f5f5 !important;
             border-color: #ddd !important;
           }
-          .text-orange-500 {
+          .text-primary {
             color: #c45000 !important;
           }
-          .text-white {
+          .text-foreground {
             color: black !important;
           }
           .text-muted-foreground {

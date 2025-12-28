@@ -146,7 +146,7 @@ function SummaryCard({ title, value, change, icon: Icon, testId }: SummaryCardPr
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold text-white" data-testid={`${testId}-value`}>{value}</div>
+        <div className="text-2xl font-bold text-foreground" data-testid={`${testId}-value`}>{value}</div>
         <p className={`text-xs flex items-center gap-1 ${isPositive ? "text-green-500" : "text-red-500"}`}>
           {isPositive ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
           {Math.abs(change)}% from last period
@@ -166,7 +166,7 @@ export default function AnalyticsDashboard() {
 
   if (isLoading) {
     return (
-      <div className="bg-black min-h-screen p-4 sm:p-6 lg:p-8">
+      <div className="bg-background min-h-screen p-4 sm:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto">
           <AnalyticsSkeleton />
         </div>
@@ -175,16 +175,16 @@ export default function AnalyticsDashboard() {
   }
 
   return (
-    <div className="bg-black min-h-screen p-4 sm:p-6 lg:p-8" data-testid="analytics-dashboard">
+    <div className="bg-background min-h-screen p-4 sm:p-6 lg:p-8" data-testid="analytics-dashboard">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">Creator Analytics</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Creator Analytics</h1>
             <p className="text-gray-400 mt-1">Track your performance and earnings</p>
           </div>
           <div className="flex items-center gap-3">
             <Select value={timePeriod} onValueChange={setTimePeriod}>
-              <SelectTrigger className="w-40 bg-gray-900 border-gray-700 text-white" data-testid="select-time-period">
+              <SelectTrigger className="w-40 bg-gray-900 border-gray-700 text-foreground" data-testid="select-time-period">
                 <SelectValue placeholder="Select period" />
               </SelectTrigger>
               <SelectContent className="bg-gray-900 border-gray-700">
@@ -236,7 +236,7 @@ export default function AnalyticsDashboard() {
           <Card className="lg:col-span-2 bg-card border-gray-800" data-testid="card-revenue-chart">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <div>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-foreground flex items-center gap-2">
                   <TrendingUp className="h-5 w-5 text-[#FF6B35]" />
                   Revenue Trends
                 </CardTitle>
@@ -290,7 +290,7 @@ export default function AnalyticsDashboard() {
 
           <Card className="bg-card border-gray-800" data-testid="card-sales-breakdown">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <ShoppingCart className="h-5 w-5 text-[#FF6B35]" />
                 Sales by Product Type
               </CardTitle>
@@ -338,7 +338,7 @@ export default function AnalyticsDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="bg-card border-gray-800" data-testid="card-top-products">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-[#FF6B35]" />
                 Top Performing Products
               </CardTitle>
@@ -361,10 +361,10 @@ export default function AnalyticsDashboard() {
                   <tbody>
                     {mockTopProducts.map((product, index) => (
                       <tr key={product.id} className="border-b border-gray-800/50" data-testid={`row-product-${index}`}>
-                        <td className="py-3 text-white font-medium truncate max-w-[200px]">{product.name}</td>
+                        <td className="py-3 text-foreground font-medium truncate max-w-[200px]">{product.name}</td>
                         <td className="py-3 text-gray-400">{product.type}</td>
                         <td className="py-3 text-right text-gray-300">{product.sales}</td>
-                        <td className="py-3 text-right text-white font-medium">${product.revenue}</td>
+                        <td className="py-3 text-right text-foreground font-medium">${product.revenue}</td>
                         <td className="py-3 text-right">
                           <span className={`flex items-center justify-end gap-1 ${product.trend >= 0 ? "text-green-500" : "text-red-500"}`}>
                             {product.trend >= 0 ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
@@ -381,7 +381,7 @@ export default function AnalyticsDashboard() {
 
           <Card className="bg-card border-gray-800" data-testid="card-recent-transactions">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-[#FF6B35]" />
                 Recent Transactions
               </CardTitle>
@@ -398,7 +398,7 @@ export default function AnalyticsDashboard() {
                     data-testid={`row-transaction-${index}`}
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="text-white font-medium truncate">{transaction.product}</p>
+                      <p className="text-foreground font-medium truncate">{transaction.product}</p>
                       <div className="flex items-center gap-2 text-xs text-gray-400">
                         <span>@{transaction.buyer}</span>
                         <span>•</span>
@@ -406,7 +406,7 @@ export default function AnalyticsDashboard() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3 ml-4">
-                      <span className="text-white font-semibold">${transaction.amount}</span>
+                      <span className="text-foreground font-semibold">${transaction.amount}</span>
                       <span
                         className={`text-xs px-2 py-1 rounded ${
                           transaction.status === "completed"

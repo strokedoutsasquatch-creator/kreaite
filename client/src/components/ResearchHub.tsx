@@ -193,14 +193,14 @@ export function ResearchHub() {
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8" data-testid="research-hub">
       <div className="text-center mb-12">
-        <h1 className="text-5xl font-serif font-bold tracking-tight text-white mb-3">Research Hub</h1>
+        <h1 className="text-5xl font-serif font-bold tracking-tight text-foreground mb-3">Research Hub</h1>
         <p className="text-lg text-zinc-400 leading-relaxed">Discover insights with AI-powered research</p>
       </div>
 
       <Card className="bg-zinc-950 border border-zinc-800/50 shadow-xl">
         <CardContent className="p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Badge variant="outline" className="border-orange-500/50 text-orange-400">
+            <Badge variant="outline" className="border-orange-500/50 text-primary">
               <Coins className="w-3 h-3 mr-1" />
               {CREDIT_COST} credit per query
             </Badge>
@@ -213,7 +213,7 @@ export function ResearchHub() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="pl-11 h-12 text-lg bg-black/50 border-zinc-700"
+                className="pl-11 h-12 text-lg bg-card border-zinc-700"
                 data-testid="input-research-query"
               />
             </div>
@@ -244,8 +244,8 @@ export function ResearchHub() {
           {currentResults.length > 0 && (
             <Card className="bg-zinc-950 border border-zinc-800/50 shadow-xl">
               <CardHeader className="flex flex-row items-center justify-between gap-2">
-                <CardTitle className="text-white flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-orange-500" />
+                <CardTitle className="text-foreground flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-primary" />
                   Search Results
                 </CardTitle>
                 <Button
@@ -253,7 +253,7 @@ export function ResearchHub() {
                   disabled={insightsMutation.isPending}
                   variant="outline"
                   size="sm"
-                  className="border-orange-500/50 text-orange-400 hover:bg-orange-500/10"
+                  className="border-orange-500/50 text-primary hover:bg-primary/10"
                   data-testid="button-generate-insights"
                 >
                   {insightsMutation.isPending ? (
@@ -274,7 +274,7 @@ export function ResearchHub() {
                         data-testid={`result-card-${index}`}
                       >
                         <div className="flex items-start justify-between gap-2 mb-2">
-                          <h4 className="text-white font-medium line-clamp-2" data-testid={`result-title-${index}`}>
+                          <h4 className="text-foreground font-medium line-clamp-2" data-testid={`result-title-${index}`}>
                             {result.title}
                           </h4>
                           <Badge variant="outline" className="text-[10px] flex-shrink-0">
@@ -288,7 +288,7 @@ export function ResearchHub() {
                           href={result.link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center text-sm text-orange-400 hover:text-orange-300"
+                          className="inline-flex items-center text-sm text-primary hover:text-orange-300"
                           data-testid={`result-link-${index}`}
                         >
                           <ExternalLink className="w-3 h-3 mr-1" />
@@ -303,10 +303,10 @@ export function ResearchHub() {
           )}
 
           {currentInsights && (
-            <Card className="bg-zinc-950 border border-orange-500/30 shadow-xl" data-testid="insights-panel">
+            <Card className="bg-zinc-950 border border shadow-xl" data-testid="insights-panel">
               <CardHeader className="flex flex-row items-center justify-between gap-2">
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Lightbulb className="w-5 h-5 text-orange-500" />
+                <CardTitle className="text-foreground flex items-center gap-2">
+                  <Lightbulb className="w-5 h-5 text-primary" />
                   AI Insights
                 </CardTitle>
                 <Button
@@ -325,7 +325,7 @@ export function ResearchHub() {
                 </Button>
               </CardHeader>
               <CardContent>
-                <h4 className="text-lg font-medium text-white mb-3" data-testid="insights-title">
+                <h4 className="text-lg font-medium text-foreground mb-3" data-testid="insights-title">
                   {currentInsights.title}
                 </h4>
                 <p className="text-zinc-300 leading-relaxed whitespace-pre-wrap" data-testid="insights-content">
@@ -339,7 +339,7 @@ export function ResearchHub() {
             <Card className="bg-zinc-950 border border-zinc-800/50 shadow-xl">
               <CardContent className="p-12 text-center">
                 <Search className="w-16 h-16 mx-auto mb-4 text-zinc-700" />
-                <h3 className="text-xl font-medium text-white mb-2">Start Your Research</h3>
+                <h3 className="text-xl font-medium text-foreground mb-2">Start Your Research</h3>
                 <p className="text-zinc-400 max-w-md mx-auto">
                   Enter a search query above to discover content across the web. Our AI will analyze results and provide actionable insights.
                 </p>
@@ -367,8 +367,8 @@ export function ResearchHub() {
         <div className="space-y-6">
           <Card className="bg-zinc-950 border border-zinc-800/50 shadow-xl">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-orange-500" />
+              <CardTitle className="text-foreground flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-primary" />
                 Trending Topics
               </CardTitle>
             </CardHeader>
@@ -405,7 +405,7 @@ export function ResearchHub() {
                               className="p-3 rounded-lg border border-zinc-800 hover:border-orange-500/50 cursor-pointer transition-colors"
                               data-testid={`trending-topic-${topic.id}`}
                             >
-                              <h5 className="text-sm font-medium text-white truncate" data-testid={`trending-title-${topic.id}`}>
+                              <h5 className="text-sm font-medium text-foreground truncate" data-testid={`trending-title-${topic.id}`}>
                                 {topic.title}
                               </h5>
                               <p className="text-xs text-zinc-500 line-clamp-1">
@@ -429,8 +429,8 @@ export function ResearchHub() {
 
           <Card className="bg-zinc-950 border border-zinc-800/50 shadow-xl">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <History className="w-5 h-5 text-orange-500" />
+              <CardTitle className="text-foreground flex items-center gap-2">
+                <History className="w-5 h-5 text-primary" />
                 Research History
               </CardTitle>
             </CardHeader>
@@ -452,7 +452,7 @@ export function ResearchHub() {
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm text-white truncate" data-testid={`history-query-${item.id}`}>
+                            <p className="text-sm text-foreground truncate" data-testid={`history-query-${item.id}`}>
                               {item.query}
                             </p>
                             <p className="text-xs text-zinc-500">
@@ -466,7 +466,7 @@ export function ResearchHub() {
                             className="flex-shrink-0"
                             data-testid={`button-replay-${item.id}`}
                           >
-                            <RotateCcw className="w-4 h-4 text-orange-400" />
+                            <RotateCcw className="w-4 h-4 text-primary" />
                           </Button>
                         </div>
                       </div>

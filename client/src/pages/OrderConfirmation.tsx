@@ -122,14 +122,14 @@ function OrderTimeline({ order }: { order: Order }) {
           <div key={step.key} className="flex flex-col items-center relative flex-1">
             <div 
               className={`w-8 h-8 rounded-full flex items-center justify-center z-10 ${
-                isComplete ? "bg-green-500 text-white" : 
-                isCurrent ? "bg-orange-500 text-white" : 
+                isComplete ? "bg-green-500 text-foreground" : 
+                isCurrent ? "bg-orange-500 text-foreground" : 
                 "bg-gray-700 text-gray-400"
               }`}
             >
               {isComplete ? <CheckCircle2 className="w-4 h-4" /> : index + 1}
             </div>
-            <span className={`text-xs mt-2 ${isComplete || isCurrent ? "text-white" : "text-gray-500"}`}>
+            <span className={`text-xs mt-2 ${isComplete || isCurrent ? "text-foreground" : "text-gray-500"}`}>
               {step.label}
             </span>
             {index < steps.length - 1 && (
@@ -156,13 +156,13 @@ function OrderItemCard({ item }: { item: OrderItem }) {
           <img src={item.coverImage} alt="" className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <FileText className="w-6 h-6 text-orange-500/50" />
+            <FileText className="w-6 h-6 text-primary/50" />
           </div>
         )}
       </div>
       
       <div className="flex-1 min-w-0">
-        <h4 className="font-medium text-white truncate">{item.listingTitle || "Book"}</h4>
+        <h4 className="font-medium text-foreground truncate">{item.listingTitle || "Book"}</h4>
         <div className="flex items-center gap-2 mt-1">
           <Badge variant="outline" className="text-xs">
             {item.isDigital ? (
@@ -198,7 +198,7 @@ function OrderItemCard({ item }: { item: OrderItem }) {
                     href={pj.trackingUrl || "#"} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-orange-400 hover:underline flex items-center gap-1"
+                    className="text-primary hover:underline flex items-center gap-1"
                     data-testid={`link-tracking-${pj.id}`}
                   >
                     {pj.carrier}: {pj.trackingNumber}
@@ -212,7 +212,7 @@ function OrderItemCard({ item }: { item: OrderItem }) {
       </div>
       
       <div className="text-right">
-        <p className="font-semibold text-white">${price.toFixed(2)}</p>
+        <p className="font-semibold text-foreground">${price.toFixed(2)}</p>
       </div>
     </div>
   );
@@ -247,7 +247,7 @@ export default function OrderConfirmation() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen bg-black flex flex-col">
+      <div className="min-h-screen bg-background flex flex-col">
         <CreatorHeader />
         <main className="flex-1 container mx-auto px-4 py-12">
           <div className="max-w-2xl mx-auto space-y-6">
@@ -263,13 +263,13 @@ export default function OrderConfirmation() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-black flex flex-col">
+      <div className="min-h-screen bg-background flex flex-col">
         <CreatorHeader />
         <main className="flex-1 container mx-auto px-4 py-12 flex items-center justify-center">
           <Card className="max-w-md w-full bg-gray-950 border-gray-800">
             <CardContent className="p-6 text-center">
-              <AlertCircle className="w-12 h-12 text-orange-500 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-white mb-2">Sign in Required</h2>
+              <AlertCircle className="w-12 h-12 text-primary mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-foreground mb-2">Sign in Required</h2>
               <p className="text-gray-400 mb-4">Please sign in to view your order details.</p>
               <Button className="bg-orange-500 hover:bg-orange-600" asChild>
                 <Link href="/auth">Sign In</Link>
@@ -284,13 +284,13 @@ export default function OrderConfirmation() {
 
   if (error || !order) {
     return (
-      <div className="min-h-screen bg-black flex flex-col">
+      <div className="min-h-screen bg-background flex flex-col">
         <CreatorHeader />
         <main className="flex-1 container mx-auto px-4 py-12 flex items-center justify-center">
           <Card className="max-w-md w-full bg-gray-950 border-gray-800">
             <CardContent className="p-6 text-center">
               <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-white mb-2">Order Not Found</h2>
+              <h2 className="text-xl font-semibold text-foreground mb-2">Order Not Found</h2>
               <p className="text-gray-400 mb-4">We couldn't find this order. It may still be processing.</p>
               <div className="flex gap-3 justify-center">
                 <Button variant="outline" onClick={() => refetch()}>
@@ -310,7 +310,7 @@ export default function OrderConfirmation() {
   }
 
   return (
-    <div className="min-h-screen bg-black flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       <CreatorHeader />
       
       <main className="flex-1 container mx-auto px-4 py-12">
@@ -320,7 +320,7 @@ export default function OrderConfirmation() {
               <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 className="w-8 h-8 text-green-400" />
               </div>
-              <h1 className="text-3xl font-serif font-bold text-white mb-2" data-testid="text-success-title">
+              <h1 className="text-3xl font-serif font-bold text-foreground mb-2" data-testid="text-success-title">
                 Thank You for Your Order!
               </h1>
               <p className="text-gray-400">
@@ -333,7 +333,7 @@ export default function OrderConfirmation() {
             <CardHeader className="flex flex-row items-center justify-between gap-4 flex-wrap">
               <div>
                 <p className="text-sm text-gray-400">Order Number</p>
-                <CardTitle className="text-xl text-white" data-testid="text-order-number">
+                <CardTitle className="text-xl text-foreground" data-testid="text-order-number">
                   {order.orderNumber}
                 </CardTitle>
               </div>
@@ -350,7 +350,7 @@ export default function OrderConfirmation() {
               <Separator className="bg-gray-800" />
 
               <div className="space-y-3">
-                <h3 className="font-medium text-white">Order Items</h3>
+                <h3 className="font-medium text-foreground">Order Items</h3>
                 {order.items.map(item => (
                   <OrderItemCard key={item.id} item={item} />
                 ))}
@@ -361,8 +361,8 @@ export default function OrderConfirmation() {
               <div className="grid md:grid-cols-2 gap-6">
                 {order.shippingStreet1 && (
                   <div>
-                    <h3 className="font-medium text-white mb-2 flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-orange-500" />
+                    <h3 className="font-medium text-foreground mb-2 flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-primary" />
                       Shipping Address
                     </h3>
                     <div className="text-gray-400 text-sm">
@@ -377,7 +377,7 @@ export default function OrderConfirmation() {
                 )}
 
                 <div>
-                  <h3 className="font-medium text-white mb-2">Order Summary</h3>
+                  <h3 className="font-medium text-foreground mb-2">Order Summary</h3>
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between text-gray-400">
                       <span>Subtotal</span>
@@ -396,7 +396,7 @@ export default function OrderConfirmation() {
                       </div>
                     )}
                     <Separator className="bg-gray-800 my-2" />
-                    <div className="flex justify-between text-white font-semibold">
+                    <div className="flex justify-between text-foreground font-semibold">
                       <span>Total</span>
                       <span data-testid="text-order-total">${(order.total / 100).toFixed(2)}</span>
                     </div>
@@ -411,7 +411,7 @@ export default function OrderConfirmation() {
                     <div className="flex items-center gap-3">
                       <Truck className="w-5 h-5 text-teal-400" />
                       <div>
-                        <p className="font-medium text-white">Tracking Information</p>
+                        <p className="font-medium text-foreground">Tracking Information</p>
                         <p className="text-sm text-gray-400">Your order is on its way!</p>
                       </div>
                     </div>
@@ -423,7 +423,7 @@ export default function OrderConfirmation() {
                         </a>
                       </Button>
                     ) : (
-                      <span className="text-white font-mono">{order.trackingNumber}</span>
+                      <span className="text-foreground font-mono">{order.trackingNumber}</span>
                     )}
                   </div>
                 </>

@@ -125,7 +125,7 @@ export function DoctrinePanel({
     return (
       <div key={node.id} className="select-none" data-testid={`doctrine-node-${node.id}`}>
         <div
-          className={`flex items-center gap-1 p-1.5 rounded hover:bg-orange-500/10 group`}
+          className={`flex items-center gap-1 p-1.5 rounded hover:bg-primary/10 group`}
           style={{ paddingLeft: `${depth * 16 + 4}px` }}
         >
           <button
@@ -145,10 +145,10 @@ export function DoctrinePanel({
           </button>
 
           <div className={`w-5 h-5 rounded flex items-center justify-center ${typeInfo.color}`}>
-            <Icon className="w-3 h-3 text-white" />
+            <Icon className="w-3 h-3 text-foreground" />
           </div>
 
-          <span className="text-xs text-white flex-1 truncate">{node.title}</span>
+          <span className="text-xs text-foreground flex-1 truncate">{node.title}</span>
 
           {linkedChapter && (
             <Badge variant="outline" className="text-[9px] px-1 py-0">
@@ -200,11 +200,11 @@ export function DoctrinePanel({
   const rootNodes = doctrine?.nodes?.filter((n) => !n.parentId) || [];
 
   return (
-    <Card className="w-80 h-full bg-black border-orange-500/20 flex flex-col" data-testid="doctrine-panel">
-      <CardHeader className="pb-2 border-b border-orange-500/20">
+    <Card className="w-80 h-full bg-background border flex flex-col" data-testid="doctrine-panel">
+      <CardHeader className="pb-2 border-b border">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-white flex items-center gap-2 text-sm">
-            <Network className="w-4 h-4 text-orange-500" />
+          <CardTitle className="text-foreground flex items-center gap-2 text-sm">
+            <Network className="w-4 h-4 text-primary" />
             Doctrine Outliner
           </CardTitle>
           <Button size="icon" variant="ghost" onClick={onClose} className="h-6 w-6" data-testid="button-close-doctrine">
@@ -230,7 +230,7 @@ export function DoctrinePanel({
             <div className="text-center py-4 text-gray-400 text-sm">Loading...</div>
           ) : !doctrine ? (
             <div className="text-center py-8">
-              <Network className="w-10 h-10 mx-auto mb-3 text-orange-500/30" />
+              <Network className="w-10 h-10 mx-auto mb-3 text-primary/30" />
               <p className="text-sm text-gray-400 mb-3">No outline yet</p>
               <p className="text-xs text-gray-500 mb-4">
                 Create a structured outline to organize themes, topics, and chapters
@@ -262,13 +262,13 @@ export function DoctrinePanel({
               )}
 
               {isAddingNode && (
-                <Card className="bg-black/50 border-orange-500/30 p-2 mt-2" data-testid="card-add-node">
+                <Card className="bg-card border p-2 mt-2" data-testid="card-add-node">
                   <div className="space-y-2">
                     <div className="flex gap-2">
                       <select
                         value={newNode.nodeType}
                         onChange={(e) => setNewNode({ ...newNode, nodeType: e.target.value })}
-                        className="h-7 text-xs bg-black/50 border border-orange-500/30 rounded px-2 text-white"
+                        className="h-7 text-xs bg-card border border rounded px-2 text-foreground"
                         data-testid="select-node-type"
                       >
                         {nodeTypes.map((type) => (
@@ -287,14 +287,14 @@ export function DoctrinePanel({
                       value={newNode.title}
                       onChange={(e) => setNewNode({ ...newNode, title: e.target.value })}
                       placeholder="Node title"
-                      className="h-7 text-xs bg-black/30 border-orange-500/20"
+                      className="h-7 text-xs bg-card/80 border"
                       data-testid="input-node-title"
                     />
                     <Textarea
                       value={newNode.content}
                       onChange={(e) => setNewNode({ ...newNode, content: e.target.value })}
                       placeholder="Description (optional)"
-                      className="min-h-[50px] text-xs bg-black/30 border-orange-500/20"
+                      className="min-h-[50px] text-xs bg-card/80 border"
                       data-testid="textarea-node-content"
                     />
                     <div className="flex gap-2">
@@ -328,10 +328,10 @@ export function DoctrinePanel({
       </ScrollArea>
 
       {doctrine?.isEnabled && !isAddingNode && (
-        <div className="p-2 border-t border-orange-500/20">
+        <div className="p-2 border-t border">
           <Button
             onClick={() => setIsAddingNode(true)}
-            className="w-full bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 border border-orange-500/30"
+            className="w-full bg-primary/10 hover:bg-primary/20 text-primary border border"
             data-testid="button-add-node"
           >
             <Plus className="w-4 h-4 mr-2" />

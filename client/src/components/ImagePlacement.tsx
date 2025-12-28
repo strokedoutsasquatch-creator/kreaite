@@ -188,8 +188,8 @@ function PlacementItem({
             className="w-full h-full object-cover"
             data-testid={`placement-image-${placement.id}`}
           />
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <Eye className="w-5 h-5 text-white" />
+          <div className="absolute inset-0 bg-card opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <Eye className="w-5 h-5 text-foreground" />
           </div>
         </div>
 
@@ -358,7 +358,7 @@ function ImageThumbnail({ image, isPlaced, onAdd }: ImageThumbnailProps) {
         "opacity-0 group-hover:opacity-100 transition-opacity"
       )}>
         <div className="absolute bottom-0 left-0 right-0 p-2">
-          <p className="text-xs text-white truncate mb-2">{image.filename}</p>
+          <p className="text-xs text-foreground truncate mb-2">{image.filename}</p>
           {!isPlaced ? (
             <Button
               size="sm"

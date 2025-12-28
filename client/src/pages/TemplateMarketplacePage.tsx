@@ -3,7 +3,7 @@ import { TemplateMarketplace } from "@/features/template-marketplace/TemplateMar
 
 export default function TemplateMarketplacePage() {
   return (
-    <div className="min-h-screen bg-black" data-testid="page-template-marketplace">
+    <div className="min-h-screen bg-background" data-testid="page-template-marketplace">
       <CreatorHeader />
       <TemplateMarketplace />
     </div>

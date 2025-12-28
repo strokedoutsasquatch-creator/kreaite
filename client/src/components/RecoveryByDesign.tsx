@@ -13,7 +13,7 @@ export default function RecoveryByDesign() {
           <div className="pl-6">
             <div className="flex items-center gap-3 mb-4">
               <Sparkles className="h-6 w-6 text-primary" />
-              <h2 className="text-xl sm:text-2xl font-bold text-white uppercase tracking-wide">
+              <h2 className="text-xl sm:text-2xl font-bold text-foreground uppercase tracking-wide">
                 RECOVERY BY DESIGN, NOT BY CHANCE
               </h2>
             </div>
