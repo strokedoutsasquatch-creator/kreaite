@@ -263,6 +263,9 @@ interface BookStudioContextValue {
   qualityPolish: (chapterIndex?: number) => Promise<void>;
   editChapter: (chapterIndex: number, editType: 'developmental' | 'line' | 'copy' | 'proofread') => Promise<void>;
   
+  applyFixes: (chapterIndex?: number) => Promise<void>;
+  isApplyingFixes: boolean;
+  
   generateBookImage: (prompt: string, style?: string, chapterId?: string) => Promise<string | null>;
   isGeneratingImage: boolean;
   removeImageBackground: (imageId: string) => Promise<void>;
@@ -1105,6 +1108,65 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
     }
   });
 
+  const applyFixesMutation = useMutation({
+    mutationFn: async ({ chapterIndex }: { chapterIndex?: number }) => {
+      if (!bookOutline) throw new Error('No outline available');
+      
+      const content = chapterIndex !== undefined && bookOutline.chapters[chapterIndex]
+        ? bookOutline.chapters[chapterIndex].content || ''
+        : bookOutline.chapters.map(ch => ch.content || '').join('\n\n---CHAPTER BREAK---\n\n');
+      
+      if (!content.trim()) throw new Error('No content to improve');
+      
+      const response = await apiRequest('POST', '/api/book/apply-fixes', {
+        content,
+        recommendations: recommendations
+      });
+      return { data: await response.json(), chapterIndex };
+    },
+    onSuccess: ({ data, chapterIndex }) => {
+      if (data.success && data.improvedContent && bookOutline) {
+        if (chapterIndex !== undefined) {
+          setBookOutline(prev => {
+            if (!prev) return null;
+            const updated = [...prev.chapters];
+            updated[chapterIndex] = {
+              ...updated[chapterIndex],
+              content: data.improvedContent,
+              wordCount: data.improvedContent.split(/\s+/).length,
+              status: 'complete' as const
+            };
+            return { ...prev, chapters: updated };
+          });
+          toast({ 
+            title: "Improvements Applied", 
+            description: `Chapter ${chapterIndex + 1} improved (${data.stats?.changePercent || 0}% changes)` 
+          });
+        } else {
+          // Split improved content back into chapters
+          const improvedChapters = data.improvedContent.split(/---CHAPTER BREAK---/);
+          setBookOutline(prev => {
+            if (!prev) return null;
+            const updated = prev.chapters.map((ch, idx) => ({
+              ...ch,
+              content: improvedChapters[idx]?.trim() || ch.content,
+              wordCount: (improvedChapters[idx]?.trim() || ch.content || '').split(/\s+/).length,
+              status: 'complete' as const
+            }));
+            return { ...prev, chapters: updated };
+          });
+          toast({ 
+            title: "All Improvements Applied", 
+            description: `Book improved with ${data.stats?.changePercent || 0}% changes` 
+          });
+        }
+      }
+    },
+    onError: (error: Error) => {
+      toast({ title: "Apply Fixes Failed", description: error.message, variant: "destructive" });
+    }
+  });
+
   const generateFullBook = useCallback(async (genre: string, description: string, chapterCount?: number, title?: string) => {
     await generateFullBookMutation.mutateAsync({ genre, description, chapterCount, title });
   }, [generateFullBookMutation]);
@@ -1213,6 +1275,25 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
     // The mutation handles getting content from bookOutline and updates the chapter on success
     await editChapterMutation.mutateAsync({ chapterIndex, editType });
   }, [bookOutline, editChapterMutation, toast]);
+
+  // Apply AI-recommended fixes to content
+  const applyFixes = useCallback(async (chapterIndex?: number) => {
+    if (!bookOutline) {
+      toast({ title: "No Content", description: "Create book outline first", variant: "destructive" });
+      return;
+    }
+    
+    const hasContent = chapterIndex !== undefined 
+      ? bookOutline.chapters[chapterIndex]?.content?.trim()
+      : bookOutline.chapters.some(ch => ch.content?.trim());
+    
+    if (!hasContent) {
+      toast({ title: "No Content", description: "Generate chapters first", variant: "destructive" });
+      return;
+    }
+    
+    await applyFixesMutation.mutateAsync({ chapterIndex });
+  }, [bookOutline, applyFixesMutation, toast]);
 
   // Generate book image from prompt
   const generateBookImage = useCallback(async (prompt: string, style?: string, chapterId?: string): Promise<string | null> => {
@@ -1343,6 +1424,10 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
     polishProgress,
     qualityPolish,
     editChapter,
+    
+    // Apply Fixes
+    applyFixes,
+    isApplyingFixes: applyFixesMutation.isPending,
     
     // Image Generation
     generateBookImage,

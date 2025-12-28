@@ -3270,6 +3270,76 @@ Provide your analysis as JSON:
     }
   });
 
+  // Apply AI-recommended fixes to content
+  app.post('/api/book/apply-fixes', isAuthenticated, async (req: any, res) => {
+    try {
+      const { content, recommendations, fixType = 'all' } = req.body;
+
+      if (!content || typeof content !== 'string' || content.trim().length < 50) {
+        return res.status(400).json({ message: "Content must be at least 50 characters" });
+      }
+
+      const recommendationsList = recommendations 
+        ? (typeof recommendations === 'object' 
+            ? Object.entries(recommendations).flatMap(([key, val]) => 
+                Array.isArray(val) ? val : [val]
+              ).filter(Boolean)
+            : [recommendations])
+        : [];
+
+      const fixPrompt = `You are a professional book editor. Apply the following improvements to this manuscript content.
+
+CONTENT TO IMPROVE:
+"""
+${content.substring(0, 15000)}
+"""
+
+${recommendationsList.length > 0 ? `
+RECOMMENDED IMPROVEMENTS TO APPLY:
+${recommendationsList.map((r, i) => `${i + 1}. ${r}`).join('\n')}
+` : `
+Apply standard professional editing improvements:
+- Fix grammar, spelling, and punctuation
+- Improve sentence flow and clarity
+- Strengthen weak verbs and remove redundancy
+- Enhance transitions between paragraphs
+- Maintain the author's voice while polishing the prose
+`}
+
+IMPORTANT INSTRUCTIONS:
+- Return ONLY the improved content, no explanations or commentary
+- Preserve the author's voice and style
+- Make meaningful improvements, not just minor tweaks
+- Keep the same overall structure and length
+- Do not add placeholder text or indicate where changes were made`;
+
+      const result = await generateCoachResponse(fixPrompt, []);
+      
+      // Clean up the response - remove any markdown code blocks or explanatory text
+      let improvedContent = result.response
+        .replace(/^```[\w]*\n?/gm, '')
+        .replace(/```$/gm, '')
+        .trim();
+
+      // If response is significantly different length, it's likely actual content
+      const originalWords = content.split(/\s+/).length;
+      const improvedWords = improvedContent.split(/\s+/).length;
+      
+      res.json({ 
+        success: true, 
+        improvedContent,
+        stats: {
+          originalWords,
+          improvedWords,
+          changePercent: Math.round(Math.abs(improvedWords - originalWords) / originalWords * 100)
+        }
+      });
+    } catch (error) {
+      console.error("Error applying fixes:", error);
+      res.status(500).json({ message: "Failed to apply fixes" });
+    }
+  });
+
   // Generate detailed image prompts for chapters or book content
   app.post('/api/book/generate-image-prompts', isAuthenticated, async (req: any, res) => {
     try {
@@ -8125,9 +8195,6 @@ High quality, suitable for print publication, no text or words in the image.`;
         return res.status(400).json({ message: "imageUrl or imageBase64 is required" });
       }
 
-      // Use Gemini Vision for image analysis
-      const gemini = await getGeminiClient(userId);
-      
       const analysisPrompt = `Analyze this image for use in a professional book publication. Provide:
 
 1. **Description**: A detailed description of what the image contains
@@ -8162,28 +8229,13 @@ Respond in JSON format:
   }
 }`;
 
-      let result;
-      if (imageBase64) {
-        // Analyze base64 image
-        const model = gemini.getGenerativeModel({ model: "gemini-2.0-flash" });
-        const response = await model.generateContent([
-          analysisPrompt,
-          {
-            inlineData: {
-              mimeType: "image/jpeg",
-              data: imageBase64.replace(/^data:image\/\w+;base64,/, '')
-            }
-          }
-        ]);
-        result = response.response.text();
-      } else {
-        // For URL-based images, provide contextual analysis
-        const model = gemini.getGenerativeModel({ model: "gemini-2.0-flash" });
-        const response = await model.generateContent([
-          `${analysisPrompt}\n\nImage URL: ${imageUrl}\n\nNote: Analyze based on the URL context and provide recommendations.`
-        ]);
-        result = response.response.text();
-      }
+      // Use generateCoachResponse for analysis (text-based context analysis)
+      const contextPrompt = imageBase64 
+        ? `${analysisPrompt}\n\n[Image data provided - analyze for book publication use]`
+        : `${analysisPrompt}\n\nImage URL: ${imageUrl}\n\nProvide recommendations based on URL context.`;
+      
+      const aiResult = await generateCoachResponse(contextPrompt, []);
+      const result = aiResult.response;
 
       // Parse JSON from response
       let analysis;

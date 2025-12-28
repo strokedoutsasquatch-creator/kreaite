@@ -162,31 +162,93 @@ export default function StartStep() {
     if (!files) return;
 
     for (const file of Array.from(files)) {
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const content = event.target?.result as string;
-        const wordCount = content.split(/\s+/).filter(Boolean).length;
-        importDocument({
-          fileName: file.name,
-          fileType: file.type,
-          content,
-          wordCount,
-        });
-        toast({ 
-          title: "Document Imported", 
-          description: `${file.name} (${wordCount.toLocaleString()} words)` 
-        });
-        
-        if (content.length >= 50) {
-          toast({ title: "Analyzing Content...", description: "AI is reviewing your manuscript" });
+      const needsServerParsing = file.name.endsWith('.docx') || 
+                                  file.name.endsWith('.pdf') || 
+                                  file.name.endsWith('.doc');
+      
+      if (needsServerParsing) {
+        // Send binary files to server for proper parsing
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          const arrayBuffer = event.target?.result as ArrayBuffer;
+          const base64 = btoa(
+            new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+          );
+          
           try {
-            await analyzeContent(content, 'manuscript', selectedGenre);
-          } catch {
-            console.log("Content analysis failed, but document was imported successfully");
+            toast({ title: "Parsing Document...", description: "Extracting text from your file" });
+            const response = await fetch('/api/documents/parse', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({
+                content: base64,
+                filename: file.name,
+                mimeType: file.type
+              })
+            });
+            
+            if (!response.ok) throw new Error('Failed to parse document');
+            
+            const { content, metadata } = await response.json();
+            const wordCount = metadata?.wordCount || content.split(/\s+/).filter(Boolean).length;
+            
+            importDocument({
+              fileName: file.name,
+              fileType: file.type,
+              content,
+              wordCount,
+            });
+            toast({ 
+              title: "Document Imported", 
+              description: `${file.name} (${wordCount.toLocaleString()} words)` 
+            });
+            
+            if (content.length >= 50) {
+              toast({ title: "Analyzing Content...", description: "AI is reviewing your manuscript" });
+              try {
+                await analyzeContent(content, 'manuscript', selectedGenre);
+              } catch {
+                console.log("Content analysis failed, but document was imported successfully");
+              }
+            }
+          } catch (err) {
+            toast({ 
+              title: "Parse Failed", 
+              description: "Could not extract text from document. Try a different format.", 
+              variant: "destructive" 
+            });
           }
-        }
-      };
-      reader.readAsText(file);
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        // Plain text files can be read directly
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          const content = event.target?.result as string;
+          const wordCount = content.split(/\s+/).filter(Boolean).length;
+          importDocument({
+            fileName: file.name,
+            fileType: file.type,
+            content,
+            wordCount,
+          });
+          toast({ 
+            title: "Document Imported", 
+            description: `${file.name} (${wordCount.toLocaleString()} words)` 
+          });
+          
+          if (content.length >= 50) {
+            toast({ title: "Analyzing Content...", description: "AI is reviewing your manuscript" });
+            try {
+              await analyzeContent(content, 'manuscript', selectedGenre);
+            } catch {
+              console.log("Content analysis failed, but document was imported successfully");
+            }
+          }
+        };
+        reader.readAsText(file);
+      }
     }
   };
 

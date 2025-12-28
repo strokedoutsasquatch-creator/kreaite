@@ -23,6 +23,7 @@ import {
   Sparkles,
   Image,
   RefreshCw,
+  Zap,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { ChapterOutline } from "@/lib/contexts/BookStudioContext";
@@ -39,6 +40,8 @@ export default function PlanStep() {
     isGeneratingImagePrompts,
     analyzeContent,
     isAnalyzingContent,
+    applyFixes,
+    isApplyingFixes,
   } = useBookStudio();
 
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
@@ -278,44 +281,69 @@ export default function PlanStep() {
                     </ul>
                   )}
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full border text-primary hover:bg-primary/10"
-                    onClick={async () => {
-                      if (chapters.length > 0) {
-                        const chapterContent = chapters.map(ch => 
-                          `${ch.title}: ${ch.description || ''}`
-                        ).join('\n');
-                        
-                        // Need at least 50 characters for analysis
-                        if (chapterContent.trim().length < 50) {
-                          toast({ 
-                            title: "More Content Needed", 
-                            description: "Add more chapter descriptions for AI analysis",
-                            variant: "default"
-                          });
-                          return;
+                  <div className="space-y-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full border text-primary hover:bg-primary/10"
+                      onClick={async () => {
+                        if (chapters.length > 0) {
+                          const chapterContent = chapters.map(ch => 
+                            `${ch.title}: ${ch.description || ''}`
+                          ).join('\n');
+                          
+                          if (chapterContent.trim().length < 50) {
+                            toast({ 
+                              title: "More Content Needed", 
+                              description: "Add more chapter descriptions for AI analysis",
+                              variant: "default"
+                            });
+                            return;
+                          }
+                          
+                          try {
+                            await analyzeContent(chapterContent, 'outline', bookOutline?.genre);
+                            toast({ title: "Analysis Complete", description: "AI suggestions updated" });
+                          } catch {
+                            toast({ title: "Analysis Failed", description: "Please try again", variant: "destructive" });
+                          }
                         }
-                        
-                        try {
-                          await analyzeContent(chapterContent, 'outline', bookOutline?.genre);
-                          toast({ title: "Analysis Complete", description: "AI suggestions updated" });
-                        } catch {
-                          toast({ title: "Analysis Failed", description: "Please try again", variant: "destructive" });
-                        }
-                      }
-                    }}
-                    disabled={isAnalyzingContent || chapters.length === 0}
-                    data-testid="button-get-suggestions"
-                  >
-                    {isAnalyzingContent ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <RefreshCw className="w-4 h-4 mr-2" />
+                      }}
+                      disabled={isAnalyzingContent || chapters.length === 0}
+                      data-testid="button-get-suggestions"
+                    >
+                      {isAnalyzingContent ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                      )}
+                      Get AI Suggestions
+                    </Button>
+                    
+                    {recommendations && (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="w-full"
+                        onClick={async () => {
+                          try {
+                            await applyFixes();
+                          } catch {
+                            toast({ title: "Apply Failed", description: "Please try again", variant: "destructive" });
+                          }
+                        }}
+                        disabled={isApplyingFixes || chapters.every(ch => !ch.content?.trim())}
+                        data-testid="button-apply-fixes"
+                      >
+                        {isApplyingFixes ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Zap className="w-4 h-4 mr-2" />
+                        )}
+                        Apply Improvements
+                      </Button>
                     )}
-                    Get AI Suggestions
-                  </Button>
+                  </div>
                 </CardContent>
               </Card>
 
