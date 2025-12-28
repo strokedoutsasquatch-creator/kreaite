@@ -11,6 +11,8 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import CreatorHeader from "@/components/CreatorHeader";
+import RecoveryHeader from "@/components/RecoveryHeader";
+import { usePlatform } from "@/lib/hooks/usePlatform";
 import Footer from "@/components/Footer";
 import { Link } from "wouter";
 import {
@@ -215,6 +217,9 @@ export default function Pricing() {
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [isAnnual, setIsAnnual] = useState(true);
+  const platform = usePlatform();
+  const isRecovery = platform === "recovery";
+  const Header = isRecovery ? RecoveryHeader : CreatorHeader;
 
   const checkoutMutation = useMutation({
     mutationFn: async (priceId: string) => {
@@ -265,7 +270,7 @@ export default function Pricing() {
 
   return (
     <div className="min-h-screen bg-black">
-      <CreatorHeader />
+      <Header />
       
       <main>
         <section className="relative overflow-hidden py-20 px-4">

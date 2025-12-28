@@ -25,6 +25,7 @@ import {
   Brain,
   Target,
   Sparkles,
+  BookOpen,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -41,6 +42,7 @@ const navLinks = [
 ];
 
 const quickFeatures = [
+  { href: "/book-studio", label: "Write Your Story", icon: BookOpen, description: "Create your recovery memoir" },
   { href: "/recovery/dashboard", label: "Progress Tracking", icon: Target, description: "Monitor your milestones" },
   { href: "/recovery/exercises", label: "Daily Exercises", icon: Activity, description: "Personalized routines" },
   { href: "/recovery/academy", label: "Brain Training", icon: Brain, description: "Cognitive exercises" },

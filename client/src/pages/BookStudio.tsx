@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import CreatorHeader from "@/components/CreatorHeader";
+import RecoveryHeader from "@/components/RecoveryHeader";
+import { usePlatform } from "@/lib/hooks/usePlatform";
 import Footer from "@/components/Footer";
 import ChildrensBookMode from "@/components/ChildrensBookMode";
 import ProfessionalEditor from "@/components/ProfessionalEditor";
@@ -285,6 +287,11 @@ export default function BookStudio() {
   const { isAuthenticated, user } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const platform = usePlatform();
+  const isRecovery = platform === "recovery";
+  
+  // Platform-specific header
+  const Header = isRecovery ? RecoveryHeader : CreatorHeader;
   
   const [showProjectSelector, setShowProjectSelector] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -1798,7 +1805,7 @@ Your journey to healing starts here.`);
   if (isChildrensGenre && !uploadedContent) {
     return (
       <div className="min-h-screen bg-black">
-        <CreatorHeader />
+        <Header />
         <ChildrensBookMode 
           onStoryGenerated={(story) => {
             setBookTitle(story.title);
@@ -1817,11 +1824,14 @@ Your journey to healing starts here.`);
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Book Studio - AI Book Writing"
-        description="Create professional books with AI-powered writing assistance. Features AI ghostwriting, professional WYSIWYG editor, and direct publishing to Amazon KDP and Lulu print-on-demand."
+        title={isRecovery ? "Write Your Recovery Story - Book Studio" : "Book Studio - AI Book Writing"}
+        description={isRecovery 
+          ? "Write and publish your stroke recovery memoir with AI-powered assistance. Share your journey, inspire others, and create a lasting legacy."
+          : "Create professional books with AI-powered writing assistance. Features AI ghostwriting, professional WYSIWYG editor, and direct publishing to Amazon KDP and Lulu print-on-demand."
+        }
         schema={studioSchemas.bookStudio}
       />
-      <CreatorHeader />
+      <Header />
       
       <main className="py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
