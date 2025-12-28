@@ -49,6 +49,13 @@ Icons: lucide-react only (no emoji)
 - **The 6 Studios**: Book, Video, Music, Course, Image, Doctrine Engine, each with specialized tools and AI integration.
 - **Creator Production Engine**: Content vaults, SERP research hub, batch production, music sandbox, script studio, life story engine, and a unified production dashboard.
 - **Marketplace (KreAItorverse)**: For selling books, courses, music, videos, and templates with an 85% creator revenue share.
+- **Creator Dashboard (/dashboard)**: Unified command center with 5 tabs:
+  - *Overview*: Credit Balance, Projects Count, Credits Used, Total Earnings
+  - *Studios*: Quick access to all 6 studios plus additional tools
+  - *Earnings*: All users track revenue (Total, Pending, Paid Out, Sales, Revenue Split visualization)
+  - *Referrals*: Affiliate system with shareable links, stats, reward breakdown (500 credits referrer/250 friend/10% commission)
+  - *Admin* (admin only): Platform revenue + Subscription Analytics (Active, New, Churned, By Tier)
+- **Affiliate/Referral System**: APIs at `/api/affiliate/*` for unique referral codes, tracking conversions, commission payouts. Schema: referralCodes, referralConversions tables.
 - **AI Integration**: Google Gemini and OpenAI for text, Lyria for music, specialized models for images/video, AI Consultant for content monetization.
 - **Quick Create**: One-click magic tools for instant content generation.
 - **Doc Hub**: Document import/parsing, merging, snippet vault, manuscript builder.

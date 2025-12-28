@@ -10,9 +10,12 @@ import {
   CreditCard, DollarSign, TrendingUp, BarChart3, 
   ShoppingBag, Users, Settings, Shield, Sparkles,
   FileText, Mic, Palette, Clock, ArrowRight, Plus,
-  Loader2, Calendar, Zap, Target, Award, FolderOpen
+  Loader2, Calendar, Zap, Target, Award, FolderOpen,
+  Copy, Share2, Gift, UserPlus
 } from "lucide-react";
 import { Link } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
 import CreatorHeader from "@/components/CreatorHeader";
 
 interface CreditBalance {
@@ -158,6 +161,16 @@ export default function Dashboard() {
     enabled: isAdmin,
   });
 
+  const subscriptionMetricsQuery = useQuery<{ 
+    activeSubscriptions: number; 
+    newThisMonth: number; 
+    churned: number; 
+    byTier: Record<string, number>;
+  }>({
+    queryKey: ['/api/admin/subscriptions'],
+    enabled: isAdmin,
+  });
+
   const projectsQuery = useQuery<any[]>({
     queryKey: ['/api/book-projects'],
     enabled: !!user,
@@ -177,6 +190,36 @@ export default function Dashboard() {
     queryKey: ['/api/creator/earnings'],
     enabled: !!user,
   });
+
+  const affiliateCodeQuery = useQuery<{ code: string; usageCount: number; totalEarnings: number }>({
+    queryKey: ['/api/affiliate/code'],
+    enabled: !!user,
+  });
+
+  const affiliateStatsQuery = useQuery<{
+    totalReferrals: number;
+    successfulConversions: number;
+    pendingConversions: number;
+    totalEarnings: number;
+    recentReferrals: Array<{ createdAt: string; commission: number; status: string }>;
+  }>({
+    queryKey: ['/api/affiliate/stats'],
+    enabled: !!user,
+  });
+
+  const { toast } = useToast();
+
+  const copyReferralLink = () => {
+    const code = affiliateCodeQuery.data?.code;
+    if (code) {
+      const link = `${window.location.origin}?ref=${code}`;
+      navigator.clipboard.writeText(link);
+      toast({
+        title: "Link copied!",
+        description: "Share it to earn free credits when others sign up.",
+      });
+    }
+  };
 
   const formatCurrency = (amount: number, fromCents = false) => {
     const dollars = fromCents ? amount / 100 : amount;
@@ -209,6 +252,7 @@ export default function Dashboard() {
             <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
             <TabsTrigger value="studios" data-testid="tab-studios">Studios</TabsTrigger>
             <TabsTrigger value="earnings" data-testid="tab-earnings">Earnings</TabsTrigger>
+            <TabsTrigger value="referrals" data-testid="tab-referrals">Referrals</TabsTrigger>
             {isAdmin && <TabsTrigger value="admin" data-testid="tab-admin">Admin</TabsTrigger>}
           </TabsList>
 
@@ -635,6 +679,159 @@ export default function Dashboard() {
             )}
           </TabsContent>
 
+          <TabsContent value="referrals" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard
+                title="Total Referrals"
+                value={affiliateStatsQuery.isLoading ? '...' : (affiliateStatsQuery.data?.totalReferrals ?? 0).toString()}
+                icon={UserPlus}
+                testId="stat-total-referrals"
+              />
+              <StatCard
+                title="Successful Signups"
+                value={affiliateStatsQuery.isLoading ? '...' : (affiliateStatsQuery.data?.successfulConversions ?? 0).toString()}
+                icon={Users}
+                testId="stat-successful-signups"
+              />
+              <StatCard
+                title="Pending"
+                value={affiliateStatsQuery.isLoading ? '...' : (affiliateStatsQuery.data?.pendingConversions ?? 0).toString()}
+                icon={Clock}
+                testId="stat-pending-referrals"
+              />
+              <StatCard
+                title="Credits Earned"
+                value={affiliateStatsQuery.isLoading ? '...' : (affiliateStatsQuery.data?.totalEarnings ?? 0).toLocaleString()}
+                icon={Gift}
+                subtitle="From referrals"
+                testId="stat-referral-credits"
+              />
+            </div>
+
+            <Card data-testid="card-referral-link">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Share2 className="h-5 w-5" />
+                  Your Referral Link
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Share your unique link and earn 500 credits for every new user who signs up. 
+                  They get 250 bonus credits too!
+                </p>
+                {affiliateCodeQuery.isLoading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  </div>
+                ) : affiliateCodeQuery.data?.code ? (
+                  <div className="flex gap-2">
+                    <Input
+                      readOnly
+                      value={`${window.location.origin}?ref=${affiliateCodeQuery.data.code}`}
+                      className="font-mono text-sm"
+                      data-testid="input-referral-link"
+                    />
+                    <Button onClick={copyReferralLink} data-testid="button-copy-referral">
+                      <Copy className="h-4 w-4 mr-2" />
+                      Copy
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-muted-foreground">
+                    Unable to load referral code
+                  </div>
+                )}
+                <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-primary" data-testid="text-referrer-reward">500</div>
+                    <div className="text-xs text-muted-foreground">Credits for You</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-primary" data-testid="text-referee-reward">250</div>
+                    <div className="text-xs text-muted-foreground">Credits for Friend</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-primary" data-testid="text-commission-rate">10%</div>
+                    <div className="text-xs text-muted-foreground">Purchase Commission</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card data-testid="card-how-it-works">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="h-5 w-5" />
+                  How It Works
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="text-center space-y-2">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                      <Share2 className="h-6 w-6 text-primary" />
+                    </div>
+                    <h3 className="font-semibold">1. Share Your Link</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Copy your unique referral link and share it with friends, on social media, or in your content
+                    </p>
+                  </div>
+                  <div className="text-center space-y-2">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                      <UserPlus className="h-6 w-6 text-primary" />
+                    </div>
+                    <h3 className="font-semibold">2. Friend Signs Up</h3>
+                    <p className="text-sm text-muted-foreground">
+                      When someone clicks your link and creates an account, they become your referral
+                    </p>
+                  </div>
+                  <div className="text-center space-y-2">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                      <Gift className="h-6 w-6 text-primary" />
+                    </div>
+                    <h3 className="font-semibold">3. Both Get Rewarded</h3>
+                    <p className="text-sm text-muted-foreground">
+                      You get 500 credits instantly, plus 10% commission on their first purchase. They get 250 bonus credits!
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {(affiliateStatsQuery.data?.recentReferrals?.length ?? 0) > 0 && (
+              <Card data-testid="card-recent-referrals">
+                <CardHeader>
+                  <CardTitle>Recent Referrals</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="divide-y">
+                    {affiliateStatsQuery.data?.recentReferrals?.slice(0, 5).map((ref, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-4" data-testid={`row-referral-${idx}`}>
+                        <div>
+                          <div className="font-medium text-sm">New Signup</div>
+                          <div className="text-xs text-muted-foreground">
+                            {new Date(ref.createdAt).toLocaleDateString()}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={ref.status === 'pending' ? 'secondary' : 'default'}>
+                            {ref.status}
+                          </Badge>
+                          {ref.commission > 0 && (
+                            <span className="font-mono text-sm text-green-600" data-testid={`text-referral-commission-${idx}`}>
+                              +{ref.commission} credits
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
           {isAdmin && (
             <TabsContent value="admin" className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -679,6 +876,62 @@ export default function Dashboard() {
                   </div>
                 )}
               </div>
+
+              <Card data-testid="card-subscription-metrics">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Subscription Analytics
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {subscriptionMetricsQuery.isLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                    </div>
+                  ) : subscriptionMetricsQuery.data ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="text-center p-3 bg-muted/50 rounded-lg">
+                          <div className="text-2xl font-bold" data-testid="text-active-subs">
+                            {subscriptionMetricsQuery.data.activeSubscriptions}
+                          </div>
+                          <div className="text-xs text-muted-foreground">Active Subscribers</div>
+                        </div>
+                        <div className="text-center p-3 bg-muted/50 rounded-lg">
+                          <div className="text-2xl font-bold text-green-600" data-testid="text-new-subs">
+                            +{subscriptionMetricsQuery.data.newThisMonth}
+                          </div>
+                          <div className="text-xs text-muted-foreground">New This Month</div>
+                        </div>
+                        <div className="text-center p-3 bg-muted/50 rounded-lg">
+                          <div className="text-2xl font-bold text-red-600" data-testid="text-churned-subs">
+                            -{subscriptionMetricsQuery.data.churned}
+                          </div>
+                          <div className="text-xs text-muted-foreground">Churned</div>
+                        </div>
+                      </div>
+                      {Object.keys(subscriptionMetricsQuery.data.byTier || {}).length > 0 && (
+                        <div>
+                          <div className="text-sm font-medium mb-2">By Tier</div>
+                          <div className="space-y-2">
+                            {Object.entries(subscriptionMetricsQuery.data.byTier).map(([tier, count]) => (
+                              <div key={tier} className="flex items-center justify-between text-sm">
+                                <span>{tier || 'Unknown'}</span>
+                                <Badge variant="secondary">{count}</Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-muted-foreground">
+                      No subscription data available
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
               <div className="flex gap-4">
                 <Link href="/admin">
