@@ -19,7 +19,14 @@ import {
   ChevronRight,
   Loader2,
   Crown,
+  DollarSign,
+  BarChart3,
+  Repeat,
+  ArrowUpRight,
+  ArrowDownRight,
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 import {
   Dialog,
   DialogContent,
@@ -71,6 +78,45 @@ interface AdminStats {
       creditsUsed: number;
     };
   };
+}
+
+interface RevenueData {
+  metrics: {
+    totalRevenue: number;
+    mrr: number;
+    subscriptionRevenue: number;
+    creditPurchases: number;
+    marketplaceSales: number;
+    creatorPayouts: number;
+    platformFees: number;
+    transactionCount: number;
+  };
+  recentEvents: Array<{
+    id: number;
+    eventType: string;
+    amount: number;
+    productType: string | null;
+    tierName: string | null;
+    status: string;
+    createdAt: string;
+  }>;
+}
+
+interface SubscriptionData {
+  activeSubscriptions: number;
+  newThisMonth: number;
+  churned: number;
+  churnRate: string;
+  byTier: Record<string, number>;
+}
+
+interface CreditAnalytics {
+  totalCreditsUsed: number;
+  totalCreditsGranted: number;
+  netCreditFlow: number;
+  byFeature: Record<string, number>;
+  byStudio: Record<string, number>;
+  topFeatures: Array<{ feature: string; credits: number }>;
 }
 
 function StatCard({ 
@@ -277,10 +323,23 @@ function UserRow({ user, onUpdate }: { user: UserWithCredits; onUpdate: () => vo
 export default function AdminPanel() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
+  const [activeTab, setActiveTab] = useState("overview");
   const limit = 20;
 
   const statsQuery = useQuery<AdminStats>({
     queryKey: ["/api/admin/stats"],
+  });
+
+  const revenueQuery = useQuery<RevenueData>({
+    queryKey: ["/api/admin/revenue"],
+  });
+
+  const subscriptionQuery = useQuery<SubscriptionData>({
+    queryKey: ["/api/admin/subscriptions"],
+  });
+
+  const creditAnalyticsQuery = useQuery<CreditAnalytics>({
+    queryKey: ["/api/admin/credits-analytics"],
   });
 
   const usersQuery = useQuery<{ users: UserWithCredits[]; total: number }>({
@@ -300,9 +359,16 @@ export default function AdminPanel() {
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
     queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/admin/revenue"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/admin/subscriptions"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/admin/credits-analytics"] });
   };
 
   const totalPages = usersQuery.data ? Math.ceil(usersQuery.data.total / limit) : 0;
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -312,104 +378,333 @@ export default function AdminPanel() {
           <h1 className="text-3xl font-bold">Admin Panel</h1>
         </div>
 
-        {statsQuery.isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <Card key={i} className="animate-pulse">
-                <CardContent className="h-24" />
-              </Card>
-            ))}
-          </div>
-        ) : statsQuery.data ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard
-              title="Total Users"
-              value={statsQuery.data.users.total}
-              icon={Users}
-              subtitle={`${statsQuery.data.users.recentSignups} in last 30 days`}
-            />
-            <StatCard
-              title="Admin Users"
-              value={statsQuery.data.users.byRole.admin || 0}
-              icon={Shield}
-            />
-            <StatCard
-              title="Credits in Circulation"
-              value={statsQuery.data.credits.totalBalance + statsQuery.data.credits.totalBonusCredits}
-              icon={CreditCard}
-            />
-            <StatCard
-              title="Usage (24h)"
-              value={statsQuery.data.usage.last24Hours.events}
-              icon={TrendingUp}
-              subtitle={`${statsQuery.data.usage.last24Hours.creditsUsed.toLocaleString()} credits used`}
-            />
-          </div>
-        ) : null}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
+            <TabsTrigger value="revenue" data-testid="tab-revenue">Revenue</TabsTrigger>
+            <TabsTrigger value="credits" data-testid="tab-credits">Credits</TabsTrigger>
+            <TabsTrigger value="users" data-testid="tab-users">Users</TabsTrigger>
+          </TabsList>
 
-        <Card>
-          <CardHeader>
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <CardTitle>User Management</CardTitle>
-              <div className="relative w-full max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by email or name..."
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setPage(0);
-                  }}
-                  className="pl-10"
-                  data-testid="input-search-users"
+          <TabsContent value="overview" className="space-y-6">
+            {statsQuery.isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[...Array(4)].map((_, i) => (
+                  <Card key={i} className="animate-pulse">
+                    <CardContent className="h-24" />
+                  </Card>
+                ))}
+              </div>
+            ) : statsQuery.data ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard
+                  title="Total Users"
+                  value={statsQuery.data.users.total}
+                  icon={Users}
+                  subtitle={`${statsQuery.data.users.recentSignups} in last 30 days`}
+                />
+                <StatCard
+                  title="Admin Users"
+                  value={statsQuery.data.users.byRole.admin || 0}
+                  icon={Shield}
+                />
+                <StatCard
+                  title="Credits in Circulation"
+                  value={statsQuery.data.credits.totalBalance + statsQuery.data.credits.totalBonusCredits}
+                  icon={CreditCard}
+                />
+                <StatCard
+                  title="Usage (24h)"
+                  value={statsQuery.data.usage.last24Hours.events}
+                  icon={TrendingUp}
+                  subtitle={`${statsQuery.data.usage.last24Hours.creditsUsed.toLocaleString()} credits used`}
                 />
               </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            {usersQuery.isLoading ? (
+            ) : null}
+
+            {revenueQuery.data && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard
+                  title="Total Revenue"
+                  value={formatCurrency(revenueQuery.data.metrics.totalRevenue)}
+                  icon={DollarSign}
+                  subtitle="This period"
+                />
+                <StatCard
+                  title="MRR"
+                  value={formatCurrency(revenueQuery.data.metrics.mrr)}
+                  icon={Repeat}
+                  subtitle="Monthly recurring"
+                />
+                <StatCard
+                  title="Active Subscriptions"
+                  value={subscriptionQuery.data?.activeSubscriptions || 0}
+                  icon={Users}
+                  subtitle={`${subscriptionQuery.data?.newThisMonth || 0} new this month`}
+                />
+                <StatCard
+                  title="Transactions"
+                  value={revenueQuery.data.metrics.transactionCount}
+                  icon={BarChart3}
+                />
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="revenue" className="space-y-6">
+            {revenueQuery.isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
-            ) : usersQuery.data?.users.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                No users found
-              </div>
-            ) : (
-              <div>
-                {usersQuery.data?.users.map((user) => (
-                  <UserRow key={user.id} user={user} onUpdate={handleRefresh} />
-                ))}
-              </div>
-            )}
+            ) : revenueQuery.data ? (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <StatCard
+                    title="Total Revenue"
+                    value={formatCurrency(revenueQuery.data.metrics.totalRevenue)}
+                    icon={DollarSign}
+                  />
+                  <StatCard
+                    title="Subscription Revenue"
+                    value={formatCurrency(revenueQuery.data.metrics.subscriptionRevenue)}
+                    icon={Repeat}
+                  />
+                  <StatCard
+                    title="Marketplace Sales"
+                    value={formatCurrency(revenueQuery.data.metrics.marketplaceSales)}
+                    icon={TrendingUp}
+                  />
+                  <StatCard
+                    title="Platform Fees (15%)"
+                    value={formatCurrency(revenueQuery.data.metrics.platformFees)}
+                    icon={ArrowUpRight}
+                  />
+                </div>
 
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 p-4 border-t">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setPage((p) => Math.max(0, p - 1))}
-                  disabled={page === 0}
-                  data-testid="button-prev-page"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  Page {page + 1} of {totalPages}
-                </span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                  disabled={page >= totalPages - 1}
-                  data-testid="button-next-page"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Recent Transactions</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    {revenueQuery.data.recentEvents.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        No transactions yet
+                      </div>
+                    ) : (
+                      <div className="divide-y">
+                        {revenueQuery.data.recentEvents.map((event) => (
+                          <div key={event.id} className="flex items-center justify-between p-4">
+                            <div>
+                              <div className="font-medium text-sm">
+                                {event.eventType.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {event.tierName || event.productType || 'N/A'} - {new Date(event.createdAt).toLocaleDateString()}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge variant={event.status === 'succeeded' ? 'default' : 'secondary'}>
+                                {event.status}
+                              </Badge>
+                              <span className="font-mono font-medium">
+                                {formatCurrency(event.amount)}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {subscriptionQuery.data && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Subscription Metrics</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="text-center p-4 bg-muted/50 rounded-lg">
+                          <div className="text-2xl font-bold">{subscriptionQuery.data.activeSubscriptions}</div>
+                          <div className="text-sm text-muted-foreground">Active</div>
+                        </div>
+                        <div className="text-center p-4 bg-muted/50 rounded-lg">
+                          <div className="text-2xl font-bold text-green-500">{subscriptionQuery.data.newThisMonth}</div>
+                          <div className="text-sm text-muted-foreground">New This Month</div>
+                        </div>
+                        <div className="text-center p-4 bg-muted/50 rounded-lg">
+                          <div className="text-2xl font-bold text-red-500">{subscriptionQuery.data.churned}</div>
+                          <div className="text-sm text-muted-foreground">Churned</div>
+                        </div>
+                        <div className="text-center p-4 bg-muted/50 rounded-lg">
+                          <div className="text-2xl font-bold">{subscriptionQuery.data.churnRate}%</div>
+                          <div className="text-sm text-muted-foreground">Churn Rate</div>
+                        </div>
+                      </div>
+                      {Object.keys(subscriptionQuery.data.byTier).length > 0 && (
+                        <div className="mt-6">
+                          <h4 className="text-sm font-medium mb-3">By Tier</h4>
+                          <div className="space-y-2">
+                            {Object.entries(subscriptionQuery.data.byTier).map(([tier, count]) => (
+                              <div key={tier} className="flex items-center justify-between">
+                                <span className="text-sm">{tier}</span>
+                                <Badge variant="secondary">{count}</Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            ) : null}
+          </TabsContent>
+
+          <TabsContent value="credits" className="space-y-6">
+            {creditAnalyticsQuery.isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
-            )}
-          </CardContent>
-        </Card>
+            ) : creditAnalyticsQuery.data ? (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <StatCard
+                    title="Credits Granted"
+                    value={creditAnalyticsQuery.data.totalCreditsGranted.toLocaleString()}
+                    icon={ArrowUpRight}
+                    subtitle="This period"
+                  />
+                  <StatCard
+                    title="Credits Used"
+                    value={creditAnalyticsQuery.data.totalCreditsUsed.toLocaleString()}
+                    icon={ArrowDownRight}
+                    subtitle="This period"
+                  />
+                  <StatCard
+                    title="Net Flow"
+                    value={creditAnalyticsQuery.data.netCreditFlow.toLocaleString()}
+                    icon={BarChart3}
+                    subtitle={creditAnalyticsQuery.data.netCreditFlow >= 0 ? 'Positive' : 'Negative'}
+                  />
+                </div>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Top Features by Credit Usage</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {creditAnalyticsQuery.data.topFeatures.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        No usage data yet
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {creditAnalyticsQuery.data.topFeatures.map((item, idx) => {
+                          const maxCredits = creditAnalyticsQuery.data!.topFeatures[0]?.credits || 1;
+                          const percentage = (item.credits / maxCredits) * 100;
+                          return (
+                            <div key={item.feature} className="space-y-1">
+                              <div className="flex items-center justify-between text-sm">
+                                <span>{item.feature.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</span>
+                                <span className="font-mono">{item.credits.toLocaleString()}</span>
+                              </div>
+                              <Progress value={percentage} className="h-2" />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {Object.keys(creditAnalyticsQuery.data.byStudio).length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Usage by Studio</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                        {Object.entries(creditAnalyticsQuery.data.byStudio).map(([studio, credits]) => (
+                          <div key={studio} className="text-center p-4 bg-muted/50 rounded-lg">
+                            <div className="text-lg font-bold">{credits.toLocaleString()}</div>
+                            <div className="text-xs text-muted-foreground">{studio}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            ) : null}
+          </TabsContent>
+
+          <TabsContent value="users" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <CardTitle>User Management</CardTitle>
+                  <div className="relative w-full max-w-sm">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search by email or name..."
+                      value={search}
+                      onChange={(e) => {
+                        setSearch(e.target.value);
+                        setPage(0);
+                      }}
+                      className="pl-10"
+                      data-testid="input-search-users"
+                    />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                {usersQuery.isLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : usersQuery.data?.users.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    No users found
+                  </div>
+                ) : (
+                  <div>
+                    {usersQuery.data?.users.map((user) => (
+                      <UserRow key={user.id} user={user} onUpdate={handleRefresh} />
+                    ))}
+                  </div>
+                )}
+
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 p-4 border-t">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setPage((p) => Math.max(0, p - 1))}
+                      disabled={page === 0}
+                      data-testid="button-prev-page"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
+                      Page {page + 1} of {totalPages}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                      disabled={page >= totalPages - 1}
+                      data-testid="button-next-page"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

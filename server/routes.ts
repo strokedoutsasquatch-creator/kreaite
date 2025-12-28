@@ -13241,6 +13241,144 @@ Provide a JSON response with track suggestions for each chapter/section.`;
     }
   });
 
+  // GET /api/admin/revenue - Revenue analytics (admin only)
+  app.get('/api/admin/revenue', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { getRevenueMetrics, getRecentRevenue } = await import('./revenueService');
+      
+      const startDate = req.query.startDate ? new Date(req.query.startDate) : undefined;
+      const endDate = req.query.endDate ? new Date(req.query.endDate) : undefined;
+      
+      const [metrics, recentEvents] = await Promise.all([
+        getRevenueMetrics(startDate, endDate),
+        getRecentRevenue(20),
+      ]);
+      
+      res.json({
+        metrics: {
+          totalRevenue: metrics.totalRevenue / 100,
+          mrr: metrics.mrr / 100,
+          subscriptionRevenue: metrics.subscriptionRevenue / 100,
+          creditPurchases: metrics.creditPurchases / 100,
+          marketplaceSales: metrics.marketplaceSales / 100,
+          creatorPayouts: metrics.creatorPayouts / 100,
+          platformFees: metrics.platformFees / 100,
+          transactionCount: metrics.transactionCount,
+        },
+        recentEvents: recentEvents.map(e => ({
+          ...e,
+          amount: e.amountCents / 100,
+        })),
+      });
+    } catch (error) {
+      console.error("Error fetching revenue analytics:", error);
+      res.status(500).json({ message: "Failed to fetch revenue analytics" });
+    }
+  });
+
+  // GET /api/admin/subscriptions - Subscription analytics (admin only)
+  app.get('/api/admin/subscriptions', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { getSubscriptionMetrics } = await import('./revenueService');
+      const metrics = await getSubscriptionMetrics();
+      
+      res.json({
+        activeSubscriptions: metrics.activeSubscriptions,
+        newThisMonth: metrics.newThisMonth,
+        churned: metrics.churned,
+        churnRate: metrics.activeSubscriptions > 0 
+          ? ((metrics.churned / metrics.activeSubscriptions) * 100).toFixed(1)
+          : '0',
+        byTier: metrics.byTier,
+      });
+    } catch (error) {
+      console.error("Error fetching subscription analytics:", error);
+      res.status(500).json({ message: "Failed to fetch subscription analytics" });
+    }
+  });
+
+  // GET /api/admin/credits-analytics - Credit usage analytics (admin only)
+  app.get('/api/admin/credits-analytics', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { getCreditUsageAnalytics } = await import('./revenueService');
+      
+      const startDate = req.query.startDate ? new Date(req.query.startDate) : undefined;
+      const endDate = req.query.endDate ? new Date(req.query.endDate) : undefined;
+      
+      const analytics = await getCreditUsageAnalytics(startDate, endDate);
+      
+      res.json({
+        totalCreditsUsed: analytics.totalCreditsUsed,
+        totalCreditsGranted: analytics.totalCreditsGranted,
+        netCreditFlow: analytics.totalCreditsGranted - analytics.totalCreditsUsed,
+        byFeature: analytics.byFeature,
+        byStudio: analytics.byStudio,
+        topFeatures: Object.entries(analytics.byFeature)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 10)
+          .map(([feature, credits]) => ({ feature, credits })),
+      });
+    } catch (error) {
+      console.error("Error fetching credit analytics:", error);
+      res.status(500).json({ message: "Failed to fetch credit analytics" });
+    }
+  });
+
+  // GET /api/user/subscription - Get current user's subscription status
+  app.get('/api/user/subscription', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { userSubscriptions, subscriptionTiers, creditWallets } = await import('../shared/schema');
+      
+      const [subscription] = await db.select()
+        .from(userSubscriptions)
+        .where(and(
+          eq(userSubscriptions.userId, userId),
+          eq(userSubscriptions.status, 'active')
+        ))
+        .limit(1);
+      
+      const [wallet] = await db.select()
+        .from(creditWallets)
+        .where(eq(creditWallets.userId, userId))
+        .limit(1);
+      
+      if (!subscription) {
+        res.json({
+          hasSubscription: false,
+          tier: 'free',
+          credits: wallet ? wallet.balance + wallet.bonusCredits : 0,
+          creditsUsed: wallet?.lifetimeSpent || 0,
+        });
+        return;
+      }
+      
+      let tierInfo = null;
+      if (subscription.tierId) {
+        const [tier] = await db.select()
+          .from(subscriptionTiers)
+          .where(eq(subscriptionTiers.id, subscription.tierId))
+          .limit(1);
+        tierInfo = tier;
+      }
+      
+      res.json({
+        hasSubscription: true,
+        tier: tierInfo?.name || 'pro',
+        tierDisplayName: tierInfo?.displayName || 'Pro',
+        billingPeriod: subscription.billingPeriod,
+        currentPeriodEnd: subscription.currentPeriodEnd,
+        monthlyCreditsQuota: subscription.monthlyCreditsQuota,
+        credits: wallet ? wallet.balance + wallet.bonusCredits : 0,
+        creditsUsed: wallet?.lifetimeSpent || 0,
+        lastCreditGrant: subscription.lastCreditGrantAt,
+      });
+    } catch (error) {
+      console.error("Error fetching user subscription:", error);
+      res.status(500).json({ message: "Failed to fetch subscription status" });
+    }
+  });
+
   // ============================================================================
   // PODCAST STUDIO ROUTES
   // ============================================================================
