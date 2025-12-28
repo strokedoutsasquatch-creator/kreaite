@@ -114,7 +114,7 @@ export const studioSchemas = {
     name: "KreAIte Video Studio",
     applicationCategory: "MultimediaApplication",
     operatingSystem: "Web Browser",
-    description: "CapCut-style video editor with AI video generation, multi-track timeline, and professional effects.",
+    description: "Professional video editor with AI video generation, multi-track timeline, and studio effects.",
     offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
     featureList: ["AI Video Generation", "Multi-track Timeline", "Effects & Transitions", "4K Export"],
   },

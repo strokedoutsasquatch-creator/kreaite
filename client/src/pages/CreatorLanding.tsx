@@ -46,7 +46,7 @@ const studios = [
   {
     icon: Video,
     title: "Video Studio",
-    description: "Edit videos like TikTok and CapCut. Auto captions, overlays, effects, and viral clip detection.",
+    description: "Professional video editing with AI. Auto captions, overlays, effects, and clip optimization.",
     features: ["Timeline editing", "Auto captions", "Text overlays", "Background removal"],
     href: "/video-studio",
     color: "from-red-500 to-red-600",

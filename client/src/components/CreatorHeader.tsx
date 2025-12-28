@@ -42,7 +42,7 @@ import kreaiteLogo from "@assets/KreAIte1_1766574083851.png";
 const studios = [
   { href: "/book-studio", label: "Book Studio", icon: BookOpen, description: "Write & publish books with AI", badge: null },
   { href: "/music-studio", label: "Music Studio", icon: Music, description: "Create AI music & audio", badge: null },
-  { href: "/video-studio", label: "Video Studio", icon: Video, description: "Edit videos like CapCut", badge: null },
+  { href: "/video-studio", label: "Video Studio", icon: Video, description: "Professional video editing with AI", badge: null },
   { href: "/course-studio", label: "Course Studio", icon: GraduationCap, description: "Build online courses", badge: null },
   { href: "/image-studio", label: "Image Studio", icon: Image, description: "AI images & editing", badge: null },
   { href: "/publishing", label: "Doctrine Engine", icon: FileText, description: "Structure your expertise", badge: null },

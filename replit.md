@@ -42,7 +42,7 @@ Icons: lucide-react only (no emoji)
 
 ### UI/UX Decisions
 - Consistent dark theme and accent color across all studios and components.
-- Intuitive interfaces for professional tools like the TipTap book editor, MediaStudio (Photoshop-like layers for images, CapCut-style timeline for video), and Cover Designer.
+- Intuitive interfaces for professional tools like the TipTap book editor, MediaStudio (Photoshop-like layers for images, multi-track timeline for video), and Cover Designer.
 - Emphasis on responsive design to ensure functionality across devices.
 
 ### Feature Specifications

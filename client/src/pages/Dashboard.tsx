@@ -462,7 +462,7 @@ export default function Dashboard() {
               />
               <StudioCard
                 title="Video Studio"
-                description="CapCut-style timeline editor with AI video generation"
+                description="Professional timeline editor with AI video generation"
                 icon={Film}
                 href="/video-studio"
                 tags={['AI Video', 'Multi-track', 'Effects']}

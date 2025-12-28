@@ -99,8 +99,8 @@ export const SEO_PAGES = {
   },
   videoStudio: {
     title: 'AI Video Production Studio',
-    description: 'Create professional videos with AI. CapCut-style timeline editor, AI video generation, multi-track editing, 4K export. Perfect for YouTube and TikTok.',
-    keywords: 'AI video generator, video editor, CapCut alternative, video production, AI video creation'
+    description: 'Create professional videos with AI. Multi-track timeline editor, AI video generation, studio effects, 4K export. Perfect for YouTube and social media.',
+    keywords: 'AI video generator, video editor, professional video production, AI video creation, video studio'
   },
   musicStudio: {
     title: 'AI Music Composition Studio',
