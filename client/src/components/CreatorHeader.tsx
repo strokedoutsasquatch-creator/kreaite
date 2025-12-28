@@ -28,10 +28,6 @@ import {
   User,
   Coins,
   Bot,
-  LayoutDashboard,
-  Mic2,
-  Film,
-  History,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -40,25 +36,20 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import kreaiteLogo from "@assets/KreAIte1_1766574083851.png";
 
 const studios = [
-  { href: "/book-studio", label: "Book Studio", icon: BookOpen, description: "Write & publish books with AI", badge: null },
-  { href: "/music-studio", label: "Music Studio", icon: Music, description: "Create AI music & audio", badge: null },
-  { href: "/video-studio", label: "Video Studio", icon: Video, description: "Professional video editing with AI", badge: null },
-  { href: "/course-studio", label: "Course Studio", icon: GraduationCap, description: "Build online courses", badge: null },
-  { href: "/image-studio", label: "Image Studio", icon: Image, description: "AI images & editing", badge: null },
-  { href: "/publishing", label: "Doctrine Engine", icon: FileText, description: "Structure your expertise", badge: null },
+  { href: "/book-studio", label: "Book Studio", icon: BookOpen, description: "Write & publish books with AI", badge: null, enabled: true },
+  { href: "/music-studio", label: "Music Studio", icon: Music, description: "Create AI music & audio", badge: null, enabled: true },
+  { href: "/video-studio", label: "Video Studio", icon: Video, description: "Professional video editing with AI", badge: "Coming Soon", enabled: false },
+  { href: "/course-studio", label: "Course Studio", icon: GraduationCap, description: "Build online courses", badge: "Coming Soon", enabled: false },
+  { href: "/image-studio", label: "Image Studio", icon: Image, description: "AI images & editing", badge: "Coming Soon", enabled: false },
+  { href: "/publishing", label: "Doctrine Engine", icon: FileText, description: "Structure your expertise", badge: "Coming Soon", enabled: false },
 ];
 
 const quickActions = [
-  { href: "/quick-create", label: "Quick Create", icon: Zap, description: "1-click magic tools" },
-  { href: "/ai-consultant", label: "AI Consultant", icon: Bot, description: "Train AI on your content" },
+  { href: "/quick-create", label: "Quick Create", icon: Zap, description: "1-click magic tools", enabled: true },
+  { href: "/ai-consultant", label: "AI Consultant", icon: Bot, description: "Train AI on your content", badge: "Coming Soon", enabled: false },
 ];
 
-const productionTools = [
-  { href: "/production-dashboard", label: "Production Dashboard", icon: LayoutDashboard, description: "Unified creator hub" },
-  { href: "/music-sandbox", label: "Music Sandbox", icon: Mic2, description: "Create beats & melodies" },
-  { href: "/script-studio", label: "Script Studio", icon: Film, description: "Write screenplays with AI" },
-  { href: "/life-story", label: "Life Story Engine", icon: History, description: "Build your autobiography" },
-];
+const productionTools: { href: string; label: string; icon: any; description: string; badge?: string; enabled: boolean }[] = [];
 
 const navLinks = [
   { href: "/marketplace", label: "KREAITORVERSE", icon: Store },
@@ -107,54 +98,72 @@ export default function CreatorHeader() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-72 bg-black border-orange-500/20">
                 {studios.map((studio) => (
-                  <DropdownMenuItem key={studio.href} asChild>
-                    <Link href={studio.href}>
-                      <div className="flex items-start gap-3 py-1 cursor-pointer w-full" data-testid={`link-${studio.label.toLowerCase().replace(" ", "-")}`}>
-                        <studio.icon className="w-5 h-5 text-orange-500 mt-0.5" />
-                        <div className="flex-1">
-                          <div className="font-medium text-white flex items-center gap-2">
-                            {studio.label}
-                            {studio.badge && (
-                              <Badge variant="outline" className="text-[10px] border-orange-500/50 text-orange-500">
-                                {studio.badge}
-                              </Badge>
-                            )}
+                  <DropdownMenuItem 
+                    key={studio.href} 
+                    asChild={studio.enabled}
+                    disabled={!studio.enabled}
+                    className={!studio.enabled ? "opacity-60 cursor-not-allowed" : ""}
+                  >
+                    {studio.enabled ? (
+                      <Link href={studio.href}>
+                        <div className="flex items-start gap-3 py-1 cursor-pointer w-full" data-testid={`link-${studio.label.toLowerCase().replace(" ", "-")}`}>
+                          <studio.icon className="w-5 h-5 text-orange-500 mt-0.5" />
+                          <div className="flex-1">
+                            <div className="font-medium text-white flex items-center gap-2">
+                              {studio.label}
+                            </div>
+                            <div className="text-xs text-muted-foreground">{studio.description}</div>
                           </div>
-                          <div className="text-xs text-muted-foreground">{studio.description}</div>
+                        </div>
+                      </Link>
+                    ) : (
+                      <div className="flex items-start gap-3 py-1 w-full" data-testid={`link-${studio.label.toLowerCase().replace(" ", "-")}`}>
+                        <studio.icon className="w-5 h-5 text-orange-500/50 mt-0.5" />
+                        <div className="flex-1">
+                          <div className="font-medium text-white/60 flex items-center gap-2">
+                            {studio.label}
+                            <Badge variant="outline" className="text-[9px] border-orange-500/30 text-orange-500/70">
+                              Coming Soon
+                            </Badge>
+                          </div>
+                          <div className="text-xs text-muted-foreground/60">{studio.description}</div>
                         </div>
                       </div>
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator className="bg-orange-500/20" />
-                <div className="px-2 py-1.5">
-                  <span className="text-[10px] font-semibold text-orange-500 uppercase tracking-wider">Production Engine</span>
-                </div>
-                {productionTools.map((tool) => (
-                  <DropdownMenuItem key={tool.href} asChild>
-                    <Link href={tool.href}>
-                      <div className="flex items-start gap-3 py-1 cursor-pointer w-full" data-testid={`link-${tool.label.toLowerCase().replace(/\s+/g, "-")}`}>
-                        <tool.icon className="w-5 h-5 text-orange-500 mt-0.5" />
-                        <div>
-                          <div className="font-medium text-white">{tool.label}</div>
-                          <div className="text-xs text-muted-foreground">{tool.description}</div>
-                        </div>
-                      </div>
-                    </Link>
+                    )}
                   </DropdownMenuItem>
                 ))}
                 <DropdownMenuSeparator className="bg-orange-500/20" />
                 {quickActions.map((action) => (
-                  <DropdownMenuItem key={action.href} asChild>
-                    <Link href={action.href}>
-                      <div className="flex items-start gap-3 py-1 cursor-pointer w-full" data-testid={`link-${action.label.toLowerCase().replace(" ", "-")}`}>
-                        <action.icon className="w-5 h-5 text-orange-500 mt-0.5" />
+                  <DropdownMenuItem 
+                    key={action.href} 
+                    asChild={action.enabled}
+                    disabled={!action.enabled}
+                    className={!action.enabled ? "opacity-60 cursor-not-allowed" : ""}
+                  >
+                    {action.enabled ? (
+                      <Link href={action.href}>
+                        <div className="flex items-start gap-3 py-1 cursor-pointer w-full" data-testid={`link-${action.label.toLowerCase().replace(" ", "-")}`}>
+                          <action.icon className="w-5 h-5 text-orange-500 mt-0.5" />
+                          <div>
+                            <div className="font-medium text-white">{action.label}</div>
+                            <div className="text-xs text-muted-foreground">{action.description}</div>
+                          </div>
+                        </div>
+                      </Link>
+                    ) : (
+                      <div className="flex items-start gap-3 py-1 w-full" data-testid={`link-${action.label.toLowerCase().replace(" ", "-")}`}>
+                        <action.icon className="w-5 h-5 text-orange-500/50 mt-0.5" />
                         <div>
-                          <div className="font-medium text-white">{action.label}</div>
-                          <div className="text-xs text-muted-foreground">{action.description}</div>
+                          <div className="font-medium text-white/60 flex items-center gap-2">
+                            {action.label}
+                            <Badge variant="outline" className="text-[9px] border-orange-500/30 text-orange-500/70">
+                              Coming Soon
+                            </Badge>
+                          </div>
+                          <div className="text-xs text-muted-foreground/60">{action.description}</div>
                         </div>
                       </div>
-                    </Link>
+                    )}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
@@ -301,35 +310,27 @@ export default function CreatorHeader() {
               Studios
             </div>
             {studios.map((studio) => (
-              <Link key={studio.href} href={studio.href}>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-white gap-3"
-                  onClick={() => setMobileMenuOpen(false)}
-                  data-testid={`mobile-link-${studio.label.toLowerCase().replace(" ", "-")}`}
-                >
-                  <studio.icon className="w-5 h-5 text-orange-500" />
-                  {studio.label}
-                </Button>
-              </Link>
-            ))}
-            
-            <div className="border-t border-orange-500/20 my-2" />
-            <div className="text-xs font-semibold text-orange-500 uppercase tracking-wider px-3 py-2">
-              Production Engine
-            </div>
-            {productionTools.map((tool) => (
-              <Link key={tool.href} href={tool.href}>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-white gap-3"
-                  onClick={() => setMobileMenuOpen(false)}
-                  data-testid={`mobile-link-${tool.label.toLowerCase().replace(/\s+/g, "-")}`}
-                >
-                  <tool.icon className="w-5 h-5 text-orange-500" />
-                  {tool.label}
-                </Button>
-              </Link>
+              studio.enabled ? (
+                <Link key={studio.href} href={studio.href}>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-white gap-3"
+                    onClick={() => setMobileMenuOpen(false)}
+                    data-testid={`mobile-link-${studio.label.toLowerCase().replace(" ", "-")}`}
+                  >
+                    <studio.icon className="w-5 h-5 text-orange-500" />
+                    {studio.label}
+                  </Button>
+                </Link>
+              ) : (
+                <div key={studio.href} className="flex items-center gap-3 px-4 py-2 opacity-60">
+                  <studio.icon className="w-5 h-5 text-orange-500/50" />
+                  <span className="text-white/60">{studio.label}</span>
+                  <Badge variant="outline" className="text-[9px] border-orange-500/30 text-orange-500/70 ml-auto">
+                    Coming Soon
+                  </Badge>
+                </div>
+              )
             ))}
             
             <div className="border-t border-orange-500/20 my-2" />
@@ -337,17 +338,27 @@ export default function CreatorHeader() {
               Quick Actions
             </div>
             {quickActions.map((action) => (
-              <Link key={action.href} href={action.href}>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-white gap-3"
-                  onClick={() => setMobileMenuOpen(false)}
-                  data-testid={`mobile-link-${action.label.toLowerCase().replace(" ", "-")}`}
-                >
-                  <action.icon className="w-5 h-5 text-orange-500" />
-                  {action.label}
-                </Button>
-              </Link>
+              action.enabled ? (
+                <Link key={action.href} href={action.href}>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-white gap-3"
+                    onClick={() => setMobileMenuOpen(false)}
+                    data-testid={`mobile-link-${action.label.toLowerCase().replace(" ", "-")}`}
+                  >
+                    <action.icon className="w-5 h-5 text-orange-500" />
+                    {action.label}
+                  </Button>
+                </Link>
+              ) : (
+                <div key={action.href} className="flex items-center gap-3 px-4 py-2 opacity-60">
+                  <action.icon className="w-5 h-5 text-orange-500/50" />
+                  <span className="text-white/60">{action.label}</span>
+                  <Badge variant="outline" className="text-[9px] border-orange-500/30 text-orange-500/70 ml-auto">
+                    Coming Soon
+                  </Badge>
+                </div>
+              )
             ))}
             
             <div className="border-t border-orange-500/20 my-2" />
