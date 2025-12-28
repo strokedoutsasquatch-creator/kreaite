@@ -1,7 +1,8 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { useBookProject, BookProject } from '@/lib/hooks/useBookProject';
 
 export interface BrainstormIdea {
   id: string;
@@ -67,7 +68,46 @@ export interface ImagePlacement {
   isApproved: boolean;
 }
 
-export type WorkflowStep = 'start' | 'plan' | 'generate' | 'edit' | 'illustrate' | 'format';
+export interface PrintSettings {
+  trimSize: string;
+  fontSize: number;
+  fontFamily: string;
+  marginInner: number;
+  marginOuter: number;
+  marginTop: number;
+  marginBottom: number;
+}
+
+export interface Source {
+  id: string;
+  title: string;
+  author?: string;
+  url?: string;
+  citation: string;
+  notes?: string;
+  createdAt: Date;
+}
+
+export interface DocumentImport {
+  id: string;
+  fileName: string;
+  fileType: string;
+  content?: string;
+  wordCount?: number;
+  importedAt: Date;
+}
+
+export interface IsbnData {
+  isbn?: string;
+  format: 'paperback' | 'hardcover' | 'ebook';
+  barcodeSettings: {
+    includeBarcode: boolean;
+    position: 'back-cover' | 'inside-back';
+    size: 'standard' | 'compact';
+  };
+}
+
+export type WorkflowStep = 'start' | 'plan' | 'generate' | 'build' | 'publish';
 
 interface GenerationProgress {
   isGenerating: boolean;
@@ -75,6 +115,25 @@ interface GenerationProgress {
   totalChapters: number;
   status: string;
 }
+
+const DEFAULT_PRINT_SETTINGS: PrintSettings = {
+  trimSize: '6x9',
+  fontSize: 11,
+  fontFamily: 'Georgia',
+  marginInner: 0.875,
+  marginOuter: 0.625,
+  marginTop: 0.75,
+  marginBottom: 0.75,
+};
+
+const DEFAULT_ISBN_DATA: IsbnData = {
+  format: 'paperback',
+  barcodeSettings: {
+    includeBarcode: true,
+    position: 'back-cover',
+    size: 'standard',
+  },
+};
 
 interface BookStudioContextValue {
   currentStep: WorkflowStep;
@@ -109,12 +168,38 @@ interface BookStudioContextValue {
   
   projectId?: number;
   setProjectId: (id: number | undefined) => void;
+  
+  printSettings: PrintSettings;
+  savePrintSettings: (settings: Partial<PrintSettings>) => void;
+  
+  sources: Source[];
+  addSource: (source: Omit<Source, 'id' | 'createdAt'>) => void;
+  removeSource: (id: string) => void;
+  
+  documentImports: DocumentImport[];
+  importDocument: (doc: Omit<DocumentImport, 'id' | 'importedAt'>) => void;
+  
+  isbnData: IsbnData;
+  setIsbnData: (data: Partial<IsbnData>) => void;
+  
+  isSaving: boolean;
+  lastSaved: Date | null;
 }
 
 const BookStudioContext = createContext<BookStudioContextValue | null>(null);
 
+const AUTOSAVE_DELAY = 2000;
+
 export function BookStudioProvider({ children, initialProjectId }: { children: ReactNode; initialProjectId?: number }) {
   const { toast } = useToast();
+  
+  const { 
+    project, 
+    updateProject, 
+    isSaving: projectIsSaving, 
+    lastSaved: projectLastSaved,
+    loadProject 
+  } = useBookProject(initialProjectId);
   
   const [currentStep, setCurrentStep] = useState<WorkflowStep>('start');
   const [brainstormIdeas, setBrainstormIdeas] = useState<BrainstormIdea[]>([]);
@@ -129,6 +214,159 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
     totalChapters: 0,
     status: ''
   });
+  
+  const [printSettings, setPrintSettings] = useState<PrintSettings>(DEFAULT_PRINT_SETTINGS);
+  const [sources, setSources] = useState<Source[]>([]);
+  const [documentImports, setDocumentImports] = useState<DocumentImport[]>([]);
+  const [isbnData, setIsbnDataState] = useState<IsbnData>(DEFAULT_ISBN_DATA);
+  
+  const isHydratedRef = useRef(false);
+  const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingChangesRef = useRef<Partial<BookProject>>({});
+
+  useEffect(() => {
+    if (project && !isHydratedRef.current) {
+      isHydratedRef.current = true;
+      
+      if (project.aiKnowledge) {
+        const ideas: BrainstormIdea[] = [];
+        const knowledge = project.aiKnowledge;
+        
+        knowledge.themes?.forEach((theme, idx) => {
+          ideas.push({
+            id: `theme-${idx}`,
+            content: theme,
+            type: 'theme',
+            createdAt: new Date(project.createdAt),
+          });
+        });
+        knowledge.characters?.forEach((char, idx) => {
+          ideas.push({
+            id: `char-${idx}`,
+            content: char,
+            type: 'character',
+            createdAt: new Date(project.createdAt),
+          });
+        });
+        knowledge.plotPoints?.forEach((plot, idx) => {
+          ideas.push({
+            id: `plot-${idx}`,
+            content: plot,
+            type: 'plot',
+            createdAt: new Date(project.createdAt),
+          });
+        });
+        knowledge.goals?.forEach((goal, idx) => {
+          ideas.push({
+            id: `goal-${idx}`,
+            content: goal,
+            type: 'goal',
+            createdAt: new Date(project.createdAt),
+          });
+        });
+        knowledge.keyFacts?.forEach((fact, idx) => {
+          ideas.push({
+            id: `note-${idx}`,
+            content: fact,
+            type: 'note',
+            createdAt: new Date(project.createdAt),
+          });
+        });
+        
+        if (ideas.length > 0) {
+          setBrainstormIdeas(ideas);
+        }
+      }
+      
+      if (project.manuscriptHtml) {
+        setManuscriptHtml(project.manuscriptHtml);
+        
+        const chapters: ChapterOutline[] = [];
+        const chapterRegex = /<h2[^>]*>(?:Chapter\s+\d+:\s*)?([^<]+)<\/h2>/gi;
+        let match;
+        let chapterNum = 1;
+        
+        while ((match = chapterRegex.exec(project.manuscriptHtml)) !== null) {
+          chapters.push({
+            id: `chapter-${chapterNum}`,
+            number: chapterNum,
+            title: match[1].trim(),
+            description: '',
+            targetWordCount: 3000,
+            status: 'complete',
+          });
+          chapterNum++;
+        }
+        
+        if (chapters.length > 0) {
+          setBookOutline({
+            title: project.title,
+            subtitle: project.subtitle,
+            genre: project.genre || 'fiction',
+            targetAudience: project.targetAudience,
+            targetWordCount: project.wordCount || 50000,
+            chapters,
+          });
+          setCurrentStep('build');
+        }
+      }
+      
+      if (project.imagePlacements && Array.isArray(project.imagePlacements)) {
+        setImagePlacements(project.imagePlacements);
+      }
+      
+      setPrintSettings({
+        trimSize: project.trimSize || DEFAULT_PRINT_SETTINGS.trimSize,
+        fontSize: project.fontSize || DEFAULT_PRINT_SETTINGS.fontSize,
+        fontFamily: project.fontFamily || DEFAULT_PRINT_SETTINGS.fontFamily,
+        marginInner: project.marginInner || DEFAULT_PRINT_SETTINGS.marginInner,
+        marginOuter: project.marginOuter || DEFAULT_PRINT_SETTINGS.marginOuter,
+        marginTop: project.marginTop || DEFAULT_PRINT_SETTINGS.marginTop,
+        marginBottom: project.marginBottom || DEFAULT_PRINT_SETTINGS.marginBottom,
+      });
+      
+      if (project.currentStep !== undefined) {
+        const stepMap: Record<number, WorkflowStep> = {
+          0: 'start',
+          1: 'plan',
+          2: 'generate',
+          3: 'build',
+          4: 'publish',
+        };
+        setCurrentStep(stepMap[project.currentStep] || 'start');
+      }
+    }
+  }, [project]);
+
+  useEffect(() => {
+    if (projectId && projectId !== initialProjectId) {
+      isHydratedRef.current = false;
+      loadProject(projectId);
+    }
+  }, [projectId, initialProjectId, loadProject]);
+
+  const scheduleAutosave = useCallback((changes: Partial<BookProject>) => {
+    pendingChangesRef.current = { ...pendingChangesRef.current, ...changes };
+    
+    if (autosaveTimerRef.current) {
+      clearTimeout(autosaveTimerRef.current);
+    }
+    
+    autosaveTimerRef.current = setTimeout(() => {
+      if (Object.keys(pendingChangesRef.current).length > 0) {
+        updateProject(pendingChangesRef.current);
+        pendingChangesRef.current = {};
+      }
+    }, AUTOSAVE_DELAY);
+  }, [updateProject]);
+
+  useEffect(() => {
+    return () => {
+      if (autosaveTimerRef.current) {
+        clearTimeout(autosaveTimerRef.current);
+      }
+    };
+  }, []);
 
   const addBrainstormIdea = useCallback((idea: Omit<BrainstormIdea, 'id' | 'createdAt'>) => {
     const newIdea: BrainstormIdea = {
@@ -136,16 +374,110 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
       id: `idea-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       createdAt: new Date()
     };
-    setBrainstormIdeas(prev => [...prev, newIdea]);
-  }, []);
+    setBrainstormIdeas(prev => {
+      const updated = [...prev, newIdea];
+      
+      const aiKnowledge = {
+        themes: updated.filter(i => i.type === 'theme').map(i => i.content),
+        characters: updated.filter(i => i.type === 'character').map(i => i.content),
+        plotPoints: updated.filter(i => i.type === 'plot').map(i => i.content),
+        goals: updated.filter(i => i.type === 'goal').map(i => i.content),
+        keyFacts: updated.filter(i => i.type === 'note').map(i => i.content),
+      };
+      scheduleAutosave({ aiKnowledge });
+      
+      return updated;
+    });
+  }, [scheduleAutosave]);
 
   const removeBrainstormIdea = useCallback((id: string) => {
-    setBrainstormIdeas(prev => prev.filter(idea => idea.id !== id));
-  }, []);
+    setBrainstormIdeas(prev => {
+      const updated = prev.filter(idea => idea.id !== id);
+      
+      const aiKnowledge = {
+        themes: updated.filter(i => i.type === 'theme').map(i => i.content),
+        characters: updated.filter(i => i.type === 'character').map(i => i.content),
+        plotPoints: updated.filter(i => i.type === 'plot').map(i => i.content),
+        goals: updated.filter(i => i.type === 'goal').map(i => i.content),
+        keyFacts: updated.filter(i => i.type === 'note').map(i => i.content),
+      };
+      scheduleAutosave({ aiKnowledge });
+      
+      return updated;
+    });
+  }, [scheduleAutosave]);
 
   const clearBrainstormIdeas = useCallback(() => {
     setBrainstormIdeas([]);
+    scheduleAutosave({ aiKnowledge: { themes: [], characters: [], plotPoints: [], goals: [], keyFacts: [] } });
+  }, [scheduleAutosave]);
+
+  const handleSetManuscriptHtml = useCallback((html: string) => {
+    setManuscriptHtml(html);
+    const wordCount = html.replace(/<[^>]*>/g, ' ').split(/\s+/).filter(Boolean).length;
+    scheduleAutosave({ manuscriptHtml: html, wordCount });
+  }, [scheduleAutosave]);
+
+  const savePrintSettings = useCallback((settings: Partial<PrintSettings>) => {
+    setPrintSettings(prev => {
+      const updated = { ...prev, ...settings };
+      scheduleAutosave({
+        trimSize: updated.trimSize,
+        fontSize: updated.fontSize,
+        fontFamily: updated.fontFamily,
+        marginInner: updated.marginInner,
+        marginOuter: updated.marginOuter,
+        marginTop: updated.marginTop,
+        marginBottom: updated.marginBottom,
+      });
+      return updated;
+    });
+  }, [scheduleAutosave]);
+
+  const addSource = useCallback((source: Omit<Source, 'id' | 'createdAt'>) => {
+    const newSource: Source = {
+      ...source,
+      id: `source-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      createdAt: new Date(),
+    };
+    setSources(prev => [...prev, newSource]);
   }, []);
+
+  const removeSource = useCallback((id: string) => {
+    setSources(prev => prev.filter(s => s.id !== id));
+  }, []);
+
+  const importDocument = useCallback((doc: Omit<DocumentImport, 'id' | 'importedAt'>) => {
+    const newDoc: DocumentImport = {
+      ...doc,
+      id: `doc-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      importedAt: new Date(),
+    };
+    setDocumentImports(prev => [...prev, newDoc]);
+  }, []);
+
+  const setIsbnData = useCallback((data: Partial<IsbnData>) => {
+    setIsbnDataState(prev => ({
+      ...prev,
+      ...data,
+      barcodeSettings: {
+        ...prev.barcodeSettings,
+        ...(data.barcodeSettings || {}),
+      },
+    }));
+  }, []);
+
+  const handleSetCurrentStep = useCallback((step: WorkflowStep) => {
+    setCurrentStep(step);
+    const stepMap: Record<WorkflowStep, number> = {
+      'start': 0,
+      'plan': 1,
+      'generate': 2,
+      'build': 3,
+      'publish': 4,
+    };
+    scheduleAutosave({ currentStep: stepMap[step] });
+  }, [scheduleAutosave]);
 
   const generateFullBookMutation = useMutation({
     mutationFn: async ({ genre, description, chapterCount }: { genre: string; description: string; chapterCount?: number }) => {
@@ -179,7 +511,7 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
           }))
         };
         setBookOutline(outline);
-        setCurrentStep('plan');
+        handleSetCurrentStep('plan');
         toast({ 
           title: "Book Outline Generated", 
           description: `"${outline.title}" with ${outline.chapters.length} chapters ready` 
@@ -231,10 +563,10 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
         const fullManuscript = data.chapters
           .map((ch: any, idx: number) => `<h2>Chapter ${idx + 1}: ${bookOutline!.chapters[idx]?.title}</h2>\n${ch.content}`)
           .join('\n\n');
-        setManuscriptHtml(fullManuscript);
+        handleSetManuscriptHtml(fullManuscript);
         
         setGenerationProgress({ isGenerating: false, currentChapter: 0, totalChapters: 0, status: '' });
-        setCurrentStep('edit');
+        handleSetCurrentStep('build');
         
         toast({ 
           title: "Book Generated", 
@@ -395,12 +727,17 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
   }, []);
 
   const insertAtCursor = useCallback((html: string) => {
-    setManuscriptHtml(prev => prev + html);
-  }, []);
+    setManuscriptHtml(prev => {
+      const updated = prev + html;
+      const wordCount = updated.replace(/<[^>]*>/g, ' ').split(/\s+/).filter(Boolean).length;
+      scheduleAutosave({ manuscriptHtml: updated, wordCount });
+      return updated;
+    });
+  }, [scheduleAutosave]);
 
   const value: BookStudioContextValue = {
     currentStep,
-    setCurrentStep,
+    setCurrentStep: handleSetCurrentStep,
     brainstormIdeas,
     addBrainstormIdea,
     removeBrainstormIdea,
@@ -420,10 +757,21 @@ export function BookStudioProvider({ children, initialProjectId }: { children: R
     updateImagePlacement,
     removeImagePlacement,
     manuscriptHtml,
-    setManuscriptHtml,
+    setManuscriptHtml: handleSetManuscriptHtml,
     insertAtCursor,
     projectId,
-    setProjectId
+    setProjectId,
+    printSettings,
+    savePrintSettings,
+    sources,
+    addSource,
+    removeSource,
+    documentImports,
+    importDocument,
+    isbnData,
+    setIsbnData,
+    isSaving: projectIsSaving,
+    lastSaved: projectLastSaved,
   };
 
   return (
