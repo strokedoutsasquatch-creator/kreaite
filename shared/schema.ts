@@ -1,7 +1,63 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, integer, boolean, jsonb, serial, index, real } from "drizzle-orm/pg-core";
+import { pgTable, pgSchema, text, varchar, timestamp, integer, boolean, jsonb, serial, index, real, customType, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// ============================================================================
+// AUTHOR BRAIN - SEMANTIC MEMORY SYSTEM (pgvector)
+// ============================================================================
+
+// Define the author_brain schema
+export const authorBrainSchema = pgSchema("author_brain");
+
+// Custom vector type for pgvector embeddings
+const vector = customType<{ data: number[]; driverData: string }>({
+  dataType() {
+    return 'vector(1536)';
+  },
+  toDriver(value: number[]): string {
+    return JSON.stringify(value);
+  },
+  fromDriver(value: string): number[] {
+    if (typeof value === 'string') {
+      // Parse PostgreSQL vector format: [0.1,0.2,0.3]
+      return value.slice(1, -1).split(',').map(Number);
+    }
+    return value as unknown as number[];
+  },
+});
+
+// Project Context - Links memories to specific books/studios
+export const projectContext = authorBrainSchema.table("project_context", {
+  id: uuid("id").primaryKey().default(sql`uuid_generate_v4()`),
+  userId: text("user_id").notNull(),
+  projectName: text("project_name").notNull(),
+  projectType: text("project_type"), // 'book', 'music', 'video', 'course'
+  globalTone: text("global_tone").default("narrative"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  lastUpdated: timestamp("last_updated", { withTimezone: true }).defaultNow(),
+});
+
+// Author Memory - Semantic memory with vector embeddings
+export const authorMemory = authorBrainSchema.table("author_memory", {
+  id: uuid("id").primaryKey().default(sql`uuid_generate_v4()`),
+  projectId: uuid("project_id").references(() => projectContext.id, { onDelete: "cascade" }),
+  contentType: text("content_type").notNull(), // 'character', 'lore', 'research', 'style'
+  rawText: text("raw_text").notNull(),
+  embedding: vector("embedding"),
+  metadata: jsonb("metadata").default({}),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+// Insert schemas for Author Brain
+export const insertProjectContextSchema = createInsertSchema(projectContext).omit({ id: true, createdAt: true, lastUpdated: true });
+export const insertAuthorMemorySchema = createInsertSchema(authorMemory).omit({ id: true, createdAt: true });
+
+// Types for Author Brain
+export type ProjectContext = typeof projectContext.$inferSelect;
+export type InsertProjectContext = z.infer<typeof insertProjectContextSchema>;
+export type AuthorMemory = typeof authorMemory.$inferSelect;
+export type InsertAuthorMemory = z.infer<typeof insertAuthorMemorySchema>;
 
 // ============================================================================
 // AFFILIATE/REFERRAL SYSTEM

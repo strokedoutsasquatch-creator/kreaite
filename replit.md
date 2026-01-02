@@ -29,9 +29,13 @@ Icons: lucide-react only (no emoji)
 - **Key Architectural Decisions**: Session storage in DB, webhook routes registered before express.json(), environment-aware configuration.
 
 ### Data Storage Solutions
-- **Primary Database**: PostgreSQL via Neon serverless driver.
+- **Primary Database**: PostgreSQL via Neon serverless driver with pgvector extension.
 - **ORM**: Drizzle ORM for type-safe queries and schema management.
 - **Schema Design**: Users, roles, media projects, assets, sessions, conversationSessions, assetRegistry, studioPipelines, creditWallets, creditLedger, usageEvents.
+- **Author Brain Schema** (`author_brain.*`): Semantic memory system using pgvector for AI context retention across sessions.
+  - `project_context`: Links memories to specific projects (book, music, video, course)
+  - `author_memory`: Stores characters, lore, research, style with 1536-dim vector embeddings
+  - HNSW index for blazing-fast cosine similarity search
 - **Migration Strategy**: Drizzle Kit for database migrations.
 
 ### Global Platform Services
